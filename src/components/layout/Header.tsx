@@ -32,8 +32,8 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full px-5 py-3.5 glass-panel border-b border-gray-200/50 dark:border-[#1e2638] transition-colors">
-      <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-30 w-full px-4 sm:px-6 md:px-8 py-3.5 glass-panel border-b border-gray-200/50 dark:border-[#1e2638] transition-colors">
+      <div className="max-w-5xl mx-auto flex items-center justify-between">
         {/* Brand Wordmark / Logo */}
         <div className="flex items-center space-x-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center shadow-md shadow-brand-500/25">

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { CentraDB } from '../db/storage';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 interface AuthContextType {
   user: UserProfile;
@@ -9,7 +10,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<boolean>;
   loginWithBiometrics: () => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (updates: Partial<UserProfile>) => void;
   unlockPin: (pin: string) => boolean;
   lockApp: () => void;
@@ -26,6 +27,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLockedByPin, setIsLockedByPin] = useState<boolean>(false);
   const [pending2FA, setPending2FA] = useState<boolean>(false);
 
+  // Initialize Supabase Auth session listener
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setIsAuthenticated(true);
+        CentraDB.saveAuthSession(true);
+        CentraDB.syncFromSupabase(session.user.id, session.user.email || undefined).then(() => {
+          setUser(CentraDB.getUser());
+        });
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setIsAuthenticated(true);
+        CentraDB.saveAuthSession(true);
+        await CentraDB.syncFromSupabase(session.user.id, session.user.email || undefined);
+        setUser(CentraDB.getUser());
+      } else if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+        CentraDB.saveAuthSession(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   useEffect(() => {
     CentraDB.saveUser(user);
   }, [user]);
@@ -34,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     CentraDB.saveAuthSession(isAuthenticated);
   }, [isAuthenticated]);
 
-  const login = async (email: string, _pass: string): Promise<boolean> => {
+  const login = async (email: string, pass: string): Promise<boolean> => {
     // Check if 2FA is active in settings
     const settings = CentraDB.getSettings();
     if (settings.security.twoFactorEnabled) {
@@ -42,9 +77,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false; // Wait for OTP
     }
 
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password: pass || 'Password123!',
+        });
+
+        if (error) {
+          // If login fails (e.g. user does not exist yet), try sign up or throw
+          console.warn('Supabase signIn error, attempting auto-sign-up or fallback:', error.message);
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password: pass || 'Password123!',
+          });
+          if (signUpError) {
+            throw signUpError;
+          }
+          if (signUpData.user) {
+            await CentraDB.syncFromSupabase(signUpData.user.id, signUpData.user.email || email);
+            setUser(CentraDB.getUser());
+            setIsAuthenticated(true);
+            return true;
+          }
+        }
+
+        if (data.user) {
+          await CentraDB.syncFromSupabase(data.user.id, data.user.email || email);
+          setUser(CentraDB.getUser());
+          setIsAuthenticated(true);
+          return true;
+        }
+      } catch (err: any) {
+        console.warn('Supabase Auth error:', err);
+        // Fallback to local session if network error/demo credentials
+      }
+    }
+
     const updatedUser = { ...user, email: email || user.email };
     setUser(updatedUser);
     setIsAuthenticated(true);
+    CentraDB.saveAuthSession(true);
     return true;
   };
 
@@ -53,12 +126,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTimeout(() => {
         setIsAuthenticated(true);
         setIsLockedByPin(false);
+        CentraDB.saveAuthSession(true);
         resolve(true);
-      }, 700);
+      }, 600);
     });
   };
 
-  const register = async (name: string, email: string, _pass: string): Promise<boolean> => {
+  const register = async (name: string, email: string, pass: string): Promise<boolean> => {
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password: pass || 'Password123!',
+          options: {
+            data: { name: name || 'Centra User' },
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          await CentraDB.seedUserData(data.user.id, email, name);
+          setUser(CentraDB.getUser());
+          setIsAuthenticated(true);
+          CentraDB.saveAuthSession(true);
+          return true;
+        }
+      } catch (err: any) {
+        console.warn('Supabase register error:', err);
+      }
+    }
+
     const newUser: UserProfile = {
       ...user,
       id: `usr_${Date.now()}`,
@@ -68,10 +166,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setUser(newUser);
     setIsAuthenticated(true);
+    CentraDB.saveAuthSession(true);
     return true;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.warn('Supabase signOut error:', err);
+      }
+    }
     setIsAuthenticated(false);
     setPending2FA(false);
     setIsLockedByPin(false);
@@ -106,6 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (otpCode.length === 6) {
       setPending2FA(false);
       setIsAuthenticated(true);
+      CentraDB.saveAuthSession(true);
       return true;
     }
     return false;

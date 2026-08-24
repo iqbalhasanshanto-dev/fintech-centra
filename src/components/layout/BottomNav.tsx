@@ -15,7 +15,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onOpenAddAction,
 }) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto pointer-events-none md:hidden">
       <div className="px-4 pb-4 pt-3">
         <div className="relative w-full h-[64px] filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)] dark:drop-shadow-[0_12px_24px_rgba(0,0,0,0.45)]">
           {/* SVG Arched & Notched Dock Background */}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Header } from './Header';
+import { Sidebar } from './Sidebar';
 import { BottomNav, TabType } from './BottomNav';
 import { HomeScreen } from '../home/HomeScreen';
 import { ReportScreen } from '../report/ReportScreen';
@@ -22,9 +23,17 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#E5E4EC] dark:bg-[#0b0d14] flex items-center justify-center p-0 sm:py-6 sm:px-4">
-      {/* Mobile-First Frame Container (max-w-md, rounded frame on desktop, full screen on mobile) */}
-      <div className="w-full max-w-md min-h-screen sm:min-h-[844px] sm:max-h-[920px] bg-[#F3F2F7] dark:bg-[#0b0d14] text-[#15141F] dark:text-[#f8fafc] sm:rounded-4xl shadow-2xl sm:border sm:border-gray-200/60 dark:sm:border-[#1e2638] flex flex-col relative overflow-hidden transition-colors">
+    <div className="min-h-screen w-full bg-[#F3F2F7] dark:bg-[#0b0d14] text-[#15141F] dark:text-[#f8fafc] flex flex-col md:flex-row transition-colors">
+      
+      {/* Desktop Left Sidebar (hidden below md) */}
+      <Sidebar
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        onOpenAddAction={() => handleOpenAddWithTab('transaction')}
+      />
+
+      {/* Main Content Area (Full width on mobile, flexible remaining width on desktop) */}
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen md:h-screen md:overflow-y-auto overscroll-contain">
         
         {/* Persistent Top Header */}
         <Header
@@ -32,8 +41,8 @@ export const AppShell: React.FC = () => {
           onNavigateToSettings={() => setActiveTab('settings')}
         />
 
-        {/* Scrollable Screen Content Area */}
-        <main className="flex-1 overflow-y-auto px-5 pt-4 overscroll-contain">
+        {/* Screen Content Container (Centered with max-readable width on desktop) */}
+        <main className="flex-1 px-4 sm:px-6 md:px-8 pt-4 pb-28 md:pb-12 max-w-5xl mx-auto w-full">
           {activeTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => setActiveTab('report')}
@@ -59,34 +68,34 @@ export const AppShell: React.FC = () => {
             <SettingsScreen />
           )}
         </main>
-
-        {/* Persistent Bottom Nav with floating centered '+' action */}
-        <BottomNav
-          activeTab={activeTab}
-          onSelectTab={setActiveTab}
-          onOpenAddAction={() => handleOpenAddWithTab('transaction')}
-        />
-
-        {/* Quick Action Sheet Modal */}
-        <AddActionModal
-          isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          defaultTab={addModalDefaultTab}
-        />
-
-        {/* Notifications Modal */}
-        <NotificationsModal
-          isOpen={showNotificationsModal}
-          onClose={() => setShowNotificationsModal(false)}
-        />
-
-        {/* Centra Pro Paywall / Upgrade Modal */}
-        <ProModal
-          isOpen={showProModal}
-          onClose={() => setShowProModal(false)}
-        />
-
       </div>
+
+      {/* Mobile Bottom Dock (hidden on md+ screens) */}
+      <BottomNav
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        onOpenAddAction={() => handleOpenAddWithTab('transaction')}
+      />
+
+      {/* Quick Action Sheet Modal */}
+      <AddActionModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        defaultTab={addModalDefaultTab}
+      />
+
+      {/* Notifications Modal */}
+      <NotificationsModal
+        isOpen={showNotificationsModal}
+        onClose={() => setShowNotificationsModal(false)}
+      />
+
+      {/* Centra Pro Paywall / Upgrade Modal */}
+      <ProModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+      />
+
     </div>
   );
 };
