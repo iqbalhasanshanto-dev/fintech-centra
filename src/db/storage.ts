@@ -20,15 +20,15 @@ import {
 } from './seedData';
 
 const STORAGE_KEYS = {
-  USER: 'centra_db_user_v1',
-  ACCOUNTS: 'centra_db_accounts_v1',
-  CATEGORIES: 'centra_db_categories_v1',
-  TRANSACTIONS: 'centra_db_transactions_v1',
-  GOALS: 'centra_db_goals_v1',
-  BUDGETS: 'centra_db_budgets_v1',
-  NOTIFICATIONS: 'centra_db_notifications_v1',
-  SETTINGS: 'centra_db_settings_v1',
-  AUTH_TOKEN: 'centra_db_auth_token_v1',
+  USER: 'centra_db_user_v2',
+  ACCOUNTS: 'centra_db_accounts_v2',
+  CATEGORIES: 'centra_db_categories_v2',
+  TRANSACTIONS: 'centra_db_transactions_v2',
+  GOALS: 'centra_db_goals_v2',
+  BUDGETS: 'centra_db_budgets_v2',
+  NOTIFICATIONS: 'centra_db_notifications_v2',
+  SETTINGS: 'centra_db_settings_v2',
+  AUTH_TOKEN: 'centra_db_auth_token_v2',
 };
 
 function safeGet<T>(key: string, fallback: T): T {

@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full px-5 py-3.5 glass-panel border-b border-gray-200/50 dark:border-gray-800/50 transition-colors">
+    <header className="sticky top-0 z-30 w-full px-5 py-3.5 glass-panel border-b border-gray-200/50 dark:border-[#1e2638] transition-colors">
       <div className="flex items-center justify-between">
         {/* Brand Wordmark / Logo */}
         <div className="flex items-center space-x-2.5">
@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <div className="flex items-center space-x-1.5">
-              <span className="text-lg font-black font-display tracking-tight text-ink dark:text-white">
+              <span className="text-lg font-black font-display tracking-tight text-ink dark:text-[#f8fafc]">
                 CENTRA
               </span>
               {user.isPro && (
@@ -59,11 +59,11 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
-              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-full bg-white dark:bg-surface-darkCard text-xs font-semibold text-gray-700 dark:text-gray-200 border border-gray-200/80 dark:border-gray-700 shadow-xs hover:border-brand-400 transition-all"
+              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-full bg-white dark:bg-surface-darkCard text-xs font-semibold text-gray-700 dark:text-[#f8fafc] border border-gray-200/80 dark:border-[#1e2638] shadow-xs hover:border-brand-400 transition-all"
               aria-expanded={showPeriodDropdown}
             >
               <span>{currentPeriodLabel}</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showPeriodDropdown ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 dark:text-[#64748b] transition-transform ${showPeriodDropdown ? 'rotate-180' : ''}`} />
             </button>
 
             {showPeriodDropdown && (
@@ -72,8 +72,8 @@ export const Header: React.FC<HeaderProps> = ({
                   className="fixed inset-0 z-40"
                   onClick={() => setShowPeriodDropdown(false)}
                 />
-                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-surface-darkCard rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 py-1.5 z-50 animate-fade-in">
-                  <div className="px-3 py-1 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-surface-darkCard rounded-2xl shadow-xl border border-gray-100 dark:border-[#1e2638] py-1.5 z-50 animate-fade-in">
+                  <div className="px-3 py-1 text-[11px] font-bold text-gray-400 dark:text-[#64748b] uppercase tracking-wider">
                     Select Period
                   </div>
                   {periods.map(p => (
@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
                         setPeriodFilter(p.id);
                         setShowPeriodDropdown(false);
                       }}
-                      className="w-full px-3.5 py-2 text-left text-xs font-medium flex items-center justify-between text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
+                      className="w-full px-3.5 py-2 text-left text-xs font-medium flex items-center justify-between text-gray-700 dark:text-[#f8fafc] hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
                     >
                       <span>{p.label}</span>
                       {periodFilter === p.id && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />}
@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Privacy Mode Quick Toggle */}
           <button
             onClick={togglePrivacy}
-            className="p-2 rounded-full text-gray-500 hover:text-brand-600 hover:bg-white dark:hover:bg-surface-darkCard border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all"
+            className="p-2 rounded-full text-gray-500 dark:text-[#64748b] hover:text-brand-600 hover:bg-white dark:hover:bg-surface-darkCard border border-transparent hover:border-gray-200 dark:hover:border-[#1e2638] transition-all"
             title={settings.privacyMode ? "Disable Privacy Mask" : "Enable Privacy Mask"}
             aria-label="Toggle privacy mask"
           >
@@ -107,12 +107,12 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Notification Bell with Badge */}
           <button
             onClick={onOpenNotifications}
-            className="relative p-2 rounded-full text-gray-600 dark:text-gray-300 hover:text-brand-600 hover:bg-white dark:hover:bg-surface-darkCard border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all"
+            className="relative p-2 rounded-full text-gray-600 dark:text-[#64748b] hover:text-brand-600 hover:bg-white dark:hover:bg-surface-darkCard border border-transparent hover:border-gray-200 dark:hover:border-[#1e2638] transition-all"
             aria-label="Open notifications"
           >
             <Bell className="w-4 h-4" />
             {unreadNotificationsCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white shadow-xs animate-pulse">
+              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white shadow-xs">
                 {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
               </span>
             )}

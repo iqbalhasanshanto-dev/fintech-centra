@@ -12,7 +12,7 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({
   const { currentInsight } = useFinance();
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-50 to-indigo-50 dark:from-brand-950/40 dark:to-indigo-950/40 border border-brand-200/60 dark:border-brand-800/40 p-4 transition-all">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-50 to-indigo-50 dark:from-[#131722] dark:to-[#131722] border border-brand-200/60 dark:border-[#1e2638] p-4 transition-all">
       <div className="flex items-start space-x-3">
         <div className="p-2 rounded-2xl bg-brand-600 text-white shadow-md shadow-brand-600/20 shrink-0 mt-0.5">
           <Sparkles className="w-4 h-4" />
@@ -23,12 +23,12 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({
               AI Insight
             </span>
             {currentInsight.metric && (
-              <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+              <span className="text-xs font-bold text-gray-500 dark:text-[#64748b]">
                 {currentInsight.metric}
               </span>
             )}
           </div>
-          <h4 className="text-sm font-bold font-display text-ink dark:text-white mt-1">
+          <h4 className="text-sm font-bold font-display text-ink dark:text-[#f8fafc] mt-1">
             {currentInsight.title}
           </h4>
           <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2 leading-relaxed">
@@ -36,13 +36,13 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({
           </p>
 
           {/* Upsell button */}
-          <div className="mt-2.5 pt-2 border-t border-brand-200/50 dark:border-brand-800/50 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
+          <div className="mt-2.5 pt-2 border-t border-brand-200/50 dark:border-[#1e2638] flex items-center justify-between">
+            <span className="text-[11px] font-medium text-gray-500 dark:text-[#64748b]">
               Want auto-budgeting rules?
             </span>
             <button
               onClick={onOpenProModal}
-              className="inline-flex items-center space-x-1 text-xs font-bold text-brand-700 dark:text-brand-300 hover:text-brand-900 dark:hover:text-white transition-colors"
+              className="inline-flex items-center space-x-1 text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-900 dark:hover:text-white transition-colors"
             >
               <span>Get Pro</span>
               <ArrowRight className="w-3 h-3" />

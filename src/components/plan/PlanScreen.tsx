@@ -74,17 +74,17 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
           {onBackToHome && (
             <button
               onClick={onBackToHome}
-              className="p-2 -ml-2 rounded-full text-gray-500 hover:text-ink dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 -ml-2 rounded-full text-gray-500 hover:text-ink dark:hover:text-[#f8fafc] hover:bg-gray-100 dark:hover:bg-[#1e2638] transition-colors"
               aria-label="Back to Home"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
           <div>
-            <h2 className="text-xl font-bold font-display text-ink dark:text-white">
+            <h2 className="text-xl font-bold font-display text-ink dark:text-[#f8fafc]">
               My Plan
             </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-gray-500 dark:text-[#64748b]">
               Savings goals & monthly budget targets
             </p>
           </div>
@@ -129,7 +129,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       {/* Section 1: Featured Goals */}
       <div className="space-y-3.5">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-base font-bold font-display text-ink dark:text-white flex items-center space-x-2">
+          <h3 className="text-base font-bold font-display text-ink dark:text-[#f8fafc] flex items-center space-x-2">
             <span>Featured Goals</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 font-bold">
               {goals.length}
@@ -149,7 +149,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
             return (
               <div
                 key={goal.id}
-                className="relative p-5 rounded-3xl bg-white dark:bg-surface-darkCard border border-gray-100 dark:border-gray-800 shadow-soft hover:shadow-md transition-all space-y-3.5"
+                className="relative p-5 rounded-3xl bg-white dark:bg-[#131722] border border-gray-100 dark:border-[#1e2638] shadow-soft hover:shadow-md transition-all space-y-3.5"
               >
                 {/* Top Row: Icon, Title, Overflow menu */}
                 <div className="flex items-start justify-between">
@@ -165,10 +165,10 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                     </div>
 
                     <div className="min-w-0">
-                      <h4 className="text-sm font-bold text-ink dark:text-white truncate">
+                      <h4 className="text-sm font-bold text-ink dark:text-[#f8fafc] truncate">
                         {goal.name}
                       </h4>
-                      <p className="text-xs text-gray-400 flex items-center space-x-1 mt-0.5">
+                      <p className="text-xs text-gray-400 dark:text-[#64748b] flex items-center space-x-1 mt-0.5">
                         <Calendar className="w-3 h-3" />
                         <span>Target: {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                       </p>
@@ -186,14 +186,14 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
 
                     <button
                       onClick={() => setActiveGoalMenuId(activeGoalMenuId === goal.id ? null : goal.id)}
-                      className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                      className="p-1 text-gray-400 dark:text-[#64748b] hover:text-gray-600 dark:hover:text-gray-200 rounded-lg"
                       aria-label="Goal options"
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
 
                     {activeGoalMenuId === goal.id && (
-                      <div className="absolute right-0 top-8 w-32 bg-white dark:bg-surface-darkCard rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 py-1 z-30 animate-fade-in text-xs">
+                      <div className="absolute right-0 top-8 w-32 bg-white dark:bg-[#131722] rounded-2xl shadow-xl border border-gray-100 dark:border-[#1e2638] py-1 z-30 animate-fade-in text-xs">
                         <button
                           onClick={() => {
                             if (window.confirm(`Delete "${goal.name}"?`)) {
@@ -214,10 +214,10 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                 {/* Amounts readout & "$X left" */}
                 <div className="flex items-baseline justify-between text-xs">
                   <div>
-                    <span className="text-base font-extrabold font-display text-ink dark:text-white currency-amount">
+                    <span className="text-base font-extrabold font-display text-ink dark:text-[#f8fafc] currency-amount">
                       {formatCurrency(goal.currentAmount, settings.baseCurrency, settings.privacyMode)}
                     </span>
-                    <span className="text-gray-400 ml-1">
+                    <span className="text-gray-400 dark:text-[#64748b] ml-1">
                       saved of {formatCurrency(goal.targetAmount, settings.baseCurrency, settings.privacyMode)}
                     </span>
                   </div>
@@ -227,7 +227,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                 </div>
 
                 {/* Linear Progress Bar */}
-                <div className="w-full h-2.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                <div className="w-full h-2.5 rounded-full bg-gray-100 dark:bg-[#1e2638] overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
@@ -242,7 +242,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                   <div className="flex items-center space-x-2 p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs">
                     <AlertTriangle className="w-4 h-4 shrink-0 text-caution" />
                     <span className="leading-snug">
-                      <strong className="font-bold">{pace.behindPercent}% behind schedule</strong> — save ~${pace.recommendedMonthly}/mo to finish on target.
+                      <strong className="font-bold">{pace.behindPercent}% behind schedule</strong> — save ~{formatCurrency(pace.recommendedMonthly, settings.baseCurrency, settings.privacyMode, false)}/mo to finish on target.
                     </span>
                   </div>
                 ) : (
@@ -261,10 +261,10 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       <div className="space-y-3.5">
         <div className="flex items-center justify-between px-1">
           <div>
-            <h3 className="text-base font-bold font-display text-ink dark:text-white">
+            <h3 className="text-base font-bold font-display text-ink dark:text-[#f8fafc]">
               Category Budgets
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-gray-500 dark:text-[#64748b]">
               Monthly spending allowances & utilization
             </p>
           </div>
@@ -279,7 +279,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
             return (
               <div
                 key={budget.id}
-                className="p-4 rounded-3xl bg-white dark:bg-surface-darkCard border border-gray-100 dark:border-gray-800 shadow-soft hover:shadow-md transition-all flex items-center justify-between"
+                className="p-4 rounded-3xl bg-white dark:bg-[#131722] border border-gray-100 dark:border-[#1e2638] shadow-soft hover:shadow-md transition-all flex items-center justify-between"
               >
                 {/* Left: Icon & Info */}
                 <div className="flex items-center space-x-3.5 min-w-0 flex-1 pr-3">
@@ -295,7 +295,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center space-x-1.5">
-                      <h4 className="text-sm font-bold text-ink dark:text-white truncate">
+                      <h4 className="text-sm font-bold text-ink dark:text-[#f8fafc] truncate">
                         {budget.categoryName}
                       </h4>
                       {isOver && (
@@ -305,7 +305,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                       )}
                     </div>
 
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    <div className="text-xs text-gray-500 dark:text-[#64748b] mt-0.5">
                       {formatCurrency(budget.spentAmount, settings.baseCurrency, settings.privacyMode)} of{' '}
                       {formatCurrency(budget.limitAmount, settings.baseCurrency, settings.privacyMode)}
                     </div>
@@ -315,7 +315,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                 {/* Right: Circular Progress Ring */}
                 <div className="shrink-0 flex items-center space-x-3">
                   <div className="text-right text-xs">
-                    <span className={`font-bold ${isOver ? 'text-danger' : 'text-gray-700 dark:text-gray-300'}`}>
+                    <span className={`font-bold ${isOver ? 'text-danger' : 'text-gray-700 dark:text-[#64748b]'}`}>
                       {isOver
                         ? `${formatCurrency(Math.abs(remaining), settings.baseCurrency, settings.privacyMode)} over`
                         : `${formatCurrency(remaining, settings.baseCurrency, settings.privacyMode)} left`}
@@ -344,8 +344,8 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       >
         <form onSubmit={handleContribute} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Deposit Amount ($)
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+              Deposit Amount ({settings.baseCurrency})
             </label>
             <input
               type="number"
@@ -354,18 +354,18 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               placeholder="100.00"
               value={fundAmount}
               onChange={e => setFundAmount(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-ink dark:text-white text-lg font-bold font-display"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-lg font-bold font-display"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
               Deduct from Account
             </label>
             <select
               value={fundSourceAccountId}
               onChange={e => setFundSourceAccountId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-ink dark:text-white text-xs"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs"
             >
               {accounts.map(a => (
                 <option key={a.id} value={a.id}>

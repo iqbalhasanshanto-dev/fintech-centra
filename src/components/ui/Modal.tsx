@@ -41,45 +41,45 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-ink/40 backdrop-blur-sm transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-ink/50 dark:bg-black/70 backdrop-blur-sm transition-opacity animate-fade-in z-[100]"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Sheet / Dialog Container */}
       <div
-        className={`relative z-10 w-full ${maxWidth} bg-white dark:bg-surface-darkCard rounded-t-4xl sm:rounded-4xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col ${
+        className={`relative z-[101] w-full ${maxWidth} bg-white dark:bg-[#131722] rounded-t-4xl sm:rounded-4xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col border border-gray-100 dark:border-[#1e2638] ${
           isBottomSheet ? 'animate-slide-up sm:animate-fade-in' : 'animate-fade-in'
         }`}
         role="dialog"
         aria-modal="true"
       >
         {/* Mobile Pull Handle Indicator */}
-        <div className="sm:hidden w-full flex justify-center pt-3 pb-1">
-          <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full" />
+        <div className="sm:hidden w-full flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-12 h-1.5 bg-gray-200 dark:bg-[#1e2638] rounded-full" />
         </div>
 
         {/* Header */}
         {!hideHeader && (
-          <div className="px-6 pt-4 pb-3 flex items-start justify-between border-b border-gray-100 dark:border-gray-800">
+          <div className="px-6 pt-4 pb-3 flex items-start justify-between border-b border-gray-100 dark:border-[#1e2638] shrink-0">
             <div>
               {title && (
-                <h3 className="text-xl font-bold font-display text-ink dark:text-white">
+                <h3 className="text-xl font-bold font-display text-ink dark:text-[#f8fafc]">
                   {title}
                 </h3>
               )}
               {subtitle && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-[#64748b] mt-0.5">
                   {subtitle}
                 </p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="p-2 -mr-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              className="p-2 -mr-2 text-gray-400 hover:text-gray-600 dark:hover:text-[#f8fafc] hover:bg-gray-100 dark:hover:bg-[#1e2638] rounded-full transition-colors"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -88,7 +88,7 @@ export const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 overscroll-contain">
+        <div className="p-6 overflow-y-auto flex-1 overscroll-contain pb-8 sm:pb-6">
           {children}
         </div>
       </div>

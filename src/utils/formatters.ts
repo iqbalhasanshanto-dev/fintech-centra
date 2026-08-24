@@ -1,6 +1,7 @@
 import { CurrencyCode } from '../types';
 
 export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
+  BDT: '৳',
   USD: '$',
   EUR: '€',
   GBP: '£',
@@ -9,6 +10,7 @@ export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
 };
 
 export const EXCHANGE_RATES_TO_USD: Record<CurrencyCode, number> = {
+  BDT: 0.0085,
   USD: 1.0,
   EUR: 1.08,
   GBP: 1.28,
@@ -30,7 +32,7 @@ export function convertCurrency(
 
 export function formatCurrency(
   amount: number,
-  currency: CurrencyCode = 'USD',
+  currency: CurrencyCode = 'BDT',
   privacyMode: boolean = false,
   showDecimals: boolean = true
 ): string {
@@ -38,7 +40,7 @@ export function formatCurrency(
     return '••••••';
   }
 
-  const symbol = CURRENCY_SYMBOLS[currency] || '$';
+  const symbol = CURRENCY_SYMBOLS[currency] || '৳';
   const absAmount = Math.abs(amount);
   
   const options: Intl.NumberFormatOptions = {

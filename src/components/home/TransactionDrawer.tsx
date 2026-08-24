@@ -66,18 +66,18 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
         {/* Search input & CSV Export button */}
         <div className="flex items-center space-x-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#64748b]" />
             <input
               type="text"
               placeholder="Search merchant, tag, note..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-ink dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full pl-9 pr-8 py-2 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#64748b] hover:text-gray-600 dark:hover:text-gray-200"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -86,10 +86,10 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
 
           <button
             onClick={handleExportCSV}
-            className="p-2 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 text-xs font-bold flex items-center space-x-1 shrink-0"
+            className="p-2 rounded-2xl bg-gray-100 dark:bg-[#1e2638] text-gray-700 dark:text-[#f8fafc] hover:bg-gray-200 dark:hover:bg-[#1e2638]/80 text-xs font-bold flex items-center space-x-1 shrink-0"
             title="Export CSV"
           >
-            <Download className="w-4 h-4 text-brand-600" />
+            <Download className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             <span className="hidden sm:inline">CSV</span>
           </button>
         </div>
@@ -103,7 +103,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
               className={`px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${
                 selectedType === 'all'
                   ? 'bg-brand-600 text-white font-bold'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                  : 'bg-gray-100 dark:bg-[#1e2638] text-gray-600 dark:text-[#64748b]'
               }`}
             >
               All Types
@@ -113,7 +113,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
               className={`px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${
                 selectedType === 'expense'
                   ? 'bg-rose-500 text-white font-bold'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                  : 'bg-gray-100 dark:bg-[#1e2638] text-gray-600 dark:text-[#64748b]'
               }`}
             >
               Expenses
@@ -123,7 +123,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
               className={`px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${
                 selectedType === 'income'
                   ? 'bg-growth text-white font-bold'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                  : 'bg-gray-100 dark:bg-[#1e2638] text-gray-600 dark:text-[#64748b]'
               }`}
             >
               Income
@@ -133,7 +133,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
               className={`px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${
                 selectedType === 'transfer'
                   ? 'bg-indigo-600 text-white font-bold'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                  : 'bg-gray-100 dark:bg-[#1e2638] text-gray-600 dark:text-[#64748b]'
               }`}
             >
               Transfers
@@ -145,7 +145,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
             <select
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-ink dark:text-white"
+              className="px-2.5 py-1.5 rounded-xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc]"
             >
               <option value="all">All Categories</option>
               {categories.map(c => (
@@ -158,7 +158,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
             <select
               value={selectedAccount}
               onChange={e => setSelectedAccount(e.target.value)}
-              className="px-2.5 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-ink dark:text-white"
+              className="px-2.5 py-1.5 rounded-xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc]"
             >
               <option value="all">All Accounts</option>
               {accounts.map(a => (
@@ -171,9 +171,9 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
         </div>
 
         {/* Results List */}
-        <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-[50vh] overflow-y-auto pr-1">
+        <div className="divide-y divide-gray-100 dark:divide-[#1e2638] max-h-[50vh] overflow-y-auto pr-1">
           {filteredTransactions.length === 0 ? (
-            <div className="text-center py-8 text-xs text-gray-400">
+            <div className="text-center py-8 text-xs text-gray-400 dark:text-[#64748b]">
               No matching transactions found.
             </div>
           ) : (
@@ -187,7 +187,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                   onClick={() => {
                     onSelectTransaction(tx);
                   }}
-                  className="py-3 px-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 cursor-pointer rounded-xl transition-colors"
+                  className="py-3 px-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#1e2638]/40 cursor-pointer rounded-xl transition-colors"
                 >
                   <div className="flex items-center space-x-3 min-w-0">
                     <div
@@ -200,10 +200,10 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                       <CategoryIcon name={tx.categoryIcon} className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-ink dark:text-white truncate">
+                      <p className="text-xs font-bold text-ink dark:text-[#f8fafc] truncate">
                         {tx.merchant || tx.categoryName}
                       </p>
-                      <p className="text-[10px] text-gray-400">
+                      <p className="text-[10px] text-gray-400 dark:text-[#64748b]">
                         {tx.accountName} • {formatFullDate(tx.date)}
                       </p>
                     </div>
@@ -212,7 +212,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                   <div className="text-right shrink-0">
                     <span
                       className={`text-xs font-bold font-display ${
-                        isIncome ? 'text-growth' : isExpense ? 'text-ink dark:text-white' : 'text-brand-600'
+                        isIncome ? 'text-growth' : isExpense ? 'text-ink dark:text-[#f8fafc]' : 'text-brand-600 dark:text-brand-400'
                       }`}
                     >
                       {isIncome ? '+' : isExpense ? '-' : ''}

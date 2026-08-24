@@ -1,4 +1,4 @@
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CAD';
+export type CurrencyCode = 'BDT' | 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CAD';
 
 export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'cash';
 

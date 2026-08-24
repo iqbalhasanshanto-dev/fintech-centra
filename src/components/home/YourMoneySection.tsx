@@ -28,10 +28,10 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
       {/* Section Header with "Details" drilldown link */}
       <div className="flex items-center justify-between px-1">
         <div>
-          <h3 className="text-base font-bold font-display text-ink dark:text-white">
+          <h3 className="text-base font-bold font-display text-ink dark:text-[#f8fafc]">
             Your Money
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-[#64748b]">
             Cash flow {getPeriodLabel()}
           </p>
         </div>
@@ -48,7 +48,7 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
       <div className="grid grid-cols-2 gap-3.5">
         
         {/* Income Card */}
-        <div className="relative p-4 rounded-3xl bg-white dark:bg-surface-darkCard border border-gray-100 dark:border-gray-800 shadow-soft transition-all hover:shadow-md">
+        <div className="relative p-4 rounded-3xl bg-white dark:bg-[#131722] border border-gray-100 dark:border-[#1e2638] shadow-soft transition-all hover:shadow-md">
           <div className="flex items-center justify-between mb-2">
             <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-growth flex items-center justify-center">
               <ArrowDownLeft className="w-4 h-4" />
@@ -62,13 +62,13 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
                 <HelpCircle className="w-3.5 h-3.5" />
               </button>
               {activeTooltip === 'income' && (
-                <div className="absolute right-0 bottom-6 w-44 p-2 bg-ink text-white text-[11px] rounded-xl shadow-lg z-20">
+                <div className="absolute right-0 bottom-6 w-44 p-2 bg-[#131722] border border-[#1e2638] text-white text-[11px] rounded-xl shadow-lg z-20">
                   Total inflows from salary, freelance, bonuses, and investment dividends for the selected period.
                 </div>
               )}
             </div>
           </div>
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span className="text-xs font-medium text-gray-500 dark:text-[#64748b]">
             Income
           </span>
           <div className="text-lg sm:text-xl font-bold font-display text-growth mt-0.5 currency-amount">
@@ -77,7 +77,7 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
         </div>
 
         {/* Expenses Card */}
-        <div className="relative p-4 rounded-3xl bg-white dark:bg-surface-darkCard border border-gray-100 dark:border-gray-800 shadow-soft transition-all hover:shadow-md">
+        <div className="relative p-4 rounded-3xl bg-white dark:bg-[#131722] border border-gray-100 dark:border-[#1e2638] shadow-soft transition-all hover:shadow-md">
           <div className="flex items-center justify-between mb-2">
             <div className="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-950/40 text-danger flex items-center justify-center">
               <ArrowUpRight className="w-4 h-4" />
@@ -91,16 +91,16 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
                 <HelpCircle className="w-3.5 h-3.5" />
               </button>
               {activeTooltip === 'expense' && (
-                <div className="absolute right-0 bottom-6 w-44 p-2 bg-ink text-white text-[11px] rounded-xl shadow-lg z-20">
+                <div className="absolute right-0 bottom-6 w-44 p-2 bg-[#131722] border border-[#1e2638] text-white text-[11px] rounded-xl shadow-lg z-20">
                   All outgoing expenditures, card purchases, bills, and subscriptions recorded during this period.
                 </div>
               )}
             </div>
           </div>
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span className="text-xs font-medium text-gray-500 dark:text-[#64748b]">
             Expenses
           </span>
-          <div className="text-lg sm:text-xl font-bold font-display text-ink dark:text-white mt-0.5 currency-amount">
+          <div className="text-lg sm:text-xl font-bold font-display text-ink dark:text-[#f8fafc] mt-0.5 currency-amount">
             -{formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
           </div>
         </div>

@@ -16,7 +16,7 @@ export const INITIAL_USER: UserProfile = {
   avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
   isPro: true,
   planExpiry: '2027-12-31',
-  baseCurrency: 'USD',
+  baseCurrency: 'BDT',
   createdAt: '2025-01-15T08:00:00.000Z',
 };
 
@@ -26,7 +26,7 @@ export const INITIAL_ACCOUNTS: Account[] = [
     name: 'Primary Checking',
     type: 'checking',
     balance: 6420.50,
-    currency: 'USD',
+    currency: 'BDT',
     accountNumberMasked: '•••• 4829',
     bankName: 'Chase Premier',
     color: '#6C5CE7',
@@ -38,7 +38,7 @@ export const INITIAL_ACCOUNTS: Account[] = [
     name: 'High Yield Vault',
     type: 'savings',
     balance: 18950.00,
-    currency: 'USD',
+    currency: 'BDT',
     accountNumberMasked: '•••• 8912',
     bankName: 'Ally High Yield (4.5% APY)',
     color: '#1FAE71',
@@ -49,7 +49,7 @@ export const INITIAL_ACCOUNTS: Account[] = [
     name: 'Sapphire Preferred',
     type: 'credit',
     balance: -482.30,
-    currency: 'USD',
+    currency: 'BDT',
     accountNumberMasked: '•••• 6041',
     bankName: 'Chase Credit',
     color: '#FF6B57',
@@ -72,7 +72,7 @@ export const INITIAL_ACCOUNTS: Account[] = [
     name: 'Growth Portfolio',
     type: 'investment',
     balance: 14320.80,
-    currency: 'USD',
+    currency: 'BDT',
     accountNumberMasked: '•••• 7104',
     bankName: 'Vanguard Index',
     color: '#F5A524',
@@ -457,7 +457,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
 
 export const INITIAL_SETTINGS: AppSettings = {
   theme: 'light',
-  baseCurrency: 'USD',
+  baseCurrency: 'BDT',
   privacyMode: false,
   security: {
     biometricEnabled: true,

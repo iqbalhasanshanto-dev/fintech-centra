@@ -63,7 +63,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
       <div className="space-y-5">
         
         {/* Top Summary Banner */}
-        <div className="text-center py-4 px-3 rounded-3xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800">
+        <div className="text-center py-4 px-3 rounded-3xl bg-gray-50 dark:bg-[#1e2638]/40 border border-gray-100 dark:border-[#1e2638]">
           <div
             className="w-14 h-14 rounded-3xl mx-auto flex items-center justify-center shadow-md mb-3"
             style={{
@@ -76,14 +76,14 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
           <div
             className={`text-3xl font-extrabold font-display currency-amount ${
-              isIncome ? 'text-growth' : isExpense ? 'text-ink dark:text-white' : 'text-brand-600'
+              isIncome ? 'text-growth' : isExpense ? 'text-ink dark:text-[#f8fafc]' : 'text-brand-600 dark:text-brand-400'
             }`}
           >
             {isIncome ? '+' : isExpense ? '-' : ''}
             {formatCurrency(transaction.amount, transaction.currency, settings.privacyMode)}
           </div>
 
-          <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm font-semibold text-gray-500 dark:text-[#64748b] mt-1">
             {transaction.merchant || transaction.categoryName}
           </p>
 
@@ -97,43 +97,43 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
         {/* View Mode */}
         {!isEditing ? (
           <div className="space-y-3 text-sm">
-            <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-              <div className="flex items-center space-x-2 text-gray-500">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-[#1e2638]">
+              <div className="flex items-center space-x-2 text-gray-500 dark:text-[#64748b]">
                 <CreditCard className="w-4 h-4" />
                 <span>Account</span>
               </div>
-              <span className="font-semibold text-ink dark:text-white">
+              <span className="font-semibold text-ink dark:text-[#f8fafc]">
                 {transaction.accountName}
               </span>
             </div>
 
-            <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-              <div className="flex items-center space-x-2 text-gray-500">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-[#1e2638]">
+              <div className="flex items-center space-x-2 text-gray-500 dark:text-[#64748b]">
                 <Calendar className="w-4 h-4" />
                 <span>Date & Time</span>
               </div>
-              <span className="font-semibold text-ink dark:text-white">
+              <span className="font-semibold text-ink dark:text-[#f8fafc]">
                 {formatFullDate(transaction.date)} at {formatTime(transaction.date)}
               </span>
             </div>
 
-            <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-              <div className="flex items-center space-x-2 text-gray-500">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-[#1e2638]">
+              <div className="flex items-center space-x-2 text-gray-500 dark:text-[#64748b]">
                 <Tag className="w-4 h-4" />
                 <span>Category</span>
               </div>
-              <span className="font-semibold text-ink dark:text-white">
+              <span className="font-semibold text-ink dark:text-[#f8fafc]">
                 {transaction.categoryName}
               </span>
             </div>
 
             {transaction.note && (
-              <div className="py-2 border-b border-gray-100 dark:border-gray-800">
-                <div className="flex items-center space-x-2 text-gray-500 mb-1">
+              <div className="py-2 border-b border-gray-100 dark:border-[#1e2638]">
+                <div className="flex items-center space-x-2 text-gray-500 dark:text-[#64748b] mb-1">
                   <FileText className="w-4 h-4" />
                   <span>Note</span>
                 </div>
-                <p className="text-ink dark:text-white bg-gray-50 dark:bg-gray-800 p-2.5 rounded-xl text-xs leading-relaxed">
+                <p className="text-ink dark:text-[#f8fafc] bg-gray-50 dark:bg-[#1e2638] p-2.5 rounded-xl text-xs leading-relaxed">
                   {transaction.note}
                 </p>
               </div>
@@ -141,7 +141,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
             {transaction.tags && transaction.tags.length > 0 && (
               <div className="flex items-center space-x-2 py-2">
-                <span className="text-xs text-gray-500">Tags:</span>
+                <span className="text-xs text-gray-500 dark:text-[#64748b]">Tags:</span>
                 <div className="flex flex-wrap gap-1">
                   {transaction.tags.map((t, idx) => (
                     <span
@@ -161,8 +161,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 onClick={() => togglePinTransaction(transaction.id)}
                 className={`py-2.5 px-3 rounded-2xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all ${
                   transaction.isPinned
-                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 border border-brand-200 dark:border-brand-800'
-                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200'
+                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 border border-brand-200 dark:border-[#1e2638]'
+                    : 'bg-gray-100 text-gray-700 dark:bg-[#1e2638] dark:text-[#f8fafc] hover:bg-gray-200'
                 }`}
               >
                 <Pin className={`w-3.5 h-3.5 ${transaction.isPinned ? 'fill-brand-600' : ''}`} />
@@ -171,7 +171,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
               <button
                 onClick={() => setIsEditing(true)}
-                className="py-2.5 px-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all"
+                className="py-2.5 px-3 rounded-2xl bg-gray-100 dark:bg-[#1e2638] text-gray-700 dark:text-[#f8fafc] hover:bg-gray-200 dark:hover:bg-[#1e2638]/80 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 <span>Edit</span>
@@ -190,25 +190,25 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
           /* Edit Mode Form */
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-[#64748b] mb-1">
                 Merchant / Description
               </label>
               <input
                 type="text"
                 value={merchant}
                 onChange={e => setMerchant(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-ink dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-[#64748b] mb-1">
                 Category
               </label>
               <select
                 value={categoryId}
                 onChange={e => setCategoryId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-ink dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>
@@ -219,27 +219,27 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-[#64748b] mb-1">
                 Note
               </label>
               <textarea
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 rows={2}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-ink dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
             <div className="pt-2 flex items-center space-x-2">
               <button
                 onClick={() => setIsEditing(false)}
-                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs"
+                className="flex-1 py-2.5 rounded-2xl bg-gray-100 dark:bg-[#1e2638] text-gray-700 dark:text-[#f8fafc] font-bold text-xs"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="flex-1 py-2.5 rounded-2xl bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-600/30 flex items-center justify-center space-x-1"
+                className="flex-1 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-600/30 flex items-center justify-center space-x-1"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>Save Changes</span>

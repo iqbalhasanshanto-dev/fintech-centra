@@ -22,9 +22,9 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#E5E4EC] dark:bg-[#09080F] flex items-center justify-center p-0 sm:py-6 sm:px-4">
+    <div className="min-h-screen w-full bg-[#E5E4EC] dark:bg-[#0b0d14] flex items-center justify-center p-0 sm:py-6 sm:px-4">
       {/* Mobile-First Frame Container (max-w-md, rounded frame on desktop, full screen on mobile) */}
-      <div className="w-full max-w-md min-h-screen sm:min-h-[844px] sm:max-h-[920px] bg-[#F3F2F7] dark:bg-[#0F0E17] text-[#15141F] dark:text-white sm:rounded-4xl shadow-2xl sm:border sm:border-gray-200/60 dark:sm:border-gray-800 flex flex-col relative overflow-hidden transition-colors">
+      <div className="w-full max-w-md min-h-screen sm:min-h-[844px] sm:max-h-[920px] bg-[#F3F2F7] dark:bg-[#0b0d14] text-[#15141F] dark:text-[#f8fafc] sm:rounded-4xl shadow-2xl sm:border sm:border-gray-200/60 dark:sm:border-[#1e2638] flex flex-col relative overflow-hidden transition-colors">
         
         {/* Persistent Top Header */}
         <Header

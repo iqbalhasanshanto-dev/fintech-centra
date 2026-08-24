@@ -54,10 +54,10 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
       {/* Header & Filter Controls */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center space-x-2">
-          <h3 className="text-base font-bold font-display text-ink dark:text-white">
+          <h3 className="text-base font-bold font-display text-ink dark:text-[#f8fafc]">
             Transactions
           </h3>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-bold">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#1e2638] text-gray-600 dark:text-[#64748b] font-bold">
             {filtered.length}
           </span>
         </div>
@@ -77,7 +77,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
           className={`px-3 py-1.5 rounded-full font-semibold transition-all ${
             filterMode === 'all'
               ? 'bg-ink text-white dark:bg-white dark:text-ink shadow-xs'
-              : 'bg-white dark:bg-surface-darkCard text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-gray-700'
+              : 'bg-white dark:bg-[#131722] text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-[#1e2638]'
           }`}
         >
           For the Period
@@ -87,7 +87,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
           className={`px-3 py-1.5 rounded-full font-semibold transition-all flex items-center space-x-1 ${
             filterMode === 'pinned'
               ? 'bg-brand-600 text-white shadow-xs'
-              : 'bg-white dark:bg-surface-darkCard text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-gray-700'
+              : 'bg-white dark:bg-[#131722] text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-[#1e2638]'
           }`}
         >
           <Pin className="w-3 h-3" />
@@ -98,7 +98,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
           className={`px-3 py-1.5 rounded-full font-semibold transition-all ${
             filterMode === 'expenses'
               ? 'bg-rose-500 text-white shadow-xs'
-              : 'bg-white dark:bg-surface-darkCard text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-gray-700'
+              : 'bg-white dark:bg-[#131722] text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-[#1e2638]'
           }`}
         >
           Expenses
@@ -108,7 +108,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
           className={`px-3 py-1.5 rounded-full font-semibold transition-all ${
             filterMode === 'income'
               ? 'bg-growth text-white shadow-xs'
-              : 'bg-white dark:bg-surface-darkCard text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-gray-700'
+              : 'bg-white dark:bg-[#131722] text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-[#1e2638]'
           }`}
         >
           Income
@@ -117,14 +117,14 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
 
       {/* Date-Grouped Transaction List */}
       {groupedTransactions.length === 0 ? (
-        <div className="text-center py-10 px-4 bg-white dark:bg-surface-darkCard rounded-3xl border border-gray-100 dark:border-gray-800">
-          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 mx-auto flex items-center justify-center mb-3">
+        <div className="text-center py-10 px-4 bg-white dark:bg-[#131722] rounded-3xl border border-gray-100 dark:border-[#1e2638]">
+          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-[#1e2638] text-gray-400 mx-auto flex items-center justify-center mb-3">
             <History className="w-6 h-6" />
           </div>
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+          <p className="text-sm font-bold text-gray-700 dark:text-[#f8fafc]">
             No transactions found
           </p>
-          <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
+          <p className="text-xs text-gray-400 dark:text-[#64748b] mt-1 max-w-xs mx-auto">
             {filterMode === 'pinned'
               ? 'You have not pinned any transactions yet. Tap any transaction to pin it.'
               : 'Add your first transaction using the "+" button below.'}
@@ -136,18 +136,18 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
             <div key={group.dateKey} className="space-y-2">
               {/* Date Header with Daily Spend Total */}
               <div className="flex items-center justify-between px-2 text-xs">
-                <span className="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-[11px]">
+                <span className="font-bold text-gray-500 dark:text-[#64748b] uppercase tracking-wider text-[11px]">
                   {formatDateHeader(group.dateKey)}
                 </span>
                 {group.dailySpendTotal > 0 && (
-                  <span className="font-semibold text-gray-400 dark:text-gray-500 text-[11px]">
+                  <span className="font-semibold text-gray-400 dark:text-[#64748b] text-[11px]">
                     Spend: -{formatCurrency(group.dailySpendTotal, settings.baseCurrency, settings.privacyMode)}
                   </span>
                 )}
               </div>
 
               {/* Transactions in this date */}
-              <div className="bg-white dark:bg-surface-darkCard rounded-3xl border border-gray-100 dark:border-gray-800 shadow-soft overflow-hidden divide-y divide-gray-50 dark:divide-gray-800/60">
+              <div className="bg-white dark:bg-[#131722] rounded-3xl border border-gray-100 dark:border-[#1e2638] shadow-soft overflow-hidden divide-y divide-gray-50 dark:divide-[#1e2638]">
                 {group.items.map(tx => {
                   const isExpense = tx.type === 'expense';
                   const isIncome = tx.type === 'income';
@@ -157,7 +157,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                     <div
                       key={tx.id}
                       onClick={() => onSelectTransaction(tx)}
-                      className="group p-3.5 hover:bg-gray-50/80 dark:hover:bg-gray-800/40 cursor-pointer transition-colors flex items-center justify-between"
+                      className="group p-3.5 hover:bg-gray-50/80 dark:hover:bg-[#1e2638]/40 cursor-pointer transition-colors flex items-center justify-between"
                     >
                       {/* Left: Icon & Info */}
                       <div className="flex items-center space-x-3 min-w-0">
@@ -173,7 +173,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
 
                         <div className="min-w-0">
                           <div className="flex items-center space-x-1.5">
-                            <span className="text-sm font-bold text-ink dark:text-white truncate">
+                            <span className="text-sm font-bold text-ink dark:text-[#f8fafc] truncate">
                               {tx.merchant || tx.categoryName}
                             </span>
                             {tx.isPinned && (
@@ -182,14 +182,14 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                           </div>
 
                           {/* Account & Currency & Tags */}
-                          <div className="flex items-center space-x-1.5 text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex-wrap gap-y-1">
+                          <div className="flex items-center space-x-1.5 text-xs text-gray-400 dark:text-[#64748b] mt-0.5 flex-wrap gap-y-1">
                             <span className="truncate max-w-[120px]">
                               {tx.accountName}
                             </span>
                             <span>•</span>
                             <span>{formatTime(tx.date)}</span>
                             {tx.tags && tx.tags.length > 0 && (
-                              <span className="px-1.5 py-0.2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-[10px] font-medium">
+                              <span className="px-1.5 py-0.2 rounded-md bg-gray-100 dark:bg-[#1e2638] text-gray-600 dark:text-[#64748b] text-[10px] font-medium">
                                 {tx.tags[0]}
                               </span>
                             )}
@@ -204,7 +204,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                             isIncome
                               ? 'text-growth'
                               : isExpense
-                              ? 'text-ink dark:text-white'
+                              ? 'text-ink dark:text-[#f8fafc]'
                               : 'text-brand-600 dark:text-brand-400'
                           }`}
                         >
@@ -213,7 +213,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                         </div>
 
                         {tx.resultingBalance !== undefined && (
-                          <div className="text-[11px] font-mono text-gray-400 dark:text-gray-500 mt-0.5">
+                          <div className="text-[11px] font-mono text-gray-400 dark:text-[#64748b] mt-0.5">
                             bal {formatCurrency(tx.resultingBalance, tx.currency, settings.privacyMode, false)}
                           </div>
                         )}
