@@ -6,41 +6,77 @@
   :root {
     --color-brand-primary: #6366f1;
     --color-brand-secondary: #818cf8;
-    --color-surface-bg: #F3F2F7;
+    --color-surface-bg: #F8FAFC;
     --color-surface-card: #FFFFFF;
-    --color-border: #E5E7EB;
-    --color-text-primary: #15141F;
-    --color-text-muted: #6B7280;
-    --color-ink: #15141F;
-    --color-growth: #1FAE71;
-    --color-danger: #FF6B57;
-    --color-caution: #F5A524;
+    --color-border: #E2E8F0;
+    --color-text-primary: #0F172A;
+    --color-text-body: #334155;
+    --color-text-muted: #64748B;
+    --color-growth: #10B981;
+    --color-danger: #EF4444;
+    --color-caution: #F59E0B;
   }
 
   .dark {
     --color-brand-primary: #6366f1;
     --color-brand-secondary: #818cf8;
-    --color-surface-bg: #0b0d14;
-    --color-surface-card: #131722;
-    --color-border: #1e2638;
-    --color-text-primary: #f8fafc;
-    --color-text-muted: #64748b;
-    --color-ink: #f8fafc;
+    --color-surface-bg: #0B0F17;
+    --color-surface-card: #161B26;
+    --color-border: #262C3A;
+    --color-text-primary: #FFFFFF;
+    --color-text-body: #E2E8F0;
+    --color-text-muted: #94A3B8;
+    --color-growth: #10B981;
+    --color-danger: #EF4444;
+    --color-caution: #F59E0B;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: var(--color-surface-bg);
-    color: var(--color-ink);
+    color: var(--color-text-primary);
     -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, h4, h5, h6, .font-display, .currency-amount, button, input, select, textarea, label {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 }
 
-/* Custom scrollbar for mobile feel */
+/* Global 300ms transition for theme switches */
+body, main, header, nav, footer, .glass-panel {
+  transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+/* Number alignment across all data columns */
+.tabular-nums, .currency-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Focused, restrained interactive states */
+button:active:not(:disabled),
+.btn-interactive:active:not(:disabled) {
+  opacity: 0.92;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Custom refined scrollbars */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -56,27 +92,17 @@
   background: rgba(99, 102, 241, 0.4);
 }
 
-/* Glassmorphism utility */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.88);
+/* Glassmorphic dock utility */
+.glass-dock {
+  background: rgba(22, 27, 38, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
-.dark .glass-panel {
-  background: rgba(19, 23, 34, 0.88);
+.light .glass-dock {
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-}
-
-/* Shimmer animation */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.92; transform: scale(0.995); }
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 3s ease-in-out infinite;
 }
 
 /* Smooth sheet sliding transitions */
@@ -92,14 +118,14 @@
 }
 
 .animate-slide-up {
-  animation: slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: scale(0.98); }
+  from { opacity: 0; transform: scale(0.99); }
   to { opacity: 1; transform: scale(1); }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fade-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

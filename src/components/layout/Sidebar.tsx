@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  Home, 
-  PieChart, 
-  Target, 
-  SlidersHorizontal, 
-  Plus, 
+import {
+  Home,
+  PieChart,
+  Target,
+  SlidersHorizontal,
+  Plus,
   Sparkles,
   Shield,
   ArrowUpRight,
@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="hidden md:flex flex-col shrink-0 w-64 lg:w-72 h-screen sticky top-0 bg-white dark:bg-[#131722] border-r border-gray-200/80 dark:border-[#1e2638] p-5 justify-between select-none z-30 transition-colors">
-      
+
       {/* Top Header & Navigation */}
       <div className="space-y-6">
         {/* Brand Logo & Wordmark */}
@@ -83,11 +83,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectTab(item.id)}
-                className={`w-full py-3 px-3.5 rounded-2xl flex items-center justify-between text-xs font-bold transition-all ${
-                  isActive
+                className={`w-full py-3 px-3.5 rounded-2xl flex items-center justify-between text-xs font-bold transition-all ${isActive
                     ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/50 dark:text-brand-300 border border-brand-200/70 dark:border-brand-900/40 shadow-xs'
                     : 'text-gray-600 hover:text-ink dark:text-[#64748b] dark:hover:text-[#f8fafc] hover:bg-gray-100/70 dark:hover:bg-[#1e2638]/50'
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-3">
                   <Icon className={`w-4 h-4 transition-transform ${isActive ? 'scale-110 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-[#64748b]'}`} />

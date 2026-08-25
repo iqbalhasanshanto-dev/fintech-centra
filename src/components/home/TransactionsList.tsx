@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pin, History, Filter, ArrowUpRight, ArrowDownLeft, ArrowRightLeft, Sparkles, ChevronRight } from 'lucide-react';
+import { Pin, History, ChevronRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
@@ -14,7 +14,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
   onSelectTransaction,
   onOpenSeeAll,
 }) => {
-  const { transactions, settings, togglePinTransaction, periodFilter } = useFinance();
+  const { transactions, settings, periodFilter } = useFinance();
   const [filterMode, setFilterMode] = useState<'all' | 'pinned' | 'expenses' | 'income'>('all');
 
   // Filter transactions
@@ -51,22 +51,23 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
 
   return (
     <div className="space-y-3.5">
-      {/* Header & Filter Controls */}
-      <div className="flex items-center justify-between px-1">
+      {/* Header & Filter Controls: accessible See all button */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <h3 className="text-base font-bold font-display text-ink dark:text-[#f8fafc]">
+          <h3 className="text-base font-bold font-display text-gray-900 dark:text-[#FFFFFF]">
             Transactions
           </h3>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#1e2638] text-gray-600 dark:text-[#64748b] font-bold">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#1E2536] text-gray-600 dark:text-[#94A3B8] font-bold tabular-nums">
             {filtered.length}
           </span>
         </div>
         <button
           onClick={onOpenSeeAll}
-          className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 flex items-center space-x-0.5 group"
+          className="min-h-[36px] px-3 py-1.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#161B26] text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center space-x-1 transition-colors"
+          aria-label="See all transactions"
         >
           <span>See all</span>
-          <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
@@ -74,153 +75,142 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
       <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
         <button
           onClick={() => setFilterMode('all')}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all ${
+          className={`min-h-[32px] px-3.5 py-1.5 rounded-xl font-semibold transition-colors ${
             filterMode === 'all'
-              ? 'bg-ink text-white dark:bg-white dark:text-ink shadow-xs'
-              : 'bg-white dark:bg-[#131722] text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-[#1e2638]'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'bg-white dark:bg-[#161B26] text-gray-600 dark:text-[#E2E8F0] border border-gray-200/80 dark:border-white/10'
           }`}
         >
           For the Period
         </button>
         <button
           onClick={() => setFilterMode('pinned')}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all flex items-center space-x-1 ${
+          className={`min-h-[32px] px-3.5 py-1.5 rounded-xl font-semibold transition-colors flex items-center space-x-1.5 ${
             filterMode === 'pinned'
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'bg-white dark:bg-[#131722] text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-[#1e2638]'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'bg-white dark:bg-[#161B26] text-gray-600 dark:text-[#E2E8F0] border border-gray-200/80 dark:border-white/10'
           }`}
         >
-          <Pin className="w-3 h-3" />
+          <Pin className="w-3.5 h-3.5" />
           <span>Pinned</span>
         </button>
         <button
           onClick={() => setFilterMode('expenses')}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all ${
+          className={`min-h-[32px] px-3.5 py-1.5 rounded-xl font-semibold transition-colors ${
             filterMode === 'expenses'
               ? 'bg-rose-500 text-white shadow-xs'
-              : 'bg-white dark:bg-[#131722] text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-[#1e2638]'
+              : 'bg-white dark:bg-[#161B26] text-gray-600 dark:text-[#E2E8F0] border border-gray-200/80 dark:border-white/10'
           }`}
         >
-          Expenses
+          Outflow Only
         </button>
         <button
           onClick={() => setFilterMode('income')}
-          className={`px-3 py-1.5 rounded-full font-semibold transition-all ${
+          className={`min-h-[32px] px-3.5 py-1.5 rounded-xl font-semibold transition-colors ${
             filterMode === 'income'
-              ? 'bg-growth text-white shadow-xs'
-              : 'bg-white dark:bg-[#131722] text-gray-600 dark:text-gray-300 border border-gray-200/60 dark:border-[#1e2638]'
+              ? 'bg-emerald-500 text-white shadow-xs'
+              : 'bg-white dark:bg-[#161B26] text-gray-600 dark:text-[#E2E8F0] border border-gray-200/80 dark:border-white/10'
           }`}
         >
-          Income
+          Inflow Only
         </button>
       </div>
 
-      {/* Date-Grouped Transaction List */}
+      {/* Date Grouped Transaction List */}
       {groupedTransactions.length === 0 ? (
-        <div className="text-center py-10 px-4 bg-white dark:bg-[#131722] rounded-3xl border border-gray-100 dark:border-[#1e2638]">
-          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-[#1e2638] text-gray-400 mx-auto flex items-center justify-center mb-3">
-            <History className="w-6 h-6" />
-          </div>
-          <p className="text-sm font-bold text-gray-700 dark:text-[#f8fafc]">
-            No transactions found
-          </p>
-          <p className="text-xs text-gray-400 dark:text-[#64748b] mt-1 max-w-xs mx-auto">
-            {filterMode === 'pinned'
-              ? 'You have not pinned any transactions yet. Tap any transaction to pin it.'
-              : 'Add your first transaction using the "+" button below.'}
+        <div className="p-8 text-center bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 rounded-xl">
+          <History className="w-8 h-8 mx-auto text-gray-300 dark:text-zinc-600 mb-2" />
+          <p className="text-sm font-semibold text-gray-500 dark:text-[#94A3B8]">
+            No transactions found for this filter.
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {groupedTransactions.map(group => (
             <div key={group.dateKey} className="space-y-2">
-              {/* Date Header with Daily Spend Total */}
-              <div className="flex items-center justify-between px-2 text-xs">
-                <span className="font-bold text-gray-500 dark:text-[#64748b] uppercase tracking-wider text-[11px]">
+              {/* Date Header + Daily Spend Subtotal */}
+              <div className="flex items-center justify-between px-1 text-xs font-bold text-gray-500 dark:text-[#94A3B8]">
+                <span className="uppercase tracking-wider text-[11px] font-extrabold">
                   {formatDateHeader(group.dateKey)}
                 </span>
                 {group.dailySpendTotal > 0 && (
-                  <span className="font-semibold text-gray-400 dark:text-[#64748b] text-[11px]">
-                    Spend: -{formatCurrency(group.dailySpendTotal, settings.baseCurrency, settings.privacyMode)}
+                  <span className="tabular-nums font-mono text-[11px]">
+                    Spend: -{formatCurrency(group.dailySpendTotal, settings.baseCurrency, settings.privacyMode, false)}
                   </span>
                 )}
               </div>
 
-              {/* Transactions in this date */}
-              <div className="bg-white dark:bg-[#131722] rounded-3xl border border-gray-100 dark:border-[#1e2638] shadow-soft overflow-hidden divide-y divide-gray-50 dark:divide-[#1e2638]">
-                {group.items.map(tx => {
-                  const isExpense = tx.type === 'expense';
-                  const isIncome = tx.type === 'income';
-                  const isTransfer = tx.type === 'transfer';
-
-                  return (
-                    <div
-                      key={tx.id}
-                      onClick={() => onSelectTransaction(tx)}
-                      className="group p-3.5 hover:bg-gray-50/80 dark:hover:bg-[#1e2638]/40 cursor-pointer transition-colors flex items-center justify-between"
-                    >
-                      {/* Left: Icon & Info */}
-                      <div className="flex items-center space-x-3 min-w-0">
-                        <div
-                          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-xs"
-                          style={{
-                            backgroundColor: `${tx.categoryColor}18`,
-                            color: tx.categoryColor,
-                          }}
-                        >
-                          <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
-                        </div>
-
-                        <div className="min-w-0">
-                          <div className="flex items-center space-x-1.5">
-                            <span className="text-sm font-bold text-ink dark:text-[#f8fafc] truncate">
-                              {tx.merchant || tx.categoryName}
-                            </span>
-                            {tx.isPinned && (
-                              <Pin className="w-3 h-3 text-brand-600 fill-brand-600 shrink-0" />
-                            )}
-                          </div>
-
-                          {/* Account & Currency & Tags */}
-                          <div className="flex items-center space-x-1.5 text-xs text-gray-400 dark:text-[#64748b] mt-0.5 flex-wrap gap-y-1">
-                            <span className="truncate max-w-[120px]">
-                              {tx.accountName}
-                            </span>
-                            <span>•</span>
-                            <span>{formatTime(tx.date)}</span>
-                            {tx.tags && tx.tags.length > 0 && (
-                              <span className="px-1.5 py-0.2 rounded-md bg-gray-100 dark:bg-[#1e2638] text-gray-600 dark:text-[#64748b] text-[10px] font-medium">
-                                {tx.tags[0]}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+              {/* Transactions in this Day */}
+              <div className="bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 rounded-xl overflow-hidden divide-y divide-gray-100 dark:divide-white/5 shadow-sm">
+                {group.items.map(tx => (
+                  <div
+                    key={tx.id}
+                    onClick={() => onSelectTransaction(tx)}
+                    className="p-3.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group select-none"
+                  >
+                    {/* Left: Category Icon + Details */}
+                    <div className="flex items-center space-x-3 min-w-0 pr-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-xs"
+                        style={{
+                          backgroundColor: `${tx.categoryColor}20`,
+                          color: tx.categoryColor,
+                        }}
+                      >
+                        <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
                       </div>
 
-                      {/* Right: Amount & Resulting Account Balance */}
-                      <div className="text-right shrink-0 ml-3">
-                        <div
-                          className={`text-sm sm:text-base font-extrabold font-display currency-amount ${
-                            isIncome
-                              ? 'text-growth'
-                              : isExpense
-                              ? 'text-ink dark:text-[#f8fafc]'
-                              : 'text-brand-600 dark:text-brand-400'
-                          }`}
-                        >
-                          {isIncome ? '+' : isExpense ? '-' : ''}
-                          {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
+                      <div className="min-w-0">
+                        <div className="flex items-center space-x-1.5">
+                          <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-[#FFFFFF] truncate">
+                            {tx.merchant || tx.categoryName}
+                          </h4>
+                          {tx.isPinned && (
+                            <Pin className="w-3 h-3 fill-indigo-500 text-indigo-500 shrink-0" />
+                          )}
+                          {tx.isRecurring && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                              REC
+                            </span>
+                          )}
                         </div>
 
-                        {tx.resultingBalance !== undefined && (
-                          <div className="text-[11px] font-mono text-gray-400 dark:text-[#64748b] mt-0.5">
-                            bal {formatCurrency(tx.resultingBalance, tx.currency, settings.privacyMode, false)}
-                          </div>
-                        )}
+                        <div className="flex items-center space-x-1.5 text-xs text-gray-500 dark:text-[#94A3B8] mt-0.5">
+                          <span>{tx.accountName}</span>
+                          <span>•</span>
+                          <span>{formatTime(tx.date)}</span>
+                          {tx.tags && tx.tags.length > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="text-indigo-600 dark:text-indigo-400 font-medium">
+                                #{tx.tags[0]}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
+
+                    {/* Right: Amount */}
+                    <div className="text-right shrink-0">
+                      <div
+                        className={`text-xs sm:text-sm font-extrabold font-display tabular-nums currency-amount ${
+                          tx.type === 'income'
+                            ? 'text-emerald-500'
+                            : tx.type === 'transfer'
+                            ? 'text-indigo-600 dark:text-indigo-400'
+                            : 'text-gray-900 dark:text-[#FFFFFF]'
+                        }`}
+                      >
+                        {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
+                        {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
+                      </div>
+                      <span className="text-[10px] text-gray-400 dark:text-[#94A3B8] uppercase font-mono">
+                        {tx.type}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
