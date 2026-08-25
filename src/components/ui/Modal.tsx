@@ -33,8 +33,11 @@ export const Modal: React.FC<ModalProps> = ({
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
+      const openDialogs = document.querySelectorAll('[role="dialog"]');
+      if (openDialogs.length <= 1) {
+        document.body.style.overflow = '';
+      }
     };
   }, [isOpen, onClose]);
 

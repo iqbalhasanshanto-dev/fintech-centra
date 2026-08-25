@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { YourMoneySection } from './YourMoneySection';
 import { TotalSpendSummary } from './TotalSpendSummary';
 import { ConnectedAccountsRow } from './ConnectedAccountsRow';
-import { InsightBanner } from './InsightBanner';
 import { TransactionsList } from './TransactionsList';
 import { TransactionDetailModal } from './TransactionDetailModal';
 import { TransactionDrawer } from './TransactionDrawer';
@@ -34,9 +33,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         onSelectAccount={setActiveAccountFilter}
         onOpenTransfer={onOpenTransfer}
       />
-
-      {/* 4. Smart Spending Analysis & Automated Insight */}
-      <InsightBanner />
 
       {/* 5. Transactions List with Date Grouping & Filtering */}
       <TransactionsList

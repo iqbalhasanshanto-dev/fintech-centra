@@ -1,5 +1,4 @@
 import React from 'react';
-import { ScrollHorizontal } from '../ui/ScrollHorizontal'; // placeholder utility or just use overflow-x-auto
 import { User } from 'lucide-react';
 
 const accounts = [

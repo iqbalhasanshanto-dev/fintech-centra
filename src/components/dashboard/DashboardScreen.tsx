@@ -4,19 +4,14 @@ import { IncomeExpenseCard } from './IncomeExpenseCard';
 import { DonutChartCard } from './DonutChartCard';
 import { AccountsCarousel } from './AccountsCarousel';
 import { Transaction } from '../../types';
+import { TransactionDetailModal } from '../home/TransactionDetailModal';
+import { TransactionDrawer } from '../home/TransactionDrawer';
 import { TransactionsList } from '../home/TransactionsList';
 import { FloatingNav } from './FloatingNav';
 
 export const DashboardScreen: React.FC = () => {
-  const handleSelectTransaction = (tx: Transaction) => {
-    console.log('Transaction selected', tx);
-    // TODO: Implement transaction detail view
-  };
-
-  const handleOpenSeeAll = () => {
-    console.log('Open see all transactions');
-    // TODO: Navigate to full transactions page
-  };
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [showSeeAllDrawer, setShowSeeAllDrawer] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const toggleTheme = () => setIsDark(!isDark);
 
@@ -41,10 +36,30 @@ export const DashboardScreen: React.FC = () => {
         {/* Transactions List Header */}
         <section className="mt-8">
           <h2 className="text-xl font-semibold mb-2">Transactions</h2>
-          <TransactionsList onSelectTransaction={handleSelectTransaction} onOpenSeeAll={handleOpenSeeAll} />
+          <TransactionsList
+            onSelectTransaction={tx => setSelectedTransaction(tx)}
+            onOpenSeeAll={() => setShowSeeAllDrawer(true)}
+          />
         </section>
       </main>
       <FloatingNav />
+
+      {/* Transaction Detail & Edit Modal */}
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        isOpen={!!selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+      />
+
+      {/* Full "See all" Search & Filter Drawer */}
+      <TransactionDrawer
+        isOpen={showSeeAllDrawer}
+        onClose={() => setShowSeeAllDrawer(false)}
+        onSelectTransaction={tx => {
+          setShowSeeAllDrawer(false);
+          setSelectedTransaction(tx);
+        }}
+      />
     </div>
   );
 };

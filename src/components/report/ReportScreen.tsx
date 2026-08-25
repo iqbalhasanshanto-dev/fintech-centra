@@ -20,6 +20,7 @@ import {
 } from 'recharts';
 import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { TransactionDetailModal } from '../home/TransactionDetailModal';
 import { formatCurrency } from '../../utils/formatters';
 import { Transaction, PeriodFilter } from '../../types';
 
@@ -46,13 +47,14 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
   const [datasetType, setDatasetType] = useState<'expense' | 'income'>('expense');
   const [chartType, setChartType] = useState<'donut' | 'bar'>('donut');
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   const activeBreakdown = datasetType === 'expense' ? categoryBreakdown : incomeBreakdown;
   const currentTotal = datasetType === 'expense' ? periodExpenses : periodIncome;
 
   // Prepare chart data for Recharts
   const chartData = useMemo(() => {
-    return activeBreakdown.map(item => ({
+    return activeBreakdown.map((item: any) => ({
       name: item.category.name,
       value: item.total,
       color: item.category.color,
@@ -70,7 +72,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
   ];
 
   const getTransactionsForCategory = (catId: string) => {
-    return transactions.filter(t => t.categoryId === catId);
+    return transactions.filter((t: any) => t.categoryId === catId);
   };
 
   const CustomChartTooltip = ({ active, payload }: any) => {
@@ -217,10 +219,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                     dataKey="value"
                     nameKey="name"
                     isAnimationActive={false}
-                    onClick={(entry) => setExpandedCategoryId(expandedCategoryId === entry.categoryId ? null : entry.categoryId)}
+                    onClick={(entry: any) => setExpandedCategoryId(expandedCategoryId === entry?.categoryId ? null : entry?.categoryId)}
                     cursor="pointer"
                   >
-                    {chartData.map((entry, index) => (
+                    {chartData.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
                     ))}
                   </Pie>
@@ -250,10 +252,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                     maxBarSize={28}
                     radius={[4, 4, 0, 0]} 
                     isAnimationActive={false}
-                    onClick={(entry) => setExpandedCategoryId(expandedCategoryId === entry.categoryId ? null : entry.categoryId)}
+                    onClick={(entry: any) => setExpandedCategoryId(expandedCategoryId === entry?.categoryId ? null : entry?.categoryId)}
                     cursor="pointer"
                   >
-                    {chartData.map((entry, index) => (
+                    {chartData.map((entry: any, index: number) => (
                       <Cell key={`bar-${index}`} fill={entry.color} />
                     ))}
                   </Bar>
@@ -276,7 +278,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
         </div>
 
         <div className="space-y-2">
-          {activeBreakdown.map(item => {
+          {activeBreakdown.map((item: any) => {
             const isExpanded = expandedCategoryId === item.category.id;
             const categoryTxs = getTransactionsForCategory(item.category.id);
 
@@ -372,10 +374,13 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                           No transactions recorded in this category.
                         </p>
                       ) : (
-                        categoryTxs.map(tx => (
+                        categoryTxs.map((tx: any) => (
                           <div
                             key={tx.id}
-                            onClick={() => onSelectTransaction && onSelectTransaction(tx)}
+                            onClick={() => {
+                              if (onSelectTransaction) onSelectTransaction(tx);
+                              setSelectedTx(tx);
+                            }}
                             className="p-2.5 rounded-lg bg-white dark:bg-[#161B26] border border-gray-200/70 dark:border-white/10 hover:border-indigo-400 flex items-center justify-between text-xs cursor-pointer transition-colors"
                           >
                             <div className="min-w-0 pr-2">
@@ -401,6 +406,12 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
           })}
         </div>
       </div>
+
+      <TransactionDetailModal
+        transaction={selectedTx}
+        isOpen={!!selectedTx}
+        onClose={() => setSelectedTx(null)}
+      />
 
     </div>
   );
