@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Shield } from 'lucide-react';
 import { Header } from './Header';
 import { BottomNav, TabType } from './BottomNav';
 import { HomeScreen } from '../home/HomeScreen';
@@ -20,7 +21,7 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] dark:bg-[#0B0F17] text-[#0F172A] dark:text-[#FFFFFF] flex flex-col transition-colors duration-300">
+    <div className="min-h-screen w-full bg-[#0A0A0A] text-gray-100 flex flex-col antialiased">
       
       {/* Persistent Slim Top Header */}
       <Header
@@ -28,8 +29,8 @@ export const AppShell: React.FC = () => {
         onNavigateToSettings={() => setActiveTab('settings')}
       />
 
-      {/* Main Screen Content Container (Centered with max-width, pb-32 safe padding for bottom dock) */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-5 pb-32">
+      {/* Main Screen Content Container */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-32">
         {activeTab === 'home' && (
           <HomeScreen
             onNavigateToReport={() => setActiveTab('report')}
@@ -55,7 +56,22 @@ export const AppShell: React.FC = () => {
         )}
       </main>
 
-      {/* Unified Floating Bottom Dock (Active on both Web and Mobile) */}
+      {/* Target Carbon Footer */}
+      <footer id="footer" className="max-w-7xl mx-auto w-full px-6 py-12 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-6 mb-20">
+        <div className="flex items-center gap-2 text-gray-500">
+          <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center">
+            <Shield className="w-3 h-3 text-gray-400" />
+          </div>
+          <span className="text-xs font-bold tracking-widest uppercase">Centra Secure Systems</span>
+        </div>
+        <div className="flex items-center gap-8 text-xs font-bold text-gray-500 uppercase tracking-widest">
+          <button onClick={() => setActiveTab('settings')} className="hover:text-white transition-colors">Privacy Policy</button>
+          <button onClick={() => setActiveTab('settings')} className="hover:text-white transition-colors">Support</button>
+          <button onClick={() => setActiveTab('settings')} className="hover:text-white transition-colors">API Docs</button>
+        </div>
+      </footer>
+
+      {/* Unified Floating Bottom Dock */}
       <BottomNav
         activeTab={activeTab}
         onSelectTab={setActiveTab}

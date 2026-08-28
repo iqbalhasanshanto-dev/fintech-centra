@@ -1,5 +1,4 @@
 import React from 'react';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 interface IncomeExpenseCardProps {
   type: 'income' | 'expenses';
@@ -8,17 +7,19 @@ interface IncomeExpenseCardProps {
 
 export const IncomeExpenseCard: React.FC<IncomeExpenseCardProps> = ({ type, amount }) => {
   const isIncome = type === 'income';
-  const title = isIncome ? 'Income' : 'Expenses';
-  const textColor = isIncome ? 'text-green-400' : 'text-red-400';
-  const Icon = isIncome ? ArrowUpRight : ArrowDownRight;
+  const title = isIncome ? 'Total Income' : 'Total Expenses';
+  const badgeText = isIncome ? '+12.5%' : '-4.2%';
+  const badgeBg = isIncome ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500';
 
   return (
-    <div className="flex-1 rounded-2xl bg-slate-800 dark:bg-slate-800 p-4 border border-slate-700/30">
-      <div className="flex items-center gap-2">
-        <Icon className={`w-5 h-5 ${isIncome ? 'text-green-400' : 'text-red-400'}`} />
-        <h3 className="text-sm font-medium text-slate-300">{title}</h3>
+    <div className="bg-[#171717] border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-colors">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-bold uppercase tracking-widest text-gray-500">{title}</span>
+        <span className={`px-2 py-1 ${badgeBg} text-[10px] font-bold rounded-md tracking-wide`}>{badgeText}</span>
       </div>
-      <p className={`mt-2 text-2xl font-bold ${textColor}`}>{amount}</p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-bold text-white">{amount}</span>
+      </div>
     </div>
   );
 };

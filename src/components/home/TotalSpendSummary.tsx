@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import { 
   ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip as RechartsTooltip, 
   PieChart, 
   Pie, 
-  Cell 
+  Cell, 
+  Tooltip as RechartsTooltip 
 } from 'recharts';
-import { PieChart as PieChartIcon, BarChart2, ArrowRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -22,7 +17,7 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
   onNavigateToReport,
 }) => {
   const { categoryBreakdown, periodExpenses, settings } = useFinance();
-  const [chartType, setChartType] = useState<'donut' | 'bar'>('donut');
+  const [viewMode, setViewMode] = useState<'monthly' | 'weekly'>('monthly');
 
   const chartData = categoryBreakdown.map(item => ({
     name: item.category.name,
@@ -31,13 +26,16 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
     percentage: item.percentage,
   }));
 
+  // Top spend percentage
+  const topSpendPercent = chartData.length > 0 ? `${chartData[0].percentage.toFixed(0)}%` : '0%';
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-[#161B26] border border-white/10 px-3 py-1.5 rounded-xl shadow-xl text-left pointer-events-none z-50 animate-fade-in">
-          <p className="text-xs font-bold text-[#FFFFFF]">{data.name}</p>
-          <p className="text-xs text-[#94A3B8] font-medium tabular-nums mt-0.5">
+        <div className="bg-[#171717] border border-gray-800 px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
+          <p className="text-xs font-bold text-white">{data.name}</p>
+          <p className="text-xs text-gray-400 font-medium tabular-nums mt-0.5">
             {formatCurrency(data.value, settings.baseCurrency, settings.privacyMode)} ({data.percentage?.toFixed(0)}%)
           </p>
         </div>
@@ -47,128 +45,101 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
   };
 
   return (
-    <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 shadow-sm transition-colors">
-      
-      {/* Top Header */}
-      <div className="flex items-center justify-between mb-3">
+    <section id="spending-analytics" className="mb-10 bg-[#171717] border border-gray-800 rounded-2xl p-6 sm:p-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-[#94A3B8]">
-            Total Spend Breakdown
+          <span className="text-xs font-bold uppercase tracking-widest text-gray-500 block mb-1">
+            Spend Breakdown
           </span>
-          <div className="text-xl sm:text-2xl font-extrabold font-display text-gray-900 dark:text-[#FFFFFF] tabular-nums currency-amount mt-0.5">
+          <h2 className="text-3xl font-bold text-white tabular-nums currency-amount">
             {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
-          </div>
+          </h2>
         </div>
-
-        {/* Controls */}
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center p-1 rounded-lg bg-gray-100 dark:bg-[#1E2536] border border-gray-200/60 dark:border-white/5">
-            <button
-              onClick={() => setChartType('donut')}
-              className={`p-1.5 rounded-md transition-colors ${
-                chartType === 'donut'
-                  ? 'bg-white dark:bg-[#161B26] text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-[#E2E8F0]'
-              }`}
-              title="Donut Overview"
-              aria-label="Switch to donut chart"
-            >
-              <PieChartIcon className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setChartType('bar')}
-              className={`p-1.5 rounded-md transition-colors ${
-                chartType === 'bar'
-                  ? 'bg-white dark:bg-[#161B26] text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-[#E2E8F0]'
-              }`}
-              title="Bar Overview"
-              aria-label="Switch to bar chart"
-            >
-              <BarChart2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
+        <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 p-1 rounded-xl">
           <button
-            onClick={onNavigateToReport}
-            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center space-x-0.5"
+            onClick={() => setViewMode('monthly')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              viewMode === 'monthly'
+                ? 'bg-gray-800 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
           >
-            <span>Full Report</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            Monthly
+          </button>
+          <button
+            onClick={() => setViewMode('weekly')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              viewMode === 'weekly'
+                ? 'bg-gray-800 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Weekly
           </button>
         </div>
       </div>
 
-      {/* Chart Visualization Container */}
-      <div className="h-44 sm:h-48 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === 'donut' ? (
-            <PieChart>
-              <RechartsTooltip content={<CustomTooltip />} isAnimationActive={false} />
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={72}
-                paddingAngle={3}
-                dataKey="value"
-                nameKey="name"
-                isAnimationActive={false}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                ))}
-              </Pie>
-            </PieChart>
+      {/* Grid: Donut Chart & Category Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        {/* Left Column: Donut Chart */}
+        <div className="lg:col-span-5 relative h-[280px] sm:h-[300px] flex items-center justify-center">
+          {chartData.length === 0 ? (
+            <p className="text-xs text-gray-500">No expense data recorded.</p>
           ) : (
-            <BarChart 
-              data={chartData} 
-              margin={{ top: 8, right: 10, left: 0, bottom: 20 }}
-              barCategoryGap="16%"
-            >
-              <XAxis
-                dataKey="name"
-                stroke="#94A3B8"
-                fontSize={10}
-                tickLine={false}
-                axisLine={false}
-                interval={0}
-                angle={-20}
-                textAnchor="end"
-              />
-              <YAxis
-                stroke="#94A3B8"
-                fontSize={10}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={val => `৳${val}`}
-              />
-              <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99, 102, 241, 0.06)' }} isAnimationActive={false} />
-              <Bar dataKey="value" maxBarSize={28} radius={[4, 4, 0, 0]} isAnimationActive={false}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`bar-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
+            <>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <RechartsTooltip content={<CustomTooltip />} isAnimationActive={false} />
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={105}
+                    paddingAngle={3}
+                    dataKey="value"
+                    nameKey="name"
+                    stroke="none"
+                    isAnimationActive={false}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Centered Donut Label */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Top Spend</span>
+                <span className="text-2xl font-bold text-white">{topSpendPercent}</span>
+              </div>
+            </>
           )}
-        </ResponsiveContainer>
-      </div>
+        </div>
 
-      {/* Category Pills list below chart */}
-      <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 dark:border-white/5">
-        {chartData.slice(0, 4).map(item => (
-          <div 
-            key={item.name}
-            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-[#1E2536] text-xs"
-          >
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-            <span className="text-gray-700 dark:text-[#E2E8F0] font-medium truncate max-w-[90px]">{item.name}</span>
-            <span className="text-gray-400 dark:text-[#94A3B8] font-bold tabular-nums">({item.percentage.toFixed(0)}%)</span>
-          </div>
-        ))}
+        {/* Right Column: Category breakdown items */}
+        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {chartData.slice(0, 4).map((item) => (
+            <div
+              key={item.name}
+              onClick={onNavigateToReport}
+              className="flex items-center gap-4 p-4 rounded-xl border border-gray-800/50 hover:bg-gray-800/20 transition-colors cursor-pointer"
+            >
+              <div
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-300 truncate">{item.name}</p>
+                <p className="text-xs text-gray-500 tabular-nums">
+                  {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode, false)} ({item.percentage.toFixed(0)}%)
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-
-    </div>
+    </section>
   );
 };

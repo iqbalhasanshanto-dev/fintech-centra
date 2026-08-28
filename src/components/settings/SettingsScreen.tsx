@@ -1,13 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { 
-  User, 
   Shield, 
   Bell, 
   Palette, 
   HelpCircle, 
   LogOut, 
   ChevronRight, 
-  Check, 
   Lock, 
   Fingerprint, 
   Moon, 
@@ -18,8 +16,7 @@ import {
   Eye, 
   EyeOff, 
   Edit2, 
-  Camera,
-  KeyRound
+  Camera
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -27,7 +24,6 @@ import { Modal } from '../ui/Modal';
 import { CurrencyCode } from '../../types';
 import { CentraDB } from '../../db/storage';
 
-// Modern smooth-sliding toggle switch component (Track w-11 h-6, Thumb w-5 h-5 translate-x-5)
 interface ToggleSwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -45,12 +41,12 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ checked, onChange, label })
         e.stopPropagation();
         onChange(!checked);
       }}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-        checked ? 'bg-indigo-600' : 'bg-slate-700'
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border border-gray-800 transition-colors duration-200 ease-in-out focus:outline-none ${
+        checked ? 'bg-indigo-600' : 'bg-gray-800'
       }`}
     >
       <span
-        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
+        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
           checked ? 'translate-x-5' : 'translate-x-0'
         }`}
       />
@@ -121,43 +117,43 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const avatarsList = [
+    'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg',
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
   ];
 
   return (
-    <div className="space-y-5 pb-8 animate-fade-in">
+    <div className="space-y-6 pb-8 animate-fade-in">
       
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold font-display text-gray-900 dark:text-[#FFFFFF]">
+        <h2 className="text-2xl font-bold text-white">
           Settings
         </h2>
-        <p className="text-xs text-gray-500 dark:text-[#94A3B8]">
+        <p className="text-sm text-gray-500 mt-0.5">
           Preferences, security, and application settings
         </p>
       </div>
 
-      {/* 1. Profile Card (Scaled down compact row with w-16 h-16 avatar) */}
-      <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 shadow-sm flex items-center justify-between transition-colors">
-        <div className="flex items-center space-x-3.5 min-w-0">
+      {/* 1. Profile Card */}
+      <div className="p-6 rounded-2xl bg-[#171717] border border-gray-800 flex items-center justify-between transition-colors">
+        <div className="flex items-center space-x-4 min-w-0">
           <img
             src={user.avatarUrl}
             alt={user.name}
-            className="w-16 h-16 rounded-full object-cover ring-2 ring-indigo-500/20 shrink-0"
+            className="w-14 h-14 rounded-full object-cover border border-gray-700 shrink-0"
           />
           <div className="min-w-0">
             <div className="flex items-center space-x-2">
-              <h3 className="text-base font-bold text-gray-900 dark:text-[#FFFFFF] truncate">
+              <h3 className="text-base font-bold text-white truncate">
                 {user.name}
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300 text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded-full bg-gray-800 text-indigo-400 text-[10px] font-bold uppercase tracking-wider">
                 Personal
               </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-[#94A3B8] truncate">{user.email}</p>
+            <p className="text-xs text-gray-500 mt-0.5 truncate">{user.email}</p>
           </div>
         </div>
 
@@ -168,7 +164,7 @@ export const SettingsScreen: React.FC = () => {
             setProfileAvatar(user.avatarUrl);
             setShowEditProfile(true);
           }}
-          className="p-2 rounded-xl bg-gray-100 dark:bg-[#1E2536] hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-[#E2E8F0] transition-colors"
+          className="p-2.5 rounded-xl bg-gray-900 border border-gray-800 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors cursor-pointer"
           aria-label="Edit profile"
         >
           <Edit2 className="w-4 h-4" />
@@ -176,15 +172,15 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* 2. Security & Authentication Center */}
-      <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 shadow-sm space-y-4 transition-colors">
-        <div className="flex items-center space-x-2">
-          <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          <h3 className="text-xs font-bold text-gray-900 dark:text-[#FFFFFF] uppercase tracking-wider">
-            Security & Authentication
+      <div className="p-6 rounded-2xl bg-[#171717] border border-gray-800 space-y-4 transition-colors">
+        <div className="flex items-center space-x-2.5">
+          <Shield className="w-4 h-4 text-indigo-400" />
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+            Security &amp; Authentication
           </h3>
         </div>
 
-        <div className="space-y-3 divide-y divide-gray-100 dark:divide-white/5 text-xs">
+        <div className="space-y-3 divide-y divide-gray-800 text-xs">
           
           {/* Biometrics Toggle */}
           <div 
@@ -192,10 +188,10 @@ export const SettingsScreen: React.FC = () => {
             className="flex items-center justify-between pt-2 cursor-pointer select-none group"
           >
             <div className="flex items-center space-x-3">
-              <Fingerprint className="w-4 h-4 text-gray-400 dark:text-[#94A3B8]" />
+              <Fingerprint className="w-4 h-4 text-gray-400" />
               <div>
-                <p className="font-bold text-gray-900 dark:text-[#E2E8F0]">Biometric / Passkey Login</p>
-                <p className="text-xs text-gray-500 dark:text-[#94A3B8]">TouchID, FaceID or device passkey</p>
+                <p className="font-semibold text-white">Biometric / Passkey Login</p>
+                <p className="text-xs text-gray-500">TouchID, FaceID or device passkey</p>
               </div>
             </div>
             <ToggleSwitch
@@ -215,10 +211,10 @@ export const SettingsScreen: React.FC = () => {
             className="flex items-center justify-between pt-3 cursor-pointer select-none group"
           >
             <div className="flex items-center space-x-3">
-              <Lock className="w-4 h-4 text-gray-400 dark:text-[#94A3B8]" />
+              <Lock className="w-4 h-4 text-gray-400" />
               <div>
-                <p className="font-bold text-gray-900 dark:text-[#E2E8F0]">Two-Factor Authentication (2FA)</p>
-                <p className="text-xs text-gray-500 dark:text-[#94A3B8]">Require OTP code for sensitive actions</p>
+                <p className="font-semibold text-white">Two-Factor Authentication (2FA)</p>
+                <p className="text-xs text-gray-500">Require OTP code for sensitive actions</p>
               </div>
             </div>
             <ToggleSwitch
@@ -237,10 +233,10 @@ export const SettingsScreen: React.FC = () => {
             className="flex items-center justify-between pt-3 cursor-pointer select-none group"
           >
             <div className="flex items-center space-x-3">
-              {settings.privacyMode ? <EyeOff className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> : <Eye className="w-4 h-4 text-gray-400 dark:text-[#94A3B8]" />}
+              {settings.privacyMode ? <EyeOff className="w-4 h-4 text-indigo-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
               <div>
-                <p className="font-bold text-gray-900 dark:text-[#E2E8F0]">Privacy Mode (Mask Balances)</p>
-                <p className="text-xs text-gray-500 dark:text-[#94A3B8]">Hide numbers when viewing in public places</p>
+                <p className="font-semibold text-white">Privacy Mode (Mask Balances)</p>
+                <p className="text-xs text-gray-500">Hide numbers when viewing in public places</p>
               </div>
             </div>
             <ToggleSwitch
@@ -254,23 +250,23 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* 3. Notification Rules */}
-      <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 shadow-sm space-y-4 transition-colors">
-        <div className="flex items-center space-x-2">
-          <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          <h3 className="text-xs font-bold text-gray-900 dark:text-[#FFFFFF] uppercase tracking-wider">
+      <div className="p-6 rounded-2xl bg-[#171717] border border-gray-800 space-y-4 transition-colors">
+        <div className="flex items-center space-x-2.5">
+          <Bell className="w-4 h-4 text-indigo-400" />
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
             Notification Rules
           </h3>
         </div>
 
-        <div className="space-y-3 divide-y divide-gray-100 dark:divide-white/5 text-xs">
+        <div className="space-y-3 divide-y divide-gray-800 text-xs">
           
           <div 
             onClick={() => updateSettings({ notifications: { ...settings.notifications, budgetOverruns: !settings.notifications.budgetOverruns } })}
             className="flex items-center justify-between pt-2 cursor-pointer select-none"
           >
             <div>
-              <p className="font-bold text-gray-900 dark:text-[#E2E8F0]">Budget Overrun Alerts</p>
-              <p className="text-xs text-gray-500 dark:text-[#94A3B8]">Instant notification when spending exceeds 80% limit</p>
+              <p className="font-semibold text-white">Budget Overrun Alerts</p>
+              <p className="text-xs text-gray-500">Instant notification when spending exceeds 80% limit</p>
             </div>
             <ToggleSwitch
               checked={settings.notifications.budgetOverruns}
@@ -284,8 +280,8 @@ export const SettingsScreen: React.FC = () => {
             className="flex items-center justify-between pt-3 cursor-pointer select-none"
           >
             <div>
-              <p className="font-bold text-gray-900 dark:text-[#E2E8F0]">High Outflow Alerts</p>
-              <p className="text-xs text-gray-500 dark:text-[#94A3B8]">Alert for single transactions exceeding ৳5,000</p>
+              <p className="font-semibold text-white">High Outflow Alerts</p>
+              <p className="text-xs text-gray-500">Alert for single transactions exceeding ৳5,000</p>
             </div>
             <ToggleSwitch
               checked={settings.notifications.transactionAlerts}
@@ -299,8 +295,8 @@ export const SettingsScreen: React.FC = () => {
             className="flex items-center justify-between pt-3 cursor-pointer select-none"
           >
             <div>
-              <p className="font-bold text-gray-900 dark:text-[#E2E8F0]">Security & Login Alerts</p>
-              <p className="text-xs text-gray-500 dark:text-[#94A3B8]">Notify upon new device sessions or credential shifts</p>
+              <p className="font-semibold text-white">Security &amp; Login Alerts</p>
+              <p className="text-xs text-gray-500">Notify upon new device sessions or credential shifts</p>
             </div>
             <ToggleSwitch
               checked={settings.notifications.securityAlerts}
@@ -313,49 +309,49 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* 4. Appearance & System Preferences */}
-      <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 shadow-sm space-y-4 transition-colors">
-        <div className="flex items-center space-x-2">
-          <Palette className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          <h3 className="text-xs font-bold text-gray-900 dark:text-[#FFFFFF] uppercase tracking-wider">
-            Appearance & Locale
+      <div className="p-6 rounded-2xl bg-[#171717] border border-gray-800 space-y-4 transition-colors">
+        <div className="flex items-center space-x-2.5">
+          <Palette className="w-4 h-4 text-indigo-400" />
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+            Appearance &amp; Locale
           </h3>
         </div>
 
-        <div className="space-y-3 divide-y divide-gray-100 dark:divide-white/5 text-xs">
+        <div className="space-y-3 divide-y divide-gray-800 text-xs">
           {/* Base Currency */}
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center space-x-3">
-              <Globe className="w-4 h-4 text-gray-400 dark:text-[#94A3B8]" />
+              <Globe className="w-4 h-4 text-gray-400" />
               <div>
-                <p className="font-bold text-gray-900 dark:text-[#E2E8F0]">Base Currency</p>
-                <p className="text-xs text-gray-500 dark:text-[#94A3B8]">Converts all dashboard totals to this currency</p>
+                <p className="font-semibold text-white">Base Currency</p>
+                <p className="text-xs text-gray-500">Converts all dashboard totals to this currency</p>
               </div>
             </div>
             <select
               value={settings.baseCurrency}
               onChange={e => updateSettings({ baseCurrency: e.target.value as CurrencyCode })}
-              className="px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-[#1E2536] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-[#FFFFFF] font-bold"
+              className="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-white font-bold focus:outline-none focus:border-indigo-500"
             >
-              <option value="BDT">BDT (৳)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-              <option value="JPY">JPY (¥)</option>
+              <option value="BDT" className="bg-gray-900 text-white">BDT (৳)</option>
+              <option value="USD" className="bg-gray-900 text-white">USD ($)</option>
+              <option value="EUR" className="bg-gray-900 text-white">EUR (€)</option>
+              <option value="GBP" className="bg-gray-900 text-white">GBP (£)</option>
+              <option value="JPY" className="bg-gray-900 text-white">JPY (¥)</option>
             </select>
           </div>
 
           {/* Theme */}
           <div className="flex items-center justify-between pt-3">
             <div className="flex items-center space-x-3">
-              {settings.theme === 'dark' ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
+              {settings.theme === 'dark' ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-400" />}
               <div>
-                <p className="font-bold text-gray-900 dark:text-[#E2E8F0]">Interface Theme</p>
-                <p className="text-xs text-gray-500 dark:text-[#94A3B8]">Switch between dark and light appearance</p>
+                <p className="font-semibold text-white">Interface Theme</p>
+                <p className="text-xs text-gray-500">Switch between dark and light appearance</p>
               </div>
             </div>
             <button
               onClick={() => updateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' })}
-              className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#1E2536] text-gray-900 dark:text-[#FFFFFF] font-bold hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-white font-semibold hover:bg-gray-800 transition-colors cursor-pointer"
             >
               {settings.theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
             </button>
@@ -364,41 +360,41 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* 5. Data Management & Backup */}
-      <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 shadow-sm space-y-3 transition-colors">
-        <h3 className="text-xs font-bold text-gray-900 dark:text-[#FFFFFF] uppercase tracking-wider">
+      <div className="p-6 rounded-2xl bg-[#171717] border border-gray-800 space-y-3 transition-colors">
+        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
           Data Management
         </h3>
         
-        <div className="grid grid-cols-2 gap-2.5 text-xs">
+        <div className="grid grid-cols-2 gap-3 text-xs">
           <button
             onClick={handleExportData}
-            className="py-2.5 px-3 rounded-xl bg-gray-50 dark:bg-[#1E2536] text-gray-900 dark:text-[#FFFFFF] hover:bg-gray-100 dark:hover:bg-white/10 font-bold flex items-center justify-center space-x-1.5 transition-colors border border-gray-200/60 dark:border-white/5"
+            className="py-3 px-4 rounded-xl bg-gray-900 border border-gray-800 text-white hover:bg-gray-800 font-semibold flex items-center justify-center space-x-2 transition-colors cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <Download className="w-4 h-4 text-indigo-400" />
             <span>Export JSON</span>
           </button>
 
           <button
             onClick={handleResetData}
-            className="py-2.5 px-3 rounded-xl bg-gray-50 dark:bg-[#1E2536] text-gray-900 dark:text-[#FFFFFF] hover:bg-gray-100 dark:hover:bg-white/10 font-bold flex items-center justify-center space-x-1.5 transition-colors border border-gray-200/60 dark:border-white/5"
+            className="py-3 px-4 rounded-xl bg-gray-900 border border-gray-800 text-white hover:bg-gray-800 font-semibold flex items-center justify-center space-x-2 transition-colors cursor-pointer"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
+            <RotateCcw className="w-4 h-4 text-amber-400" />
             <span>Reset Demo Data</span>
           </button>
         </div>
       </div>
 
       {/* 6. Support & Logout */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <button
           onClick={() => setShowHelpModal(true)}
-          className="w-full py-3 px-4 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 text-xs font-bold text-gray-700 dark:text-[#E2E8F0] hover:bg-gray-50 dark:hover:bg-white/5 flex items-center justify-between transition-colors shadow-sm"
+          className="w-full py-3.5 px-5 rounded-2xl bg-[#171717] border border-gray-800 text-xs font-semibold text-gray-300 hover:text-white hover:border-gray-700 flex items-center justify-between transition-colors cursor-pointer"
         >
-          <div className="flex items-center space-x-2.5">
-            <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <span>Centra Help & Support FAQ</span>
+          <div className="flex items-center space-x-3">
+            <HelpCircle className="w-4 h-4 text-indigo-400" />
+            <span>Centra Help &amp; Support FAQ</span>
           </div>
-          <ChevronRight className="w-4 h-4 text-gray-400 dark:text-[#94A3B8]" />
+          <ChevronRight className="w-4 h-4 text-gray-500" />
         </button>
 
         <button
@@ -407,7 +403,7 @@ export const SettingsScreen: React.FC = () => {
               logout();
             }
           }}
-          className="w-full py-3 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 flex items-center justify-center space-x-2 transition-colors shadow-sm"
+          className="w-full py-3.5 px-5 rounded-2xl bg-rose-950/20 border border-rose-900/30 text-xs font-semibold text-rose-400 hover:bg-rose-900/30 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Log Out of Session</span>
@@ -418,7 +414,7 @@ export const SettingsScreen: React.FC = () => {
       <Modal isOpen={showEditProfile} onClose={() => setShowEditProfile(false)} title="Edit Profile">
         <form onSubmit={handleSaveProfile} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-[#94A3B8] mb-1.5">Choose Avatar</label>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">Choose Avatar</label>
             <div className="flex items-center space-x-3 overflow-x-auto pb-1">
               {avatarsList.map((url, i) => (
                 <img
@@ -426,39 +422,19 @@ export const SettingsScreen: React.FC = () => {
                   src={url}
                   alt={`Avatar ${i}`}
                   onClick={() => setProfileAvatar(url)}
-                  className={`w-12 h-12 rounded-full object-cover cursor-pointer ring-2 transition-all shrink-0 ${
-                    profileAvatar === url ? 'ring-indigo-600 scale-105 shadow-md' : 'ring-transparent opacity-60 hover:opacity-100'
+                  className={`w-12 h-12 rounded-full object-cover cursor-pointer border transition-all shrink-0 ${
+                    profileAvatar === url ? 'border-indigo-500 scale-105' : 'border-gray-800 opacity-60 hover:opacity-100'
                   }`}
                 />
               ))}
 
-              {/* 5th Option: Upload from device */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-12 h-12 rounded-full flex flex-col items-center justify-center cursor-pointer transition-all shrink-0 relative overflow-hidden ${
-                  !avatarsList.includes(profileAvatar)
-                    ? 'ring-2 ring-indigo-600 scale-105 shadow-md bg-indigo-50 dark:bg-[#1E2536]'
-                    : 'border-2 border-dashed border-gray-300 dark:border-white/20 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-[#94A3B8]'
-                }`}
+                className="w-12 h-12 rounded-full flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-700 bg-gray-900 hover:bg-gray-800 text-gray-400 transition-colors shrink-0"
                 title="Upload from device"
               >
-                {!avatarsList.includes(profileAvatar) ? (
-                  <>
-                    <img
-                      src={profileAvatar}
-                      alt="Custom Avatar"
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                      <Camera className="w-4 h-4 text-white" />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Camera className="w-4 h-4 text-gray-500 dark:text-[#94A3B8]" />
-                    <span className="text-[8px] font-bold mt-0.5 leading-none">Upload</span>
-                  </>
-                )}
+                <Camera className="w-4 h-4" />
+                <span className="text-[8px] font-bold mt-0.5">Upload</span>
               </div>
               <input
                 ref={fileInputRef}
@@ -471,30 +447,30 @@ export const SettingsScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-[#94A3B8] mb-1">Display Name</label>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Display Name</label>
             <input
               type="text"
               required
               value={profileName}
               onChange={e => setProfileName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1E2536] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-[#FFFFFF] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs font-semibold focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-[#94A3B8] mb-1">Email Address</label>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Email Address</label>
             <input
               type="email"
               required
               value={profileEmail}
               onChange={e => setProfileEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1E2536] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-[#FFFFFF] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs font-semibold focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-colors"
+            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors cursor-pointer"
           >
             Save Profile Changes
           </button>
@@ -503,14 +479,14 @@ export const SettingsScreen: React.FC = () => {
 
       {/* Two-Factor Setup Modal */}
       <Modal isOpen={showTwoFactorModal} onClose={() => setShowTwoFactorModal(false)} title="2FA Authentication Active">
-        <div className="space-y-4 text-xs text-gray-600 dark:text-[#E2E8F0]">
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">
+        <div className="space-y-4 text-xs text-gray-300">
+          <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
             <p className="font-bold">Two-Factor Authentication is now enabled.</p>
-            <p className="text-[11px] mt-0.5">Your financial account data is protected with hardware &amp; OTP verification.</p>
+            <p className="text-[11px] mt-0.5 text-gray-400">Your financial account data is protected with hardware &amp; OTP verification.</p>
           </div>
           <button
             onClick={() => setShowTwoFactorModal(false)}
-            className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-sm"
+            className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors"
           >
             Done
           </button>
@@ -518,19 +494,19 @@ export const SettingsScreen: React.FC = () => {
       </Modal>
 
       {/* Help Modal */}
-      <Modal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} title="Centra Help & FAQ">
-        <div className="space-y-3 text-xs text-gray-600 dark:text-[#E2E8F0]">
-          <div className="p-3 rounded-xl bg-gray-50 dark:bg-[#1E2536] border border-gray-100 dark:border-white/10 space-y-1">
-            <h4 className="font-bold text-gray-900 dark:text-[#FFFFFF]">How is my balance calculated?</h4>
-            <p className="text-gray-500 dark:text-[#94A3B8]">Total balance is aggregated in real-time across all connected wallets and bank accounts in your chosen base currency (৳ BDT).</p>
+      <Modal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} title="Centra Help &amp; FAQ">
+        <div className="space-y-3 text-xs text-gray-300">
+          <div className="p-3.5 rounded-xl bg-gray-900 border border-gray-800 space-y-1">
+            <h4 className="font-bold text-white">How is my balance calculated?</h4>
+            <p className="text-gray-400">Total balance is aggregated in real-time across all connected wallets and bank accounts in your chosen base currency (৳ BDT).</p>
           </div>
-          <div className="p-3 rounded-xl bg-gray-50 dark:bg-[#1E2536] border border-gray-100 dark:border-white/10 space-y-1">
-            <h4 className="font-bold text-gray-900 dark:text-[#FFFFFF]">How do I export my data?</h4>
-            <p className="text-gray-500 dark:text-[#94A3B8]">Navigate to Data Management in Settings and click "Export JSON" to download your complete encrypted local database.</p>
+          <div className="p-3.5 rounded-xl bg-gray-900 border border-gray-800 space-y-1">
+            <h4 className="font-bold text-white">How do I export my data?</h4>
+            <p className="text-gray-400">Navigate to Data Management in Settings and click "Export JSON" to download your complete encrypted local database.</p>
           </div>
           <button
             onClick={() => setShowHelpModal(false)}
-            className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-sm"
+            className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors"
           >
             Close FAQ
           </button>

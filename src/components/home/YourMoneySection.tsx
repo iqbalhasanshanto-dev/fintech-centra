@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, HelpCircle, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { ArrowRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -10,103 +10,55 @@ interface YourMoneySectionProps {
 export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
   onNavigateToReport,
 }) => {
-  const { periodIncome, periodExpenses, settings, periodFilter } = useFinance();
-  const [activeTooltip, setActiveTooltip] = useState<'income' | 'expense' | null>(null);
-
-  const getPeriodLabel = () => {
-    switch (periodFilter) {
-      case 'this_month': return 'this month';
-      case 'last_month': return 'last month';
-      case 'last_90_days': return 'last 90 days';
-      case 'this_year': return 'this year';
-      default: return 'all time';
-    }
-  };
+  const { periodIncome, periodExpenses, settings } = useFinance();
 
   return (
-    <div className="space-y-3">
-      {/* Section Header: flush alignment with cards, accessible Details button */}
-      <div className="flex items-center justify-between">
+    <section id="cashflow-summary" className="mb-10">
+      <div className="flex items-end justify-between mb-6">
         <div>
-          <h3 className="text-base font-bold font-display text-gray-900 dark:text-[#FFFFFF]">
-            Your Money
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-[#94A3B8]">
-            Cash flow {getPeriodLabel()}
-          </p>
+          <h1 className="text-2xl font-bold text-white">Your Money</h1>
+          <p className="text-gray-500 text-sm mt-1">Cash flow summary for the current period</p>
         </div>
         <button
           onClick={onNavigateToReport}
-          className="min-h-[36px] px-3 py-1.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#161B26] text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center space-x-1 transition-colors"
-          aria-label="View cash flow report details"
+          className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1 cursor-pointer"
         >
-          <span>Details</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <span>View Detailed Report</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Side by side cards */}
-      <div className="grid grid-cols-2 gap-3.5">
-        
-        {/* Income Card */}
-        <div className="relative p-4 sm:p-5 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 shadow-sm transition-all hover:shadow-md">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-500 flex items-center justify-center">
-              <ArrowDownLeft className="w-4 h-4" />
-            </div>
-            <div className="relative">
-              <button
-                onClick={() => setActiveTooltip(activeTooltip === 'income' ? null : 'income')}
-                className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-[#E2E8F0] rounded-full"
-                aria-label="Income information details"
-              >
-                <HelpCircle className="w-4 h-4" />
-              </button>
-              {activeTooltip === 'income' && (
-                <div className="absolute right-0 bottom-8 w-52 p-3 bg-[#161B26] border border-white/10 text-[#E2E8F0] text-xs rounded-xl shadow-xl z-20 animate-fade-in leading-relaxed">
-                  Total inflows from salary, freelance, bonuses, and investment returns for the selected period.
-                </div>
-              )}
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Total Income Card */}
+        <div className="bg-[#171717] border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Total Income</span>
+            <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-md tracking-wide">
+              +12.5%
+            </span>
           </div>
-          <span className="text-xs font-medium text-gray-500 dark:text-[#94A3B8]">
-            Income
-          </span>
-          <div className="text-lg sm:text-2xl font-extrabold font-display text-emerald-500 mt-0.5 tabular-nums currency-amount">
-            +{formatCurrency(periodIncome, settings.baseCurrency, settings.privacyMode)}
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-white tabular-nums currency-amount">
+              {formatCurrency(periodIncome, settings.baseCurrency, settings.privacyMode)}
+            </span>
           </div>
         </div>
 
-        {/* Expenses Card */}
-        <div className="relative p-4 sm:p-5 rounded-xl bg-white dark:bg-[#161B26] border border-gray-200/80 dark:border-white/10 shadow-sm transition-all hover:shadow-md">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center">
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
-            <div className="relative">
-              <button
-                onClick={() => setActiveTooltip(activeTooltip === 'expense' ? null : 'expense')}
-                className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-[#E2E8F0] rounded-full"
-                aria-label="Expenses information details"
-              >
-                <HelpCircle className="w-4 h-4" />
-              </button>
-              {activeTooltip === 'expense' && (
-                <div className="absolute right-0 bottom-8 w-52 p-3 bg-[#161B26] border border-white/10 text-[#E2E8F0] text-xs rounded-xl shadow-xl z-20 animate-fade-in leading-relaxed">
-                  All outgoing expenditures, card purchases, bills, and subscriptions recorded during this period.
-                </div>
-              )}
-            </div>
+        {/* Total Expenses Card */}
+        <div className="bg-[#171717] border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Total Expenses</span>
+            <span className="px-2 py-1 bg-rose-500/10 text-rose-500 text-[10px] font-bold rounded-md tracking-wide">
+              -4.2%
+            </span>
           </div>
-          <span className="text-xs font-medium text-gray-500 dark:text-[#94A3B8]">
-            Expenses
-          </span>
-          <div className="text-lg sm:text-2xl font-extrabold font-display text-gray-900 dark:text-[#FFFFFF] mt-0.5 tabular-nums currency-amount">
-            -{formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-white tabular-nums currency-amount">
+              {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
+            </span>
           </div>
         </div>
-
       </div>
-    </div>
+    </section>
   );
 };

@@ -16,16 +16,16 @@ export const DashboardScreen: React.FC = () => {
   const toggleTheme = () => setIsDark(!isDark);
 
   return (
-    <div className={isDark ? 'dark' : ''}>
+    <div className="min-h-screen bg-[#0A0A0A] text-gray-100">
       <DashboardNavBar isDark={isDark} toggleTheme={toggleTheme} />
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-8 bg-slate-900 dark:bg-slate-900 text-white">
-        {/* Hero Section - Your Money */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <IncomeExpenseCard type="income" amount="$12,340" />
-          <IncomeExpenseCard type="expenses" amount="$8,560" />
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8 pb-32">
+        {/* Top Stats - Cash Flow */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <IncomeExpenseCard type="income" amount="৳711,764.71" />
+          <IncomeExpenseCard type="expenses" amount="৳275,481.18" />
         </section>
 
-        {/* Middle Section - Donut Chart */}
+        {/* Spend Breakdown */}
         <section>
           <DonutChartCard />
         </section>
@@ -33,9 +33,8 @@ export const DashboardScreen: React.FC = () => {
         {/* Accounts Section */}
         <AccountsCarousel />
 
-        {/* Transactions List Header */}
+        {/* Transactions List */}
         <section className="mt-8">
-          <h2 className="text-xl font-semibold mb-2">Transactions</h2>
           <TransactionsList
             onSelectTransaction={tx => setSelectedTransaction(tx)}
             onOpenSeeAll={() => setShowSeeAllDrawer(true)}

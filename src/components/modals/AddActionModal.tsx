@@ -1,26 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { 
   Plus, 
-  ArrowRightLeft, 
-  Target, 
-  PieChart, 
   Check, 
   Calendar, 
-  CreditCard, 
-  Tag, 
-  FileText, 
-  Sparkles,
-  Repeat,
   Paperclip,
   X,
-  Upload,
-  ArrowDownLeft,
-  ArrowUpRight,
   Receipt
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
-import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, convertCurrency } from '../../utils/formatters';
 
 interface AddActionModalProps {
@@ -41,8 +29,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     transferFunds, 
     addGoal, 
     addBudget, 
-    settings,
-    addNotification
+    settings
   } = useFinance();
 
   // Mode: 'spend' | 'income' | 'transfer' | 'goal' | 'budget'
@@ -65,7 +52,6 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const [categoryId, setCategoryId] = useState(categories[0]?.id || 'cat_dining');
   const [accountId, setAccountId] = useState(accounts[0]?.id || 'acc_checking');
   const [note, setNote] = useState('');
-  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [receiptName, setReceiptName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -83,24 +69,17 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const [budgetCategoryId, setBudgetCategoryId] = useState(categories[0]?.id || '');
   const [budgetAlertThreshold, setBudgetAlertThreshold] = useState(80);
 
-  // Toast / feedback message
+  // Feedback message
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
   const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setReceiptName(file.name);
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        const res = uploadEvent.target?.result as string;
-        if (res) setReceiptPreview(res);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
   const removeReceipt = () => {
-    setReceiptPreview(null);
     setReceiptName(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -261,49 +240,6 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const fromAcc = accounts.find(a => a.id === fromAccountId);
   const toAcc = accounts.find(a => a.id === toAccountId);
 
-  // Card background styling based on active type
-  const getCardTheme = () => {
-    switch (activeTab) {
-      case 'spend':
-        return {
-          bg: 'bg-rose-50/90 dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-900/40',
-          badge: 'text-rose-700 dark:text-rose-300',
-          title: 'Enter Spent Amount',
-          symbolColor: 'text-rose-600 dark:text-rose-400',
-        };
-      case 'income':
-        return {
-          bg: 'bg-emerald-50/90 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-900/40',
-          badge: 'text-emerald-700 dark:text-emerald-300',
-          title: 'Enter Earned Amount',
-          symbolColor: 'text-emerald-600 dark:text-emerald-400',
-        };
-      case 'transfer':
-        return {
-          bg: 'bg-sky-50/90 dark:bg-sky-950/30 border-sky-200/80 dark:border-sky-900/40',
-          badge: 'text-sky-700 dark:text-sky-300',
-          title: 'Enter Transferred Amount',
-          symbolColor: 'text-sky-600 dark:text-sky-400',
-        };
-      case 'goal':
-        return {
-          bg: 'bg-indigo-50/90 dark:bg-indigo-950/30 border-indigo-200/80 dark:border-indigo-900/40',
-          badge: 'text-indigo-700 dark:text-indigo-300',
-          title: 'Enter Target Amount',
-          symbolColor: 'text-indigo-600 dark:text-indigo-400',
-        };
-      case 'budget':
-        return {
-          bg: 'bg-amber-50/90 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-900/40',
-          badge: 'text-amber-700 dark:text-amber-300',
-          title: 'Enter Monthly Limit',
-          symbolColor: 'text-amber-600 dark:text-amber-400',
-        };
-    }
-  };
-
-  const cardTheme = getCardTheme();
-
   return (
     <Modal
       isOpen={isOpen}
@@ -312,15 +248,15 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       subtitle="Record transaction or set financial plan"
     >
       <div className="space-y-4">
-        {/* Top Segmented Control (Pill-shaped segments with dark filled active state) */}
-        <div className="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-[#1e2638] rounded-2xl text-xs font-bold overflow-x-auto no-scrollbar">
+        {/* Top Segmented Control */}
+        <div className="flex items-center gap-1 p-1 bg-gray-900 border border-gray-800 rounded-xl text-xs font-semibold overflow-x-auto no-scrollbar">
           <button
             type="button"
             onClick={() => setActiveTab('spend')}
-            className={`flex-1 min-w-[64px] py-2 px-2.5 rounded-xl text-center transition-all ${
+            className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors ${
               activeTab === 'spend'
-                ? 'bg-ink text-white dark:bg-white dark:text-ink shadow-sm'
-                : 'text-gray-500 hover:text-ink dark:text-[#64748b] dark:hover:text-[#f8fafc]'
+                ? 'bg-gray-800 text-white'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             Spend
@@ -328,10 +264,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('income')}
-            className={`flex-1 min-w-[64px] py-2 px-2.5 rounded-xl text-center transition-all ${
+            className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors ${
               activeTab === 'income'
-                ? 'bg-ink text-white dark:bg-white dark:text-ink shadow-sm'
-                : 'text-gray-500 hover:text-ink dark:text-[#64748b] dark:hover:text-[#f8fafc]'
+                ? 'bg-gray-800 text-white'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             Income
@@ -339,10 +275,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('transfer')}
-            className={`flex-1 min-w-[64px] py-2 px-2.5 rounded-xl text-center transition-all ${
+            className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors ${
               activeTab === 'transfer'
-                ? 'bg-ink text-white dark:bg-white dark:text-ink shadow-sm'
-                : 'text-gray-500 hover:text-ink dark:text-[#64748b] dark:hover:text-[#f8fafc]'
+                ? 'bg-gray-800 text-white'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             Transfer
@@ -350,10 +286,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('goal')}
-            className={`flex-1 min-w-[64px] py-2 px-2.5 rounded-xl text-center transition-all ${
+            className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors ${
               activeTab === 'goal'
-                ? 'bg-ink text-white dark:bg-white dark:text-ink shadow-sm'
-                : 'text-gray-500 hover:text-ink dark:text-[#64748b] dark:hover:text-[#f8fafc]'
+                ? 'bg-gray-800 text-white'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             Goal
@@ -361,10 +297,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('budget')}
-            className={`flex-1 min-w-[64px] py-2 px-2.5 rounded-xl text-center transition-all ${
+            className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors ${
               activeTab === 'budget'
-                ? 'bg-ink text-white dark:bg-white dark:text-ink shadow-sm'
-                : 'text-gray-500 hover:text-ink dark:text-[#64748b] dark:hover:text-[#f8fafc]'
+                ? 'bg-gray-800 text-white'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             Budget
@@ -373,31 +309,30 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
         {/* Feedback message toast */}
         {feedbackMsg && (
-          <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold text-center animate-fade-in">
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold text-center animate-fade-in">
             {feedbackMsg}
           </div>
         )}
 
-        {/* Colored Header Card */}
-        <div className={`p-4 sm:p-5 rounded-3xl border transition-all ${cardTheme.bg}`}>
+        {/* Amount Input Card */}
+        <div className="p-5 rounded-2xl bg-gray-900/50 border border-gray-800">
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-[11px] font-extrabold uppercase tracking-wider ${cardTheme.badge}`}>
-              {cardTheme.title}
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+              {activeTab === 'spend' ? 'Enter Expense Amount' : activeTab === 'income' ? 'Enter Income Amount' : activeTab === 'transfer' ? 'Enter Transfer Amount' : activeTab === 'goal' ? 'Enter Goal Target' : 'Enter Budget Limit'}
             </span>
-            <div className="flex items-center space-x-1.5 bg-white/80 dark:bg-[#131722]/80 px-2.5 py-1 rounded-xl border border-black/5 dark:border-white/10 text-xs text-ink dark:text-[#f8fafc]">
-              <Calendar className="w-3.5 h-3.5 text-gray-500 dark:text-[#64748b]" />
+            <div className="flex items-center space-x-1.5 bg-gray-900 border border-gray-800 px-2.5 py-1 rounded-lg text-xs text-gray-300">
+              <Calendar className="w-3.5 h-3.5 text-gray-500" />
               <input
                 type="date"
                 value={txDate}
                 onChange={e => setTxDate(e.target.value)}
-                className="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs font-medium focus:outline-none cursor-pointer text-gray-300"
               />
             </div>
           </div>
 
-          {/* Large Amount Input with ৳ currency symbol and BDT label */}
           <div className="relative flex items-center mt-2">
-            <span className={`text-2xl sm:text-3xl font-extrabold font-display mr-2 ${cardTheme.symbolColor}`}>
+            <span className="text-3xl font-bold text-white mr-2">
               ৳
             </span>
             <input
@@ -409,100 +344,95 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               placeholder="0.00"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full bg-transparent text-3xl sm:text-4xl font-black font-display text-ink dark:text-[#f8fafc] focus:outline-none placeholder-gray-300 dark:placeholder-gray-600"
+              className="w-full bg-transparent text-3xl font-bold text-white focus:outline-none placeholder-gray-600 tabular-nums"
             />
-            <span className="text-xs font-bold uppercase text-gray-400 dark:text-[#64748b] shrink-0 ml-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-gray-500 shrink-0 ml-2">
               BDT
             </span>
           </div>
         </div>
 
-        {/* Form Fields below Amount Card */}
+        {/* Form Fields */}
         <div className="space-y-3.5">
           {/* SPEND / INCOME FLOW */}
           {(activeTab === 'spend' || activeTab === 'income') && (
             <>
-              {/* 1. Paid To / Received From */}
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   {activeTab === 'spend' ? 'Paid To (Merchant / Payee)' : 'Received From (Source / Client)'}
                 </label>
                 <input
                   type="text"
-                  placeholder={activeTab === 'spend' ? 'e.g. Starbucks Coffee, Apple Store' : 'e.g. Monthly Salary, Freelance Client'}
+                  placeholder={activeTab === 'spend' ? 'e.g. Uber Ride, Whole Foods Market' : 'e.g. Salary Deposit, Client Wire'}
                   value={merchant}
                   onChange={e => setMerchant(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              {/* 2. Category Dropdown with CategoryIcon */}
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   Category
                 </label>
                 <select
                   value={categoryId}
                   onChange={e => setCategoryId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                 >
                   {categories
                     .filter(c => (activeTab === 'spend' ? c.type === 'expense' : c.type === 'income'))
                     .map(c => (
-                      <option key={c.id} value={c.id}>
+                      <option key={c.id} value={c.id} className="bg-gray-900 text-white">
                         {c.name}
                       </option>
                     ))}
                 </select>
               </div>
 
-              {/* 3. Payment Method / Account Dropdown */}
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   Payment Method / Account
                 </label>
                 <select
                   value={accountId}
                   onChange={e => setAccountId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                 >
                   {accounts.map(a => (
-                    <option key={a.id} value={a.id}>
+                    <option key={a.id} value={a.id} className="bg-gray-900 text-white">
                       {a.name} — Balance: {formatCurrency(a.balance, a.currency)}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* 4. Notes */}
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   Notes / Memo
                 </label>
                 <input
                   type="text"
-                  placeholder="Optional memo or description"
+                  placeholder="Optional memo or transaction note"
                   value={note}
                   onChange={e => setNote(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              {/* 5. Attach Receipt / Bill */}
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   Attach Receipt / Bill
                 </label>
                 {receiptName ? (
-                  <div className="flex items-center justify-between p-2.5 rounded-2xl bg-brand-50 dark:bg-brand-950/30 border border-brand-200 dark:border-brand-900/40 text-xs">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-900 border border-gray-800 text-xs">
                     <div className="flex items-center space-x-2 truncate">
-                      <Receipt className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-                      <span className="font-semibold text-brand-900 dark:text-brand-200 truncate">{receiptName}</span>
+                      <Receipt className="w-4 h-4 text-indigo-400 shrink-0" />
+                      <span className="font-semibold text-gray-200 truncate">{receiptName}</span>
                     </div>
                     <button
                       type="button"
                       onClick={removeReceipt}
-                      className="p-1 text-gray-400 hover:text-rose-500 transition-colors"
+                      className="p-1 text-gray-500 hover:text-rose-400 transition-colors"
                       title="Remove file"
                     >
                       <X className="w-4 h-4" />
@@ -512,9 +442,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-2.5 px-3.5 rounded-2xl border border-dashed border-gray-300 dark:border-[#1e2638] hover:bg-gray-50 dark:hover:bg-[#1e2638]/40 text-xs font-semibold text-gray-600 dark:text-[#64748b] flex items-center justify-center space-x-2 transition-all"
+                    className="w-full py-2.5 px-3.5 rounded-xl border border-dashed border-gray-800 hover:bg-gray-900/50 text-xs font-semibold text-gray-400 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
                   >
-                    <Paperclip className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                    <Paperclip className="w-4 h-4 text-indigo-400" />
                     <span>Upload receipt or invoice</span>
                   </button>
                 )}
@@ -532,19 +462,18 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           {/* TRANSFER FLOW */}
           {activeTab === 'transfer' && (
             <>
-              {/* To & From Accounts */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                     From Account
                   </label>
                   <select
                     value={fromAccountId}
                     onChange={e => setFromAccountId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs"
+                    className="w-full px-3 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                   >
                     {accounts.map(a => (
-                      <option key={a.id} value={a.id}>
+                      <option key={a.id} value={a.id} className="bg-gray-900 text-white">
                         {a.name} ({formatCurrency(a.balance, a.currency)})
                       </option>
                     ))}
@@ -552,16 +481,16 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                     To Account
                   </label>
                   <select
                     value={toAccountId}
                     onChange={e => setToAccountId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs"
+                    className="w-full px-3 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                   >
                     {accounts.map(a => (
-                      <option key={a.id} value={a.id}>
+                      <option key={a.id} value={a.id} className="bg-gray-900 text-white">
                         {a.name} ({a.currency})
                       </option>
                     ))}
@@ -569,55 +498,22 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                 </div>
               </div>
 
-              {/* Conversion indicator if accounts differ */}
               {fromAcc && toAcc && fromAcc.currency !== toAcc.currency && amount && (
-                <div className="p-2.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900/40 text-xs text-sky-800 dark:text-sky-300">
-                  Target conversion: <span className="font-bold">{formatCurrency(convertCurrency(parseFloat(amount) || 0, fromAcc.currency, toAcc.currency), toAcc.currency)}</span>
+                <div className="p-2.5 rounded-xl bg-gray-900 border border-gray-800 text-xs text-indigo-300">
+                  Target conversion: <span className="font-bold text-white">{formatCurrency(convertCurrency(parseFloat(amount) || 0, fromAcc.currency, toAcc.currency), toAcc.currency)}</span>
                 </div>
               )}
 
-              {/* Notes */}
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   Purpose / Memo
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Savings allocation, Rent share"
+                  placeholder="e.g. Savings transfer, Vault top up"
                   value={transferNote}
                   onChange={e => setTransferNote(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs"
-                />
-              </div>
-
-              {/* Attach Receipt */}
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
-                  Attach Transfer Slip (Optional)
-                </label>
-                {receiptName ? (
-                  <div className="flex items-center justify-between p-2.5 rounded-2xl bg-brand-50 dark:bg-brand-950/30 border border-brand-200 dark:border-brand-900/40 text-xs">
-                    <span className="font-semibold text-brand-900 dark:text-brand-200 truncate">{receiptName}</span>
-                    <button type="button" onClick={removeReceipt} className="text-gray-400 hover:text-rose-500">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-2.5 px-3.5 rounded-2xl border border-dashed border-gray-300 dark:border-[#1e2638] hover:bg-gray-50 dark:hover:bg-[#1e2638]/40 text-xs font-semibold text-gray-600 dark:text-[#64748b] flex items-center justify-center space-x-2"
-                  >
-                    <Paperclip className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                    <span>Upload transfer slip</span>
-                  </button>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={handleReceiptChange}
-                  className="hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </>
@@ -627,56 +523,56 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           {activeTab === 'goal' && (
             <>
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
-                  Goal Name / Target
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
+                  Goal Name / Milestone
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Dream Apartment Deposit, Tokyo Trip"
+                  placeholder="e.g. High Yield Vault Target, Tech Setup"
                   value={goalName}
                   onChange={e => setGoalName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
-                    Initial Deposit ({settings.baseCurrency})
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
+                    Initial Deposit (৳)
                   </label>
                   <input
                     type="number"
                     placeholder="0.00"
                     value={goalInitialDeposit}
                     onChange={e => setGoalInitialDeposit(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs font-bold"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs font-bold focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                     Target Deadline
                   </label>
                   <input
                     type="date"
                     value={goalTargetDate}
                     onChange={e => setGoalTargetDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   Linked Savings Account
                 </label>
                 <select
                   value={accountId}
                   onChange={e => setAccountId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                 >
                   {accounts.map(a => (
-                    <option key={a.id} value={a.id}>
+                    <option key={a.id} value={a.id} className="bg-gray-900 text-white">
                       {a.name} ({a.currency})
                     </option>
                   ))}
@@ -689,16 +585,16 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           {activeTab === 'budget' && (
             <>
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   Category
                 </label>
                 <select
                   value={budgetCategoryId}
                   onChange={e => setBudgetCategoryId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1e2638] border border-gray-200 dark:border-[#1e2638] text-ink dark:text-[#f8fafc] text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-white text-xs focus:outline-none focus:border-indigo-500"
                 >
                   {categories.filter(c => c.type === 'expense').map(c => (
-                    <option key={c.id} value={c.id}>
+                    <option key={c.id} value={c.id} className="bg-gray-900 text-white">
                       {c.name}
                     </option>
                   ))}
@@ -706,7 +602,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-[#64748b] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                   Alert Threshold ({budgetAlertThreshold}%)
                 </label>
                 <input
@@ -716,9 +612,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   step="5"
                   value={budgetAlertThreshold}
                   onChange={e => setBudgetAlertThreshold(parseInt(e.target.value))}
-                  className="w-full accent-brand-600"
+                  className="w-full accent-indigo-500"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400 dark:text-[#64748b] mt-1">
+                <div className="flex justify-between text-[10px] text-gray-500 mt-1">
                   <span>50%</span>
                   <span>80% (Recommended)</span>
                   <span>100%</span>
@@ -728,21 +624,21 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           )}
         </div>
 
-        {/* Action Buttons: "Save & Add" (Outline) and "Save" (Filled Dark) */}
+        {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-2.5 pt-3">
           <button
             type="button"
             onClick={() => handleSave(true)}
-            className="py-3.5 rounded-2xl border border-gray-300 dark:border-[#1e2638] hover:bg-gray-50 dark:hover:bg-[#1e2638]/80 active:scale-98 text-ink dark:text-[#f8fafc] font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
+            className="py-3 rounded-xl bg-gray-900 border border-gray-800 hover:bg-gray-800 text-gray-300 font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+            <Plus className="w-3.5 h-3.5 text-indigo-400" />
             <span>Save & Add</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleSave(false)}
-            className="py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-98 text-white font-bold text-xs shadow-md shadow-brand-600/30 transition-all flex items-center justify-center space-x-1.5"
+            className="py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
           >
             <Check className="w-4 h-4" />
             <span>Save</span>

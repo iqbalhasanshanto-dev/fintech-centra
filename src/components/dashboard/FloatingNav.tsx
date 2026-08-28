@@ -10,15 +10,15 @@ export const FloatingNav: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-slate-800 text-slate-300 rounded-full px-4 py-2 shadow-xl border border-slate-700/30">
+    <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#171717]/90 backdrop-blur-md text-gray-400 rounded-full px-6 py-2.5 shadow-2xl border border-gray-800">
       <ul className="flex space-x-6">
         {items.map((item, idx) => {
           const Icon = item.icon;
           return (
             <li key={idx} className="flex flex-col items-center text-xs">
-              <button className="flex flex-col items-center focus:outline-none">
-                <Icon className="w-5 h-5 mb-1" />
-                <span>{item.name}</span>
+              <button className="flex flex-col items-center hover:text-white transition-colors focus:outline-none cursor-pointer">
+                <Icon className="w-4 h-4 mb-0.5" />
+                <span className="text-[10px] font-semibold">{item.name}</span>
               </button>
             </li>
           );

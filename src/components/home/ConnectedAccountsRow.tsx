@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wallet, Landmark, ArrowUpRight } from 'lucide-react';
+import { Wallet, ArrowRightLeft, ArrowUpRight, MoreVertical } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
 import { Account } from '../../types';
@@ -24,94 +24,78 @@ export const ConnectedAccountsRow: React.FC<ConnectedAccountsRowProps> = ({
   };
 
   return (
-    <div className="space-y-3">
-      {/* Top Header Row with unified accessible Transfer action */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-bold font-display text-gray-900 dark:text-[#FFFFFF]">
-            Connected Accounts ({accounts.length})
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-[#94A3B8]">
-            Total balance: <strong className="text-gray-900 dark:text-[#FFFFFF] font-display tabular-nums">{formatCurrency(totalBalance, settings.baseCurrency, settings.privacyMode)}</strong>
-          </p>
+    <section id="accounts" className="mb-10">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-bold text-white">Connected Accounts</h3>
+          <span className="px-2 py-0.5 bg-gray-800 text-gray-400 text-[10px] font-bold rounded-full">
+            {accounts.length + 1}
+          </span>
         </div>
-
         {onOpenTransfer && (
           <button
             onClick={onOpenTransfer}
-            className="min-h-[36px] px-3 py-1.5 rounded-xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#161B26] text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 flex items-center space-x-1 transition-colors"
-            aria-label="Initiate money transfer"
+            className="text-sm font-semibold text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            <span>Transfer</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <span>Transfer Funds</span>
+            <ArrowRightLeft className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
 
-      {/* Horizontal Scrolling Accounts Row */}
-      <div className="flex items-center space-x-2.5 overflow-x-auto pb-1.5 no-scrollbar scrollbar-none">
-        
-        {/* "All Accounts" Filter Chip */}
-        <button
+      {/* Responsive Grid breaking cleanly into vertical stacks on mobile */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Balance Card (Highlighted) */}
+        <div
           onClick={() => handleAccountClick('all')}
-          className={`p-3 rounded-xl text-left whitespace-nowrap transition-colors flex items-center space-x-3 shrink-0 cursor-pointer ${
-            selectedAccountId === 'all'
-              ? 'bg-indigo-600 text-white shadow-sm border border-indigo-500'
-              : 'bg-white dark:bg-[#161B26] text-gray-800 dark:text-[#E2E8F0] border border-gray-200/80 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5'
+          className={`bg-indigo-600/10 border border-indigo-500/20 rounded-xl p-5 group cursor-pointer hover:bg-indigo-600/20 transition-all ${
+            selectedAccountId === 'all' ? 'ring-1 ring-indigo-500/50' : ''
           }`}
         >
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-            selectedAccountId === 'all' ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400'
-          }`}>
-            <Wallet className="w-4 h-4" />
+          <div className="flex justify-between items-start mb-4">
+            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-white" />
+            </div>
+            <MoreVertical className="w-4 h-4 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
-          <div className="min-w-0 pr-1">
-            <p className="text-xs font-bold leading-tight">
-              All Accounts
-            </p>
-            <p className="text-xs font-extrabold font-display tabular-nums mt-0.5">
-              {formatCurrency(totalBalance, settings.baseCurrency, settings.privacyMode, false)}
-            </p>
-          </div>
-        </button>
+          <p className="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-1">
+            Total Balance
+          </p>
+          <p className="text-xl font-bold text-white tabular-nums currency-amount">
+            {formatCurrency(totalBalance, settings.baseCurrency, settings.privacyMode)}
+          </p>
+        </div>
 
         {/* Individual Account Cards */}
         {accounts.map(acc => {
+          const isNegative = acc.balance < 0;
           const isSelected = selectedAccountId === acc.id;
+
           return (
-            <button
+            <div
               key={acc.id}
               onClick={() => handleAccountClick(acc.id)}
-              className={`p-3 rounded-xl text-left whitespace-nowrap transition-colors flex items-center space-x-3 shrink-0 cursor-pointer ${
-                isSelected
-                  ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-2 border-indigo-500 shadow-sm'
-                  : 'bg-white dark:bg-[#161B26] text-gray-800 dark:text-[#E2E8F0] border border-gray-200/80 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5'
+              className={`bg-gray-900/50 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-colors cursor-pointer group ${
+                isSelected ? 'border-indigo-500/60 ring-1 ring-indigo-500/40' : ''
               }`}
             >
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: `${acc.color}20`, color: acc.color }}
-              >
-                <Landmark className="w-4 h-4" />
+              <div className="flex justify-between items-start mb-4 text-gray-500 group-hover:text-gray-300 transition-colors">
+                <span className="text-[10px] font-bold tracking-widest uppercase">
+                  {acc.type.toUpperCase()} • {acc.accountNumberMasked.replace('••••', '')}
+                </span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
               </div>
-              <div className="min-w-0 pr-1">
-                <div className="flex items-center space-x-1.5">
-                  <p className="text-xs font-bold truncate max-w-[130px] leading-tight">
-                    {acc.name}
-                  </p>
-                  <span className="text-[10px] px-1 py-0.2 rounded bg-gray-100 dark:bg-[#1E2536] text-gray-500 dark:text-[#94A3B8] font-mono">
-                    {acc.accountNumberMasked}
-                  </span>
-                </div>
-                <p className="text-xs font-extrabold font-display tabular-nums mt-0.5 text-gray-900 dark:text-[#FFFFFF]">
-                  {formatCurrency(acc.balance, acc.currency, settings.privacyMode, false)}
-                </p>
-              </div>
-            </button>
+              <p className="text-sm font-semibold text-gray-400 mb-1 truncate">
+                {acc.name}
+              </p>
+              <p className={`text-xl font-bold tabular-nums currency-amount ${isNegative ? 'text-rose-400' : 'text-white'}`}>
+                {formatCurrency(acc.balance, acc.currency, settings.privacyMode)}
+              </p>
+            </div>
           );
         })}
-
       </div>
-    </div>
+    </section>
   );
 };
