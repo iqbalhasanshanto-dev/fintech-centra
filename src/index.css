@@ -20,9 +20,9 @@
   .dark {
     --color-brand-primary: #6366F1;
     --color-brand-secondary: #818CF8;
-    --color-surface-bg: #0A0A0A;
-    --color-surface-card: #171717;
-    --color-border: #1F2937;
+    --color-surface-bg: #0A0E1A;
+    --color-surface-card: #121A2C;
+    --color-border: #232C45;
     --color-text-primary: #FFFFFF;
     --color-text-body: #E5E7EB;
     --color-text-muted: #9CA3AF;
@@ -37,28 +37,11 @@
   }
 
   h1, h2, h3, h4, h5, h6, .font-display, .currency-amount, button, input, select, textarea, label {
-    font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 }
 
-/* Global 200ms transition for theme switches */
-body, main, header, nav, footer, div, section, button, input, select, textarea {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 200ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Plotly chart container transparency if used */
-.chart-container .main-svg {
-  background: transparent !important;
-}
-
-/* Number alignment across all data columns */
-.tabular-nums, .currency-amount {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Hide scrollbar utility */
+/* Custom transitions and scrollbar helpers */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -67,63 +50,24 @@ body, main, header, nav, footer, div, section, button, input, select, textarea {
   scrollbar-width: none;
 }
 
-/* Focused, restrained interactive states */
-button:active:not(:disabled),
-.btn-interactive:active:not(:disabled) {
-  opacity: 0.92;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Custom refined scrollbars */
+/* Subtle modern scrollbar for desktop tables & drawers */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
+  background: rgba(156, 163, 175, 0.4);
   border-radius: 9999px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #27272A;
+  background: rgba(35, 44, 69, 0.8);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9CA3AF;
+  background: rgba(156, 163, 175, 0.6);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #3F3F46;
-}
-
-/* Smooth sheet sliding transitions */
-@keyframes slide-up {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes fade-in {
-  from { opacity: 0; transform: scale(0.99); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  background: rgba(45, 55, 85, 1);
 }

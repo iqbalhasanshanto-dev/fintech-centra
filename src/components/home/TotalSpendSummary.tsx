@@ -33,9 +33,9 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-[#171717] border border-gray-800 px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
-          <p className="text-xs font-bold text-white">{data.name}</p>
-          <p className="text-xs text-gray-400 font-medium tabular-nums mt-0.5">
+        <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
+          <p className="text-xs font-bold text-gray-900 dark:text-white">{data.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium tabular-nums mt-0.5">
             {formatCurrency(data.value, settings.baseCurrency, settings.privacyMode)} ({data.percentage?.toFixed(0)}%)
           </p>
         </div>
@@ -45,34 +45,34 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
   };
 
   return (
-    <section id="spending-analytics" className="mb-10 bg-[#171717] border border-gray-800 rounded-2xl p-6 sm:p-8">
+    <section id="spending-analytics" className="mb-10 bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl p-6 sm:p-8 transition-colors shadow-xs">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-500 block mb-1">
+          <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 block mb-1">
             Spend Breakdown
           </span>
-          <h2 className="text-3xl font-bold text-white tabular-nums currency-amount">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
             {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
           </h2>
         </div>
-        <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 p-1 rounded-xl">
+        <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] p-1 rounded-xl">
           <button
             onClick={() => setViewMode('monthly')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               viewMode === 'monthly'
-                ? 'bg-gray-800 text-white'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs font-semibold'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             Monthly
           </button>
           <button
             onClick={() => setViewMode('weekly')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               viewMode === 'weekly'
-                ? 'bg-gray-800 text-white'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs font-semibold'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             Weekly
@@ -111,8 +111,8 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
               </ResponsiveContainer>
               {/* Centered Donut Label */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Top Spend</span>
-                <span className="text-2xl font-bold text-white">{topSpendPercent}</span>
+                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Top Spend</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">{topSpendPercent}</span>
               </div>
             </>
           )}
@@ -124,15 +124,15 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
             <div
               key={item.name}
               onClick={onNavigateToReport}
-              className="flex items-center gap-4 p-4 rounded-xl border border-gray-800/50 hover:bg-gray-800/20 transition-colors cursor-pointer"
+              className="flex items-center gap-4 p-4 rounded-xl bg-gray-50/70 dark:bg-[#0A0E1A]/60 border border-gray-200/80 dark:border-[#232C45]/80 hover:bg-gray-100 dark:hover:bg-[#1A233A] transition-colors cursor-pointer"
             >
               <div
                 className="w-3 h-3 rounded-full shrink-0"
                 style={{ backgroundColor: item.color }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-300 truncate">{item.name}</p>
-                <p className="text-xs text-gray-500 tabular-nums">
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
                   {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode, false)} ({item.percentage.toFixed(0)}%)
                 </p>
               </div>

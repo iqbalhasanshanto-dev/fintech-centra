@@ -9,10 +9,10 @@ export default {
     extend: {
       colors: {
         carbon: {
-          bg: '#0A0A0A',
-          card: '#171717',
-          subtle: '#111827',
-          border: '#1F2937',
+          bg: '#0A0E1A',
+          card: '#121A2C',
+          subtle: '#232C45',
+          border: '#232C45',
         },
         brand: {
           50: '#EEF2FF',
@@ -28,16 +28,20 @@ export default {
           DEFAULT: '#4F46E5',
         },
         surface: {
-          light: '#F8FAFC',
-          card: '#171717',
-          dark: '#0A0A0A',
-          darkCard: '#171717',
-          darkSubtle: '#111827',
-          darkBorder: '#1F2937',
+          light: '#FAFAFA',
+          card: '#FFFFFF',
+          border: '#E5E7EB',
+          dark: '#0A0E1A',       // richer navy-black canvas
+          darkCard: '#121A2C',   // clearly lighter than canvas
+          darkBorder: '#232C45', // visibly lighter than the card
+          darkSubtle: '#232C45', // same as darkBorder
         },
         growth: '#10B981',
         danger: '#EF4444',
         caution: '#F59E0B',
+      },
+      boxShadow: {
+        'float': '0 8px 24px -4px rgba(99, 102, 241, 0.25)',
       },
       fontFamily: {
         sans: ['Inter', '"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],

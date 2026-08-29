@@ -79,9 +79,9 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-[#171717] border border-gray-800 px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
-          <p className="text-xs font-bold text-white">{data.name}</p>
-          <p className="text-xs text-gray-400 mt-0.5 font-medium tabular-nums">
+        <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
+          <p className="text-xs font-bold text-gray-900 dark:text-white">{data.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium tabular-nums">
             Amount : {formatCurrency(data.value, settings.baseCurrency, settings.privacyMode)}
           </p>
         </div>
@@ -99,17 +99,17 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
           {onBackToHome && (
             <button
               onClick={onBackToHome}
-              className="p-2 -ml-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              className="p-2 -ml-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
               aria-label="Back to Home"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
           <div>
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Analytics &amp; Breakdown
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               Interactive visualization and category cash outflows
             </p>
           </div>
@@ -119,10 +119,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
         <select
           value={periodFilter}
           onChange={e => setPeriodFilter(e.target.value as PeriodFilter)}
-          className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-gray-300 hover:text-white focus:outline-none"
+          className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none cursor-pointer shadow-xs"
         >
           {periods.map(p => (
-            <option key={p.id} value={p.id} className="bg-gray-900 text-white">
+            <option key={p.id} value={p.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
               {p.label}
             </option>
           ))}
@@ -130,16 +130,16 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
       </div>
 
       {/* Dataset Toggle (Expenses vs Income) */}
-      <div className="p-1 rounded-xl bg-gray-900 border border-gray-800 flex items-center">
+      <div className="p-1 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] flex items-center">
         <button
           onClick={() => {
             setDatasetType('expense');
             setExpandedCategoryId(null);
           }}
-          className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors tabular-nums ${
+          className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors tabular-nums cursor-pointer ${
             datasetType === 'expense'
-              ? 'bg-gray-800 text-rose-400'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-white dark:bg-[#121A2C] text-rose-600 dark:text-rose-400 shadow-xs'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           Expenses ({formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode, false)})
@@ -149,10 +149,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
             setDatasetType('income');
             setExpandedCategoryId(null);
           }}
-          className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors tabular-nums ${
+          className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors tabular-nums cursor-pointer ${
             datasetType === 'income'
-              ? 'bg-gray-800 text-emerald-400'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-white dark:bg-[#121A2C] text-emerald-600 dark:text-emerald-400 shadow-xs'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           Income ({formatCurrency(periodIncome, settings.baseCurrency, settings.privacyMode, false)})
@@ -160,25 +160,25 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
       </div>
 
       {/* Chart Card */}
-      <div className="p-6 rounded-2xl bg-[#171717] border border-gray-800 transition-colors">
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] transition-colors shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
               Total {datasetType === 'expense' ? 'Spend' : 'Income'}
             </span>
-            <div className="text-3xl font-bold text-white tabular-nums currency-amount mt-0.5">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount mt-0.5">
               {formatCurrency(currentTotal, settings.baseCurrency, settings.privacyMode)}
             </div>
           </div>
 
           {/* Chart Type Toggle Button */}
-          <div className="flex items-center p-1 rounded-lg bg-gray-900 border border-gray-800">
+          <div className="flex items-center p-1 rounded-lg bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45]">
             <button
               onClick={() => setChartType('donut')}
-              className={`p-1.5 rounded-md transition-colors ${
+              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
                 chartType === 'donut'
-                  ? 'bg-gray-800 text-indigo-400'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-white dark:bg-[#121A2C] text-brand-600 dark:text-brand-400 shadow-xs'
+                  : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
               title="Donut Chart"
             >
@@ -186,10 +186,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
             </button>
             <button
               onClick={() => setChartType('bar')}
-              className={`p-1.5 rounded-md transition-colors ${
+              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
                 chartType === 'bar'
-                  ? 'bg-gray-800 text-indigo-400'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-white dark:bg-[#121A2C] text-brand-600 dark:text-brand-400 shadow-xs'
+                  : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
               title="Bar Chart"
             >
@@ -200,7 +200,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
 
         {/* Visual Chart Rendering */}
         {chartData.length === 0 ? (
-          <div className="h-48 flex items-center justify-center text-xs text-gray-500">
+          <div className="h-48 flex items-center justify-center text-xs text-gray-400">
             No {datasetType} data recorded for this period.
           </div>
         ) : (
@@ -232,7 +232,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 25 }} barCategoryGap="16%">
                   <XAxis
                     dataKey="name"
-                    stroke="#6B7280"
+                    stroke="#9CA3AF"
                     fontSize={10}
                     tickLine={false}
                     axisLine={false}
@@ -241,13 +241,13 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                     textAnchor="end"
                   />
                   <YAxis
-                    stroke="#6B7280"
+                    stroke="#9CA3AF"
                     fontSize={10}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={val => `৳${val}`}
                   />
-                  <RechartsTooltip content={<CustomChartTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.04)' }} isAnimationActive={false} />
+                  <RechartsTooltip content={<CustomChartTooltip />} cursor={{ fill: 'rgba(99, 102, 241, 0.05)' }} isAnimationActive={false} />
                   <Bar 
                     dataKey="value" 
                     maxBarSize={28}
@@ -270,10 +270,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
       {/* Category Breakdown List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
             Category Breakdown
           </h3>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             Tap a row to view inline transactions
           </span>
         </div>
@@ -286,10 +286,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
             return (
               <div
                 key={item.category.id}
-                className={`rounded-2xl bg-[#171717] border transition-colors overflow-hidden ${
+                className={`rounded-2xl bg-white dark:bg-[#121A2C] border transition-colors overflow-hidden shadow-xs ${
                   isExpanded
-                    ? 'border-indigo-500/80 ring-1 ring-indigo-500/20'
-                    : 'border-gray-800 hover:border-gray-700'
+                    ? 'border-brand-500 ring-1 ring-brand-500/20'
+                    : 'border-gray-200 dark:border-[#232C45] hover:border-gray-300 dark:hover:border-gray-700'
                 }`}
               >
                 {/* Clickable Header Row */}
@@ -299,22 +299,22 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                 >
                   {/* Left: Icon & Name & % Bar */}
                   <div className="flex items-center space-x-3.5 flex-1 min-w-0 pr-3">
-                    <div className="w-10 h-10 rounded-xl bg-gray-800 text-gray-400 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200/80 dark:border-[#232C45] text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
                       <CategoryIcon name={item.category.icon} className="w-4 h-4" />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-sm font-semibold text-white truncate">
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                           {item.category.name}
                         </span>
-                        <span className="text-xs text-gray-400 tabular-nums">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
                           {item.percentage.toFixed(1)}%
                         </span>
                       </div>
 
                       {/* Progress Line */}
-                      <div className="w-full h-1.5 rounded-full bg-gray-800 overflow-hidden">
+                      <div className="w-full h-1.5 rounded-full bg-gray-100 dark:bg-[#0A0E1A] overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -329,17 +329,17 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                   {/* Right: Amount & Trend & Chevron */}
                   <div className="text-right shrink-0 flex items-center space-x-3 ml-2">
                     <div>
-                      <div className="text-sm font-bold text-white tabular-nums currency-amount">
+                      <div className="text-sm font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
                         {formatCurrency(item.total, settings.baseCurrency, settings.privacyMode)}
                       </div>
                       <div className="flex items-center justify-end space-x-0.5 text-[10px] font-bold mt-0.5 tabular-nums">
                         {item.trendPercentage > 0 ? (
-                          <span className="text-rose-400 flex items-center">
+                          <span className="text-rose-600 dark:text-rose-400 flex items-center">
                             <TrendingUp className="w-3 h-3 mr-0.5" />
                             +{item.trendPercentage.toFixed(0)}%
                           </span>
                         ) : (
-                          <span className="text-emerald-400 flex items-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 flex items-center">
                             <TrendingDown className="w-3 h-3 mr-0.5" />
                             {item.trendPercentage.toFixed(0)}%
                           </span>
@@ -348,8 +348,8 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                     </div>
 
                     <ChevronRight 
-                      className={`w-4 h-4 text-gray-500 group-hover:text-white transition-transform duration-200 ${
-                        isExpanded ? 'rotate-90 text-indigo-400' : ''
+                      className={`w-4 h-4 text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white transition-transform duration-200 ${
+                        isExpanded ? 'rotate-90 text-brand-600 dark:text-brand-400' : ''
                       }`} 
                     />
                   </div>
@@ -357,15 +357,15 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
 
                 {/* INLINE ACCORDION DRAWER */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-2 border-t border-gray-800 bg-gray-900/40 animate-fade-in">
-                    <div className="flex items-center justify-between py-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <div className="px-4 pb-4 pt-2 border-t border-gray-100 dark:border-[#232C45] bg-gray-50/70 dark:bg-[#0A0E1A]/40 animate-fade-in">
+                    <div className="flex items-center justify-between py-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       <span>{item.category.name} Transactions</span>
-                      <span className="font-mono text-gray-400">{categoryTxs.length} items</span>
+                      <span className="font-mono text-gray-400 dark:text-gray-500">{categoryTxs.length} items</span>
                     </div>
 
                     <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                       {categoryTxs.length === 0 ? (
-                        <p className="text-xs text-gray-500 py-3 text-center">
+                        <p className="text-xs text-gray-400 py-3 text-center">
                           No transactions recorded in this category.
                         </p>
                       ) : (
@@ -376,17 +376,17 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                               if (onSelectTransaction) onSelectTransaction(tx);
                               setSelectedTx(tx);
                             }}
-                            className="p-3 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 flex items-center justify-between text-xs cursor-pointer transition-colors"
+                            className="p-3 rounded-xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/40 flex items-center justify-between text-xs cursor-pointer transition-colors"
                           >
                             <div className="min-w-0 pr-2">
-                              <p className="font-semibold text-white truncate">
+                              <p className="font-semibold text-gray-900 dark:text-white truncate">
                                 {tx.merchant || tx.categoryName}
                               </p>
-                              <p className="text-[10px] text-gray-500 mt-0.5">
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
                                 {tx.accountName} • {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </p>
                             </div>
-                            <span className="font-bold tabular-nums text-white shrink-0 font-display">
+                            <span className="font-bold tabular-nums text-gray-900 dark:text-white shrink-0 font-display">
                               {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
                             </span>
                           </div>

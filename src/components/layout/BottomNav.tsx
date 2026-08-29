@@ -22,10 +22,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-auto max-w-[94vw] sm:max-w-md pointer-events-none select-none">
-      {/* Carbon Unified Floating Bottom Dock */}
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-auto max-w-[94vw] sm:max-w-md pointer-events-none select-none md:hidden">
+      {/* Mobile Unified Floating Bottom Dock */}
       <nav 
-        className="relative px-4 sm:px-6 py-2.5 rounded-full bg-[#171717]/90 backdrop-blur-md border border-gray-800 shadow-2xl flex items-center justify-between space-x-2 sm:space-x-4 pointer-events-auto"
+        className="relative px-4 sm:px-6 py-2.5 rounded-full bg-white/90 dark:bg-[#121A2C]/90 backdrop-blur-md border border-gray-200 dark:border-[#232C45] shadow-2xl flex items-center justify-between space-x-2 sm:space-x-4 pointer-events-auto transition-colors"
         aria-label="Main Navigation Dock"
       >
         {/* Left Nav Pair: Home & Analytics */}
@@ -39,8 +39,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 onClick={() => onSelectTab(tab.id)}
                 className={`relative px-3 sm:px-3.5 py-1.5 rounded-full flex flex-col items-center justify-center transition-colors duration-200 ${
                   isActive
-                    ? 'text-indigo-400 font-bold bg-gray-800/80'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/40'
+                    ? 'text-brand-600 dark:text-brand-400 font-bold bg-gray-100 dark:bg-[#0A0E1A]'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-gray-800/40'
                 }`}
                 aria-label={tab.label}
               >
@@ -55,7 +55,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         <div className="relative -top-3 px-1">
           <button
             onClick={onOpenAddAction}
-            className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold shadow-lg border-2 border-[#171717] transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold shadow-float border-2 border-white dark:border-[#121A2C] transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
             aria-label="New Transaction or Transfer"
           >
             <Plus className="w-6 h-6 stroke-[2.5]" />
@@ -73,8 +73,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 onClick={() => onSelectTab(tab.id)}
                 className={`relative px-3 sm:px-3.5 py-1.5 rounded-full flex flex-col items-center justify-center transition-colors duration-200 ${
                   isActive
-                    ? 'text-indigo-400 font-bold bg-gray-800/80'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/40'
+                    ? 'text-brand-600 dark:text-brand-400 font-bold bg-gray-100 dark:bg-[#0A0E1A]'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-gray-800/40'
                 }`}
                 aria-label={tab.label}
               >
