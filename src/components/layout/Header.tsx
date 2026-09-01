@@ -31,21 +31,27 @@ export const Header: React.FC<HeaderProps> = ({
   const currentPeriodLabel = periods.find(p => p.id === periodFilter)?.label || 'This Month';
 
   return (
-    <header id="header" className="border-b border-gray-200 dark:border-[#232C45] bg-white/80 dark:bg-[#0A0E1A]/80 backdrop-blur-md sticky top-0 z-50 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <header id="header" className="border-b border-gray-200 dark:border-[#232C45] bg-white/80 dark:bg-[#0A0E1A]/80 backdrop-blur-md sticky top-0 z-40 transition-colors w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        {/* Brand Logo & Wordmark */}
-        <div className="flex items-center gap-3">
+        {/* Brand Logo & Wordmark (Visible on mobile/tablet below lg where sidebar is hidden) */}
+        <div className="flex items-center gap-3 lg:hidden">
           <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shadow-sm">
             <Shield className="w-4 h-4 text-white fill-white/20" />
           </div>
           <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">CENTRA</span>
         </div>
 
+        {/* Desktop left header spacer or page indicator */}
+        <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span>Live Financial Sync</span>
+        </div>
+
         {/* Right Controls */}
         <div className="flex items-center gap-3 sm:gap-4">
           
-          {/* Period Selector Dropdown & Quick Add + (Desktop only) */}
+          {/* Period Selector Dropdown (Desktop & Tablet) */}
           <div className="relative hidden md:flex items-center gap-2">
             <button
               onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
@@ -56,26 +62,14 @@ export const Header: React.FC<HeaderProps> = ({
               <ChevronDown className={`ml-2 w-3.5 h-3.5 text-gray-400 transition-transform ${showPeriodDropdown ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Header "+" Quick Add Button (Desktop Only) - Subdued Secondary Style so page-specific primary CTA stands out */}
-            {onOpenAddAction && (
-              <button
-                onClick={onOpenAddAction}
-                className="hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:bg-gray-200 dark:hover:bg-[#1E293B] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all transform active:scale-95 cursor-pointer shadow-2xs"
-                title="New Transaction or Transfer"
-                aria-label="New Transaction or Transfer"
-              >
-                <Plus className="w-4 h-4 stroke-[2]" />
-              </button>
-            )}
-
             {showPeriodDropdown && (
               <>
                 <div
                   className="fixed inset-0 z-40"
                   onClick={() => setShowPeriodDropdown(false)}
                 />
-                <div className="absolute left-0 top-full mt-2 w-44 bg-white dark:bg-[#121A2C] rounded-xl shadow-2xl border border-gray-200 dark:border-[#232C45] py-1.5 z-50 animate-fade-in">
-                  <div className="px-3 py-1 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-[#121A2C] rounded-xl shadow-2xl border border-gray-200 dark:border-[#232C45] py-1.5 z-50 animate-fade-in">
+                  <div className="px-3 py-1 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                     Select Period
                   </div>
                   {periods.map(p => (
@@ -101,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Theme Toggle Switch */}
             <ThemeToggle showLabel={false} />
 
-            {/* Notification Bell with Red Dot */}
+            {/* Notification Bell with Unread Indicator */}
             <button
               onClick={onOpenNotifications}
               className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#121A2C]"
@@ -109,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Bell className="w-4 h-4" />
               {unreadNotificationsCount > 0 && (
-                <span className="absolute 1 top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
               )}
             </button>
 
