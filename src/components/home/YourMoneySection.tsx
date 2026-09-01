@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ChevronRight, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -16,15 +16,15 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
     <section id="cashflow-summary" className="transition-colors">
       <div className="flex items-end justify-between mb-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Your Money</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Cash flow this month</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Cash flow &amp; financial overview</p>
         </div>
         <button
           onClick={onNavigateToReport}
-          className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors flex items-center gap-1 cursor-pointer"
+          className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors inline-flex items-center gap-1 py-2 px-3 min-h-[40px] rounded-xl hover:bg-gray-100 dark:hover:bg-[#121A2C] cursor-pointer"
         >
           <span>Details</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -32,9 +32,9 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
         {/* Total Income Card */}
         <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl p-6 hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all shadow-xs">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Total Income</span>
-            <span className="inline-flex items-center gap-0.5 px-2 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-md tracking-wide">
-              <ArrowUpRight className="w-3 h-3" />
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Total income</span>
+            <span className="inline-flex items-center gap-0.5 px-2 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-md tracking-wide">
+              <ArrowUpRight className="w-3.5 h-3.5" />
               +12.5%
             </span>
           </div>
@@ -48,9 +48,9 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
         {/* Total Expenses Card */}
         <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl p-6 hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all shadow-xs">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Total Expenses</span>
-            <span className="inline-flex items-center gap-0.5 px-2 py-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold rounded-md tracking-wide">
-              <ArrowDownRight className="w-3 h-3" />
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Total expenses</span>
+            <span className="inline-flex items-center gap-0.5 px-2 py-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-bold rounded-md tracking-wide">
+              <ArrowDownRight className="w-3.5 h-3.5" />
               -4.2%
             </span>
           </div>

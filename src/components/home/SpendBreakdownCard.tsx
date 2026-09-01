@@ -9,7 +9,7 @@ import {
   Bar,
   XAxis
 } from 'recharts';
-import { PieChart as PieChartIcon, BarChart2, ArrowRight } from 'lucide-react';
+import { PieChart as PieChartIcon, BarChart2, ChevronRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -52,8 +52,8 @@ export const SpendBreakdownCard: React.FC<SpendBreakdownCardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 block mb-1">
-            Spend Breakdown
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+            Spend breakdown
           </span>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
             {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
@@ -92,10 +92,10 @@ export const SpendBreakdownCard: React.FC<SpendBreakdownCardProps> = ({
           {/* Full Report Link */}
           <button
             onClick={onNavigateToReport}
-            className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors flex items-center gap-1 cursor-pointer ml-2"
+            className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors flex items-center gap-1 py-1.5 px-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-[#121A2C] cursor-pointer ml-2"
           >
             <span>Full Report</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

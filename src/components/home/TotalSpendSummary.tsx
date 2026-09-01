@@ -49,8 +49,8 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 block mb-1">
-            Spend Breakdown
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+            Spend breakdown
           </span>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
             {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}

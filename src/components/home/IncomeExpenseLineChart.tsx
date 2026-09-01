@@ -94,10 +94,10 @@ export const IncomeExpenseLineChart: React.FC = () => {
       {/* Header with Title and Legend Indicators */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-[#737373] dark:text-[#A3A3A3] block mb-1">
-            Income vs Expense Over Time
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+            Income vs. expense over time
           </span>
-          <h3 className="text-xl font-bold text-[#171717] dark:text-[#FAFAFA]">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
             Cash Flow Trend
           </h3>
         </div>

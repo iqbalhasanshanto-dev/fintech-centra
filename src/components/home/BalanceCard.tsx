@@ -32,8 +32,8 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
       {/* Top row: Label & quick actions */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
-            {activeAccount ? activeAccount.name : 'Total Balance'}
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+            {activeAccount ? activeAccount.name : 'Total balance'}
           </span>
           {activeAccount && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-[#0A0E1A] text-gray-600 dark:text-gray-400 font-mono border border-gray-200 dark:border-[#232C45]">

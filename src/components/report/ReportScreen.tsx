@@ -22,10 +22,11 @@ import {
 } from 'recharts';
 import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { Button } from '../ui/Button';
 import { TransactionDetailModal } from '../home/TransactionDetailModal';
 import { AnalyticsCalendar } from './AnalyticsCalendar';
 import { formatCurrency } from '../../utils/formatters';
-import { Transaction, PeriodFilter } from '../../types';
+import { Transaction } from '../../types';
 import { getThemePalette } from '../../utils/themeColors';
 
 interface ReportScreenProps {
@@ -41,8 +42,6 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
     categoryBreakdown,
     periodIncome,
     periodExpenses,
-    periodFilter,
-    setPeriodFilter,
     settings,
     transactions,
     categories,
@@ -67,13 +66,6 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
     count: number;
     categoryId: string;
   } | null>(null);
-
-  const periods: { id: PeriodFilter; label: string }[] = [
-    { id: 'this_month', label: 'This Month' },
-    { id: 'last_month', label: 'Last Month' },
-    { id: 'last_90_days', label: 'Last 90 Days' },
-    { id: 'this_year', label: 'This Year' },
-  ];
 
   // 1. Grouped Bar Chart Data: Income vs Expense per Category
   const categoryComparisonData = useMemo(() => {
@@ -167,56 +159,45 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       
-      {/* Header with Back Button & Period Switcher */}
+      {/* Header with Back Button */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-3">
           {onBackToHome && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onBackToHome}
-              className="p-2 -ml-2 rounded-lg text-[#737373] dark:text-[#A3A3A3] hover:text-[#171717] dark:hover:text-[#FAFAFA] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors cursor-pointer"
+              icon={<ArrowLeft className="w-4 h-4" />}
               aria-label="Back to Dashboard"
             >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+              Back
+            </Button>
           )}
           <div>
-            <h2 className="text-2xl font-bold text-[#171717] dark:text-[#FAFAFA]">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Analytics &amp; Breakdown
-            </h2>
-            <p className="text-sm text-[#737373] dark:text-[#A3A3A3] mt-0.5">
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               Category income vs. expense comparison, expense distribution &amp; daily calendar
             </p>
           </div>
         </div>
-
-        {/* Period Selector Dropdown */}
-        <select
-          value={periodFilter}
-          onChange={e => setPeriodFilter(e.target.value as PeriodFilter)}
-          className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] text-[#171717] dark:text-[#FAFAFA] hover:border-[#737373] focus:outline-none cursor-pointer shadow-xs"
-        >
-          {periods.map(p => (
-            <option key={p.id} value={p.id} className="bg-white dark:bg-[#171717] text-[#171717] dark:text-[#FAFAFA]">
-              {p.label}
-            </option>
-          ))}
-        </select>
       </div>
 
       {/* Summary KPI Cards Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#737373] dark:text-[#A3A3A3] block mb-1">
-            Period Total Income
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] shadow-xs">
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+            Period total income
           </span>
           <div className="text-2xl font-bold tabular-nums currency-amount" style={{ color: palette.positive }}>
             +{formatCurrency(periodIncome, settings.baseCurrency, settings.privacyMode)}
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#737373] dark:text-[#A3A3A3] block mb-1">
-            Period Total Expenses
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] shadow-xs">
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+            Period total expenses
           </span>
           <div className="text-2xl font-bold tabular-nums currency-amount" style={{ color: palette.negative }}>
             -{formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
@@ -227,13 +208,13 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
       {/* =========================================================================
           SECTION 1: CHARTS (Bar Chart: Income vs Expense by Category + Donut Chart)
           ========================================================================= */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] transition-colors shadow-xs">
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] transition-colors shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <span className="text-xs font-bold text-[#737373] dark:text-[#A3A3A3] uppercase tracking-widest block mb-1">
-              Visual Analytics
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+              Visual analytics
             </span>
-            <h3 className="text-xl font-bold text-[#171717] dark:text-[#FAFAFA]">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               {activeChartTab === 'grouped_bar'
                 ? 'Category Income vs Expense Comparison'
                 : 'Expense Breakdown by Category'}
@@ -241,13 +222,13 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
           </div>
 
           {/* Chart View Mode Switcher */}
-          <div className="flex items-center p-1 rounded-xl bg-[#F5F5F5] dark:bg-[#262626] border border-[#E5E5E5] dark:border-[#404040] self-start sm:self-auto">
+          <div className="flex items-center p-1 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] self-start sm:self-auto">
             <button
               onClick={() => setActiveChartTab('grouped_bar')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeChartTab === 'grouped_bar'
-                  ? 'bg-white dark:bg-[#171717] text-[#171717] dark:text-[#FAFAFA] shadow-xs'
-                  : 'text-[#737373] dark:text-[#A3A3A3] hover:text-[#171717] dark:hover:text-[#FAFAFA]'
+                  ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <BarChart2 className="w-3.5 h-3.5" />
@@ -257,8 +238,8 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
               onClick={() => setActiveChartTab('donut')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeChartTab === 'donut'
-                  ? 'bg-white dark:bg-[#171717] text-[#171717] dark:text-[#FAFAFA] shadow-xs'
-                  : 'text-[#737373] dark:text-[#A3A3A3] hover:text-[#171717] dark:hover:text-[#FAFAFA]'
+                  ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <PieChartIcon className="w-3.5 h-3.5" />
@@ -271,7 +252,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
         {activeChartTab === 'grouped_bar' && (
           <div className="w-full">
             {categoryComparisonData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-xs text-[#737373] dark:text-[#A3A3A3]">
+              <div className="h-64 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
                 No category transaction data available for this timeframe.
               </div>
             ) : (
@@ -287,16 +268,16 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                       <XAxis
                         dataKey="name"
                         stroke={palette.textSecondary}
-                        fontSize={10}
+                        fontSize={11}
                         tickLine={false}
                         axisLine={false}
                         interval={0}
-                        angle={-20}
+                        angle={-15}
                         textAnchor="end"
                       />
                       <YAxis
                         stroke={palette.textSecondary}
-                        fontSize={10}
+                        fontSize={11}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(val: number) => {
@@ -309,20 +290,20 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                         verticalAlign="top"
                         align="right"
                         iconType="circle"
-                        wrapperStyle={{ fontSize: '11px', paddingBottom: '12px' }}
+                        wrapperStyle={{ fontSize: '12px', paddingBottom: '8px', top: -5 }}
                       />
                       <Bar
                         dataKey="income"
                         name="Income"
                         fill={palette.positive}
-                        maxBarSize={20}
+                        maxBarSize={22}
                         radius={[4, 4, 0, 0]}
                       />
                       <Bar
                         dataKey="expense"
                         name="Expense"
                         fill={palette.negative}
-                        maxBarSize={20}
+                        maxBarSize={22}
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -337,7 +318,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
         {activeChartTab === 'donut' && (
           <div className="w-full">
             {expenseDonutData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-xs text-[#737373] dark:text-[#A3A3A3]">
+              <div className="h-64 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
                 No expense breakdown recorded for this timeframe.
               </div>
             ) : (
@@ -377,10 +358,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
                     {hoveredSlice ? (
                       <div className="animate-fade-in flex flex-col items-center">
-                        <span className="text-[11px] font-bold text-[#737373] dark:text-[#A3A3A3] uppercase tracking-wider truncate max-w-[130px]">
+                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate max-w-[130px]">
                           {hoveredSlice.name}
                         </span>
-                        <span className="text-xl font-bold text-[#171717] dark:text-[#FAFAFA] tabular-nums font-display">
+                        <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums font-display">
                           {formatCurrency(hoveredSlice.value, settings.baseCurrency, settings.privacyMode)}
                         </span>
                         <span
@@ -392,14 +373,14 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                       </div>
                     ) : (
                       <div className="animate-fade-in flex flex-col items-center">
-                        <span className="text-[10px] font-bold text-[#737373] dark:text-[#A3A3A3] uppercase tracking-wider">
-                          Total Spend
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                          Total spend
                         </span>
-                        <span className="text-xl font-bold text-[#171717] dark:text-[#FAFAFA] tabular-nums font-display">
+                        <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums font-display">
                           {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
                         </span>
                         {topExpenseCategory && (
-                          <span className="text-[10px] font-medium text-[#737373] dark:text-[#A3A3A3] mt-0.5">
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
                             Top: {topExpenseCategory.name} ({topExpenseCategory.percentage.toFixed(0)}%)
                           </span>
                         )}
@@ -420,18 +401,18 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                         onClick={() =>
                           setExpandedCategoryId(expandedCategoryId === item.categoryId ? null : item.categoryId)
                         }
-                        className={`flex items-center gap-3 p-3 rounded-xl bg-[#F5F5F5] dark:bg-[#262626] border transition-all cursor-pointer ${
+                        className={`flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-[#0A0E1A] border transition-all cursor-pointer ${
                           isHovered
-                            ? 'border-[#2F6FED] dark:border-[#C6FF3D] shadow-xs scale-[1.02]'
-                            : 'border-[#E5E5E5] dark:border-[#404040] hover:border-[#2F6FED] dark:hover:border-[#C6FF3D]'
+                            ? 'border-brand-500 shadow-xs scale-[1.02]'
+                            : 'border-gray-200 dark:border-[#232C45] hover:border-brand-500'
                         }`}
                       >
                         <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-[#171717] dark:text-[#FAFAFA] truncate">
+                          <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
                             {item.name}
                           </p>
-                          <p className="text-[11px] text-[#737373] dark:text-[#A3A3A3] tabular-nums">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
                             {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode, false)} ({item.percentage.toFixed(1)}%)
                           </p>
                         </div>
@@ -455,10 +436,13 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
           ========================================================================= */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-[#737373] dark:text-[#A3A3A3]">
-            Itemized Category Outflows
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+            <span>Itemized Category Outflows</span>
+            <span className="px-2 py-0.5 bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 text-xs font-bold rounded-full font-mono">
+              {categoryBreakdown.length}
+            </span>
           </h3>
-          <span className="text-xs text-[#737373] dark:text-[#A3A3A3]">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             Tap any row to view inline transactions
           </span>
         </div>
@@ -471,10 +455,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
             return (
               <div
                 key={item.category.id}
-                className={`rounded-2xl bg-white dark:bg-[#171717] border transition-colors overflow-hidden shadow-xs ${
+                className={`rounded-2xl bg-white dark:bg-[#121A2C] border transition-colors overflow-hidden shadow-xs ${
                   isExpanded
-                    ? 'border-[#2F6FED] dark:border-[#C6FF3D] ring-1 ring-[#2F6FED]/20 dark:ring-[#C6FF3D]/20'
-                    : 'border-[#E5E5E5] dark:border-[#404040] hover:border-gray-400 dark:hover:border-gray-500'
+                    ? 'border-brand-500 ring-1 ring-brand-500/20'
+                    : 'border-gray-200 dark:border-[#232C45] hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
               >
                 {/* Clickable Header Row */}
@@ -483,22 +467,22 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                   className="p-4 flex items-center justify-between cursor-pointer select-none group"
                 >
                   <div className="flex items-center space-x-3.5 flex-1 min-w-0 pr-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#F5F5F5] dark:bg-[#262626] border border-[#E5E5E5] dark:border-[#404040] text-[#171717] dark:text-[#FAFAFA] flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200/80 dark:border-[#232C45] text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
                       <CategoryIcon name={item.category.icon} className="w-4 h-4" />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-sm font-semibold text-[#171717] dark:text-[#FAFAFA] truncate">
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                           {item.category.name}
                         </span>
-                        <span className="text-xs text-[#737373] dark:text-[#A3A3A3] tabular-nums">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
                           {item.percentage.toFixed(1)}%
                         </span>
                       </div>
 
                       {/* Progress Line */}
-                      <div className="w-full h-1.5 rounded-full bg-[#F5F5F5] dark:bg-[#262626] overflow-hidden">
+                      <div className="w-full h-1.5 rounded-full bg-gray-100 dark:bg-[#0A0E1A] overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -513,10 +497,10 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                   {/* Amount & Trend & Chevron */}
                   <div className="text-right shrink-0 flex items-center space-x-3 ml-2">
                     <div>
-                      <div className="text-sm font-bold text-[#171717] dark:text-[#FAFAFA] tabular-nums currency-amount">
+                      <div className="text-sm font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
                         {formatCurrency(item.total, settings.baseCurrency, settings.privacyMode)}
                       </div>
-                      <div className="flex items-center justify-end space-x-0.5 text-[10px] font-bold mt-0.5 tabular-nums">
+                      <div className="flex items-center justify-end space-x-0.5 text-xs font-bold mt-0.5 tabular-nums">
                         {item.trendPercentage > 0 ? (
                           <span className="flex items-center" style={{ color: palette.negative }}>
                             <TrendingUp className="w-3 h-3 mr-0.5" />
@@ -532,8 +516,8 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                     </div>
 
                     <ChevronRight 
-                      className={`w-4 h-4 text-[#737373] dark:text-[#A3A3A3] group-hover:text-[#171717] dark:group-hover:text-[#FAFAFA] transition-transform duration-200 ${
-                        isExpanded ? 'rotate-90 text-[#2F6FED] dark:!text-[#C6FF3D]' : ''
+                      className={`w-4 h-4 text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white transition-transform duration-200 ${
+                        isExpanded ? 'rotate-90 text-brand-600 dark:!text-[#C6FF3D]' : ''
                       }`} 
                     />
                   </div>
@@ -541,15 +525,15 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
 
                 {/* Inline Accordion Drawer */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-2 border-t border-[#E5E5E5] dark:border-[#404040] bg-[#FAFAFA] dark:bg-[#0A0A0A]/60 animate-fade-in">
-                    <div className="flex items-center justify-between py-1.5 text-xs font-bold text-[#737373] dark:text-[#A3A3A3] uppercase tracking-wider">
+                  <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-[#232C45] bg-gray-50/50 dark:bg-[#0A0E1A]/60 animate-fade-in">
+                    <div className="flex items-center justify-between py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">
                       <span>{item.category.name} Transactions</span>
-                      <span className="font-mono text-[#737373] dark:text-[#A3A3A3]">{categoryTxs.length} items</span>
+                      <span className="font-mono text-gray-500 dark:text-gray-400">{categoryTxs.length} items</span>
                     </div>
 
                     <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                       {categoryTxs.length === 0 ? (
-                        <p className="text-xs text-[#737373] dark:text-[#A3A3A3] py-3 text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 py-3 text-center">
                           No transactions recorded in this category.
                         </p>
                       ) : (
@@ -557,18 +541,18 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                           <div
                             key={tx.id}
                             onClick={() => handleTxSelect(tx)}
-                            className="p-3 rounded-xl bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] hover:border-[#2F6FED] dark:hover:border-[#C6FF3D] flex items-center justify-between text-xs cursor-pointer transition-colors"
+                            className="p-3 rounded-xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500 flex items-center justify-between text-xs cursor-pointer transition-colors"
                           >
                             <div className="min-w-0 pr-2">
-                              <p className="font-semibold text-[#171717] dark:text-[#FAFAFA] truncate">
+                              <p className="font-semibold text-gray-900 dark:text-white truncate">
                                 {tx.merchant || tx.categoryName}
                               </p>
-                              <p className="text-[10px] text-[#737373] dark:text-[#A3A3A3] mt-0.5">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                 {tx.accountName} • {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </p>
                             </div>
                             <span
-                              className="font-bold tabular-nums shrink-0 font-display"
+                              className="font-bold tabular-nums shrink-0 font-display text-xs"
                               style={{
                                 color: tx.type === 'income' ? palette.positive : palette.negative,
                               }}

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
@@ -49,7 +50,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
       {/* Header & Filter pills */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h3>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="flex bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] rounded-lg p-0.5">
             <button
               onClick={() => setFilterMode('all')}
@@ -84,9 +85,10 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
           </div>
           <button
             onClick={onOpenSeeAll}
-            className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 py-2 px-3 min-h-[44px] rounded-xl hover:bg-gray-100 dark:hover:bg-[#121A2C] transition-colors cursor-pointer"
           >
-            View All
+            <span>View All</span>
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -102,7 +104,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
             <div key={group.dateKey}>
               {/* Date divider */}
               <div className="px-4 py-2.5 bg-gray-50/80 dark:bg-[#0A0E1A]/50 border-b border-gray-200 dark:border-[#232C45]">
-                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {formatDateHeader(group.dateKey)}
                 </span>
               </div>
@@ -129,7 +131,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                           <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">
                             {tx.merchant || tx.categoryName}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                             {tx.accountName} • {formatTime(tx.date)}
                             {tx.tags && tx.tags.length > 0 && (
                               <span> • <span className="text-brand-600 dark:text-brand-400">#{tx.tags[0]}</span></span>
@@ -152,7 +154,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                           {isIncome ? '+' : isExpense ? '-' : ''}
                           {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
                         </p>
-                        <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 capitalize">
                           {tx.type}
                         </p>
                       </div>

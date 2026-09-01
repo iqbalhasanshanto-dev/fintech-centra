@@ -21,6 +21,7 @@ import {
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../ui/Modal';
+import { Button } from '../ui/Button';
 import { CurrencyCode } from '../../types';
 import { CentraDB } from '../../db/storage';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -129,15 +130,15 @@ export const SettingsScreen: React.FC = () => {
       
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Settings
-        </h2>
+        </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
           Preferences, security, and application settings
         </p>
       </div>
 
-      {/* 1. Profile Card */}
+      {/* 1. Profile Card with labeled Edit button */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] flex items-center justify-between transition-colors shadow-xs">
         <div className="flex items-center space-x-4 min-w-0">
           <img
@@ -150,7 +151,7 @@ export const SettingsScreen: React.FC = () => {
               <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
                 {user.name}
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 text-xs font-bold uppercase tracking-wider">
                 Personal
               </span>
             </div>
@@ -158,26 +159,29 @@ export const SettingsScreen: React.FC = () => {
           </div>
         </div>
 
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => {
             setProfileName(user.name);
             setProfileEmail(user.email);
             setProfileAvatar(user.avatarUrl);
             setShowEditProfile(true);
           }}
-          className="p-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] hover:bg-gray-200 dark:hover:bg-[#1A233A] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-          aria-label="Edit profile"
+          icon={<Edit2 className="w-4 h-4" />}
+          className="min-h-[44px] px-3.5"
+          aria-label="Edit user profile"
         >
-          <Edit2 className="w-4 h-4" />
-        </button>
+          Edit
+        </Button>
       </div>
 
       {/* 2. Security & Authentication Center */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
         <div className="flex items-center space-x-2.5">
           <Shield className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-            Security &amp; Authentication
+          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            Security &amp; authentication
           </h3>
         </div>
 
@@ -254,8 +258,8 @@ export const SettingsScreen: React.FC = () => {
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
         <div className="flex items-center space-x-2.5">
           <Bell className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-            Notification Rules
+          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            Notification rules
           </h3>
         </div>
 
@@ -313,8 +317,8 @@ export const SettingsScreen: React.FC = () => {
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
         <div className="flex items-center space-x-2.5">
           <Palette className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-            Appearance &amp; Locale
+          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            Appearance &amp; locale
           </h3>
         </div>
 
@@ -355,33 +359,37 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Data Management & Backup */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-3 transition-colors shadow-xs">
-        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-          Data Management
+      {/* 5. Data Management & Backup with Destructive Reset Button */}
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
+        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          Data management
         </h3>
         
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <button
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <Button
+            variant="secondary"
+            size="md"
             onClick={handleExportData}
-            className="py-3 px-4 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-[#1A233A] font-semibold flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+            icon={<Download className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
+            className="w-full"
           >
-            <Download className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            <span>Export JSON</span>
-          </button>
+            Export JSON
+          </Button>
 
-          <button
+          <Button
+            variant="destructive"
+            size="md"
             onClick={handleResetData}
-            className="py-3 px-4 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-[#1A233A] font-semibold flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+            icon={<RotateCcw className="w-4 h-4" />}
+            className="w-full"
           >
-            <RotateCcw className="w-4 h-4 text-amber-500" />
-            <span>Reset Demo Data</span>
-          </button>
+            Reset Demo Data
+          </Button>
         </div>
       </div>
 
       {/* 6. Support & Logout */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <button
           onClick={() => setShowHelpModal(true)}
           className="w-full py-3.5 px-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-700 flex items-center justify-between transition-colors cursor-pointer shadow-xs"
@@ -393,24 +401,28 @@ export const SettingsScreen: React.FC = () => {
           <ChevronRight className="w-4 h-4 text-gray-400" />
         </button>
 
-        <button
-          onClick={() => {
-            if (window.confirm('Log out of Centra?')) {
-              logout();
-            }
-          }}
-          className="w-full py-3.5 px-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Log Out of Session</span>
-        </button>
+        {/* Standard button width for Logout rather than spanning full content width */}
+        <div className="flex justify-start">
+          <Button
+            variant="destructive"
+            size="md"
+            onClick={() => {
+              if (window.confirm('Log out of Centra?')) {
+                logout();
+              }
+            }}
+            icon={<LogOut className="w-4 h-4" />}
+          >
+            Log Out of Session
+          </Button>
+        </div>
       </div>
 
       {/* Edit Profile Modal */}
       <Modal isOpen={showEditProfile} onClose={() => setShowEditProfile(false)} title="Edit Profile">
         <form onSubmit={handleSaveProfile} className="space-y-4">
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">Choose Avatar</label>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Choose Avatar</label>
             <div className="flex items-center space-x-3 overflow-x-auto pb-1">
               {avatarsList.map((url, i) => (
                 <img
@@ -430,7 +442,7 @@ export const SettingsScreen: React.FC = () => {
                 title="Upload from device"
               >
                 <Camera className="w-4 h-4" />
-                <span className="text-[8px] font-bold mt-0.5">Upload</span>
+                <span className="text-[9px] font-bold mt-0.5">Upload</span>
               </div>
               <input
                 ref={fileInputRef}
@@ -443,7 +455,7 @@ export const SettingsScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">Display Name</label>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Display Name</label>
             <input
               type="text"
               required
@@ -454,7 +466,7 @@ export const SettingsScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">Email Address</label>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Email Address</label>
             <input
               type="email"
               required
@@ -464,12 +476,14 @@ export const SettingsScreen: React.FC = () => {
             />
           </div>
 
-          <button
+          <Button
             type="submit"
-            className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-float transition-all cursor-pointer"
+            variant="primary"
+            size="lg"
+            fullWidth
           >
             Save Profile Changes
-          </button>
+          </Button>
         </form>
       </Modal>
 
@@ -478,14 +492,16 @@ export const SettingsScreen: React.FC = () => {
         <div className="space-y-4 text-xs text-gray-700 dark:text-gray-300">
           <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
             <p className="font-bold">Two-Factor Authentication is now enabled.</p>
-            <p className="text-[11px] mt-0.5 text-gray-500 dark:text-gray-400">Your financial account data is protected with hardware &amp; OTP verification.</p>
+            <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">Your financial account data is protected with hardware &amp; OTP verification.</p>
           </div>
-          <button
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
             onClick={() => setShowTwoFactorModal(false)}
-            className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors cursor-pointer"
           >
             Done
-          </button>
+          </Button>
         </div>
       </Modal>
 
@@ -500,12 +516,14 @@ export const SettingsScreen: React.FC = () => {
             <h4 className="font-bold text-gray-900 dark:text-white">How do I export my data?</h4>
             <p className="text-gray-500 dark:text-gray-400">Navigate to Data Management in Settings and click "Export JSON" to download your complete encrypted local database.</p>
           </div>
-          <button
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
             onClick={() => setShowHelpModal(false)}
-            className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors cursor-pointer"
           >
             Close FAQ
-          </button>
+          </Button>
         </div>
       </Modal>
 

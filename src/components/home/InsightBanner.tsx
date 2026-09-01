@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, TrendingUp, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Sparkles, TrendingUp, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 
 interface InsightBannerProps {
@@ -38,7 +38,7 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({ onActionClick }) =
               {currentInsight.title}
             </h4>
             {currentInsight.metric && (
-              <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-300 text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-300 text-xs font-bold">
                 {currentInsight.metric}
               </span>
             )}
@@ -52,10 +52,10 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({ onActionClick }) =
       {currentInsight.actionText && (
         <button
           onClick={onActionClick}
-          className="self-start sm:self-center px-3.5 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/60 hover:bg-brand-100 dark:hover:bg-brand-900/80 text-brand-600 dark:text-brand-300 text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer border border-brand-200/60 dark:border-brand-900/40"
+          className="self-start sm:self-center px-4 py-2 min-h-[40px] rounded-xl bg-brand-50 dark:bg-brand-950/60 hover:bg-brand-100 dark:hover:bg-brand-900/80 text-brand-600 dark:text-brand-300 text-xs font-bold transition-colors flex items-center gap-1 shrink-0 cursor-pointer border border-brand-200/60 dark:border-brand-900/40"
         >
           <span>{currentInsight.actionText}</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       )}
     </div>

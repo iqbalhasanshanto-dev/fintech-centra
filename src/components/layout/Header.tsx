@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, ChevronDown, Check, Eye, EyeOff, Shield, Plus } from 'lucide-react';
+import { Bell, ChevronDown, Check, Shield, Plus } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { PeriodFilter } from '../../types';
@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigateToSettings,
   onOpenAddAction,
 }) => {
-  const { periodFilter, setPeriodFilter, unreadNotificationsCount, settings, updateSettings } = useFinance();
+  const { periodFilter, setPeriodFilter, unreadNotificationsCount } = useFinance();
   const { user } = useAuth();
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
 
@@ -29,10 +29,6 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   const currentPeriodLabel = periods.find(p => p.id === periodFilter)?.label || 'This Month';
-
-  const togglePrivacy = () => {
-    updateSettings({ privacyMode: !settings.privacyMode });
-  };
 
   return (
     <header id="header" className="border-b border-gray-200 dark:border-[#232C45] bg-white/80 dark:bg-[#0A0E1A]/80 backdrop-blur-md sticky top-0 z-50 transition-colors">
@@ -47,28 +43,28 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Controls */}
-        <div className="flex items-center gap-3 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-4">
           
           {/* Period Selector Dropdown & Quick Add + (Desktop only) */}
-          <div className="relative hidden md:flex items-center gap-2.5">
+          <div className="relative hidden md:flex items-center gap-2">
             <button
               onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
-              className="flex items-center bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="flex items-center bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-full px-4 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
               aria-expanded={showPeriodDropdown}
             >
               <span>{currentPeriodLabel}</span>
-              <ChevronDown className={`ml-2 w-3 h-3 text-gray-400 transition-transform ${showPeriodDropdown ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`ml-2 w-3.5 h-3.5 text-gray-400 transition-transform ${showPeriodDropdown ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Header "+" Quick Add Button (Desktop Only) */}
+            {/* Header "+" Quick Add Button (Desktop Only) - Subdued Secondary Style so page-specific primary CTA stands out */}
             {onOpenAddAction && (
               <button
                 onClick={onOpenAddAction}
-                className="hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-brand-600 via-brand-500 to-indigo-500 hover:from-brand-700 hover:to-indigo-600 text-white shadow-float transition-all transform active:scale-95 cursor-pointer"
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:bg-gray-200 dark:hover:bg-[#1E293B] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all transform active:scale-95 cursor-pointer shadow-2xs"
                 title="New Transaction or Transfer"
                 aria-label="New Transaction or Transfer"
               >
-                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <Plus className="w-4 h-4 stroke-[2]" />
               </button>
             )}
 
@@ -101,36 +97,26 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Action Toolbar */}
-          <div className="flex items-center gap-3 sm:gap-4 border-l border-gray-200 dark:border-[#232C45] pl-3 sm:pl-6">
-            {/* Privacy Mask Toggle */}
-            <button
-              onClick={togglePrivacy}
-              className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer p-1"
-              title={settings.privacyMode ? "Disable Privacy Mask" : "Enable Privacy Mask"}
-              aria-label="Toggle privacy mask"
-            >
-              {settings.privacyMode ? <EyeOff className="w-4 h-4 text-brand-600 dark:text-brand-400" /> : <Eye className="w-4 h-4" />}
-            </button>
-
-            {/* Carbon Theme Toggle Switch */}
+          <div className="flex items-center gap-3 sm:gap-4 border-l border-gray-200 dark:border-[#232C45] pl-3 sm:pl-4">
+            {/* Theme Toggle Switch */}
             <ThemeToggle showLabel={false} />
 
             {/* Notification Bell with Red Dot */}
             <button
               onClick={onOpenNotifications}
-              className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative cursor-pointer p-1"
+              className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#121A2C]"
               aria-label="Open notifications"
             >
               <Bell className="w-4 h-4" />
               {unreadNotificationsCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full"></span>
+                <span className="absolute 1 top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
               )}
             </button>
 
             {/* User Profile Avatar */}
             <button
               onClick={onNavigateToSettings}
-              className="relative cursor-pointer ml-1"
+              className="relative cursor-pointer"
               aria-label="Open user settings"
             >
               <img

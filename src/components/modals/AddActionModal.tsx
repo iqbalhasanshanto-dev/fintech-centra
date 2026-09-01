@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
+import { Button } from '../ui/Button';
 import { formatCurrency } from '../../utils/formatters';
 
 interface AddActionModalProps {
@@ -600,22 +601,26 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
         {/* Action Buttons */}
         <div className="pt-3 grid grid-cols-2 gap-2.5">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             onClick={() => handleSave(true)}
-            className="py-3 px-4 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] hover:bg-gray-200 dark:hover:bg-[#1A233A] text-gray-700 dark:text-gray-300 font-bold text-xs transition-colors cursor-pointer"
+            className="w-full"
           >
             Save &amp; Add Another
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="primary"
+            size="md"
             onClick={() => handleSave(false)}
-            className="py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-float transition-all cursor-pointer"
+            icon={<Check className="w-4 h-4 stroke-[2.5]" />}
+            className="w-full"
           >
-            <Check className="w-4 h-4 stroke-[2.5]" />
-            <span>Confirm</span>
-          </button>
+            Confirm
+          </Button>
         </div>
 
       </div>
