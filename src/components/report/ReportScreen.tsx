@@ -59,6 +59,14 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
   const [activeChartTab, setActiveChartTab] = useState<'grouped_bar' | 'donut'>('grouped_bar');
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [hoveredSlice, setHoveredSlice] = useState<{
+    name: string;
+    value: number;
+    color: string;
+    percentage: number;
+    count: number;
+    categoryId: string;
+  } | null>(null);
 
   const periods: { id: PeriodFilter; label: string }[] = [
     { id: 'this_month', label: 'This Month' },
@@ -150,22 +158,6 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
               </span>
             </div>
           ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Tooltip for Donut Chart
-  const DonutTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in text-xs">
-          <p className="font-bold text-[#171717] dark:text-[#FAFAFA]">{data.name}</p>
-          <p className="text-[#737373] dark:text-[#A3A3A3] mt-0.5 font-medium tabular-nums">
-            Spend: {formatCurrency(data.value, settings.baseCurrency, settings.privacyMode)} ({data.percentage?.toFixed(1)}%)
-          </p>
         </div>
       );
     }
@@ -353,7 +345,6 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                 <div className="lg:col-span-6 relative h-64 flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <RechartsTooltip content={<DonutTooltip />} />
                       <Pie
                         data={expenseDonutData}
                         cx="50%"
@@ -364,6 +355,12 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                         dataKey="value"
                         nameKey="name"
                         stroke="none"
+                        onMouseEnter={(_, index) => {
+                          setHoveredSlice(expenseDonutData[index] || null);
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredSlice(null);
+                        }}
                         onClick={(entry: any) =>
                           setExpandedCategoryId(expandedCategoryId === entry?.categoryId ? null : entry?.categoryId)
                         }
@@ -376,43 +373,71 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                     </PieChart>
                   </ResponsiveContainer>
 
-                  {/* Centered Donut Summary */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                    <span className="text-[10px] font-bold text-[#737373] dark:text-[#A3A3A3] uppercase tracking-wider">
-                      Total Spend
-                    </span>
-                    <span className="text-xl font-bold text-[#171717] dark:text-[#FAFAFA] tabular-nums font-display">
-                      {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
-                    </span>
-                    {topExpenseCategory && (
-                      <span className="text-[10px] font-medium text-[#737373] dark:text-[#A3A3A3] mt-0.5">
-                        Top: {topExpenseCategory.name} ({topExpenseCategory.percentage.toFixed(0)}%)
-                      </span>
+                  {/* Clean Non-overlapping Dynamic Centered Summary */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
+                    {hoveredSlice ? (
+                      <div className="animate-fade-in flex flex-col items-center">
+                        <span className="text-[11px] font-bold text-[#737373] dark:text-[#A3A3A3] uppercase tracking-wider truncate max-w-[130px]">
+                          {hoveredSlice.name}
+                        </span>
+                        <span className="text-xl font-bold text-[#171717] dark:text-[#FAFAFA] tabular-nums font-display">
+                          {formatCurrency(hoveredSlice.value, settings.baseCurrency, settings.privacyMode)}
+                        </span>
+                        <span
+                          className="text-xs font-bold mt-0.5 tabular-nums"
+                          style={{ color: hoveredSlice.color }}
+                        >
+                          {hoveredSlice.percentage.toFixed(1)}%
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="animate-fade-in flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-[#737373] dark:text-[#A3A3A3] uppercase tracking-wider">
+                          Total Spend
+                        </span>
+                        <span className="text-xl font-bold text-[#171717] dark:text-[#FAFAFA] tabular-nums font-display">
+                          {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
+                        </span>
+                        {topExpenseCategory && (
+                          <span className="text-[10px] font-medium text-[#737373] dark:text-[#A3A3A3] mt-0.5">
+                            Top: {topExpenseCategory.name} ({topExpenseCategory.percentage.toFixed(0)}%)
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
 
                 {/* Donut Legend Grid */}
                 <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {expenseDonutData.map(item => (
-                    <div
-                      key={item.name}
-                      onClick={() =>
-                        setExpandedCategoryId(expandedCategoryId === item.categoryId ? null : item.categoryId)
-                      }
-                      className="flex items-center gap-3 p-3 rounded-xl bg-[#F5F5F5] dark:bg-[#262626] border border-[#E5E5E5] dark:border-[#404040] hover:border-[#2F6FED] dark:hover:border-[#C6FF3D] transition-colors cursor-pointer"
-                    >
-                      <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-[#171717] dark:text-[#FAFAFA] truncate">
-                          {item.name}
-                        </p>
-                        <p className="text-[11px] text-[#737373] dark:text-[#A3A3A3] tabular-nums">
-                          {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode, false)} ({item.percentage.toFixed(1)}%)
-                        </p>
+                  {expenseDonutData.map(item => {
+                    const isHovered = hoveredSlice?.categoryId === item.categoryId;
+                    return (
+                      <div
+                        key={item.name}
+                        onMouseEnter={() => setHoveredSlice(item)}
+                        onMouseLeave={() => setHoveredSlice(null)}
+                        onClick={() =>
+                          setExpandedCategoryId(expandedCategoryId === item.categoryId ? null : item.categoryId)
+                        }
+                        className={`flex items-center gap-3 p-3 rounded-xl bg-[#F5F5F5] dark:bg-[#262626] border transition-all cursor-pointer ${
+                          isHovered
+                            ? 'border-[#2F6FED] dark:border-[#C6FF3D] shadow-xs scale-[1.02]'
+                            : 'border-[#E5E5E5] dark:border-[#404040] hover:border-[#2F6FED] dark:hover:border-[#C6FF3D]'
+                        }`}
+                      >
+                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-[#171717] dark:text-[#FAFAFA] truncate">
+                            {item.name}
+                          </p>
+                          <p className="text-[11px] text-[#737373] dark:text-[#A3A3A3] tabular-nums">
+                            {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode, false)} ({item.percentage.toFixed(1)}%)
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
