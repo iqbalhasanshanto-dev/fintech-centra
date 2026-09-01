@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, TrendingUp, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
+import { Button } from '../ui/Button';
 
 interface InsightBannerProps {
   onActionClick?: () => void;
@@ -34,9 +35,9 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({ onActionClick }) =
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">
               {currentInsight.title}
-            </h4>
+            </h3>
             {currentInsight.metric && (
               <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-300 text-xs font-bold">
                 {currentInsight.metric}
@@ -50,13 +51,16 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({ onActionClick }) =
       </div>
 
       {currentInsight.actionText && (
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onActionClick}
-          className="self-start sm:self-center px-4 py-2 min-h-[40px] rounded-xl bg-brand-50 dark:bg-brand-950/60 hover:bg-brand-100 dark:hover:bg-brand-900/80 text-brand-600 dark:text-brand-300 text-xs font-bold transition-colors flex items-center gap-1 shrink-0 cursor-pointer border border-brand-200/60 dark:border-brand-900/40"
+          icon={<ChevronRight className="w-4 h-4" />}
+          iconPosition="right"
+          className="self-start sm:self-center shrink-0 border border-brand-200/60 dark:border-brand-900/40 bg-brand-50 dark:bg-brand-950/60 hover:bg-brand-100 dark:hover:bg-brand-900/80 text-brand-600 dark:text-brand-300"
         >
-          <span>{currentInsight.actionText}</span>
-          <ChevronRight className="w-4 h-4" />
-        </button>
+          {currentInsight.actionText}
+        </Button>
       )}
     </div>
   );

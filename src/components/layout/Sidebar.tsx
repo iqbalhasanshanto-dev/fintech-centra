@@ -114,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
                 {user.name}
               </p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">
+              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
                 {user.email}
               </p>
             </div>

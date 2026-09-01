@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { Button } from '../ui/Button';
 import { formatCurrency, formatDateHeader, formatTime } from '../../utils/formatters';
 
 interface TransactionsListProps {
@@ -49,7 +50,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
     <section id="transactions" className="transition-colors">
       {/* Header & Filter pills */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h3>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h2>
         <div className="flex items-center gap-2">
           <div className="flex bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] rounded-lg p-0.5">
             <button
@@ -83,13 +84,16 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
               Outflow
             </button>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onOpenSeeAll}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 py-2 px-3 min-h-[44px] rounded-xl hover:bg-gray-100 dark:hover:bg-[#121A2C] transition-colors cursor-pointer"
+            icon={<ChevronRight className="w-4 h-4" />}
+            iconPosition="right"
+            aria-label="View all transactions"
           >
-            <span>View All</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            View All
+          </Button>
         </div>
       </div>
 

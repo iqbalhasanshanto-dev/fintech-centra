@@ -30,8 +30,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     <div
       onClick={handleToggle}
       className={`inline-flex items-center gap-2 cursor-pointer select-none group ${className}`}
-      title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-      role="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

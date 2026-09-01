@@ -57,6 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
               className="flex items-center bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-full px-4 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
               aria-expanded={showPeriodDropdown}
+              aria-haspopup="listbox"
+              aria-label={`Filter by period: ${currentPeriodLabel}`}
             >
               <span>{currentPeriodLabel}</span>
               <ChevronDown className={`ml-2 w-3.5 h-3.5 text-gray-400 transition-transform ${showPeriodDropdown ? 'rotate-180' : ''}`} />
@@ -79,6 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
                         setPeriodFilter(p.id);
                         setShowPeriodDropdown(false);
                       }}
+                      aria-current={periodFilter === p.id ? 'true' : undefined}
                       className="w-full px-3.5 py-2 text-left text-xs font-semibold flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E293B] hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
                     >
                       <span>{p.label}</span>

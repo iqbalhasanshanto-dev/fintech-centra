@@ -130,9 +130,9 @@ export const SettingsScreen: React.FC = () => {
       
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Settings
-        </h1>
+        </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
           Preferences, security, and application settings
         </p>
@@ -390,16 +390,17 @@ export const SettingsScreen: React.FC = () => {
 
       {/* 6. Support & Logout */}
       <div className="space-y-4">
-        <button
+        <Button
+          variant="ghost"
+          fullWidth
           onClick={() => setShowHelpModal(true)}
-          className="w-full py-3.5 px-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-700 flex items-center justify-between transition-colors cursor-pointer shadow-xs"
+          icon={<HelpCircle className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
+          iconPosition="left"
+          className="py-3.5 px-5 rounded-2xl justify-between border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#121A2C] hover:bg-gray-50 dark:hover:bg-[#1A233A]"
         >
-          <div className="flex items-center space-x-3">
-            <HelpCircle className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            <span>Centra Help &amp; Support FAQ</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-        </button>
+          <span className="flex-1 text-left">Centra Help &amp; Support FAQ</span>
+          <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+        </Button>
 
         {/* Standard button width for Logout rather than spanning full content width */}
         <div className="flex justify-start">
