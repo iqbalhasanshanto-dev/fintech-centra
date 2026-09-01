@@ -23,28 +23,13 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Cash flow &amp; financial overview</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Desktop-only labeled "+ New transaction" Primary Button */}
-          {onOpenAddTransaction && (
-            <Button
-              variant="primary"
-              size="md"
-              onClick={onOpenAddTransaction}
-              icon={<Plus className="w-4 h-4 stroke-[2.5]" />}
-              className="hidden lg:inline-flex"
-            >
-              New transaction
-            </Button>
-          )}
-
-          <button
-            onClick={onNavigateToReport}
-            className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors inline-flex items-center gap-1 py-2 px-3 min-h-[40px] rounded-xl hover:bg-gray-100 dark:hover:bg-[#121A2C] cursor-pointer"
-          >
-            <span>Details</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          onClick={onNavigateToReport}
+          className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors inline-flex items-center gap-1 py-2 px-3 min-h-[40px] rounded-xl hover:bg-gray-100 dark:hover:bg-[#121A2C] cursor-pointer"
+        >
+          <span>Details</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
