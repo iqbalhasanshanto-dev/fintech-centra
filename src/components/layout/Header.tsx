@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAddAction,
 }) => {
   const { periodFilter, setPeriodFilter, unreadNotificationsCount } = useFinance();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
 
   const periods: { id: PeriodFilter; label: string }[] = [
@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header id="header" className="border-b border-gray-200 dark:border-[#232C45] bg-white/80 dark:bg-[#0A0E1A]/80 backdrop-blur-md sticky top-0 z-40 transition-colors w-full">
       <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        
+
         {/* Brand Logo & Wordmark (Visible on mobile/tablet below lg where sidebar is hidden) */}
         <div className="flex items-center gap-3 lg:hidden">
           <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shadow-sm">
@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Controls */}
         <div className="flex items-center gap-3 sm:gap-4">
-          
+
           {/* Period Selector Dropdown (Desktop & Tablet) */}
           <div className="relative hidden md:flex items-center gap-2">
             <button
@@ -110,17 +110,23 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* User Profile Avatar */}
+            {/* User Profile Avatar (or Guest badge) */}
             <button
               onClick={onNavigateToSettings}
-              className="relative cursor-pointer"
+              className="relative cursor-pointer flex items-center gap-2"
               aria-label="Open user settings"
             >
-              <img
-                src={user.avatarUrl || "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg"}
-                alt={user.name}
-                className="w-8 h-8 rounded-full border border-gray-300 dark:border-[#232C45] object-cover hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
-              />
+              {isGuest ? (
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-300/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                  Guest
+                </span>
+              ) : (
+                <img
+                  src={user.avatarUrl || "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg"}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full border border-gray-300 dark:border-[#232C45] object-cover hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                />
+              )}
             </button>
           </div>
 

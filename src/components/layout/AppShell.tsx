@@ -3,6 +3,7 @@ import { Shield } from 'lucide-react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav, TabType } from './BottomNav';
+import { GuestBanner } from './GuestBanner';
 import { HomeScreen } from '../home/HomeScreen';
 import { ReportScreen } from '../report/ReportScreen';
 import { PlanScreen } from '../plan/PlanScreen';
@@ -40,6 +41,11 @@ export const AppShell: React.FC = () => {
           onNavigateToSettings={() => setActiveTab('settings')}
           onOpenAddAction={() => handleOpenAddWithTab('transaction')}
         />
+
+        {/* Guest Mode Warning Banner */}
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <GuestBanner />
+        </div>
 
         {/* Main Screen Content Container */}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-36 lg:pb-12 bg-[#FAFAFA] dark:bg-[#0A0E1A]">

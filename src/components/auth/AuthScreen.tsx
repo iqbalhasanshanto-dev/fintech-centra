@@ -1,29 +1,70 @@
-import React, { useState } from 'react';
-import { Fingerprint, Lock, Mail, ArrowRight, ShieldCheck, User, Shield } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Lock, Mail, ArrowRight, ShieldCheck, User, Shield, UserX, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
+const RESEND_COOLDOWN = 60;
+
 export const AuthScreen: React.FC = () => {
-  const { login, register, loginWithBiometrics, pending2FA, verify2FA, cancel2FA } = useAuth();
-  
+  const {
+    login,
+    register,
+    loginWithBiometrics,
+    pending2FA,
+    verify2FA,
+    cancel2FA,
+    enterGuestMode,
+    resendVerificationEmail,
+  } = useAuth();
+
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('alex.morgan@centra.io');
-  const [password, setPassword] = useState('••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isScanningBiometrics, setIsScanningBiometrics] = useState(false);
   const [otpInput, setOtpInput] = useState('');
+
+  // Error / status states
   const [errorMsg, setErrorMsg] = useState('');
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendSent, setResendSent] = useState(false);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendCooldown]);
+
+  // Reset unconfirmed state when switching modes
+  const switchMode = (toLogin: boolean) => {
+    setIsLoginMode(toLogin);
+    setErrorMsg('');
+    setEmailNotConfirmed(false);
+    setResendSent(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setEmailNotConfirmed(false);
+    setResendSent(false);
+
     try {
       if (isLoginMode) {
-        await login(email, password);
+        const result = await login(email, password);
+        if (!result.ok) {
+          if (result.emailNotConfirmed) {
+            setEmailNotConfirmed(true);
+          } else {
+            setErrorMsg('Invalid email or password. Please try again.');
+          }
+        }
       } else {
         await register(name, email, password);
       }
-    } catch (err) {
-      setErrorMsg('Authentication failed. Please check credentials.');
+    } catch {
+      setErrorMsg('Authentication failed. Please check your credentials.');
     }
   };
 
@@ -32,7 +73,7 @@ export const AuthScreen: React.FC = () => {
     setErrorMsg('');
     try {
       await loginWithBiometrics();
-    } catch (err) {
+    } catch {
       setErrorMsg('Biometric authentication failed.');
     } finally {
       setIsScanningBiometrics(false);
@@ -51,10 +92,17 @@ export const AuthScreen: React.FC = () => {
     }
   };
 
+  const handleResendFromLogin = useCallback(async () => {
+    if (!email || resendCooldown > 0) return;
+    await resendVerificationEmail(email);
+    setResendSent(true);
+    setResendCooldown(RESEND_COOLDOWN);
+  }, [email, resendCooldown, resendVerificationEmail]);
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-gray-100 transition-colors">
       <div className="w-full max-w-md bg-white dark:bg-[#121A2C] rounded-2xl p-6 sm:p-8 border border-gray-200 dark:border-[#232C45] shadow-2xl animate-fade-in">
-        
+
         {/* Centra Brand Header */}
         <div className="text-center mb-6">
           <div className="w-12 h-12 rounded-xl bg-brand-600 text-white mx-auto flex items-center justify-center mb-3 shadow-md shadow-brand-500/20">
@@ -112,29 +160,58 @@ export const AuthScreen: React.FC = () => {
         ) : (
           /* Main Auth Form */
           <div className="space-y-5">
-            
+
             {/* Mode Switcher */}
             <div className="grid grid-cols-2 p-1 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-xs font-semibold">
               <button
-                onClick={() => setIsLoginMode(true)}
+                onClick={() => switchMode(true)}
                 className={`py-2 rounded-lg transition-colors cursor-pointer ${
-                  isLoginMode ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs font-bold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  isLoginMode
+                    ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs font-bold'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 Sign In
               </button>
               <button
-                onClick={() => setIsLoginMode(false)}
+                onClick={() => switchMode(false)}
                 className={`py-2 rounded-lg transition-colors cursor-pointer ${
-                  !isLoginMode ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs font-bold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  !isLoginMode
+                    ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs font-bold'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 Create Account
               </button>
             </div>
 
-            {/* Error state */}
-            {errorMsg && <p className="text-xs text-rose-500 font-semibold text-center">{errorMsg}</p>}
+            {/* Generic error */}
+            {errorMsg && (
+              <p className="text-xs text-rose-500 font-semibold text-center">{errorMsg}</p>
+            )}
+
+            {/* Email not confirmed inline block */}
+            {emailNotConfirmed && (
+              <div className="rounded-xl border border-amber-300/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 p-3.5 space-y-2.5">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                  Please verify your email before signing in. Check your inbox for a confirmation link.
+                </p>
+                {resendSent && (
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                    Verification email sent!
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleResendFromLogin}
+                  disabled={resendCooldown > 0}
+                  className="w-full py-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 border border-amber-300/60 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-amber-200 dark:hover:bg-amber-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification email'}
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
               {!isLoginMode && (
@@ -182,6 +259,7 @@ export const AuthScreen: React.FC = () => {
                   <input
                     type="password"
                     required
+                    placeholder="••••••••"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:border-brand-500 focus:outline-none"
@@ -198,29 +276,38 @@ export const AuthScreen: React.FC = () => {
               </button>
             </form>
 
-            {/* Quick Biometric / Passkey Sign-in Button */}
-            <div className="pt-2">
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-gray-200 dark:border-[#232C45]" />
-                <span className="flex-shrink mx-3 text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest">
-                  or passkey
-                </span>
-                <div className="flex-grow border-t border-gray-200 dark:border-[#232C45]" />
-              </div>
-
+            {/* Biometrics (login only) */}
+            {isLoginMode && (
               <button
                 type="button"
                 onClick={handleBiometricAuth}
                 disabled={isScanningBiometrics}
-                className="w-full py-2.5 px-4 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] hover:bg-gray-200 dark:hover:bg-[#1A233A] border border-gray-200 dark:border-[#232C45] text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#1A233A] disabled:opacity-50 transition-colors cursor-pointer"
               >
-                <Fingerprint className={`w-4 h-4 text-brand-600 dark:text-brand-400 ${isScanningBiometrics ? 'animate-pulse' : ''}`} />
-                <span>{isScanningBiometrics ? 'Verifying...' : 'Sign in with Passkey / FaceID'}</span>
+                <ShieldCheck className="w-4 h-4" />
+                {isScanningBiometrics ? 'Scanning…' : 'Use Biometrics'}
               </button>
+            )}
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200 dark:bg-[#232C45]" />
+              <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">or</span>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-[#232C45]" />
             </div>
 
-            <p className="text-[10px] font-medium text-center text-gray-400 dark:text-gray-500 pt-1">
-              Press Sign In to explore pre-loaded demo finance portfolio.
+            {/* Continue as Guest */}
+            <button
+              type="button"
+              onClick={enterGuestMode}
+              className="w-full py-3 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#1A233A] transition-colors cursor-pointer"
+            >
+              <UserX className="w-4 h-4" />
+              Continue as Guest
+            </button>
+
+            <p className="text-[10px] font-medium text-center text-gray-400 dark:text-gray-500">
+              Guest data is stored locally only — no cloud backup.
             </p>
 
           </div>

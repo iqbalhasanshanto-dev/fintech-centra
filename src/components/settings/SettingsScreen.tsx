@@ -1,19 +1,19 @@
 import React, { useState, useRef } from 'react';
-import { 
-  Shield, 
-  Bell, 
-  Palette, 
-  HelpCircle, 
-  LogOut, 
-  ChevronRight, 
-  Lock, 
-  Fingerprint, 
-  Globe, 
-  Download, 
-  RotateCcw, 
-  Eye, 
-  EyeOff, 
-  Edit2, 
+import {
+  Shield,
+  Bell,
+  Palette,
+  HelpCircle,
+  LogOut,
+  ChevronRight,
+  Lock,
+  Fingerprint,
+  Globe,
+  Download,
+  RotateCcw,
+  Eye,
+  EyeOff,
+  Edit2,
   Camera
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
@@ -25,10 +25,10 @@ import { CurrencyCode } from '../../types';
 import { CentraDB } from '../../db/storage';
 
 export const SettingsScreen: React.FC = () => {
-  const { 
-    settings, 
-    updateSettings, 
-    resetAllData 
+  const {
+    settings,
+    updateSettings,
+    resetAllData
   } = useFinance();
   const { user, updateUser, logout } = useAuth();
 
@@ -95,7 +95,7 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-8 animate-fade-in">
-      
+
       {/* Page Heading */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -153,9 +153,9 @@ export const SettingsScreen: React.FC = () => {
         </div>
 
         <div className="space-y-3 divide-y divide-gray-100 dark:divide-[#232C45] text-xs">
-          
+
           {/* Biometrics Toggle */}
-          <div 
+          <div
             onClick={() => updateSettings({ security: { ...settings.security, biometricEnabled: !settings.security.biometricEnabled } })}
             className="flex items-center justify-between pt-2 cursor-pointer select-none group gap-4"
           >
@@ -174,7 +174,7 @@ export const SettingsScreen: React.FC = () => {
           </div>
 
           {/* 2FA Toggle */}
-          <div 
+          <div
             onClick={() => {
               const nextVal = !settings.security.twoFactorEnabled;
               updateSettings({ security: { ...settings.security, twoFactorEnabled: nextVal } });
@@ -200,7 +200,7 @@ export const SettingsScreen: React.FC = () => {
           </div>
 
           {/* Privacy Mask Toggle */}
-          <div 
+          <div
             onClick={() => updateSettings({ privacyMode: !settings.privacyMode })}
             className="flex items-center justify-between pt-3 cursor-pointer select-none group gap-4"
           >
@@ -235,8 +235,8 @@ export const SettingsScreen: React.FC = () => {
         </div>
 
         <div className="space-y-3 divide-y divide-gray-100 dark:divide-[#232C45] text-xs">
-          
-          <div 
+
+          <div
             onClick={() => updateSettings({ notifications: { ...settings.notifications, budgetOverruns: !settings.notifications.budgetOverruns } })}
             className="flex items-center justify-between pt-2 cursor-pointer select-none gap-4"
           >
@@ -251,7 +251,7 @@ export const SettingsScreen: React.FC = () => {
             />
           </div>
 
-          <div 
+          <div
             onClick={() => updateSettings({ notifications: { ...settings.notifications, transactionAlerts: !settings.notifications.transactionAlerts } })}
             className="flex items-center justify-between pt-3 cursor-pointer select-none gap-4"
           >
@@ -266,7 +266,7 @@ export const SettingsScreen: React.FC = () => {
             />
           </div>
 
-          <div 
+          <div
             onClick={() => updateSettings({ notifications: { ...settings.notifications, securityAlerts: !settings.notifications.securityAlerts } })}
             className="flex items-center justify-between pt-3 cursor-pointer select-none gap-4"
           >
@@ -323,7 +323,7 @@ export const SettingsScreen: React.FC = () => {
         <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
           Data management
         </h2>
-        
+
         <div className="flex flex-wrap items-center gap-3 text-xs">
           <Button
             variant="secondary"
@@ -390,9 +390,8 @@ export const SettingsScreen: React.FC = () => {
                   src={url}
                   alt={`Avatar ${i}`}
                   onClick={() => setProfileAvatar(url)}
-                  className={`w-12 h-12 rounded-full object-cover cursor-pointer border transition-all shrink-0 ${
-                    profileAvatar === url ? 'border-brand-500 scale-105 ring-2 ring-brand-500/40' : 'border-gray-200 dark:border-[#232C45] opacity-60 hover:opacity-100'
-                  }`}
+                  className={`w-12 h-12 rounded-full object-cover cursor-pointer border transition-all shrink-0 ${profileAvatar === url ? 'border-brand-500 scale-105 ring-2 ring-brand-500/40' : 'border-gray-200 dark:border-[#232C45] opacity-60 hover:opacity-100'
+                    }`}
                 />
               ))}
 
