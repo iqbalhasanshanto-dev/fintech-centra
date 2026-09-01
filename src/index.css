@@ -13,7 +13,7 @@
     --color-text-body: #171717;
     --color-text-muted: #737373;
     --color-accent: #2F6FED;
-    --color-accent-gradient: linear-gradient(135deg, #2F6FED 0%, #16A34A 100%);
+    --color-accent-gradient: #2F6FED;
     --color-accent-text: #FFFFFF;
     --color-growth: #16A34A;
     --color-danger: #E11D48;
@@ -62,7 +62,7 @@ html:not(.dark) {
 html:not(.dark) .bg-brand-600,
 html:not(.dark) .bg-brand-500,
 html:not(.dark) .btn-primary {
-  background: linear-gradient(135deg, #2F6FED 0%, #16A34A 100%) !important;
+  background: #2F6FED !important;
   color: #FFFFFF !important;
 }
 

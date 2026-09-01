@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Quick Action Button in Sidebar */}
         {onOpenAddAction && (
-          <div className="px-1">
+          <div>
             <Button
               variant="primary"
               size="md"
@@ -84,15 +84,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectTab(item.id)}
-                className={`w-full py-3 px-3.5 rounded-xl flex items-center justify-between text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full py-3 px-3.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer relative overflow-hidden ${
                   isActive
-                    ? 'bg-brand-600 text-white dark:!bg-[#C6FF3D] dark:!text-[#171717] font-bold shadow-xs'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1A233A]'
+                    ? 'bg-gray-100 dark:bg-[#1A233A] text-gray-900 dark:text-white font-semibold before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-600 dark:before:bg-brand-400'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#161D2F] font-medium'
                 }`}
                 aria-label={item.label}
               >
                 <div className="flex items-center space-x-3">
-                  <Icon className={`w-4 h-4 transition-transform ${isActive ? 'scale-105' : 'text-gray-400 dark:text-gray-500'}`} />
+                  <Icon
+                    className={`w-4 h-4 transition-colors ${
+                      isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'
+                    }`}
+                  />
                   <span>{item.label}</span>
                 </div>
               </button>

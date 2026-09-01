@@ -21,7 +21,7 @@ export const THEME_COLORS: { light: ThemePalette; dark: ThemePalette } = {
     textPrimary: '#171717',
     textSecondary: '#737373',
     accent: '#2F6FED',
-    accentGradient: 'linear-gradient(135deg, #2F6FED 0%, #16A34A 100%)',
+    accentGradient: '#2F6FED',
     accentText: '#FFFFFF',
     positive: '#16A34A',
     negative: '#E11D48',

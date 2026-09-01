@@ -55,7 +55,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
 
   const palette = getThemePalette(isDark);
 
-  const [activeChartTab, setActiveChartTab] = useState<'grouped_bar' | 'donut'>('grouped_bar');
+  const [activeChartTab, setActiveChartTab] = useState<'donut' | 'grouped_bar'>('donut');
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [hoveredSlice, setHoveredSlice] = useState<{
@@ -215,25 +215,14 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
               Visual analytics
             </span>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-              {activeChartTab === 'grouped_bar'
-                ? 'Category Income vs Expense Comparison'
-                : 'Expense Breakdown by Category'}
+              {activeChartTab === 'donut'
+                ? 'Expense Breakdown by Category'
+                : 'Category Income vs Expense Comparison'}
             </h3>
           </div>
 
           {/* Chart View Mode Switcher */}
           <div className="flex items-center p-1 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] self-start sm:self-auto">
-            <button
-              onClick={() => setActiveChartTab('grouped_bar')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeChartTab === 'grouped_bar'
-                  ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <BarChart2 className="w-3.5 h-3.5" />
-              <span>Income vs Expense (Bars)</span>
-            </button>
             <button
               onClick={() => setActiveChartTab('donut')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
@@ -244,6 +233,17 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
             >
               <PieChartIcon className="w-3.5 h-3.5" />
               <span>Expense Donut</span>
+            </button>
+            <button
+              onClick={() => setActiveChartTab('grouped_bar')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeChartTab === 'grouped_bar'
+                  ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+              <span>Income vs Expense (Bars)</span>
             </button>
           </div>
         </div>
@@ -318,20 +318,20 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
         {activeChartTab === 'donut' && (
           <div className="w-full">
             {expenseDonutData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
+              <div className="h-72 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
                 No expense breakdown recorded for this timeframe.
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className="lg:col-span-6 relative h-64 flex items-center justify-center">
+                <div className="lg:col-span-6 relative h-72 sm:h-80 flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={expenseDonutData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={65}
-                        outerRadius={95}
+                        innerRadius={78}
+                        outerRadius={112}
                         paddingAngle={3}
                         dataKey="value"
                         nameKey="name"
@@ -354,38 +354,40 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                     </PieChart>
                   </ResponsiveContainer>
 
-                  {/* Clean Non-overlapping Dynamic Centered Summary */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
-                    {hoveredSlice ? (
-                      <div className="animate-fade-in flex flex-col items-center">
-                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate max-w-[130px]">
-                          {hoveredSlice.name}
-                        </span>
-                        <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums font-display">
-                          {formatCurrency(hoveredSlice.value, settings.baseCurrency, settings.privacyMode)}
-                        </span>
-                        <span
-                          className="text-xs font-bold mt-0.5 tabular-nums"
-                          style={{ color: hoveredSlice.color }}
-                        >
-                          {hoveredSlice.percentage.toFixed(1)}%
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="animate-fade-in flex flex-col items-center">
-                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                          Total spend
-                        </span>
-                        <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums font-display">
-                          {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
-                        </span>
-                        {topExpenseCategory && (
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
-                            Top: {topExpenseCategory.name} ({topExpenseCategory.percentage.toFixed(0)}%)
+                  {/* Clean Non-overlapping Dynamic Centered Summary contained strictly within inner circle */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-center">
+                    <div className="w-[130px] max-w-[130px] flex flex-col items-center justify-center text-center px-1">
+                      {hoveredSlice ? (
+                        <div className="animate-fade-in flex flex-col items-center w-full">
+                          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider line-clamp-1 truncate w-full text-center">
+                            {hoveredSlice.name}
                           </span>
-                        )}
-                      </div>
-                    )}
+                          <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white tabular-nums font-display leading-tight my-0.5 truncate w-full text-center">
+                            {formatCurrency(hoveredSlice.value, settings.baseCurrency, settings.privacyMode)}
+                          </span>
+                          <span
+                            className="text-[11px] font-bold tabular-nums leading-tight"
+                            style={{ color: hoveredSlice.color }}
+                          >
+                            {hoveredSlice.percentage.toFixed(1)}%
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="animate-fade-in flex flex-col items-center w-full">
+                          <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Total spend
+                          </span>
+                          <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white tabular-nums font-display leading-tight my-0.5 truncate w-full text-center">
+                            {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
+                          </span>
+                          {topExpenseCategory && (
+                            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 leading-tight line-clamp-1 truncate w-full text-center">
+                              Top: {topExpenseCategory.name} ({topExpenseCategory.percentage.toFixed(0)}%)
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

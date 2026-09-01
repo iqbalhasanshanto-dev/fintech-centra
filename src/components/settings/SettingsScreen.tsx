@@ -8,8 +8,6 @@ import {
   ChevronRight, 
   Lock, 
   Fingerprint, 
-  Moon, 
-  Sun, 
   Globe, 
   Download, 
   RotateCcw, 
@@ -22,39 +20,9 @@ import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
+import { Switch } from '../ui/Switch';
 import { CurrencyCode } from '../../types';
 import { CentraDB } from '../../db/storage';
-import { ThemeToggle } from '../ui/ThemeToggle';
-
-interface ToggleSwitchProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  label?: string;
-}
-
-const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ checked, onChange, label }) => {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={(e) => {
-        e.stopPropagation();
-        onChange(!checked);
-      }}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border border-gray-200 dark:border-[#232C45] transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? 'bg-brand-600' : 'bg-gray-200 dark:bg-gray-700'
-      }`}
-    >
-      <span
-        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
-          checked ? 'translate-x-5' : 'translate-x-0'
-        }`}
-      />
-    </button>
-  );
-};
 
 export const SettingsScreen: React.FC = () => {
   const { 
@@ -128,17 +96,17 @@ export const SettingsScreen: React.FC = () => {
   return (
     <div className="space-y-6 pb-8 animate-fade-in">
       
-      {/* Header */}
+      {/* Page Heading */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Settings
-        </h2>
+        </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
           Preferences, security, and application settings
         </p>
       </div>
 
-      {/* 1. Profile Card with labeled Edit button */}
+      {/* 1. Profile Card with Edit button grouped close to profile info */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] flex items-center justify-between transition-colors shadow-xs">
         <div className="flex items-center space-x-4 min-w-0">
           <img
@@ -146,43 +114,42 @@ export const SettingsScreen: React.FC = () => {
             alt={user.name}
             className="w-14 h-14 rounded-full object-cover border border-gray-200 dark:border-[#232C45] shrink-0"
           />
-          <div className="min-w-0">
-            <div className="flex items-center space-x-2">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
+          <div className="min-w-0 space-y-1">
+            <div className="flex items-center flex-wrap gap-2">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white break-words">
                 {user.name}
-              </h3>
-              <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 text-xs font-bold uppercase tracking-wider">
+              </h2>
+              <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 text-xs font-semibold">
                 Personal
               </span>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setProfileName(user.name);
+                  setProfileEmail(user.email);
+                  setProfileAvatar(user.avatarUrl);
+                  setShowEditProfile(true);
+                }}
+                icon={<Edit2 className="w-3.5 h-3.5" />}
+                aria-label="Edit user profile"
+                className="ml-1"
+              >
+                Edit
+              </Button>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{user.email}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 break-words">{user.email}</p>
           </div>
         </div>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            setProfileName(user.name);
-            setProfileEmail(user.email);
-            setProfileAvatar(user.avatarUrl);
-            setShowEditProfile(true);
-          }}
-          icon={<Edit2 className="w-4 h-4" />}
-          className="min-h-[44px] px-3.5"
-          aria-label="Edit user profile"
-        >
-          Edit
-        </Button>
       </div>
 
       {/* 2. Security & Authentication Center */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Shield className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <Shield className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
             Security &amp; authentication
-          </h3>
+          </h2>
         </div>
 
         <div className="space-y-3 divide-y divide-gray-100 dark:divide-[#232C45] text-xs">
@@ -190,16 +157,16 @@ export const SettingsScreen: React.FC = () => {
           {/* Biometrics Toggle */}
           <div 
             onClick={() => updateSettings({ security: { ...settings.security, biometricEnabled: !settings.security.biometricEnabled } })}
-            className="flex items-center justify-between pt-2 cursor-pointer select-none group"
+            className="flex items-center justify-between pt-2 cursor-pointer select-none group gap-4"
           >
-            <div className="flex items-center space-x-3">
-              <Fingerprint className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+            <div className="flex items-center space-x-3 min-w-0">
+              <Fingerprint className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Biometric / Passkey Login</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">TouchID, FaceID or device passkey</p>
               </div>
             </div>
-            <ToggleSwitch
+            <Switch
               checked={settings.security.biometricEnabled}
               onChange={(val) => updateSettings({ security: { ...settings.security, biometricEnabled: val } })}
               label="Toggle Biometric Login"
@@ -213,16 +180,16 @@ export const SettingsScreen: React.FC = () => {
               updateSettings({ security: { ...settings.security, twoFactorEnabled: nextVal } });
               if (nextVal) setShowTwoFactorModal(true);
             }}
-            className="flex items-center justify-between pt-3 cursor-pointer select-none group"
+            className="flex items-center justify-between pt-3 cursor-pointer select-none group gap-4"
           >
-            <div className="flex items-center space-x-3">
-              <Lock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+            <div className="flex items-center space-x-3 min-w-0">
+              <Lock className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Two-Factor Authentication (2FA)</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Require OTP code for sensitive actions</p>
               </div>
             </div>
-            <ToggleSwitch
+            <Switch
               checked={settings.security.twoFactorEnabled}
               onChange={(val) => {
                 updateSettings({ security: { ...settings.security, twoFactorEnabled: val } });
@@ -235,16 +202,20 @@ export const SettingsScreen: React.FC = () => {
           {/* Privacy Mask Toggle */}
           <div 
             onClick={() => updateSettings({ privacyMode: !settings.privacyMode })}
-            className="flex items-center justify-between pt-3 cursor-pointer select-none group"
+            className="flex items-center justify-between pt-3 cursor-pointer select-none group gap-4"
           >
-            <div className="flex items-center space-x-3">
-              {settings.privacyMode ? <EyeOff className="w-4 h-4 text-brand-600 dark:text-brand-400" /> : <Eye className="w-4 h-4 text-gray-400 dark:text-gray-500" />}
+            <div className="flex items-center space-x-3 min-w-0">
+              {settings.privacyMode ? (
+                <EyeOff className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+              ) : (
+                <Eye className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
+              )}
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Privacy Mode (Mask Balances)</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Hide numbers when viewing in public places</p>
               </div>
             </div>
-            <ToggleSwitch
+            <Switch
               checked={settings.privacyMode}
               onChange={(val) => updateSettings({ privacyMode: val })}
               label="Toggle Privacy Mode"
@@ -257,23 +228,23 @@ export const SettingsScreen: React.FC = () => {
       {/* 3. Notification Rules */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Bell className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <Bell className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
             Notification rules
-          </h3>
+          </h2>
         </div>
 
         <div className="space-y-3 divide-y divide-gray-100 dark:divide-[#232C45] text-xs">
           
           <div 
             onClick={() => updateSettings({ notifications: { ...settings.notifications, budgetOverruns: !settings.notifications.budgetOverruns } })}
-            className="flex items-center justify-between pt-2 cursor-pointer select-none"
+            className="flex items-center justify-between pt-2 cursor-pointer select-none gap-4"
           >
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">Budget Overrun Alerts</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Instant notification when spending exceeds 80% limit</p>
             </div>
-            <ToggleSwitch
+            <Switch
               checked={settings.notifications.budgetOverruns}
               onChange={(val) => updateSettings({ notifications: { ...settings.notifications, budgetOverruns: val } })}
               label="Toggle Budget Overrun Alerts"
@@ -282,13 +253,13 @@ export const SettingsScreen: React.FC = () => {
 
           <div 
             onClick={() => updateSettings({ notifications: { ...settings.notifications, transactionAlerts: !settings.notifications.transactionAlerts } })}
-            className="flex items-center justify-between pt-3 cursor-pointer select-none"
+            className="flex items-center justify-between pt-3 cursor-pointer select-none gap-4"
           >
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">High Outflow Alerts</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Alert for single transactions exceeding ৳5,000</p>
             </div>
-            <ToggleSwitch
+            <Switch
               checked={settings.notifications.transactionAlerts}
               onChange={(val) => updateSettings({ notifications: { ...settings.notifications, transactionAlerts: val } })}
               label="Toggle Transaction Alerts"
@@ -297,13 +268,13 @@ export const SettingsScreen: React.FC = () => {
 
           <div 
             onClick={() => updateSettings({ notifications: { ...settings.notifications, securityAlerts: !settings.notifications.securityAlerts } })}
-            className="flex items-center justify-between pt-3 cursor-pointer select-none"
+            className="flex items-center justify-between pt-3 cursor-pointer select-none gap-4"
           >
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">Security &amp; Login Alerts</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Notify upon new device sessions or credential shifts</p>
             </div>
-            <ToggleSwitch
+            <Switch
               checked={settings.notifications.securityAlerts}
               onChange={(val) => updateSettings({ notifications: { ...settings.notifications, securityAlerts: val } })}
               label="Toggle Security Alerts"
@@ -316,17 +287,17 @@ export const SettingsScreen: React.FC = () => {
       {/* 4. Appearance & System Preferences */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Palette className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <Palette className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
             Appearance &amp; locale
-          </h3>
+          </h2>
         </div>
 
-        <div className="space-y-3 divide-y divide-gray-100 dark:divide-[#232C45] text-xs">
+        <div className="space-y-3 text-xs">
           {/* Base Currency */}
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center space-x-3">
-              <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+              <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Base Currency</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Converts all dashboard totals to this currency</p>
@@ -344,34 +315,21 @@ export const SettingsScreen: React.FC = () => {
               <option value="JPY" className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">JPY (¥)</option>
             </select>
           </div>
-
-          {/* Theme Toggle */}
-          <div className="flex items-center justify-between pt-3">
-            <div className="flex items-center space-x-3">
-              {settings.theme === 'dark' ? <Moon className="w-4 h-4 text-brand-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
-              <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Interface Theme</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Switch between dark and light appearance</p>
-              </div>
-            </div>
-            <ThemeToggle showLabel={true} />
-          </div>
         </div>
       </div>
 
-      {/* 5. Data Management & Backup with Destructive Reset Button */}
+      {/* 5. Data Management & Backup */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
-        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
           Data management
-        </h3>
+        </h2>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-3 text-xs">
           <Button
             variant="secondary"
             size="md"
             onClick={handleExportData}
             icon={<Download className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
-            className="w-full"
           >
             Export JSON
           </Button>
@@ -381,7 +339,6 @@ export const SettingsScreen: React.FC = () => {
             size="md"
             onClick={handleResetData}
             icon={<RotateCcw className="w-4 h-4" />}
-            className="w-full"
           >
             Reset Demo Data
           </Button>
@@ -390,19 +347,21 @@ export const SettingsScreen: React.FC = () => {
 
       {/* 6. Support & Logout */}
       <div className="space-y-4">
-        <Button
-          variant="ghost"
-          fullWidth
+        <button
+          type="button"
           onClick={() => setShowHelpModal(true)}
-          icon={<HelpCircle className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
-          iconPosition="left"
-          className="py-3.5 px-5 rounded-2xl justify-between border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#121A2C] hover:bg-gray-50 dark:hover:bg-[#1A233A]"
+          className="w-full py-3.5 px-5 rounded-2xl flex items-center justify-between border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#121A2C] hover:bg-gray-50 dark:hover:bg-[#1A233A] transition-colors cursor-pointer group select-none shadow-xs"
         >
-          <span className="flex-1 text-left">Centra Help &amp; Support FAQ</span>
-          <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
-        </Button>
+          <div className="flex items-center gap-3 min-w-0">
+            <HelpCircle className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+            <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white">
+              Centra Help &amp; Support FAQ
+            </span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+        </button>
 
-        {/* Standard button width for Logout rather than spanning full content width */}
+        {/* Standard button width for Logout with left-aligned icon & text */}
         <div className="flex justify-start">
           <Button
             variant="destructive"

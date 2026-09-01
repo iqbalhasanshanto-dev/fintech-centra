@@ -49,15 +49,15 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
 
       {/* Carbon Switch Track */}
       <div
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out border ${
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out border ${
           isDark
             ? 'bg-indigo-600/30 border-indigo-500/50'
-            : 'bg-gray-200 border-gray-300'
+            : 'bg-gray-200 border-gray-300 dark:bg-gray-700 dark:border-gray-600'
         }`}
       >
         <span
-          className={`inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${
-            isDark ? 'translate-x-5 bg-indigo-500 text-white' : 'translate-x-0.5 text-amber-500'
+          className={`inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out ${
+            isDark ? 'translate-x-5 bg-indigo-500 text-white' : 'translate-x-0 text-amber-500'
           }`}
         >
           {isDark ? (
