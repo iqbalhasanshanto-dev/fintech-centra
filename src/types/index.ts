@@ -94,8 +94,6 @@ export interface UserProfile {
   name: string;
   email: string;
   avatarUrl: string;
-  isPro: boolean;
-  planExpiry?: string;
   baseCurrency: CurrencyCode;
   createdAt: string;
 }

@@ -43,14 +43,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Shield className="w-5 h-5 fill-white/20 stroke-[2.2]" />
           </div>
           <div>
-            <div className="flex items-center space-x-1.5">
-              <span className="text-xl font-bold font-display tracking-tight text-gray-900 dark:text-white">
-                CENTRA
-              </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
-                PRO
-              </span>
-            </div>
+            <span className="text-xl font-bold font-display tracking-tight text-gray-900 dark:text-white">
+              CENTRA
+            </span>
             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
               Financial Overview
             </p>
@@ -84,18 +79,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectTab(item.id)}
-                className={`w-full py-3 px-3.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer relative overflow-hidden ${
-                  isActive
+                className={`w-full py-3 px-3.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer relative overflow-hidden ${isActive
                     ? 'bg-gray-100 dark:bg-[#1A233A] text-gray-900 dark:text-white font-semibold before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-600 dark:before:bg-brand-400'
                     : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#161D2F] font-medium'
-                }`}
+                  }`}
                 aria-label={item.label}
               >
                 <div className="flex items-center space-x-3">
                   <Icon
-                    className={`w-4 h-4 transition-colors ${
-                      isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'
-                    }`}
+                    className={`w-4 h-4 transition-colors ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'
+                      }`}
                   />
                   <span>{item.label}</span>
                 </div>

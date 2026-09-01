@@ -23,7 +23,7 @@ export const AppShell: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-gray-100 flex antialiased transition-colors duration-200">
-      
+
       {/* 1. Desktop Left Sidebar Navigation (Visible on lg: ≥1024px) */}
       <Sidebar
         activeTab={activeTab}
@@ -33,7 +33,7 @@ export const AppShell: React.FC = () => {
 
       {/* 2. Main Area (Header + Scrollable Content + Footer) */}
       <div className="flex-1 flex flex-col min-w-0 w-full min-h-screen bg-[#FAFAFA] dark:bg-[#0A0E1A]">
-        
+
         {/* Top Header Toolbar */}
         <Header
           onOpenNotifications={() => setShowNotificationsModal(true)}

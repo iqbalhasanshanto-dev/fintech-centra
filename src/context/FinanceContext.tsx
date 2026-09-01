@@ -60,7 +60,7 @@ interface FinanceContextType {
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   togglePinTransaction: (id: string) => void;
-  
+
   addAccount: (acc: Omit<Account, 'id'>) => void;
   updateAccount: (id: string, updates: Partial<Account>) => void;
   deleteAccount: (id: string) => void;
@@ -103,7 +103,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => { CentraDB.saveGoals(goals); }, [goals]);
   useEffect(() => { CentraDB.saveBudgets(budgets); }, [budgets]);
   useEffect(() => { CentraDB.saveNotifications(notifications); }, [notifications]);
-  useEffect(() => { 
+  useEffect(() => {
     CentraDB.saveSettings(settings);
     // Apply theme class to document element
     if (settings.theme === 'dark') {
@@ -184,7 +184,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Category breakdown for expenses
   const categoryBreakdown = useMemo(() => {
     const expenseMap: Record<string, { total: number; count: number }> = {};
-    
+
     filteredTransactions
       .filter(t => t.type === 'expense')
       .forEach(tx => {
@@ -222,7 +222,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Category breakdown for income
   const incomeBreakdown = useMemo(() => {
     const incomeMap: Record<string, { total: number; count: number }> = {};
-    
+
     filteredTransactions
       .filter(t => t.type === 'income')
       .forEach(tx => {
@@ -305,7 +305,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addTransaction = async (txData: Omit<Transaction, 'id'>): Promise<Transaction> => {
     const targetAccount = accounts.find(a => a.id === txData.accountId);
     const txAmount = Number(txData.amount);
-    
+
     // Calculate new resulting balance
     let newBalance = targetAccount ? targetAccount.balance : 0;
     if (txData.type === 'expense') {
@@ -337,7 +337,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (budget) {
         const newSpent = budget.spentAmount + txAmount;
         const percentSpent = (newSpent / budget.limitAmount) * 100;
-        
+
         // Update budget spent amount
         setBudgets(prev =>
           prev.map(b => (b.id === budget.id ? { ...b, spentAmount: newSpent } : b))
@@ -385,11 +385,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setAccounts(prev =>
         prev.map(acc => {
           if (acc.id === txToDelete.accountId) {
-            const reverted = txToDelete.type === 'expense' 
-              ? acc.balance + txToDelete.amount 
+            const reverted = txToDelete.type === 'expense'
+              ? acc.balance + txToDelete.amount
               : txToDelete.type === 'income'
-              ? acc.balance - txToDelete.amount
-              : acc.balance;
+                ? acc.balance - txToDelete.amount
+                : acc.balance;
             return { ...acc, balance: reverted };
           }
           return acc;

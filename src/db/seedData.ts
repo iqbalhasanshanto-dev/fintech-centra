@@ -14,8 +14,6 @@ export const INITIAL_USER: UserProfile = {
   name: 'Alex Morgan',
   email: 'alex.morgan@centra.io',
   avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  isPro: true,
-  planExpiry: '2027-12-31',
   baseCurrency: 'BDT',
   createdAt: '2025-01-15T08:00:00.000Z',
 };

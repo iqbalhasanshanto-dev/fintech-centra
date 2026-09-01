@@ -273,8 +273,6 @@ export const CentraDB = {
           name: user.name,
           email: user.email,
           avatar_url: user.avatarUrl,
-          is_pro: user.isPro,
-          plan_expiry: user.planExpiry || null,
           base_currency: user.baseCurrency,
           updated_at: new Date().toISOString(),
         });
@@ -428,8 +426,6 @@ export const CentraDB = {
           name: userProfile.name,
           email: userProfile.email,
           avatar_url: userProfile.avatarUrl,
-          is_pro: userProfile.isPro,
-          plan_expiry: userProfile.planExpiry || null,
           base_currency: userProfile.baseCurrency,
         });
 
@@ -470,8 +466,6 @@ export const CentraDB = {
         name: profileData.name || 'Centra User',
         email: profileData.email || userEmail || '',
         avatarUrl: profileData.avatar_url || INITIAL_USER.avatarUrl,
-        isPro: !!profileData.is_pro,
-        planExpiry: profileData.plan_expiry || undefined,
         baseCurrency: (profileData.base_currency as any) || 'BDT',
         createdAt: profileData.created_at || new Date().toISOString(),
       };
