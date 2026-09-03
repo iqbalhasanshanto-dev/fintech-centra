@@ -4,8 +4,7 @@ import {
   PieChart as PieChartIcon, 
   TrendingDown, 
   TrendingUp, 
-  ChevronRight, 
-  ArrowLeft
+  ChevronRight
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -30,12 +29,10 @@ import { Transaction } from '../../types';
 import { getThemePalette } from '../../utils/themeColors';
 
 interface ReportScreenProps {
-  onBackToHome?: () => void;
   onSelectTransaction?: (tx: Transaction) => void;
 }
 
 export const ReportScreen: React.FC<ReportScreenProps> = ({
-  onBackToHome,
   onSelectTransaction,
 }) => {
   const {
@@ -159,28 +156,15 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       
-      {/* Header with Back Button */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {onBackToHome && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBackToHome}
-              icon={<ArrowLeft className="w-4 h-4" />}
-              aria-label="Back to Dashboard"
-            >
-              Back
-            </Button>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Analytics &amp; Breakdown
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Category income vs. expense comparison, expense distribution &amp; daily calendar
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Analytics &amp; Breakdown
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            Category income vs. expense comparison, expense distribution &amp; daily calendar
+          </p>
         </div>
       </div>
 

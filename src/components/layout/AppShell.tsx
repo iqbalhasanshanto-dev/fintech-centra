@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import { Shield } from 'lucide-react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
@@ -16,6 +16,32 @@ export const AppShell: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget'>('transaction');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const mainContentRef = useRef<HTMLElement>(null);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (document.documentElement) {
+      document.documentElement.scrollTop = 0;
+    }
+    if (document.body) {
+      document.body.scrollTop = 0;
+    }
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+    }
+  };
+
+  useLayoutEffect(() => {
+    scrollToTop();
+  }, [activeTab]);
+
+  const handleSelectTab = (tab: TabType) => {
+    if (tab === activeTab) {
+      scrollToTop();
+    } else {
+      setActiveTab(tab);
+    }
+  };
 
   const handleOpenAddWithTab = (tab: 'transaction' | 'transfer' | 'goal' | 'budget') => {
     setAddModalDefaultTab(tab);
@@ -23,22 +49,22 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-gray-100 flex antialiased transition-colors duration-200">
+    <div className="min-h-[100dvh] w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-gray-100 flex antialiased transition-colors duration-200">
 
       {/* 1. Desktop Left Sidebar Navigation (Visible on lg: ≥1024px) */}
       <Sidebar
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleSelectTab}
         onOpenAddAction={() => handleOpenAddWithTab('transaction')}
       />
 
       {/* 2. Main Area (Header + Scrollable Content + Footer) */}
-      <div className="flex-1 flex flex-col min-w-0 w-full min-h-screen bg-[#FAFAFA] dark:bg-[#0A0E1A]">
+      <div className="flex-1 flex flex-col min-w-0 w-full min-h-[100dvh] bg-[#FAFAFA] dark:bg-[#0A0E1A]">
 
         {/* Top Header Toolbar */}
         <Header
           onOpenNotifications={() => setShowNotificationsModal(true)}
-          onNavigateToSettings={() => setActiveTab('settings')}
+          onNavigateToSettings={() => handleSelectTab('settings')}
           onOpenAddAction={() => handleOpenAddWithTab('transaction')}
         />
 
@@ -48,24 +74,21 @@ export const AppShell: React.FC = () => {
         </div>
 
         {/* Main Screen Content Container */}
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-36 lg:pb-12 bg-[#FAFAFA] dark:bg-[#0A0E1A]">
+        <main ref={mainContentRef} className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-36 lg:pb-12 bg-[#FAFAFA] dark:bg-[#0A0E1A]">
           {activeTab === 'home' && (
             <HomeScreen
-              onNavigateToReport={() => setActiveTab('report')}
+              onNavigateToReport={() => handleSelectTab('report')}
               onOpenTransfer={() => handleOpenAddWithTab('transfer')}
               onOpenAddTransaction={() => handleOpenAddWithTab('transaction')}
             />
           )}
 
           {activeTab === 'report' && (
-            <ReportScreen
-              onBackToHome={() => setActiveTab('home')}
-            />
+            <ReportScreen />
           )}
 
           {activeTab === 'plan' && (
             <PlanScreen
-              onBackToHome={() => setActiveTab('home')}
               onOpenAddGoal={() => handleOpenAddWithTab('goal')}
             />
           )}
@@ -84,9 +107,9 @@ export const AppShell: React.FC = () => {
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Centra Secure Systems</span>
           </div>
           <div className="flex items-center gap-6 text-xs font-medium text-gray-500 dark:text-gray-400">
-            <button onClick={() => setActiveTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
-            <button onClick={() => setActiveTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Support</button>
-            <button onClick={() => setActiveTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">API Docs</button>
+            <button onClick={() => handleSelectTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
+            <button onClick={() => handleSelectTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Support</button>
+            <button onClick={() => handleSelectTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">API Docs</button>
           </div>
         </footer>
 
@@ -96,7 +119,7 @@ export const AppShell: React.FC = () => {
       <div className="lg:hidden">
         <BottomNav
           activeTab={activeTab}
-          onSelectTab={setActiveTab}
+          onSelectTab={handleSelectTab}
           onOpenAddAction={() => handleOpenAddWithTab('transaction')}
         />
       </div>

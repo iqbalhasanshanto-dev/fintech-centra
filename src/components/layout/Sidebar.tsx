@@ -33,7 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="hidden lg:flex flex-col shrink-0 w-64 h-screen sticky top-0 bg-white dark:bg-[#121A2C] border-r border-gray-200 dark:border-[#232C45] p-5 justify-between select-none z-30 transition-colors">
+    <aside className="hidden lg:flex flex-col shrink-0 w-64 h-[100dvh] sticky top-0 bg-white dark:bg-[#121A2C] border-r border-gray-200 dark:border-[#232C45] p-5 justify-between select-none z-30 transition-colors">
 
       {/* Top Header & Navigation */}
       <div className="space-y-6">

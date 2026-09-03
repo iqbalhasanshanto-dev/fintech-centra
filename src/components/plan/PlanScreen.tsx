@@ -5,7 +5,6 @@ import {
   CheckCircle2, 
   MoreVertical, 
   Calendar, 
-  ArrowLeft, 
   Trash2, 
   Wallet 
 } from 'lucide-react';
@@ -19,12 +18,10 @@ import { Button } from '../ui/Button';
 import { formatCurrency, calculateGoalPace } from '../../utils/formatters';
 
 interface PlanScreenProps {
-  onBackToHome?: () => void;
   onOpenAddGoal: () => void;
 }
 
 export const PlanScreen: React.FC<PlanScreenProps> = ({
-  onBackToHome,
   onOpenAddGoal,
 }) => {
   const { goals, budgets, settings, contributeToGoal, deleteGoal, accounts } = useFinance();
@@ -62,28 +59,15 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
   return (
     <div className="space-y-6 animate-fade-in pb-8">
       
-      {/* Header with back button & "+ New Target" action */}
+      {/* Header with "+ New Target" action */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {onBackToHome && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBackToHome}
-              icon={<ArrowLeft className="w-4 h-4" />}
-              aria-label="Back to Dashboard"
-            >
-              Back
-            </Button>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Goals &amp; Budgets
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Savings milestones and category monthly limits
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Goals &amp; Budgets
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            Savings milestones and category monthly limits
+          </p>
         </div>
 
         <Button

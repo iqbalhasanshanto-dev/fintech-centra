@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, PieChart, Plus, Target, SlidersHorizontal } from 'lucide-react';
 
 export type TabType = 'home' | 'report' | 'plan' | 'settings';
@@ -14,6 +14,27 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onSelectTab,
   onOpenAddAction,
 }) => {
+  const [viewportBottom, setViewportBottom] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+
+    const updatePosition = () => {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      const offset = Math.max(0, Math.round(window.innerHeight - (vv.offsetTop + vv.height)));
+      setViewportBottom(prev => (prev !== offset ? offset : prev));
+    };
+
+    window.visualViewport.addEventListener('resize', updatePosition);
+    window.visualViewport.addEventListener('scroll', updatePosition);
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', updatePosition);
+      window.visualViewport?.removeEventListener('scroll', updatePosition);
+    };
+  }, []);
+
   const tabs: { id: TabType; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'report', label: 'Analytics', icon: PieChart },
@@ -22,7 +43,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 w-full bg-white/95 dark:bg-[#121A2C]/95 backdrop-blur-md border-t border-gray-200 dark:border-[#232C45] px-3 py-1.5 md:hidden shadow-lg select-none">
+    <div 
+      className="fixed left-0 right-0 z-40 w-full bg-white/95 dark:bg-[#121A2C]/95 backdrop-blur-md border-t border-gray-200 dark:border-[#232C45] px-3 pt-1.5 md:hidden shadow-lg select-none"
+      style={{
+        bottom: `${viewportBottom}px`,
+        paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom, 0px))',
+        transform: 'translate3d(0, 0, 0)',
+        WebkitTransform: 'translate3d(0, 0, 0)',
+        willChange: 'transform',
+      }}
+    >
       {/* Mobile Bottom Fixed Nav Bar */}
       <nav 
         className="max-w-md mx-auto flex items-center justify-between"

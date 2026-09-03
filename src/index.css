@@ -42,6 +42,7 @@
     color: var(--color-text-primary);
     font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-tap-highlight-color: transparent;
+    min-height: 100dvh;
   }
 
   h1, h2, h3, h4, h5, h6, .font-display, .currency-amount, button, input, select, textarea, label {
