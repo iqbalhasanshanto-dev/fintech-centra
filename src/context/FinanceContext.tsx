@@ -113,7 +113,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [settings]);
 
-  const baseCurrency: CurrencyCode = settings.baseCurrency;
+  const baseCurrency: CurrencyCode = settings.baseCurrency || 'USD';
 
   // Filter transactions by active period
   const filteredTransactions = useMemo(() => {

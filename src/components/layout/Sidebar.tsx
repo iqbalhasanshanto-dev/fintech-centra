@@ -6,11 +6,12 @@ import {
   SlidersHorizontal,
   Shield,
   LogOut,
-  Plus
+  Plus,
 } from 'lucide-react';
 import { TabType } from './BottomNav';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
+import brandLogo from '../../assets/brand/logo.png';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -39,8 +40,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="space-y-6">
         {/* Brand Logo & Wordmark */}
         <div className="flex items-center space-x-3 px-2 pt-1">
-          <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-sm">
-            <Shield className="w-5 h-5 fill-white/20 stroke-[2.2]" />
+          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#151c2e] p-1.5 flex items-center justify-center shadow-xs border border-gray-200 dark:border-white/10">
+            <img
+              src={brandLogo}
+              alt="Centra"
+              className="w-full h-full object-contain select-none"
+              draggable={false}
+            />
           </div>
           <div>
             <span className="text-xl font-bold font-display tracking-tight text-gray-900 dark:text-white">

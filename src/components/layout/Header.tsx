@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Bell, ChevronDown, Check, Shield, Plus } from 'lucide-react';
+import { Bell, ChevronDown, Check, Plus } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { PeriodFilter } from '../../types';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import brandLogo from '../../assets/brand/logo.png';
 
 interface HeaderProps {
   onOpenNotifications: () => void;
@@ -35,9 +36,14 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
         {/* Brand Logo & Wordmark (Visible on mobile/tablet below lg where sidebar is hidden) */}
-        <div className="flex items-center gap-3 lg:hidden">
-          <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shadow-sm">
-            <Shield className="w-4 h-4 text-white fill-white/20" />
+        <div className="flex items-center gap-2.5 lg:hidden">
+          <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#151c2e] p-1 flex items-center justify-center shadow-xs border border-gray-200 dark:border-white/10">
+            <img
+              src={brandLogo}
+              alt="Centra"
+              className="w-full h-full object-contain select-none"
+              draggable={false}
+            />
           </div>
           <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">CENTRA</span>
         </div>

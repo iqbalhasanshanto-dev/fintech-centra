@@ -1,4 +1,11 @@
-export type CurrencyCode = 'BDT' | 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CAD';
+export type CurrencyCode = string;
+
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  flag?: string;
+}
 
 export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'cash';
 
@@ -93,8 +100,8 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  avatarUrl: string;
-  baseCurrency: CurrencyCode;
+  avatarUrl?: string;
+  baseCurrency?: CurrencyCode | null;
   createdAt: string;
 }
 
@@ -118,7 +125,7 @@ export interface NotificationPreferences {
 
 export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
-  baseCurrency: CurrencyCode;
+  baseCurrency?: CurrencyCode | null;
   privacyMode: boolean; // Masks sensitive numbers with dots
   security: SecuritySettings;
   notifications: NotificationPreferences;

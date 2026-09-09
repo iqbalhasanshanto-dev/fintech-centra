@@ -23,6 +23,7 @@ import { Button } from '../ui/Button';
 import { Switch } from '../ui/Switch';
 import { CurrencyCode } from '../../types';
 import { CentraDB } from '../../db/storage';
+import { ISO_CURRENCIES } from '../../utils/currencies';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -332,15 +333,19 @@ export const SettingsScreen: React.FC = () => {
               </div>
             </div>
             <select
-              value={settings.baseCurrency}
+              value={settings.baseCurrency || 'USD'}
               onChange={e => updateSettings({ baseCurrency: e.target.value as CurrencyCode })}
-              className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-brand-500 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-brand-500 cursor-pointer text-xs max-w-[200px]"
             >
-              <option value="BDT" className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">BDT (৳)</option>
-              <option value="USD" className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">USD ($)</option>
-              <option value="EUR" className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">EUR (€)</option>
-              <option value="GBP" className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">GBP (£)</option>
-              <option value="JPY" className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">JPY (¥)</option>
+              {ISO_CURRENCIES.map(c => (
+                <option
+                  key={c.code}
+                  value={c.code}
+                  className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white"
+                >
+                  {c.flag} {c.code} ({c.symbol}) - {c.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>

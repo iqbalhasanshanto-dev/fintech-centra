@@ -254,7 +254,7 @@ const mapSettingsToDb = (s: AppSettings, userId: string) => ({
 
 const mapSettingsFromDb = (row: any): AppSettings => ({
   theme: row.theme || 'light',
-  baseCurrency: row.base_currency || 'BDT',
+  baseCurrency: row.base_currency || null,
   privacyMode: !!row.privacy_mode,
   security: row.security || INITIAL_SETTINGS.security,
   notifications: row.notifications || INITIAL_SETTINGS.notifications,
@@ -397,8 +397,10 @@ export const CentraDB = {
     const userProfile: UserProfile = {
       ...INITIAL_USER,
       id: userId,
-      email: userEmail || INITIAL_USER.email,
-      name: userName || INITIAL_USER.name,
+      email: userEmail || '',
+      name: userName || '',
+      baseCurrency: null,
+      avatarUrl: undefined,
     };
 
     cache.user = userProfile;
@@ -423,10 +425,10 @@ export const CentraDB = {
       try {
         await supabase.from('profiles').upsert({
           id: userId,
-          name: userProfile.name,
-          email: userProfile.email,
-          avatar_url: userProfile.avatarUrl,
-          base_currency: userProfile.baseCurrency,
+          name: userProfile.name || null,
+          email: userProfile.email || null,
+          avatar_url: userProfile.avatarUrl || null,
+          base_currency: userProfile.baseCurrency || null,
         });
 
         await supabase.from('accounts').upsert(INITIAL_ACCOUNTS.map(a => mapAccountToDb(a, userId)));
@@ -463,10 +465,10 @@ export const CentraDB = {
       // Profile exists: update user profile
       cache.user = {
         id: profileData.id,
-        name: profileData.name || 'Centra User',
+        name: profileData.name || '',
         email: profileData.email || userEmail || '',
-        avatarUrl: profileData.avatar_url || INITIAL_USER.avatarUrl,
-        baseCurrency: (profileData.base_currency as any) || 'BDT',
+        avatarUrl: profileData.avatar_url || undefined,
+        baseCurrency: (profileData.base_currency as any) || null,
         createdAt: profileData.created_at || new Date().toISOString(),
       };
       safeSet(STORAGE_KEYS.USER, cache.user);

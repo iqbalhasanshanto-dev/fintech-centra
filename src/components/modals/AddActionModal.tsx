@@ -107,7 +107,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     await addTransaction({
       type,
       amount: parsedAmount,
-      currency: selectedAcc?.currency || settings.baseCurrency,
+      currency: selectedAcc?.currency || settings.baseCurrency || 'USD',
       categoryId,
       categoryName: selectedCat?.name || 'General',
       categoryIcon: selectedCat?.icon || 'HelpCircle',

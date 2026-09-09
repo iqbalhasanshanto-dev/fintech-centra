@@ -1,38 +1,53 @@
 import { CurrencyCode } from '../types';
+import { getCurrencyInfo } from './currencies';
 
-export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
+export const CURRENCY_SYMBOLS: Record<string, string> = {
   BDT: '৳',
   USD: '$',
   EUR: '€',
   GBP: '£',
   JPY: '¥',
   CAD: 'CA$',
+  AUD: 'A$',
+  CHF: 'CHF',
+  CNY: '¥',
+  INR: '₹',
+  SGD: 'S$',
+  AED: 'AED',
+  SAR: 'SAR',
 };
 
-export const EXCHANGE_RATES_TO_USD: Record<CurrencyCode, number> = {
+export const EXCHANGE_RATES_TO_USD: Record<string, number> = {
   BDT: 0.0085,
   USD: 1.0,
   EUR: 1.08,
   GBP: 1.28,
   JPY: 0.0067,
   CAD: 0.74,
+  AUD: 0.65,
+  CHF: 1.12,
+  CNY: 0.14,
+  INR: 0.012,
+  SGD: 0.75,
+  AED: 0.27,
+  SAR: 0.27,
 };
 
 export function convertCurrency(
   amount: number,
-  from: CurrencyCode,
-  to: CurrencyCode
+  from: CurrencyCode = 'USD',
+  to: CurrencyCode = 'USD'
 ): number {
   if (from === to) return amount;
-  // Convert from origin to USD, then from USD to destination
-  const amountInUSD = amount * EXCHANGE_RATES_TO_USD[from];
-  const targetRate = EXCHANGE_RATES_TO_USD[to];
-  return amountInUSD / targetRate;
+  const fromRate = EXCHANGE_RATES_TO_USD[from] || 1.0;
+  const toRate = EXCHANGE_RATES_TO_USD[to] || 1.0;
+  const amountInUSD = amount * fromRate;
+  return amountInUSD / toRate;
 }
 
 export function formatCurrency(
   amount: number,
-  currency: CurrencyCode = 'BDT',
+  currency?: CurrencyCode | null,
   privacyMode: boolean = false,
   showDecimals: boolean = true
 ): string {
@@ -40,12 +55,14 @@ export function formatCurrency(
     return '••••••';
   }
 
-  const symbol = CURRENCY_SYMBOLS[currency] || '৳';
+  const activeCurrency = currency || 'USD';
+  const info = getCurrencyInfo(activeCurrency);
+  const symbol = info.symbol || activeCurrency;
   const absAmount = Math.abs(amount);
   
   const options: Intl.NumberFormatOptions = {
-    minimumFractionDigits: currency === 'JPY' ? 0 : showDecimals ? 2 : 0,
-    maximumFractionDigits: currency === 'JPY' ? 0 : showDecimals ? 2 : 0,
+    minimumFractionDigits: activeCurrency === 'JPY' ? 0 : showDecimals ? 2 : 0,
+    maximumFractionDigits: activeCurrency === 'JPY' ? 0 : showDecimals ? 2 : 0,
   };
 
   const formattedNum = absAmount.toLocaleString('en-US', options);

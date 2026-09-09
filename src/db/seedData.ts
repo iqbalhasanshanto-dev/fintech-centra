@@ -10,12 +10,12 @@ import {
 } from '../types';
 
 export const INITIAL_USER: UserProfile = {
-  id: 'usr_centra_01',
-  name: 'Alex Morgan',
-  email: 'alex.morgan@centra.io',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  baseCurrency: 'BDT',
-  createdAt: '2025-01-15T08:00:00.000Z',
+  id: '',
+  name: '',
+  email: '',
+  avatarUrl: undefined,
+  baseCurrency: null,
+  createdAt: new Date().toISOString(),
 };
 
 export const INITIAL_ACCOUNTS: Account[] = [
@@ -455,7 +455,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
 
 export const INITIAL_SETTINGS: AppSettings = {
   theme: 'light',
-  baseCurrency: 'BDT',
+  baseCurrency: null,
   privacyMode: false,
   security: {
     biometricEnabled: true,

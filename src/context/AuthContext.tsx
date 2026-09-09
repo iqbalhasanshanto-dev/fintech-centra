@@ -8,6 +8,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 // ---------------------------------------------------------------------------
 
 export type AuthView =
+  | 'intro'       // initial welcome / hero screen
+  | 'onboarding'  // 7-step onboarding wizard
   | 'login'       // sign-in/sign-up form
   | 'check-email' // "verify your inbox" screen after registration
   | 'callback'    // processing the email-link redirect (/auth/callback)
@@ -61,13 +63,35 @@ const GUEST_FLAG_KEY = 'centra_is_guest_v2';
 // Provider
 // ---------------------------------------------------------------------------
 
+const ONBOARDING_STEP_KEY = 'centra_onboarding_step';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => CentraDB.getUser());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [isLockedByPin, setIsLockedByPin] = useState<boolean>(false);
   const [pending2FA, setPending2FA] = useState<boolean>(false);
-  const [authView, setAuthView] = useState<AuthView>('login');
+  const [authView, setAuthView] = useState<AuthView>(() => {
+    // URL verification callback check
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('code') || window.location.hash.includes('access_token=')) {
+      return 'callback';
+    }
+    // Guest session restoration check
+    if (localStorage.getItem(GUEST_FLAG_KEY) === 'true') {
+      return 'app';
+    }
+    // Demo session restoration
+    if (!isSupabaseConfigured() && CentraDB.getAuthSession()) {
+      return 'app';
+    }
+    // Mid-onboarding check
+    const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
+    if (savedStep && Number(savedStep) > 0) {
+      return 'onboarding';
+    }
+    return 'intro';
+  });
   const [pendingEmail, setPendingEmail] = useState<string>('');
 
   // -------------------------------------------------------------------------
@@ -143,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setIsGuest(false);
-        setAuthView('login');
+        setAuthView('intro');
         CentraDB.saveAuthSession(false);
       }
     });
@@ -223,12 +247,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Register
   // -------------------------------------------------------------------------
   const register = async (name: string, email: string, pass: string): Promise<boolean> => {
+    if (!email) {
+      throw new Error('Email is required.');
+    }
+    const cleanName = name?.trim() || '';
     if (isSupabaseConfigured()) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password: pass || 'Password123!',
         options: {
-          data: { name: name || 'Centra User' },
+          data: { name: cleanName },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
@@ -237,27 +265,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         // Seed local data immediately so the app is ready when they confirm
-        await CentraDB.seedUserData(data.user.id, email, name);
+        await CentraDB.seedUserData(data.user.id, email, cleanName);
         setUser(CentraDB.getUser());
         setPendingEmail(email);
-        // Do NOT change authView here — keep user in OnboardingFlow steps
         return true;
       }
 
       return false;
     }
 
-    // Demo / local-only mode
+    // Demo / local-only mode: do not fall back to fake demo names
     const newUser: UserProfile = {
       ...user,
       id: `usr_${Date.now()}`,
-      name: name || 'Centra User',
-      email: email || 'user@centra.io',
+      name: cleanName,
+      email: email,
       createdAt: new Date().toISOString(),
     };
     setUser(newUser);
-    setPendingEmail(email || 'user@centra.io');
-    // Keep in onboarding flow — do NOT setAuthView('app') here!
+    setPendingEmail(email);
     return true;
   };
 
@@ -270,6 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(CentraDB.getUser());
     });
     localStorage.setItem(GUEST_FLAG_KEY, 'true');
+    localStorage.removeItem(ONBOARDING_STEP_KEY);
     setIsGuest(true);
     setIsAuthenticated(true);
     CentraDB.saveAuthSession(false); // not a real cloud session
@@ -296,11 +323,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     localStorage.removeItem(GUEST_FLAG_KEY);
+    localStorage.removeItem(ONBOARDING_STEP_KEY);
     setIsAuthenticated(false);
     setIsGuest(false);
     setPending2FA(false);
     setIsLockedByPin(false);
-    setAuthView('login');
+    setAuthView('intro');
     CentraDB.saveAuthSession(false);
   };
 
@@ -453,6 +481,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const completeOnboarding = async () => {
     localStorage.setItem('centra_onboarding_done_v1', 'true');
+    localStorage.removeItem(ONBOARDING_STEP_KEY);
     setIsAuthenticated(true);
     CentraDB.saveAuthSession(true);
     setAuthView('app');

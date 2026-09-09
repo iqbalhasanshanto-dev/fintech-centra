@@ -1,4 +1,5 @@
 import React from 'react';
+import brandLogo from '../../assets/brand/logo.png';
 
 interface CentraLogoProps {
   className?: string;
@@ -27,9 +28,9 @@ export const CentraLogo: React.FC<CentraLogoProps> = ({
         />
       )}
       <img
-        src="/centra-logo.png"
-        alt="Centra Logo"
-        className={`${sizeMap[size]} object-contain select-none drop-shadow-md`}
+        src={brandLogo}
+        alt="Centra"
+        className={`${sizeMap[size]} object-contain select-none drop-shadow-sm`}
         draggable={false}
       />
     </div>
