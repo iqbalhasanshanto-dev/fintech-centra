@@ -30,7 +30,7 @@ export const SettingsScreen: React.FC = () => {
     updateSettings,
     resetAllData
   } = useFinance();
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, logout, isGuest, setAuthView } = useAuth();
 
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -105,6 +105,34 @@ export const SettingsScreen: React.FC = () => {
           Preferences, security, and application settings
         </p>
       </div>
+
+      {/* Guest Mode Upgrade Banner */}
+      {isGuest && (
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold">
+              Guest Session Active
+            </span>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+              Upgrade to a Full Centra Account
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Your financial data is currently stored locally. Create a free account to enable encrypted cloud backup and sync across devices.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              logout();
+              setAuthView('login');
+            }}
+            className="shrink-0 bg-black dark:bg-white text-white dark:text-black hover:opacity-90 font-bold"
+          >
+            Create Full Account
+          </Button>
+        </div>
+      )}
 
       {/* 1. Profile Card with Edit button grouped close to profile info */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] flex items-center justify-between transition-colors shadow-xs">

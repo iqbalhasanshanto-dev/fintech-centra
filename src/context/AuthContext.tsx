@@ -31,7 +31,21 @@ interface AuthContextType {
   pending2FA: boolean;
   cancel2FA: () => void;
   enterGuestMode: () => void;
+  signInWithOAuth: (provider: 'google' | 'apple') => Promise<void>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ ok: boolean; error?: string }>;
+  saveOnboardingProfile: (data: {
+    name: string;
+    dob?: string;
+    country?: string;
+    address?: string;
+    avatarUrl?: string;
+    currency?: any;
+    theme?: 'dark' | 'light';
+    categories?: string[];
+  }) => Promise<void>;
+  completeOnboarding: () => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
+  setPendingEmail: (email: string) => void;
   setAuthView: (view: AuthView) => void;
 }
 
@@ -225,9 +239,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Seed local data immediately so the app is ready when they confirm
         await CentraDB.seedUserData(data.user.id, email, name);
         setUser(CentraDB.getUser());
-        // Do NOT authenticate yet — email must be confirmed first
         setPendingEmail(email);
-        setAuthView('check-email');
+        // Do NOT change authView here — keep user in OnboardingFlow steps
         return true;
       }
 
@@ -238,14 +251,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newUser: UserProfile = {
       ...user,
       id: `usr_${Date.now()}`,
-      name: name || 'Fintech User',
+      name: name || 'Centra User',
       email: email || 'user@centra.io',
       createdAt: new Date().toISOString(),
     };
     setUser(newUser);
-    setIsAuthenticated(true);
-    CentraDB.saveAuthSession(true);
-    setAuthView('app');
+    setPendingEmail(email || 'user@centra.io');
+    // Keep in onboarding flow — do NOT setAuthView('app') here!
     return true;
   };
 
@@ -349,6 +361,103 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPending2FA(false);
   };
 
+  const signInWithOAuth = async (provider: 'google' | 'apple') => {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } else {
+      // Demo / offline mode: instantly authenticate as OAuth user
+      const demoUser: UserProfile = {
+        ...user,
+        id: `${provider}_${Date.now()}`,
+        name: provider === 'google' ? 'Google Account' : 'Apple ID',
+        email: `${provider}.user@centra.io`,
+        createdAt: new Date().toISOString(),
+      };
+      setUser(demoUser);
+      setIsAuthenticated(true);
+      CentraDB.saveAuthSession(true);
+      setAuthView('app');
+    }
+  };
+
+  const verifyEmailOtp = async (email: string, token: string): Promise<{ ok: boolean; error?: string }> => {
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: 'signup',
+        });
+        if (error) {
+          const fallback = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: 'email',
+          });
+          if (fallback.error) {
+            return { ok: false, error: error.message || fallback.error.message };
+          }
+        }
+        return { ok: true };
+      } catch (err: any) {
+        return { ok: false, error: err?.message || 'Verification failed. Please check the code.' };
+      }
+    }
+    // Demo / offline mode always accepts 5-digit OTP
+    return { ok: true };
+  };
+
+  const saveOnboardingProfile = async (data: {
+    name: string;
+    dob?: string;
+    country?: string;
+    address?: string;
+    avatarUrl?: string;
+    currency?: any;
+    theme?: 'dark' | 'light';
+    categories?: string[];
+  }) => {
+    const updatedUser: UserProfile = {
+      ...user,
+      name: data.name || user.name,
+      avatarUrl: data.avatarUrl || user.avatarUrl,
+      baseCurrency: data.currency || user.baseCurrency,
+    };
+    setUser(updatedUser);
+    CentraDB.saveUser(updatedUser);
+
+    const currentSettings = CentraDB.getSettings();
+    const updatedSettings = {
+      ...currentSettings,
+      baseCurrency: data.currency || currentSettings.baseCurrency,
+      theme: data.theme || currentSettings.theme,
+    };
+    CentraDB.saveSettings(updatedSettings);
+
+    if (data.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (data.theme === 'light') {
+      document.documentElement.classList.remove('dark');
+    }
+
+    if (data.categories && data.categories.length > 0) {
+      localStorage.setItem('centra_onboarding_categories', JSON.stringify(data.categories));
+    }
+  };
+
+  const completeOnboarding = async () => {
+    localStorage.setItem('centra_onboarding_done_v1', 'true');
+    setIsAuthenticated(true);
+    CentraDB.saveAuthSession(true);
+    setAuthView('app');
+  };
+
   // -------------------------------------------------------------------------
   // Context value
   // -------------------------------------------------------------------------
@@ -373,6 +482,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cancel2FA,
         enterGuestMode,
         resendVerificationEmail,
+        signInWithOAuth,
+        verifyEmailOtp,
+        saveOnboardingProfile,
+        completeOnboarding,
+        setPendingEmail,
         setAuthView,
       }}
     >

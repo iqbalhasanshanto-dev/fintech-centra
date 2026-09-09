@@ -2,7 +2,7 @@ import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FinanceProvider } from './context/FinanceContext';
 import { AppShell } from './components/layout/AppShell';
-import { AuthScreen } from './components/auth/AuthScreen';
+import { OnboardingFlow } from './components/auth/OnboardingFlow';
 import { PinLockScreen } from './components/auth/PinLockScreen';
 import { CheckEmailScreen } from './components/auth/CheckEmailScreen';
 import { AuthCallbackScreen } from './components/auth/AuthCallbackScreen';
@@ -19,8 +19,8 @@ const MainApp: React.FC = () => {
   // Post-registration "check your email" holding screen
   if (authView === 'check-email') return <CheckEmailScreen />;
 
-  // Not authenticated → show sign-in/sign-up form
-  if (authView === 'login') return <AuthScreen />;
+  // Not authenticated → show new Onboarding + Login flow
+  if (authView === 'login') return <OnboardingFlow />;
 
   // Authenticated (real session or guest) → main app
   return (
