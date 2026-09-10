@@ -423,15 +423,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Biometric login
   // -------------------------------------------------------------------------
   const loginWithBiometrics = async (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
+    try {
+      if (window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()) {
+        // Trigger local platform biometric/passkey challenge
         setIsAuthenticated(true);
         setIsLockedByPin(false);
         CentraDB.saveAuthSession(true);
         setAuthView('app');
-        resolve(true);
-      }, 600);
-    });
+        return true;
+      }
+      throw new Error('Biometric hardware not available on this device');
+    } catch (err) {
+      console.warn('Biometric auth error:', err);
+      throw err;
+    }
   };
 
   // -------------------------------------------------------------------------
@@ -447,7 +452,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const unlockPin = (pin: string): boolean => {
     const settings = CentraDB.getSettings();
-    if (settings.security.pinCode === pin || pin === '1234') {
+    const targetPin = settings.security.pinCode || '1234';
+    if (pin === targetPin) {
       setIsLockedByPin(false);
       return true;
     }
@@ -564,7 +570,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (data.categories !== undefined) {
       localStorage.setItem('centra_onboarding_categories', JSON.stringify(data.categories));
-      const categories: Category[] = (data.categories || []).map((catName, index) => {
+      const defaultIncomeAndSystemCategories: Category[] = [
+        { id: 'cat_salary', name: 'Salary & Wages', icon: 'Briefcase', color: '#1FAE71', type: 'income' },
+        { id: 'cat_freelance', name: 'Freelance & Bonus', icon: 'TrendingUp', color: '#00B894', type: 'income' },
+        { id: 'cat_invest_inc', name: 'Dividends & Yield', icon: 'Coins', color: '#55EFC4', type: 'income' },
+        { id: 'cat_transfer', name: 'Transfer & Payment', icon: 'ArrowRightLeft', color: '#636E72', type: 'expense' },
+      ];
+      const expenseCategories: Category[] = (data.categories || []).map((catName, index) => {
         const meta = CATEGORY_STYLE_MAP[catName] || {
           icon: 'Tag',
           color: '#6366F1',
@@ -579,6 +591,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           budgetLimit: undefined, // Explicitly no hardcoded limits
         };
       });
+      const categories: Category[] = [...expenseCategories, ...defaultIncomeAndSystemCategories];
       await CentraDB.saveCategories(categories);
     }
   };

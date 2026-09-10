@@ -40,12 +40,16 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
     contributeToGoal(selectedGoalForFunds.id, amount, fundSourceAccountId);
 
     if (selectedGoalForFunds.currentAmount + amount >= selectedGoalForFunds.targetAmount) {
-      confetti({
-        particleCount: 120,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#6366F1', '#10B981', '#818CF8', '#F59E0B'],
-      });
+      try {
+        confetti({
+          particleCount: 120,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#6366F1', '#10B981', '#818CF8', '#F59E0B'],
+        });
+      } catch (err) {
+        console.warn('Confetti animation failed:', err);
+      }
     }
 
     setFundAmount('');

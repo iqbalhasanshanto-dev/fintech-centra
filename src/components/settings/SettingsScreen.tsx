@@ -138,11 +138,21 @@ export const SettingsScreen: React.FC = () => {
       {/* 1. Profile Card with Edit button grouped close to profile info */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] flex items-center justify-between transition-colors shadow-xs">
         <div className="flex items-center space-x-4 min-w-0">
-          <img
-            src={user.avatarUrl}
-            alt={user.name}
-            className="w-14 h-14 rounded-full object-cover border border-gray-200 dark:border-[#232C45] shrink-0"
-          />
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.name}
+              className="w-14 h-14 rounded-full object-cover border border-gray-200 dark:border-[#232C45] shrink-0"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg";
+              }}
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 font-bold text-lg flex items-center justify-center border border-gray-200 dark:border-[#232C45] shrink-0">
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
           <div className="min-w-0 space-y-1">
             <div className="flex items-center flex-wrap gap-2">
               <h2 className="text-base font-bold text-gray-900 dark:text-white break-words">

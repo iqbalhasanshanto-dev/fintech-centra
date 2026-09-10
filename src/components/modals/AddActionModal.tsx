@@ -11,6 +11,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { formatCurrency } from '../../utils/formatters';
+import { getCurrencyInfo } from '../../utils/currencies';
 
 interface AddActionModalProps {
   isOpen: boolean;
@@ -73,6 +74,11 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   // Feedback message
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
+  // Active currency info based on selected account or settings
+  const relevantAccountId = activeTab === 'transfer' ? fromAccountId : accountId;
+  const selectedAcc = accounts.find(a => a.id === relevantAccountId) || accounts[0];
+  const activeCurrencyInfo = getCurrencyInfo(selectedAcc?.currency || settings.baseCurrency);
+
   const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -94,7 +100,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   // Perform Save for Transaction / Spend / Income
   const executeSaveTransaction = async (keepOpen: boolean = false) => {
-    const parsedAmount = parseFloat(amount);
+    const parsedAmount = parseFloat(amount.replace(',', '.'));
     if (!parsedAmount || parsedAmount <= 0) {
       alert('Please enter a valid amount.');
       return false;
@@ -133,7 +139,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   // Perform Save for Transfer
   const executeSaveTransfer = async (keepOpen: boolean = false) => {
-    const parsedAmount = parseFloat(amount);
+    const parsedAmount = parseFloat(amount.replace(',', '.'));
     if (!parsedAmount || parsedAmount <= 0) {
       alert('Please enter a valid transfer amount.');
       return false;
@@ -161,9 +167,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   };
 
   // Perform Save for Goal
-  const executeSaveGoal = (keepOpen: boolean = false) => {
-    const target = parseFloat(amount);
-    const deposit = parseFloat(goalInitialDeposit) || 0;
+  const executeSaveGoal = async (keepOpen: boolean = false) => {
+    const target = parseFloat(amount.replace(',', '.'));
+    const deposit = parseFloat(goalInitialDeposit.replace(',', '.')) || 0;
     if (!goalName || !target || target <= 0) {
       alert('Please enter goal name and valid target amount.');
       return false;
@@ -179,6 +185,25 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       targetDate: goalTargetDate,
       linkedAccountId: accountId,
     });
+
+    if (deposit > 0 && accountId) {
+      const selectedDepositAcc = accounts.find(a => a.id === accountId);
+      await addTransaction({
+        type: 'expense',
+        amount: deposit,
+        currency: selectedDepositAcc?.currency || settings.baseCurrency || 'USD',
+        categoryId: 'cat_transfer',
+        categoryName: 'Goal Funding',
+        categoryIcon: 'Target',
+        categoryColor: '#6366f1',
+        accountId: accountId,
+        accountName: selectedDepositAcc?.name || 'Primary Account',
+        merchant: `Goal: ${goalName.trim()}`,
+        date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
+        note: `Initial deposit for goal: ${goalName.trim()}`,
+        tags: ['Goal', 'Savings'],
+      });
+    }
 
     if (keepOpen) {
       setAmount('');
@@ -197,7 +222,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   // Perform Save for Budget
   const executeSaveBudget = (keepOpen: boolean = false) => {
-    const limit = parseFloat(amount);
+    const limit = parseFloat(amount.replace(',', '.'));
     if (!limit || limit <= 0) {
       alert('Please enter a valid monthly limit amount.');
       return false;
@@ -334,21 +359,25 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
           <div className="relative flex items-center mt-2">
             <span className="text-3xl font-bold text-gray-900 dark:text-white mr-2">
-              ৳
+              {activeCurrencyInfo.symbol}
             </span>
             <input
-              type="number"
-              step="0.01"
-              min="0.01"
+              type="text"
+              inputMode="decimal"
               required
               autoFocus
               placeholder="0.00"
               value={amount}
-              onChange={e => setAmount(e.target.value)}
+              onChange={e => {
+                const val = e.target.value.replace(',', '.');
+                if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                  setAmount(val);
+                }
+              }}
               className="w-full bg-transparent text-3xl font-bold text-gray-900 dark:text-white focus:outline-none placeholder-gray-400 tabular-nums"
             />
             <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 shrink-0 ml-2 font-mono">
-              BDT
+              {activeCurrencyInfo.code}
             </span>
           </div>
         </div>
@@ -531,14 +560,19 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                    Initial Deposit (৳)
+                    Initial Deposit ({activeCurrencyInfo.symbol})
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0.00"
                     value={goalInitialDeposit}
-                    onChange={e => setGoalInitialDeposit(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value.replace(',', '.');
+                      if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                        setGoalInitialDeposit(val);
+                      }
+                    }}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500"
                   />
                 </div>

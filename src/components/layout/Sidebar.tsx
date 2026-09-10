@@ -108,11 +108,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-[#232C45]">
         <div className="p-3 rounded-xl bg-gray-50 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] flex items-center justify-between">
           <div className="flex items-center space-x-2.5 min-w-0">
-            <img
-              src={user.avatarUrl}
-              alt={user.name}
-              className="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-[#232C45] shrink-0"
-            />
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-[#232C45] shrink-0"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg";
+                }}
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 font-bold text-xs flex items-center justify-center border border-gray-200 dark:border-[#232C45] shrink-0">
+                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
             <div className="min-w-0">
               <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
                 {user.name}

@@ -168,21 +168,60 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const netSavings = periodIncome - periodExpenses;
   const savingsRate = periodIncome > 0 ? Math.max(0, (netSavings / periodIncome) * 100) : 0;
 
-  // Period over period delta
+  // Period over period delta: difference between current period net savings and previous period net savings
   const previousPeriodBalanceDelta = useMemo(() => {
-    // Computed comparison indicator
-    const deltaAmount = periodIncome - periodExpenses;
+    const now = new Date();
+    const prevPeriodTransactions = transactions.filter(tx => {
+      const txDate = new Date(tx.date);
+      if (periodFilter === 'this_month') {
+        const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+        const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+        return txDate.getMonth() === lastMonth && txDate.getFullYear() === lastMonthYear;
+      }
+      if (periodFilter === 'last_month') {
+        const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+        return txDate.getMonth() === twoMonthsAgo.getMonth() && txDate.getFullYear() === twoMonthsAgo.getFullYear();
+      }
+      if (periodFilter === 'last_90_days') {
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        const oneEightyDaysAgo = new Date();
+        oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180);
+        return txDate >= oneEightyDaysAgo && txDate < ninetyDaysAgo;
+      }
+      if (periodFilter === 'this_year') {
+        return txDate.getFullYear() === now.getFullYear() - 1;
+      }
+      // 'all'
+      return txDate.getFullYear() === now.getFullYear() - 1;
+    });
+
+    let prevIncome = 0;
+    let prevExpenses = 0;
+    prevPeriodTransactions.forEach(tx => {
+      const amountInBase = convertCurrency(tx.amount, tx.currency, baseCurrency);
+      if (tx.type === 'income') {
+        prevIncome += amountInBase;
+      } else if (tx.type === 'expense') {
+        prevExpenses += amountInBase;
+      }
+    });
+
+    const currentNetSavings = periodIncome - periodExpenses;
+    const prevNetSavings = prevIncome - prevExpenses;
+    const deltaAmount = currentNetSavings - prevNetSavings;
     const isPositive = deltaAmount >= 0;
     const percentage =
-      periodExpenses > 0
-        ? Math.min(99.9, Math.abs((deltaAmount / periodExpenses) * 100))
+      Math.abs(prevNetSavings) > 0
+        ? Math.min(99.9, Math.abs((deltaAmount / Math.abs(prevNetSavings)) * 100))
         : 0;
+
     return {
       amount: Math.abs(deltaAmount),
       percentage,
       isPositive,
     };
-  }, [periodIncome, periodExpenses]);
+  }, [transactions, periodFilter, periodIncome, periodExpenses, baseCurrency]);
 
   // Category breakdown for expenses
   const categoryBreakdown = useMemo(() => {
@@ -391,24 +430,32 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteTransaction = (id: string) => {
-    const txToDelete = transactions.find(t => t.id === id);
-    if (txToDelete) {
-      // Revert account balance
-      setAccounts(prev =>
-        prev.map(acc => {
-          if (acc.id === txToDelete.accountId) {
-            const reverted = txToDelete.type === 'expense'
-              ? acc.balance + txToDelete.amount
-              : txToDelete.type === 'income'
-                ? acc.balance - txToDelete.amount
-                : acc.balance;
-            return { ...acc, balance: reverted };
-          }
-          return acc;
-        })
-      );
+    const tx = transactions.find(t => t.id === id);
+    if (!tx) return;
+
+    if (tx.type === 'transfer' && tx.toAccountId) {
+      setAccounts(prev => prev.map(acc => {
+        if (acc.id === tx.accountId) {
+          return { ...acc, balance: acc.balance + tx.amount };
+        }
+        if (acc.id === tx.toAccountId) {
+          return { ...acc, balance: acc.balance - tx.amount };
+        }
+        return acc;
+      }));
+    } else {
+      setAccounts(prev => prev.map(acc => {
+        if (acc.id === tx.accountId) {
+          const reverted = tx.type === 'expense'
+            ? acc.balance + tx.amount
+            : acc.balance - tx.amount;
+          return { ...acc, balance: reverted };
+        }
+        return acc;
+      }));
     }
-    setTransactions(prev => prev.filter(tx => tx.id !== id));
+
+    setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
   const togglePinTransaction = (id: string) => {
