@@ -64,10 +64,25 @@ export const AuthCallbackScreen: React.FC = () => {
           return;
         }
 
-        // Success — sync data then navigate into the app
+        // Success — sync data then navigate based on onboarding completion
+        const isOAuth =
+          user.app_metadata?.provider === 'google' ||
+          user.app_metadata?.provider === 'apple';
+
         await CentraDB.syncFromSupabase(user.id, user.email || undefined);
+        const syncedUser = CentraDB.getUser();
         setStatus('success');
-        setTimeout(() => setAuthView('app'), 1000);
+
+        if (isOAuth || !syncedUser.onboardingCompleted) {
+          if (syncedUser.onboardingCompleted) {
+            setTimeout(() => setAuthView('app'), 1000);
+          } else {
+            localStorage.setItem('centra_onboarding_step', 'profile');
+            setTimeout(() => setAuthView('onboarding'), 1000);
+          }
+        } else {
+          setTimeout(() => setAuthView('app'), 1000);
+        }
         return;
       }
 

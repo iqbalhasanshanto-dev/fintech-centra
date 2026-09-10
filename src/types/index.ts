@@ -102,6 +102,7 @@ export interface UserProfile {
   email: string;
   avatarUrl?: string;
   baseCurrency?: CurrencyCode | null;
+  onboardingCompleted?: boolean;
   createdAt: string;
 }
 

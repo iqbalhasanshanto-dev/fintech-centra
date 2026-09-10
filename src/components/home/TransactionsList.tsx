@@ -101,7 +101,9 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
       <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl overflow-hidden shadow-xs transition-colors">
         {groupedTransactions.length === 0 ? (
           <div className="p-8 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">
-            No transactions found for this filter.
+            {transactions.length === 0
+              ? "No transactions yet. Tap '+' in the bottom bar to add your first transaction."
+              : 'No transactions found for this filter.'}
           </div>
         ) : (
           groupedTransactions.map(group => (

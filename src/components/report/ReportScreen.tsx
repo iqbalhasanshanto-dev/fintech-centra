@@ -302,8 +302,37 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
         {activeChartTab === 'donut' && (
           <div className="w-full">
             {expenseDonutData.length === 0 ? (
-              <div className="h-72 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
-                No expense breakdown recorded for this timeframe.
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-6">
+                <div className="lg:col-span-6 relative h-64 sm:h-72 flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[{ value: 1 }]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={78}
+                        outerRadius={112}
+                        dataKey="value"
+                        stroke="none"
+                        isAnimationActive={false}
+                      >
+                        <Cell fill={isDark ? '#262626' : '#E5E7EB'} />
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-center">
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Top Spend</span>
+                      <span className="text-base font-bold text-gray-500 mt-0.5">0%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="lg:col-span-6 p-8 rounded-2xl border border-dashed border-gray-200 dark:border-[#232C45] text-center">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No expense breakdown recorded</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Record your expenses to visualize itemized category analytics and distributions.
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">

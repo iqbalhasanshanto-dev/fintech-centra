@@ -9,11 +9,19 @@ import { TransactionDrawer } from '../home/TransactionDrawer';
 import { TransactionsList } from '../home/TransactionsList';
 import { FloatingNav } from './FloatingNav';
 
+import { useFinance } from '../../context/FinanceContext';
+import { formatCurrency } from '../../utils/formatters';
+
 export const DashboardScreen: React.FC = () => {
+  const { periodIncome, periodExpenses, transactions, settings } = useFinance();
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showSeeAllDrawer, setShowSeeAllDrawer] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const toggleTheme = () => setIsDark(!isDark);
+
+  const hasData = transactions.length > 0;
+  const formattedIncome = formatCurrency(periodIncome, settings.baseCurrency, settings.privacyMode);
+  const formattedExpenses = formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode);
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100">
@@ -21,8 +29,8 @@ export const DashboardScreen: React.FC = () => {
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8 pb-32">
         {/* Top Stats - Cash Flow */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <IncomeExpenseCard type="income" amount="৳711,764.71" />
-          <IncomeExpenseCard type="expenses" amount="৳275,481.18" />
+          <IncomeExpenseCard type="income" amount={formattedIncome} hasData={hasData} />
+          <IncomeExpenseCard type="expenses" amount={formattedExpenses} hasData={hasData} />
         </section>
 
         {/* Spend Breakdown */}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft,
   Camera,
@@ -48,6 +48,16 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user.avatarUrl);
   const [currency, setCurrency] = useState<string>(''); // Unset until chosen or auto-suggested on country select
   const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Sync Google / Apple OAuth prefilled name & avatar
+  useEffect(() => {
+    if (!fullName && user.name) {
+      setFullName(user.name);
+    }
+    if (!avatarUrl && user.avatarUrl) {
+      setAvatarUrl(user.avatarUrl);
+    }
+  }, [user.name, user.avatarUrl]);
 
   // Dropdown UI states
   const [isCountryOpen, setIsCountryOpen] = useState(false);

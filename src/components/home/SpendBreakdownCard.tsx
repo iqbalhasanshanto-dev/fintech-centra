@@ -105,7 +105,28 @@ export const SpendBreakdownCard: React.FC<SpendBreakdownCardProps> = ({
         {/* Chart Column */}
         <div className="md:col-span-5 relative h-56 flex items-center justify-center">
           {chartData.length === 0 ? (
-            <p className="text-xs text-gray-400">No expense data recorded.</p>
+            <>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[{ value: 1 }]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    dataKey="value"
+                    stroke="none"
+                    isAnimationActive={false}
+                  >
+                    <Cell fill="#374151" fillOpacity={0.3} />
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Top Spend</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">0%</span>
+              </div>
+            </>
           ) : (
             <>
               <ResponsiveContainer width="100%" height="100%">
@@ -160,25 +181,36 @@ export const SpendBreakdownCard: React.FC<SpendBreakdownCardProps> = ({
         </div>
 
         {/* Legend Column (2-col grid) */}
-        <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {chartData.slice(0, 4).map((item) => (
-            <div
-              key={item.name}
-              onClick={onNavigateToReport}
-              className="flex items-center gap-3 p-3 rounded-xl bg-gray-50/70 dark:bg-[#0A0E1A]/60 border border-gray-200/80 dark:border-[#232C45]/80 hover:bg-gray-100 dark:hover:bg-[#1A233A] transition-colors cursor-pointer"
-            >
-              <div
-                className="w-3 h-3 rounded-full shrink-0"
-                style={{ backgroundColor: item.color }}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 tabular-nums">
-                  {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode, false)} ({item.percentage.toFixed(0)}%)
-                </p>
-              </div>
+        <div className="md:col-span-7">
+          {chartData.length === 0 ? (
+            <div className="p-6 rounded-xl border border-dashed border-gray-200 dark:border-[#232C45] bg-gray-50/50 dark:bg-[#0A0E1A]/40 text-center">
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">No expenses recorded yet</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                Your categorized spending breakdown will be visualized here as transactions are logged.
+              </p>
             </div>
-          ))}
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {chartData.slice(0, 4).map((item) => (
+                <div
+                  key={item.name}
+                  onClick={onNavigateToReport}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-gray-50/70 dark:bg-[#0A0E1A]/60 border border-gray-200/80 dark:border-[#232C45]/80 hover:bg-gray-100 dark:hover:bg-[#1A233A] transition-colors cursor-pointer"
+                >
+                  <div
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 tabular-nums">
+                      {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode, false)} ({item.percentage.toFixed(0)}%)
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

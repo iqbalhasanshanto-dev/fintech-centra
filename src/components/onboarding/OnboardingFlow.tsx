@@ -59,6 +59,14 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialView = 'i
 
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward');
 
+  // React to external changes in saved step (e.g. Google / Apple sign-in setting step to 'profile')
+  useEffect(() => {
+    const savedStep = localStorage.getItem(ONBOARDING_STEP_STORAGE_KEY);
+    if (savedStep && STEP_ORDER.includes(savedStep as OnboardingStep)) {
+      setCurrentStep(savedStep as OnboardingStep);
+    }
+  }, [initialView]);
+
   // Sync step to localStorage
   const goToStep = (step: OnboardingStep, direction: 'forward' | 'backward' = 'forward') => {
     setTransitionDirection(direction);
@@ -123,7 +131,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialView = 'i
 
           {currentStep === 'profile' && (
             <ProfileInfoScreen
-              onBack={() => goToStep('verify', 'backward')}
+              onBack={() => {
+                // Google/Apple OAuth users must never see verify OTP screen
+                const isOAuth = !signupEmail && !pendingEmail;
+                if (isOAuth) {
+                  goToStep('intro', 'backward');
+                } else {
+                  goToStep('verify', 'backward');
+                }
+              }}
               onContinue={() => goToStep('theme', 'forward')}
             />
           )}

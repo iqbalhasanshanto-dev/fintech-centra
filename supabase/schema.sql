@@ -11,9 +11,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   is_pro BOOLEAN DEFAULT TRUE,
   plan_expiry TIMESTAMPTZ,
   base_currency TEXT DEFAULT 'BDT',
+  onboarding_completed BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration support if table already exists
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 

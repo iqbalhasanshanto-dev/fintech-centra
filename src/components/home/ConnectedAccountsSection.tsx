@@ -63,38 +63,48 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
 
       {/* Account Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {accounts.map(acc => {
-          const Icon = getAccountIcon(acc.type);
-          const isNegative = acc.balance < 0;
+        {accounts.length === 0 ? (
+          <div className="col-span-full p-8 rounded-2xl bg-white dark:bg-[#121A2C] border border-dashed border-gray-200 dark:border-[#232C45] text-center">
+            <Wallet className="w-8 h-8 mx-auto text-gray-400 dark:text-gray-500 mb-2" />
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No accounts connected yet</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Connect a checking account, savings vault, or card to monitor your real-time balances.
+            </p>
+          </div>
+        ) : (
+          accounts.map(acc => {
+            const Icon = getAccountIcon(acc.type);
+            const isNegative = acc.balance < 0;
 
-          return (
-            <div
-              key={acc.id}
-              onClick={() => onSelectAccount && onSelectAccount(acc)}
-              className="p-4 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/50 dark:hover:border-brand-500/50 transition-all cursor-pointer group shadow-xs hover:shadow-md"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200/60 dark:border-brand-900/40">
-                  <Icon className="w-4 h-4" />
+            return (
+              <div
+                key={acc.id}
+                onClick={() => onSelectAccount && onSelectAccount(acc)}
+                className="p-4 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/50 dark:hover:border-brand-500/50 transition-all cursor-pointer group shadow-xs hover:shadow-md"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200/60 dark:border-brand-900/40">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-[11px] font-mono font-medium text-gray-400 dark:text-gray-500">
+                    {acc.accountNumberMasked}
+                  </span>
                 </div>
-                <span className="text-[11px] font-mono font-medium text-gray-400 dark:text-gray-500">
-                  {acc.accountNumberMasked}
-                </span>
+
+                <p className="text-xs font-bold text-gray-900 dark:text-white truncate mb-1">
+                  {acc.name}
+                </p>
+                <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+                  {acc.type}
+                </p>
+
+                <p className={`text-lg font-bold tabular-nums currency-amount ${isNegative ? 'text-rose-500 dark:text-rose-400' : 'text-gray-900 dark:text-white'}`}>
+                  {formatCurrency(acc.balance, acc.currency, settings.privacyMode)}
+                </p>
               </div>
-
-              <p className="text-xs font-bold text-gray-900 dark:text-white truncate mb-1">
-                {acc.name}
-              </p>
-              <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
-                {acc.type}
-              </p>
-
-              <p className={`text-lg font-bold tabular-nums currency-amount ${isNegative ? 'text-rose-500 dark:text-rose-400' : 'text-gray-900 dark:text-white'}`}>
-                {formatCurrency(acc.balance, acc.currency, settings.privacyMode)}
-              </p>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </section>
   );

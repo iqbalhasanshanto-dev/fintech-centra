@@ -173,7 +173,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Computed comparison indicator
     const deltaAmount = periodIncome - periodExpenses;
     const isPositive = deltaAmount >= 0;
-    const percentage = periodExpenses > 0 ? Math.min(99.9, Math.abs((deltaAmount / periodExpenses) * 100)) : 12.4;
+    const percentage =
+      periodExpenses > 0
+        ? Math.min(99.9, Math.abs((deltaAmount / periodExpenses) * 100))
+        : 0;
     return {
       amount: Math.abs(deltaAmount),
       percentage,
@@ -259,6 +262,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Dynamic Insight Banner Computation
   const currentInsight: FinancialInsight = useMemo(() => {
+    if (filteredTransactions.length === 0) {
+      return {
+        title: 'Welcome to your financial overview',
+        description: 'Add your first account or transaction to begin tracking your cash flow, savings rate, and spending insights.',
+        type: 'positive',
+        metric: 'Ready',
+        actionText: 'Add Transaction',
+      };
+    }
     if (topSpendCategory && topSpendCategory.percentage > 30) {
       return {
         title: `${topSpendCategory.category.name} is your top expense`,
@@ -284,7 +296,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       metric: 'Stable',
       actionText: 'Explore Pro',
     };
-  }, [topSpendCategory, savingsRate]);
+  }, [filteredTransactions.length, topSpendCategory, savingsRate]);
 
   const unreadNotificationsCount = useMemo(() => {
     return notifications.filter(n => !n.isRead).length;

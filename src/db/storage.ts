@@ -7,6 +7,7 @@ import {
   Budget,
   NotificationItem,
   AppSettings,
+  CurrencyCode,
 } from '../types';
 import {
   INITIAL_USER,
@@ -260,6 +261,22 @@ const mapSettingsFromDb = (row: any): AppSettings => ({
   notifications: row.notifications || INITIAL_SETTINGS.notifications,
 });
 
+export const CATEGORY_STYLE_MAP: Record<string, { icon: string; color: string; type: 'expense' | 'income' }> = {
+  'Groceries': { icon: 'ShoppingBag', color: '#10B981', type: 'expense' },
+  'Food & Drinks': { icon: 'Utensils', color: '#FF7675', type: 'expense' },
+  'Food & Dining': { icon: 'Utensils', color: '#FF7675', type: 'expense' },
+  'Bills & Utilities': { icon: 'Home', color: '#6C5CE7', type: 'expense' },
+  'Housing & Rent': { icon: 'Home', color: '#6C5CE7', type: 'expense' },
+  'Shopping': { icon: 'ShoppingBag', color: '#FD79A8', type: 'expense' },
+  'Travel': { icon: 'Plane', color: '#FDCB6E', type: 'expense' },
+  'Entertainment': { icon: 'Film', color: '#A29BFE', type: 'expense' },
+  'Work & Freelance': { icon: 'TrendingUp', color: '#00B894', type: 'income' },
+  'Transport': { icon: 'Car', color: '#0984E3', type: 'expense' },
+  'Subscriptions': { icon: 'Repeat', color: '#E17055', type: 'expense' },
+  'Health & Wellness': { icon: 'HeartPulse', color: '#00CEC9', type: 'expense' },
+  'Salary & Wages': { icon: 'Briefcase', color: '#1FAE71', type: 'income' },
+};
+
 export const CentraDB = {
   // Sync memory & local storage
   getUser: (): UserProfile => cache.user,
@@ -274,6 +291,7 @@ export const CentraDB = {
           email: user.email,
           avatar_url: user.avatarUrl,
           base_currency: user.baseCurrency,
+          onboarding_completed: user.onboardingCompleted ?? false,
           updated_at: new Date().toISOString(),
         });
       } catch (err) {
@@ -392,7 +410,7 @@ export const CentraDB = {
     safeSet(STORAGE_KEYS.AUTH_TOKEN, isLoggedIn);
   },
 
-  // Seed remote and local data for a new or reset user
+  // Seed remote and local data for a new or reset user (GUEST MODE & DEMO RESET ONLY)
   seedUserData: async (userId: string, userEmail?: string, userName?: string) => {
     const userProfile: UserProfile = {
       ...INITIAL_USER,
@@ -429,6 +447,7 @@ export const CentraDB = {
           email: userProfile.email || null,
           avatar_url: userProfile.avatarUrl || null,
           base_currency: userProfile.baseCurrency || null,
+          onboarding_completed: true,
         });
 
         await supabase.from('accounts').upsert(INITIAL_ACCOUNTS.map(a => mapAccountToDb(a, userId)));
@@ -444,8 +463,124 @@ export const CentraDB = {
     }
   },
 
+  // Initialize a genuinely blank user state for real signups (email, Google, Apple)
+  createBlankUserData: async (
+    userId: string,
+    userEmail?: string,
+    userName?: string,
+    avatarUrl?: string,
+    baseCurrency?: CurrencyCode | null,
+    theme?: 'light' | 'dark',
+    selectedCategories?: string[]
+  ) => {
+    const cleanEmail = userEmail?.trim() || '';
+    const cleanName = userName?.trim() || '';
+
+    const userProfile: UserProfile = {
+      id: userId,
+      email: cleanEmail,
+      name: cleanName,
+      avatarUrl: avatarUrl || undefined,
+      baseCurrency: baseCurrency || null,
+      onboardingCompleted: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    const categories: Category[] = (selectedCategories || []).map((name, index) => {
+      const meta = CATEGORY_STYLE_MAP[name] || {
+        icon: 'Tag',
+        color: '#6366F1',
+        type: 'expense' as const,
+      };
+      return {
+        id: `cat_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${index}`,
+        name,
+        icon: meta.icon,
+        color: meta.color,
+        type: meta.type,
+        budgetLimit: undefined, // Explicitly no hardcoded limits
+      };
+    });
+
+    const welcomeNotification: NotificationItem[] = [
+      {
+        id: `notif_welcome_${Date.now()}`,
+        type: 'system',
+        title: 'Welcome to Centra',
+        message: 'Your financial workspace is ready. Connect an account or record your first transaction to get started.',
+        timestamp: new Date().toISOString(),
+        isRead: false,
+        severity: 'success',
+      },
+    ];
+
+    const userSettings: AppSettings = {
+      ...INITIAL_SETTINGS,
+      theme: theme || 'dark',
+      baseCurrency: baseCurrency || null,
+    };
+
+    cache.user = userProfile;
+    cache.accounts = [];
+    cache.categories = categories;
+    cache.transactions = [];
+    cache.goals = [];
+    cache.budgets = [];
+    cache.notifications = welcomeNotification;
+    cache.settings = userSettings;
+
+    safeSet(STORAGE_KEYS.USER, cache.user);
+    safeSet(STORAGE_KEYS.ACCOUNTS, cache.accounts);
+    safeSet(STORAGE_KEYS.CATEGORIES, cache.categories);
+    safeSet(STORAGE_KEYS.TRANSACTIONS, cache.transactions);
+    safeSet(STORAGE_KEYS.GOALS, cache.goals);
+    safeSet(STORAGE_KEYS.BUDGETS, cache.budgets);
+    safeSet(STORAGE_KEYS.NOTIFICATIONS, cache.notifications);
+    safeSet(STORAGE_KEYS.SETTINGS, cache.settings);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('profiles').upsert({
+          id: userId,
+          name: userProfile.name || null,
+          email: userProfile.email || null,
+          avatar_url: userProfile.avatarUrl || null,
+          base_currency: userProfile.baseCurrency || null,
+          onboarding_completed: false,
+          updated_at: new Date().toISOString(),
+        });
+
+        if (categories.length > 0) {
+          await supabase.from('categories').upsert(categories.map(c => mapCategoryToDb(c, userId)));
+        }
+        await supabase.from('notifications').upsert(welcomeNotification.map(n => mapNotificationToDb(n, userId)));
+        await supabase.from('settings').upsert(mapSettingsToDb(userSettings, userId));
+      } catch (err) {
+        console.warn('Error creating blank Supabase rows:', err);
+      }
+    }
+  },
+
+  // Mark onboarding completed in cache, localStorage and Supabase
+  markOnboardingCompleted: async (userId: string) => {
+    if (cache.user) {
+      cache.user = { ...cache.user, onboardingCompleted: true };
+      safeSet(STORAGE_KEYS.USER, cache.user);
+    }
+    if (isSupabaseConfigured() && userId) {
+      try {
+        await supabase.from('profiles').update({
+          onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        }).eq('id', userId);
+      } catch (err) {
+        console.warn('Supabase markOnboardingCompleted failed:', err);
+      }
+    }
+  },
+
   // Sync entire state from Supabase if user is logged in
-  syncFromSupabase: async (userId: string, userEmail?: string): Promise<boolean> => {
+  syncFromSupabase: async (userId: string, userEmail?: string, userName?: string): Promise<boolean> => {
     if (!isSupabaseConfigured()) return false;
 
     try {
@@ -457,18 +592,19 @@ export const CentraDB = {
         .maybeSingle();
 
       if (!profileData) {
-        // First login for this user: Seed initial rows!
-        await CentraDB.seedUserData(userId, userEmail);
+        // First login for this user (including Google / Apple OAuth): create genuinely blank rows!
+        await CentraDB.createBlankUserData(userId, userEmail, userName);
         return true;
       }
 
       // Profile exists: update user profile
       cache.user = {
         id: profileData.id,
-        name: profileData.name || '',
+        name: profileData.name || userName || '',
         email: profileData.email || userEmail || '',
         avatarUrl: profileData.avatar_url || undefined,
         baseCurrency: (profileData.base_currency as any) || null,
+        onboardingCompleted: profileData.onboarding_completed ?? false,
         createdAt: profileData.created_at || new Date().toISOString(),
       };
       safeSet(STORAGE_KEYS.USER, cache.user);
@@ -479,7 +615,7 @@ export const CentraDB = {
         .select('*')
         .eq('user_id', userId);
 
-      if (accountsData && accountsData.length > 0) {
+      if (accountsData) {
         cache.accounts = accountsData.map(mapAccountFromDb);
         safeSet(STORAGE_KEYS.ACCOUNTS, cache.accounts);
       }
@@ -490,7 +626,7 @@ export const CentraDB = {
         .select('*')
         .eq('user_id', userId);
 
-      if (categoriesData && categoriesData.length > 0) {
+      if (categoriesData) {
         cache.categories = categoriesData.map(mapCategoryFromDb);
         safeSet(STORAGE_KEYS.CATEGORIES, cache.categories);
       }
@@ -502,7 +638,7 @@ export const CentraDB = {
         .eq('user_id', userId)
         .order('date', { ascending: false });
 
-      if (txData && txData.length > 0) {
+      if (txData) {
         cache.transactions = txData.map(mapTransactionFromDb);
         safeSet(STORAGE_KEYS.TRANSACTIONS, cache.transactions);
       }
@@ -513,7 +649,7 @@ export const CentraDB = {
         .select('*')
         .eq('user_id', userId);
 
-      if (goalsData && goalsData.length > 0) {
+      if (goalsData) {
         cache.goals = goalsData.map(mapGoalFromDb);
         safeSet(STORAGE_KEYS.GOALS, cache.goals);
       }
@@ -524,7 +660,7 @@ export const CentraDB = {
         .select('*')
         .eq('user_id', userId);
 
-      if (budgetsData && budgetsData.length > 0) {
+      if (budgetsData) {
         cache.budgets = budgetsData.map(mapBudgetFromDb);
         safeSet(STORAGE_KEYS.BUDGETS, cache.budgets);
       }
@@ -536,7 +672,7 @@ export const CentraDB = {
         .eq('user_id', userId)
         .order('timestamp', { ascending: false });
 
-      if (notifData && notifData.length > 0) {
+      if (notifData) {
         cache.notifications = notifData.map(mapNotificationFromDb);
         safeSet(STORAGE_KEYS.NOTIFICATIONS, cache.notifications);
       }

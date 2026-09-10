@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { UserProfile } from '../types';
-import { CentraDB } from '../db/storage';
+import { UserProfile, Category } from '../types';
+import { CentraDB, CATEGORY_STYLE_MAP } from '../db/storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 // ---------------------------------------------------------------------------
@@ -134,15 +134,107 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    const handleSession = async (session: any) => {
+      if (!session?.user) return;
+
+      const isOAuth =
+        session.user.app_metadata?.provider === 'google' ||
+        session.user.app_metadata?.provider === 'apple' ||
+        (Array.isArray(session.user.app_metadata?.providers) &&
+          (session.user.app_metadata.providers.includes('google') ||
+           session.user.app_metadata.providers.includes('apple'))) ||
+        (Array.isArray(session.user.identities) &&
+          session.user.identities.some(
+            (i: any) => i.provider === 'google' || i.provider === 'apple'
+          ));
+
+      const userId = session.user.id;
+      const userEmail = session.user.email || session.user.user_metadata?.email || '';
+      const userName =
+        session.user.user_metadata?.full_name ||
+        session.user.user_metadata?.name ||
+        '';
+      const userAvatar =
+        session.user.user_metadata?.avatar_url ||
+        session.user.user_metadata?.picture ||
+        undefined;
+
+      // Query Supabase for user profile to check onboarding_completed
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, onboarding_completed, name, email, avatar_url, base_currency')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (isOAuth) {
+        // Never route OAuth users to OTP (step 2/5), even briefly!
+        if (profile?.onboarding_completed) {
+          // Returning Google/Apple user: skip onboarding wizard entirely, go straight to Dashboard
+          setIsAuthenticated(true);
+          setIsGuest(false);
+          setAuthView('app');
+          CentraDB.saveAuthSession(true);
+          localStorage.removeItem(ONBOARDING_STEP_KEY);
+          await CentraDB.syncFromSupabase(userId, userEmail, userName);
+          setUser(CentraDB.getUser());
+        } else {
+          // First-time Google/Apple sign-up or abandoned mid-onboarding:
+          // Route straight into step 3/5, Profile Info
+          if (!profile) {
+            await CentraDB.createBlankUserData(userId, userEmail, userName, userAvatar);
+          } else {
+            const existingUser: UserProfile = {
+              id: profile.id,
+              name: userName || profile.name || '',
+              email: userEmail || profile.email || '',
+              avatarUrl: userAvatar || profile.avatar_url || undefined,
+              baseCurrency: profile.base_currency || null,
+              onboardingCompleted: false,
+              createdAt: new Date().toISOString(),
+            };
+            CentraDB.saveUser(existingUser);
+          }
+          setUser(CentraDB.getUser());
+          setIsAuthenticated(true);
+          setIsGuest(false);
+          CentraDB.saveAuthSession(true);
+          localStorage.setItem(ONBOARDING_STEP_KEY, 'profile');
+          setAuthView('onboarding');
+        }
+        return;
+      }
+
+      // Email / Password flow
+      if (session.user.email_confirmed_at) {
+        setIsAuthenticated(true);
+        setIsGuest(false);
+        CentraDB.saveAuthSession(true);
+        await CentraDB.syncFromSupabase(userId, userEmail, userName);
+        const currentUser = CentraDB.getUser();
+        setUser(currentUser);
+
+        if (currentUser.onboardingCompleted) {
+          setAuthView('app');
+          localStorage.removeItem(ONBOARDING_STEP_KEY);
+        } else {
+          const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
+          if (!savedStep || savedStep === 'signup' || savedStep === 'verify') {
+            localStorage.setItem(ONBOARDING_STEP_KEY, 'profile');
+          }
+          setAuthView('onboarding');
+        }
+      } else {
+        // Signed in but email not confirmed yet
+        if (authView !== 'callback') {
+          setAuthView('check-email');
+        }
+      }
+    };
+
     // Check existing session on load
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.email_confirmed_at) {
-        setIsAuthenticated(true);
-        setAuthView('app');
-        CentraDB.saveAuthSession(true);
-        CentraDB.syncFromSupabase(session.user.id, session.user.email || undefined).then(() => {
-          setUser(CentraDB.getUser());
-        });
+      if (session?.user) {
+        handleSession(session);
       }
     });
 
@@ -150,20 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-        if (session.user.email_confirmed_at) {
-          // Fully confirmed — allow into the app
-          setIsAuthenticated(true);
-          setIsGuest(false);
-          setAuthView('app');
-          CentraDB.saveAuthSession(true);
-          await CentraDB.syncFromSupabase(session.user.id, session.user.email || undefined);
-          setUser(CentraDB.getUser());
-        } else {
-          // Signed in but email not confirmed yet — stay on check-email
-          if (authView !== 'callback') {
-            setAuthView('check-email');
-          }
-        }
+        await handleSession(session);
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setIsGuest(false);
@@ -225,9 +304,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         await CentraDB.syncFromSupabase(data.user.id, data.user.email || email);
-        setUser(CentraDB.getUser());
+        const currentUser = CentraDB.getUser();
+        setUser(currentUser);
         setIsAuthenticated(true);
-        setAuthView('app');
+        if (currentUser.onboardingCompleted) {
+          setAuthView('app');
+          localStorage.removeItem(ONBOARDING_STEP_KEY);
+        } else {
+          localStorage.setItem(ONBOARDING_STEP_KEY, 'profile');
+          setAuthView('onboarding');
+        }
         return { ok: true };
       }
 
@@ -264,8 +350,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
 
       if (data.user) {
-        // Seed local data immediately so the app is ready when they confirm
-        await CentraDB.seedUserData(data.user.id, email, cleanName);
+        // Real signups start with genuinely blank data!
+        await CentraDB.createBlankUserData(data.user.id, email, cleanName);
         setUser(CentraDB.getUser());
         setPendingEmail(email);
         return true;
@@ -274,14 +360,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    // Demo / local-only mode: do not fall back to fake demo names
+    // Demo / local-only mode: genuinely blank start
     const newUser: UserProfile = {
-      ...user,
       id: `usr_${Date.now()}`,
       name: cleanName,
       email: email,
+      onboardingCompleted: false,
       createdAt: new Date().toISOString(),
     };
+    await CentraDB.createBlankUserData(newUser.id, email, cleanName);
     setUser(newUser);
     setPendingEmail(email);
     return true;
@@ -399,18 +486,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (error) throw error;
     } else {
-      // Demo / offline mode: instantly authenticate as OAuth user
+      // Demo / offline mode: route directly into Profile Info step 3/5 with blank data
       const demoUser: UserProfile = {
-        ...user,
         id: `${provider}_${Date.now()}`,
         name: provider === 'google' ? 'Google Account' : 'Apple ID',
         email: `${provider}.user@centra.io`,
+        onboardingCompleted: false,
         createdAt: new Date().toISOString(),
       };
+      await CentraDB.createBlankUserData(demoUser.id, demoUser.email, demoUser.name);
       setUser(demoUser);
       setIsAuthenticated(true);
-      CentraDB.saveAuthSession(true);
-      setAuthView('app');
+      localStorage.setItem(ONBOARDING_STEP_KEY, 'profile');
+      setAuthView('onboarding');
     }
   };
 
@@ -458,7 +546,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       baseCurrency: data.currency || user.baseCurrency,
     };
     setUser(updatedUser);
-    CentraDB.saveUser(updatedUser);
+    await CentraDB.saveUser(updatedUser);
 
     const currentSettings = CentraDB.getSettings();
     const updatedSettings = {
@@ -466,7 +554,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       baseCurrency: data.currency || currentSettings.baseCurrency,
       theme: data.theme || currentSettings.theme,
     };
-    CentraDB.saveSettings(updatedSettings);
+    await CentraDB.saveSettings(updatedSettings);
 
     if (data.theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -474,12 +562,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       document.documentElement.classList.remove('dark');
     }
 
-    if (data.categories && data.categories.length > 0) {
+    if (data.categories !== undefined) {
       localStorage.setItem('centra_onboarding_categories', JSON.stringify(data.categories));
+      const categories: Category[] = (data.categories || []).map((catName, index) => {
+        const meta = CATEGORY_STYLE_MAP[catName] || {
+          icon: 'Tag',
+          color: '#6366F1',
+          type: 'expense' as const,
+        };
+        return {
+          id: `cat_${catName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${index}`,
+          name: catName,
+          icon: meta.icon,
+          color: meta.color,
+          type: meta.type,
+          budgetLimit: undefined, // Explicitly no hardcoded limits
+        };
+      });
+      await CentraDB.saveCategories(categories);
     }
   };
 
   const completeOnboarding = async () => {
+    if (user?.id) {
+      await CentraDB.markOnboardingCompleted(user.id);
+      setUser(prev => ({ ...prev, onboardingCompleted: true }));
+    }
     localStorage.setItem('centra_onboarding_done_v1', 'true');
     localStorage.removeItem(ONBOARDING_STEP_KEY);
     setIsAuthenticated(true);

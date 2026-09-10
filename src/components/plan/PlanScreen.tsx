@@ -119,21 +119,37 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
         </div>
 
         <div className="space-y-3">
-          {goals.map(goal => {
-            const pace = calculateGoalPace(
-              goal.currentAmount,
-              goal.targetAmount,
-              goal.startDate,
-              goal.targetDate
-            );
-
-            const progressBarColor = pace.isBehind ? '#F59E0B' : '#10B981';
-
-            return (
-              <div
-                key={goal.id}
-                className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-colors space-y-4 shadow-xs"
+          {goals.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-white dark:bg-[#121A2C] border border-dashed border-gray-200 dark:border-[#232C45] text-center">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No savings goals created yet</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
+                Set milestones for a dream purchase, vacation, or emergency fund to track your progress.
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onOpenAddGoal}
+                icon={<Plus className="w-3.5 h-3.5" />}
               >
+                Create Goal
+              </Button>
+            </div>
+          ) : (
+            goals.map(goal => {
+              const pace = calculateGoalPace(
+                goal.currentAmount,
+                goal.targetAmount,
+                goal.startDate,
+                goal.targetDate
+              );
+
+              const progressBarColor = pace.isBehind ? '#F59E0B' : '#10B981';
+
+              return (
+                <div
+                  key={goal.id}
+                  className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-colors space-y-4 shadow-xs"
+                >
                 {/* Top Row: Icon, Title, Actions */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center space-x-3.5 min-w-0 flex-1">
@@ -230,7 +246,8 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                 )}
               </div>
             );
-          })}
+          })
+        )}
         </div>
       </div>
 
@@ -248,61 +265,70 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
         </div>
 
         <div className="space-y-3">
-          {budgets.map(budget => {
-            const percentSpent = (budget.spentAmount / budget.limitAmount) * 100;
-            const remaining = budget.limitAmount - budget.spentAmount;
-            const isOver = percentSpent >= 100;
+          {budgets.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-white dark:bg-[#121A2C] border border-dashed border-gray-200 dark:border-[#232C45] text-center">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No category budgets created yet</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Set monthly spending limits for your categories to keep spending on track.
+              </p>
+            </div>
+          ) : (
+            budgets.map(budget => {
+              const percentSpent = (budget.spentAmount / budget.limitAmount) * 100;
+              const remaining = budget.limitAmount - budget.spentAmount;
+              const isOver = percentSpent >= 100;
 
-            return (
-              <div
-                key={budget.id}
-                className="p-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-colors flex items-center justify-between shadow-xs"
-              >
-                {/* Left: Icon & Info */}
-                <div className="flex items-center space-x-3.5 min-w-0 flex-1 pr-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200/80 dark:border-[#232C45] text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
-                    <CategoryIcon name={budget.categoryIcon} className="w-5 h-5" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                        {budget.categoryName}
-                      </h4>
-                      {isOver && (
-                        <span className="px-2 py-0.5 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider">
-                          Over Limit
-                        </span>
-                      )}
+              return (
+                <div
+                  key={budget.id}
+                  className="p-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-colors flex items-center justify-between shadow-xs"
+                >
+                  {/* Left: Icon & Info */}
+                  <div className="flex items-center space-x-3.5 min-w-0 flex-1 pr-3">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200/80 dark:border-[#232C45] text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
+                      <CategoryIcon name={budget.categoryIcon} className="w-5 h-5" />
                     </div>
 
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 tabular-nums">
-                      {formatCurrency(budget.spentAmount, settings.baseCurrency, settings.privacyMode)} of{' '}
-                      {formatCurrency(budget.limitAmount, settings.baseCurrency, settings.privacyMode)}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                          {budget.categoryName}
+                        </h4>
+                        {isOver && (
+                          <span className="px-2 py-0.5 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider">
+                            Over Limit
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 tabular-nums">
+                        {formatCurrency(budget.spentAmount, settings.baseCurrency, settings.privacyMode)} of{' '}
+                        {formatCurrency(budget.limitAmount, settings.baseCurrency, settings.privacyMode)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Right: Circular Progress Ring + Column-aligned Remaining Values */}
-                <div className="shrink-0 flex items-center space-x-4">
-                  <div className="text-right min-w-[130px] font-mono tabular-nums text-xs">
-                    <span className={`font-semibold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                      {isOver
-                        ? `${formatCurrency(Math.abs(remaining), settings.baseCurrency, settings.privacyMode)} over`
-                        : `${formatCurrency(remaining, settings.baseCurrency, settings.privacyMode)} left`}
-                    </span>
+                  {/* Right: Circular Progress Ring + Column-aligned Remaining Values */}
+                  <div className="shrink-0 flex items-center space-x-4">
+                    <div className="text-right min-w-[130px] font-mono tabular-nums text-xs">
+                      <span className={`font-semibold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                        {isOver
+                          ? `${formatCurrency(Math.abs(remaining), settings.baseCurrency, settings.privacyMode)} over`
+                          : `${formatCurrency(remaining, settings.baseCurrency, settings.privacyMode)} left`}
+                      </span>
+                    </div>
+
+                    <CircularProgress
+                      percentage={percentSpent}
+                      size={44}
+                      strokeWidth={4}
+                      showText={true}
+                    />
                   </div>
-
-                  <CircularProgress
-                    percentage={percentSpent}
-                    size={44}
-                    strokeWidth={4}
-                    showText={true}
-                  />
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -316,7 +342,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
         <form onSubmit={handleContribute} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-              Deposit Amount (৳ BDT)
+              Deposit Amount ({settings.baseCurrency || 'BDT'})
             </label>
             <input
               type="number"
@@ -333,17 +359,23 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
             <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
               Deduct from Account
             </label>
-            <select
-              value={fundSourceAccountId}
-              onChange={e => setFundSourceAccountId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500"
-            >
-              {accounts.map(a => (
-                <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                  {a.name} — Available: {formatCurrency(a.balance, a.currency)}
-                </option>
-              ))}
-            </select>
+            {accounts.length === 0 ? (
+              <p className="text-xs text-rose-500 py-2">
+                No connected accounts available. Please add an account first.
+              </p>
+            ) : (
+              <select
+                value={fundSourceAccountId}
+                onChange={e => setFundSourceAccountId(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500"
+              >
+                {accounts.map(a => (
+                  <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                    {a.name} — Available: {formatCurrency(a.balance, a.currency)}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <Button
@@ -351,6 +383,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
             variant="primary"
             size="lg"
             fullWidth
+            disabled={accounts.length === 0}
             icon={<Wallet className="w-4 h-4" />}
           >
             Confirm Deposit

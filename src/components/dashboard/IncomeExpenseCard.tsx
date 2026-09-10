@@ -3,13 +3,18 @@ import React from 'react';
 interface IncomeExpenseCardProps {
   type: 'income' | 'expenses';
   amount: string;
+  hasData?: boolean;
 }
 
-export const IncomeExpenseCard: React.FC<IncomeExpenseCardProps> = ({ type, amount }) => {
+export const IncomeExpenseCard: React.FC<IncomeExpenseCardProps> = ({ type, amount, hasData = true }) => {
   const isIncome = type === 'income';
   const title = isIncome ? 'Total Income' : 'Total Expenses';
-  const badgeText = isIncome ? '+12.5%' : '-4.2%';
-  const badgeBg = isIncome ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500';
+  const badgeText = !hasData ? '0.0%' : isIncome ? '+12.5%' : '-4.2%';
+  const badgeBg = !hasData
+    ? 'bg-gray-800 text-gray-400'
+    : isIncome
+    ? 'bg-emerald-500/10 text-emerald-500'
+    : 'bg-rose-500/10 text-rose-500';
 
   return (
     <div className="bg-[#171717] border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-colors">
