@@ -1,4 +1,3 @@
--- Generated from migrations - do not edit
 -- ==============================================================================
 -- CENTRA FINTECH - PRODUCTION DATABASE INITIAL MIGRATION
 -- Self-contained, idempotent, and secure with Row Level Security (RLS)

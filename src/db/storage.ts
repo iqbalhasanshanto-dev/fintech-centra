@@ -327,7 +327,7 @@ export const CentraDB = {
     if (isSupabaseConfigured() && userId) {
       try {
         const rows = accounts.map(a => mapAccountToDb(a, userId));
-        await supabase.from('accounts').upsert(rows);
+        await supabase.from('accounts').upsert(rows, { onConflict: 'user_id,id' });
       } catch (err) {
         console.warn('Supabase saveAccounts sync failed:', err);
       }
@@ -342,7 +342,7 @@ export const CentraDB = {
     if (isSupabaseConfigured() && userId) {
       try {
         const rows = categories.map(c => mapCategoryToDb(c, userId));
-        await supabase.from('categories').upsert(rows);
+        await supabase.from('categories').upsert(rows, { onConflict: 'user_id,id' });
       } catch (err) {
         console.warn('Supabase saveCategories sync failed:', err);
       }
@@ -357,7 +357,7 @@ export const CentraDB = {
     if (isSupabaseConfigured() && userId) {
       try {
         const rows = txs.map(t => mapTransactionToDb(t, userId));
-        await supabase.from('transactions').upsert(rows);
+        await supabase.from('transactions').upsert(rows, { onConflict: 'user_id,id' });
       } catch (err) {
         console.warn('Supabase saveTransactions sync failed:', err);
       }
@@ -372,7 +372,7 @@ export const CentraDB = {
     if (isSupabaseConfigured() && userId) {
       try {
         const rows = goals.map(g => mapGoalToDb(g, userId));
-        await supabase.from('goals').upsert(rows);
+        await supabase.from('goals').upsert(rows, { onConflict: 'user_id,id' });
       } catch (err) {
         console.warn('Supabase saveGoals sync failed:', err);
       }
@@ -387,7 +387,7 @@ export const CentraDB = {
     if (isSupabaseConfigured() && userId) {
       try {
         const rows = budgets.map(b => mapBudgetToDb(b, userId));
-        await supabase.from('budgets').upsert(rows);
+        await supabase.from('budgets').upsert(rows, { onConflict: 'user_id,id' });
       } catch (err) {
         console.warn('Supabase saveBudgets sync failed:', err);
       }
@@ -402,7 +402,7 @@ export const CentraDB = {
     if (isSupabaseConfigured() && userId) {
       try {
         const rows = notifs.map(n => mapNotificationToDb(n, userId));
-        await supabase.from('notifications').upsert(rows);
+        await supabase.from('notifications').upsert(rows, { onConflict: 'user_id,id' });
       } catch (err) {
         console.warn('Supabase saveNotifications sync failed:', err);
       }
@@ -416,7 +416,7 @@ export const CentraDB = {
     const userId = getActiveUserId();
     if (isSupabaseConfigured() && userId) {
       try {
-        await supabase.from('settings').upsert(mapSettingsToDb(settings, userId));
+        await supabase.from('settings').upsert(mapSettingsToDb(settings, userId), { onConflict: 'user_id' });
       } catch (err) {
         console.warn('Supabase saveSettings sync failed:', err);
       }
@@ -474,22 +474,37 @@ export const CentraDB = {
 
     if (isSupabaseConfigured()) {
       try {
-        await supabase.from('profiles').upsert({
-          id: userId,
-          name: userProfile.name || null,
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
+
+        const profileFields = {
+          name: userProfile.name || '',
           email: userProfile.email || null,
           avatar_url: userProfile.avatarUrl || null,
           base_currency: userProfile.baseCurrency || null,
           onboarding_completed: true,
-        });
+          updated_at: new Date().toISOString(),
+        };
 
-        await supabase.from('accounts').upsert(INITIAL_ACCOUNTS.map(a => mapAccountToDb(a, userId)));
-        await supabase.from('categories').upsert(INITIAL_CATEGORIES.map(c => mapCategoryToDb(c, userId)));
-        await supabase.from('transactions').upsert(INITIAL_TRANSACTIONS.map(t => mapTransactionToDb(t, userId)));
-        await supabase.from('goals').upsert(INITIAL_GOALS.map(g => mapGoalToDb(g, userId)));
-        await supabase.from('budgets').upsert(INITIAL_BUDGETS.map(b => mapBudgetToDb(b, userId)));
-        await supabase.from('notifications').upsert(INITIAL_NOTIFICATIONS.map(n => mapNotificationToDb(n, userId)));
-        await supabase.from('settings').upsert(mapSettingsToDb(INITIAL_SETTINGS, userId));
+        if (existingProfile) {
+          await supabase.from('profiles').update(profileFields).eq('id', userId);
+        } else {
+          await supabase.from('profiles').insert({
+            id: userId,
+            ...profileFields,
+          });
+        }
+
+        await supabase.from('accounts').upsert(INITIAL_ACCOUNTS.map(a => mapAccountToDb(a, userId)), { onConflict: 'user_id,id' });
+        await supabase.from('categories').upsert(INITIAL_CATEGORIES.map(c => mapCategoryToDb(c, userId)), { onConflict: 'user_id,id' });
+        await supabase.from('transactions').upsert(INITIAL_TRANSACTIONS.map(t => mapTransactionToDb(t, userId)), { onConflict: 'user_id,id' });
+        await supabase.from('goals').upsert(INITIAL_GOALS.map(g => mapGoalToDb(g, userId)), { onConflict: 'user_id,id' });
+        await supabase.from('budgets').upsert(INITIAL_BUDGETS.map(b => mapBudgetToDb(b, userId)), { onConflict: 'user_id,id' });
+        await supabase.from('notifications').upsert(INITIAL_NOTIFICATIONS.map(n => mapNotificationToDb(n, userId)), { onConflict: 'user_id,id' });
+        await supabase.from('settings').upsert(mapSettingsToDb(INITIAL_SETTINGS, userId), { onConflict: 'user_id' });
       } catch (err) {
         console.warn('Error seeding Supabase rows:', err);
       }
@@ -592,10 +607,10 @@ export const CentraDB = {
         }
 
         if (categories.length > 0) {
-          await supabase.from('categories').upsert(categories.map(c => mapCategoryToDb(c, userId)));
+          await supabase.from('categories').upsert(categories.map(c => mapCategoryToDb(c, userId)), { onConflict: 'user_id,id' });
         }
-        await supabase.from('notifications').upsert(welcomeNotification.map(n => mapNotificationToDb(n, userId)));
-        await supabase.from('settings').upsert(mapSettingsToDb(userSettings, userId));
+        await supabase.from('notifications').upsert(welcomeNotification.map(n => mapNotificationToDb(n, userId)), { onConflict: 'user_id,id' });
+        await supabase.from('settings').upsert(mapSettingsToDb(userSettings, userId), { onConflict: 'user_id' });
       } catch (err) {
         console.warn('Error creating blank Supabase rows:', err);
       }
