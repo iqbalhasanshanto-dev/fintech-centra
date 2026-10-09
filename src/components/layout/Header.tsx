@@ -17,9 +17,29 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigateToSettings,
   onOpenAddAction,
 }) => {
-  const { periodFilter, setPeriodFilter, unreadNotificationsCount } = useFinance();
+  const { periodFilter, setPeriodFilter, unreadNotificationsCount, syncStatus } = useFinance();
   const { user, isGuest } = useAuth();
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
+
+  const syncLabel = isGuest
+    ? 'Local Demo'
+    : syncStatus === 'synced'
+      ? 'Synced'
+      : syncStatus === 'syncing'
+        ? 'Syncing...'
+        : syncStatus === 'offline'
+          ? 'Offline'
+          : 'Sync Error';
+
+  const syncColor = isGuest
+    ? 'bg-gray-400'
+    : syncStatus === 'synced'
+      ? 'bg-emerald-500'
+      : syncStatus === 'syncing'
+        ? 'bg-blue-500 animate-pulse'
+        : syncStatus === 'offline'
+          ? 'bg-amber-500'
+          : 'bg-rose-500';
 
   const periods: { id: PeriodFilter; label: string }[] = [
     { id: 'this_month', label: 'This Month' },
@@ -46,12 +66,16 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </div>
           <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">CENTRA</span>
+          <div className="flex items-center gap-1.5 ml-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-[10px] font-medium text-gray-600 dark:text-gray-300">
+            <span className={`w-1.5 h-1.5 rounded-full ${syncColor}`} />
+            <span>{syncLabel}</span>
+          </div>
         </div>
 
-        {/* Desktop left header spacer or page indicator */}
-        <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span>Live Financial Sync</span>
+        {/* Desktop left header sync status indicator */}
+        <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400" title={`Sync Status: ${syncLabel}`}>
+          <span className={`w-2 h-2 rounded-full ${syncColor}`} />
+          <span>{syncLabel}</span>
         </div>
 
         {/* Right Controls */}

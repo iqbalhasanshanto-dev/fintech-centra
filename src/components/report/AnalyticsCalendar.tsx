@@ -5,6 +5,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatTime } from '../../utils/formatters';
 import { getThemePalette } from '../../utils/themeColors';
+import { todayLocalDateKey, toLocalDateKey } from '../../utils/dates';
 
 interface AnalyticsCalendarProps {
   onSelectTransaction?: (tx: Transaction) => void;
@@ -26,10 +27,7 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
   const [currentDate, setCurrentDate] = useState(() => new Date());
   
   // Selected date (defaults to today or latest transaction date)
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
+  const [selectedDate, setSelectedDate] = useState(() => todayLocalDateKey());
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -46,14 +44,14 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
   const handleJumpToToday = () => {
     const today = new Date();
     setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
-    setSelectedDate(today.toISOString().split('T')[0]);
+    setSelectedDate(todayLocalDateKey());
   };
 
   // Group transactions by date key (YYYY-MM-DD)
   const transactionsByDate = useMemo(() => {
     const map: Record<string, Transaction[]> = {};
     transactions.forEach(tx => {
-      const dateKey = tx.date.split('T')[0];
+      const dateKey = toLocalDateKey(tx.date);
       if (!map[dateKey]) {
         map[dateKey] = [];
       }
@@ -78,7 +76,7 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
       totalIncome: number;
     }[] = [];
 
-    const todayKey = new Date().toISOString().split('T')[0];
+    const todayKey = todayLocalDateKey();
 
     // Leading days from previous month
     for (let i = firstDayIndex - 1; i >= 0; i--) {

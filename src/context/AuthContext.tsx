@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const effectiveMode = storedIntent || authMode;
 
     try {
-      let { data: profile, error: profileErr } = await supabase
+      const { data: initialProfile, error: profileErr } = await supabase
         .from('profiles')
         .select('id, onboarding_completed, name, email, avatar_url, base_currency')
         .eq('id', userId)
@@ -114,6 +114,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthView('profileError');
         return;
       }
+
+      let profile = initialProfile;
 
       let isNewUser = false;
 

@@ -12,6 +12,7 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { formatCurrency } from '../../utils/formatters';
 import { getCurrencyInfo } from '../../utils/currencies';
+import { todayLocalDateKey } from '../../utils/dates';
 
 interface AddActionModalProps {
   isOpen: boolean;
@@ -49,7 +50,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   // Form State: Common
   const [amount, setAmount] = useState('');
-  const [txDate, setTxDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [txDate, setTxDate] = useState<string>(() => todayLocalDateKey());
   const [merchant, setMerchant] = useState('');
   const [categoryId, setCategoryId] = useState(categories[0]?.id || 'cat_dining');
   const [accountId, setAccountId] = useState(accounts[0]?.id || 'acc_checking');

@@ -48,8 +48,11 @@ export interface Transaction {
   merchant?: string;
 }
 
+export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
+
 export interface Category {
   id: string;
+  systemKey?: string;
   name: string;
   icon: string;
   color: string;
@@ -103,6 +106,8 @@ export interface UserProfile {
   avatarUrl?: string;
   baseCurrency?: CurrencyCode | null;
   onboardingCompleted?: boolean;
+  isPro?: boolean;
+  planExpiry?: string | null;
   createdAt: string;
 }
 

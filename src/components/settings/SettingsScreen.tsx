@@ -13,7 +13,8 @@ import {
   Eye,
   EyeOff,
   Edit2,
-  Camera
+  Camera,
+  Trash2
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -35,6 +36,9 @@ export const SettingsScreen: React.FC = () => {
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showDeleteDataModal, setShowDeleteDataModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Edit Profile Form
   const [profileName, setProfileName] = useState(user.name);
@@ -78,10 +82,32 @@ export const SettingsScreen: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  const handleResetData = () => {
+  const handleResetGuestData = async () => {
     if (window.confirm('Reset all transactions, accounts, and budgets to default demo state?')) {
-      resetAllData();
+      await resetAllData();
       alert('Application reset to seed data.');
+    }
+  };
+
+  const handleConfirmDeleteAllData = async () => {
+    setIsDeleting(true);
+    try {
+      await resetAllData();
+      setShowDeleteDataModal(false);
+      alert('All your financial records have been wiped from both cloud and local storage.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleConfirmDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await resetAllData();
+      setShowDeleteAccountModal(false);
+      await logout();
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -348,14 +374,35 @@ export const SettingsScreen: React.FC = () => {
             Export JSON
           </Button>
 
-          <Button
-            variant="destructive"
-            size="md"
-            onClick={handleResetData}
-            icon={<RotateCcw className="w-4 h-4" />}
-          >
-            Reset Demo Data
-          </Button>
+          {isGuest ? (
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={handleResetGuestData}
+              icon={<RotateCcw className="w-4 h-4" />}
+            >
+              Reset Demo Data
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="destructive"
+                size="md"
+                onClick={() => setShowDeleteDataModal(true)}
+                icon={<Trash2 className="w-4 h-4" />}
+              >
+                Delete All My Data
+              </Button>
+              <Button
+                variant="destructive"
+                size="md"
+                onClick={() => setShowDeleteAccountModal(true)}
+                icon={<Trash2 className="w-4 h-4" />}
+              >
+                Delete Account
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -479,6 +526,74 @@ export const SettingsScreen: React.FC = () => {
           >
             Close FAQ
           </Button>
+        </div>
+      </Modal>
+
+      {/* Delete All Data Modal */}
+      <Modal
+        isOpen={showDeleteDataModal}
+        onClose={() => !isDeleting && setShowDeleteDataModal(false)}
+        title="Delete All Data"
+      >
+        <div className="space-y-4 text-xs">
+          <p className="text-gray-600 dark:text-gray-300">
+            Are you sure you want to delete all your data? This will permanently wipe all your accounts, transactions, categories, budgets, and goals from both your cloud database and local device storage.
+          </p>
+          <p className="text-red-600 dark:text-red-400 font-semibold">
+            This action cannot be undone.
+          </p>
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowDeleteDataModal(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={handleConfirmDeleteAllData}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Permanently Delete'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Account Modal */}
+      <Modal
+        isOpen={showDeleteAccountModal}
+        onClose={() => !isDeleting && setShowDeleteAccountModal(false)}
+        title="Delete Account"
+      >
+        <div className="space-y-4 text-xs">
+          <p className="text-gray-600 dark:text-gray-300">
+            Permanently delete your Centra account? This will wipe all financial records and settings from cloud and local storage and log you out.
+          </p>
+          <p className="text-red-600 dark:text-red-400 font-semibold">
+            All stored financial data will be immediately and irreversibly lost.
+          </p>
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowDeleteAccountModal(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={handleConfirmDeleteAccount}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Account & Sign Out'}
+            </Button>
+          </div>
         </div>
       </Modal>
 

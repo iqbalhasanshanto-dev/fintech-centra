@@ -52,7 +52,7 @@ export const updateNativeStatusBar = async (isDark: boolean) => {
     await StatusBar.setBackgroundColor({
       color: isDark ? '#0A0E1A' : '#FAFAFA',
     });
-  } catch (err) {
+  } catch {
     // Status bar may not be supported on some platforms
   }
 };

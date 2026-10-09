@@ -15,7 +15,7 @@ import { ProfileErrorScreen } from './components/auth/ProfileErrorScreen';
 import { isSupabaseConfigured } from './lib/supabaseClient';
 
 const MainApp: React.FC = () => {
-  const { authView, isLockedByPin } = useAuth();
+  const { authView, isLockedByPin, user, isGuest } = useAuth();
 
   // If Supabase backend is missing and user is not in guest mode
   if (!isSupabaseConfigured() && authView !== 'guest') {
@@ -71,7 +71,7 @@ const MainApp: React.FC = () => {
 
   // Authenticated user (or guest demo) inside main app
   return (
-    <FinanceProvider>
+    <FinanceProvider key={user?.id || (isGuest ? 'guest' : 'anon')}>
       <AppShell />
     </FinanceProvider>
   );
