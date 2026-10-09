@@ -30,7 +30,6 @@ const STORAGE_KEYS = {
   BUDGETS: 'centra_db_budgets_v2',
   NOTIFICATIONS: 'centra_db_notifications_v2',
   SETTINGS: 'centra_db_settings_v2',
-  AUTH_TOKEN: 'centra_db_auth_token_v2',
 };
 
 // In-memory / local cache
@@ -43,7 +42,6 @@ const cache = {
   budgets: safeGet<Budget[]>(STORAGE_KEYS.BUDGETS, INITIAL_BUDGETS),
   notifications: safeGet<NotificationItem[]>(STORAGE_KEYS.NOTIFICATIONS, INITIAL_NOTIFICATIONS),
   settings: safeGet<AppSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS),
-  authToken: safeGet<boolean>(STORAGE_KEYS.AUTH_TOKEN, true),
 };
 
 function safeGet<T>(key: string, fallback: T): T {
@@ -404,10 +402,24 @@ export const CentraDB = {
     }
   },
 
-  getAuthSession: (): boolean => cache.authToken,
-  saveAuthSession: (isLoggedIn: boolean) => {
-    cache.authToken = isLoggedIn;
-    safeSet(STORAGE_KEYS.AUTH_TOKEN, isLoggedIn);
+  clearAllData: () => {
+    cache.user = INITIAL_USER;
+    cache.accounts = [];
+    cache.categories = [];
+    cache.transactions = [];
+    cache.goals = [];
+    cache.budgets = [];
+    cache.notifications = [];
+    cache.settings = INITIAL_SETTINGS;
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('centra_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (err) {
+      console.warn('Error clearing localStorage:', err);
+    }
   },
 
   // Seed remote and local data for a new or reset user (GUEST MODE & DEMO RESET ONLY)
@@ -699,8 +711,6 @@ export const CentraDB = {
   resetToSeedData: async () => {
     const userId = getActiveUserId() || 'usr_centra_01';
     await CentraDB.seedUserData(userId);
-    cache.authToken = true;
-    safeSet(STORAGE_KEYS.AUTH_TOKEN, true);
   },
 
   exportAllData: () => {

@@ -110,9 +110,6 @@ export interface SecuritySettings {
   biometricEnabled: boolean;
   pinLockEnabled: boolean;
   pinCode?: string;
-  twoFactorEnabled: boolean;
-  twoFactorType: 'authenticator' | 'sms' | 'email';
-  twoFactorContact?: string;
   lastLogin?: string;
 }
 

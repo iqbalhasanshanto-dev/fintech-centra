@@ -6,7 +6,6 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
-  Lock,
   Fingerprint,
   Globe,
   Download,
@@ -31,11 +30,10 @@ export const SettingsScreen: React.FC = () => {
     updateSettings,
     resetAllData
   } = useFinance();
-  const { user, updateUser, logout, isGuest, setAuthView } = useAuth();
+  const { user, updateUser, logout, isGuest } = useAuth();
 
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showTwoFactorModal, setShowTwoFactorModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Edit Profile Form
@@ -126,7 +124,6 @@ export const SettingsScreen: React.FC = () => {
             size="sm"
             onClick={() => {
               logout();
-              setAuthView('login');
             }}
             className="shrink-0 bg-black dark:bg-white text-white dark:text-black hover:opacity-90 font-bold"
           >
@@ -209,32 +206,6 @@ export const SettingsScreen: React.FC = () => {
               checked={settings.security.biometricEnabled}
               onChange={(val) => updateSettings({ security: { ...settings.security, biometricEnabled: val } })}
               label="Toggle Biometric Login"
-            />
-          </div>
-
-          {/* 2FA Toggle */}
-          <div
-            onClick={() => {
-              const nextVal = !settings.security.twoFactorEnabled;
-              updateSettings({ security: { ...settings.security, twoFactorEnabled: nextVal } });
-              if (nextVal) setShowTwoFactorModal(true);
-            }}
-            className="flex items-center justify-between pt-3 cursor-pointer select-none group gap-4"
-          >
-            <div className="flex items-center space-x-3 min-w-0">
-              <Lock className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
-              <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Two-Factor Authentication (2FA)</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Require OTP code for sensitive actions</p>
-              </div>
-            </div>
-            <Switch
-              checked={settings.security.twoFactorEnabled}
-              onChange={(val) => {
-                updateSettings({ security: { ...settings.security, twoFactorEnabled: val } });
-                if (val) setShowTwoFactorModal(true);
-              }}
-              label="Toggle 2FA"
             />
           </div>
 
@@ -487,24 +458,6 @@ export const SettingsScreen: React.FC = () => {
             Save Profile Changes
           </Button>
         </form>
-      </Modal>
-
-      {/* Two-Factor Setup Modal */}
-      <Modal isOpen={showTwoFactorModal} onClose={() => setShowTwoFactorModal(false)} title="2FA Authentication Active">
-        <div className="space-y-4 text-xs text-gray-700 dark:text-gray-300">
-          <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-            <p className="font-bold">Two-Factor Authentication is now enabled.</p>
-            <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">Your financial account data is protected with hardware &amp; OTP verification.</p>
-          </div>
-          <Button
-            variant="primary"
-            size="md"
-            fullWidth
-            onClick={() => setShowTwoFactorModal(false)}
-          >
-            Done
-          </Button>
-        </div>
       </Modal>
 
       {/* Help Modal */}

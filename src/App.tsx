@@ -3,32 +3,55 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { FinanceProvider } from './context/FinanceContext';
 import { AppShell } from './components/layout/AppShell';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
-import { AuthScreen } from './components/auth/AuthScreen';
+import { IntroScreen } from './components/onboarding/IntroScreen';
+import { OtpScreen } from './components/auth/OtpScreen';
 import { PinLockScreen } from './components/auth/PinLockScreen';
-import { CheckEmailScreen } from './components/auth/CheckEmailScreen';
 import { AuthCallbackScreen } from './components/auth/AuthCallbackScreen';
+import { LoadingSplashScreen } from './components/auth/LoadingSplashScreen';
+import { SupabaseConfigErrorScreen } from './components/auth/SupabaseConfigErrorScreen';
+import { isSupabaseConfigured } from './lib/supabaseClient';
 
 const MainApp: React.FC = () => {
   const { authView, isLockedByPin } = useAuth();
 
-  // PIN lock takes priority over any view
-  if (isLockedByPin) return <PinLockScreen />;
-
-  // Email-verification callback link was opened
-  if (authView === 'callback') return <AuthCallbackScreen />;
-
-  // Post-registration "check your email" holding screen
-  if (authView === 'check-email') return <CheckEmailScreen />;
-
-  // Returning user sign-in only form
-  if (authView === 'login') return <AuthScreen />;
-
-  // Intro or full 7-step onboarding flow
-  if (authView === 'intro' || authView === 'onboarding') {
-    return <OnboardingFlow initialView={authView} />;
+  // If Supabase backend is missing and user is not in guest mode
+  if (!isSupabaseConfigured() && authView !== 'guest') {
+    return <SupabaseConfigErrorScreen />;
   }
 
-  // Authenticated (real session or guest) → main app
+  // App lock state (PIN lock)
+  if (isLockedByPin || authView === 'locked') {
+    return <PinLockScreen />;
+  }
+
+  // OAuth return callback detected in URL
+  const params = new URLSearchParams(window.location.search);
+  const hasCallbackCode = params.has('code') || window.location.hash.includes('access_token=');
+  if (hasCallbackCode) {
+    return <AuthCallbackScreen />;
+  }
+
+  // Cold start resolving session (splash screen)
+  if (authView === 'loading') {
+    return <LoadingSplashScreen />;
+  }
+
+  // Email OTP verification screen
+  if (authView === 'otp') {
+    return <OtpScreen />;
+  }
+
+  // Landing screen (Google, Apple, Email OTP, and Guest)
+  if (authView === 'signedOut') {
+    return <IntroScreen />;
+  }
+
+  // Setup wizard for users who haven't completed onboarding
+  if (authView === 'onboarding') {
+    return <OnboardingFlow />;
+  }
+
+  // Authenticated user (or guest demo) inside main app
   return (
     <FinanceProvider>
       <AppShell />

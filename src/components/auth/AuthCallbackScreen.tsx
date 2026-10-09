@@ -1,192 +1,143 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, XCircle, Loader2, Shield, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { CentraDB } from '../../db/storage';
-
-type CallbackStatus = 'processing' | 'success' | 'error';
+import logoImg from '../../assets/brand/logo.png';
 
 export const AuthCallbackScreen: React.FC = () => {
-  const { setAuthView, resendVerificationEmail } = useAuth();
-  const [status, setStatus] = useState<CallbackStatus>('processing');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [resendEmail, setResendEmail] = useState('');
-  const [resendSent, setResendSent] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-
-  // Countdown timer for resend
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const id = setTimeout(() => setCooldown(c => c - 1), 1000);
-    return () => clearTimeout(id);
-  }, [cooldown]);
+  const { setAuthView } = useAuth();
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    const handleCallback = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
+    let isMounted = true;
 
-      // Remove the code from the URL immediately so a browser refresh doesn't replay it
-      window.history.replaceState({}, document.title, window.location.pathname);
+    if (!isSupabaseConfigured()) {
+      setAuthView('signedOut');
+      return;
+    }
 
-      if (!isSupabaseConfigured()) {
-        // Demo mode — just proceed into the app
-        setStatus('success');
-        setTimeout(() => setAuthView('app'), 800);
-        return;
-      }
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
 
-      // -----------------------------------------------------------------------
-      // SDK v2 PKCE flow: exchange the code for a session
-      // -----------------------------------------------------------------------
-      if (code) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (session?.user) {
+          // Clear query params / hash without refreshing
+          window.history.replaceState({}, document.title, window.location.pathname);
 
-        if (error || !data.session) {
-          setErrorMsg(
-            error?.message?.includes('expired')
-              ? 'This verification link has expired. Please request a new one.'
-              : 'This link is invalid or has already been used. Please request a new verification email.'
-          );
-          // Try to extract email from any partial session / local storage
-          const stored = await supabase.auth.getUser();
-          setResendEmail(stored.data.user?.email || '');
-          setStatus('error');
-          return;
-        }
+          // Check profile onboarding status
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, onboarding_completed')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-        const user = data.session.user;
+          if (!isMounted) return;
 
-        if (!user.email_confirmed_at) {
-          setErrorMsg('Email address could not be verified. The link may have expired.');
-          setResendEmail(user.email || '');
-          setStatus('error');
-          return;
-        }
-
-        // Success — sync data then navigate based on onboarding completion
-        const isOAuth =
-          user.app_metadata?.provider === 'google' ||
-          user.app_metadata?.provider === 'apple';
-
-        await CentraDB.syncFromSupabase(user.id, user.email || undefined);
-        const syncedUser = CentraDB.getUser();
-        setStatus('success');
-
-        if (isOAuth || !syncedUser.onboardingCompleted) {
-          if (syncedUser.onboardingCompleted) {
-            setTimeout(() => setAuthView('app'), 1000);
+          if (profile?.onboarding_completed) {
+            setAuthView('app');
           } else {
-            localStorage.setItem('centra_onboarding_step', 'profile');
-            setTimeout(() => setAuthView('onboarding'), 1000);
+            setAuthView('onboarding');
           }
-        } else {
-          setTimeout(() => setAuthView('app'), 1000);
+          return true;
         }
-        return;
+        return false;
+      } catch (err: any) {
+        console.warn('Callback session check error:', err);
+        return false;
       }
-
-      // -----------------------------------------------------------------------
-      // Legacy hash-token flow (#access_token=...) handled by onAuthStateChange
-      // in AuthContext — just wait briefly for it to fire
-      // -----------------------------------------------------------------------
-      if (window.location.hash.includes('access_token=')) {
-        // Clear the hash to avoid stale tokens
-        window.history.replaceState({}, document.title, window.location.pathname);
-
-        // Wait for the Supabase listener in AuthContext to process SIGNED_IN
-        setTimeout(() => {
-          // If we're still on the callback screen after 3s, something went wrong
-          setErrorMsg('Verification could not be completed. Please try signing in manually.');
-          setStatus('error');
-        }, 3000);
-        return;
-      }
-
-      // No code and no hash — nothing to process, redirect to login
-      setAuthView('login');
     };
 
-    handleCallback();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Check immediately
+    checkSession();
 
-  const handleResend = async () => {
-    if (!resendEmail || cooldown > 0) return;
-    await resendVerificationEmail(resendEmail);
-    setResendSent(true);
-    setCooldown(60);
-  };
+    // Listen for auth state change from supabase auto-exchange
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, onboarding_completed')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (!isMounted) return;
+
+        if (profile?.onboarding_completed) {
+          setAuthView('app');
+        } else {
+          setAuthView('onboarding');
+        }
+      }
+    });
+
+    // 10s fallback timeout
+    const timeoutTimer = setTimeout(async () => {
+      const resolved = await checkSession();
+      if (!resolved && isMounted) {
+        setErrorMessage('Authentication timed out. Please try signing in again.');
+      }
+    }, 10000);
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+      clearTimeout(timeoutTimer);
+    };
+  }, [setAuthView]);
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-gray-100 transition-colors">
-      <div className="w-full max-w-xs bg-white dark:bg-[#121A2C] rounded-2xl p-6 sm:p-8 border border-gray-200 dark:border-[#232C45] shadow-2xl animate-fade-in text-center">
-
-        {/* Brand */}
-        <div className="w-12 h-12 rounded-xl bg-brand-600 text-white mx-auto flex items-center justify-center mb-5 shadow-md shadow-brand-500/20">
-          <Shield className="w-6 h-6 fill-white/20" />
+    <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center p-6 transition-colors">
+      <div className="w-full max-w-sm bg-white dark:bg-[#0D1220] rounded-3xl p-8 border border-gray-200 dark:border-[#1e263c] shadow-2xl text-center animate-fade-in">
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <img
+            src={logoImg}
+            alt="Centra"
+            className="w-8 h-8 object-contain drop-shadow-sm select-none"
+            draggable={false}
+          />
+          <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white font-display">
+            Centra
+          </span>
         </div>
 
-        {status === 'processing' && (
-          <>
-            <Loader2 className="w-10 h-10 text-brand-600 dark:text-brand-400 mx-auto mb-4 animate-spin" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              Verifying your email…
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Please wait while we confirm your account.
-            </p>
-          </>
-        )}
-
-        {status === 'success' && (
-          <>
-            <CheckCircle2 className="w-10 h-10 text-emerald-500 dark:text-emerald-400 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              Email verified!
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Signing you in to Centra…
-            </p>
-          </>
-        )}
-
-        {status === 'error' && (
-          <>
-            <XCircle className="w-10 h-10 text-rose-500 dark:text-rose-400 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              Verification failed
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
-              {errorMsg}
-            </p>
-
-            {resendSent && (
-              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-3">
-                New verification email sent!
+        {errorMessage ? (
+          <div className="space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">Sign In Failed</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+                {errorMessage}
               </p>
-            )}
-
-            {resendEmail && (
-              <button
-                onClick={handleResend}
-                disabled={cooldown > 0}
-                className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center justify-center gap-2 shadow-float transition-all cursor-pointer mb-3"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend verification email'}
-              </button>
-            )}
-
+            </div>
             <button
-              onClick={() => setAuthView('login')}
-              className="w-full py-2 rounded-xl text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              type="button"
+              onClick={() => {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                setAuthView('signedOut');
+              }}
+              className="w-full py-3 px-4 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              Back to sign in
+              <ArrowLeft className="w-4 h-4" />
+              <span>Return to sign in</span>
             </button>
-          </>
+          </div>
+        ) : (
+          <div className="space-y-3 py-4">
+            <Loader2 className="w-8 h-8 animate-spin text-teal-500 mx-auto" />
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">
+              Completing sign in...
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Please wait while we verify your credentials.
+            </p>
+          </div>
         )}
-
       </div>
     </div>
   );

@@ -1,40 +1,41 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { UserProfile, Category } from '../types';
 import { CentraDB, CATEGORY_STYLE_MAP } from '../db/storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 // ---------------------------------------------------------------------------
-// Types
+// Types & State Machine
 // ---------------------------------------------------------------------------
 
-export type AuthView =
-  | 'intro'       // initial welcome / hero screen
-  | 'onboarding'  // 7-step onboarding wizard
-  | 'login'       // sign-in/sign-up form
-  | 'check-email' // "verify your inbox" screen after registration
-  | 'callback'    // processing the email-link redirect (/auth/callback)
-  | 'app';        // inside the main app
+export type AuthState =
+  | 'loading'     // Cold start resolving session (splash screen)
+  | 'signedOut'   // Landing screen (Google, Apple, Email OTP)
+  | 'otp'         // 6-digit OTP verification screen
+  | 'onboarding'  // Setup wizard (Profile info, currency, theme, categories)
+  | 'locked'      // App lock screen (PIN lock)
+  | 'app'         // Authenticated user in the app
+  | 'guest';      // Local-only demo user
+
+export type AuthView = AuthState;
 
 interface AuthContextType {
   user: UserProfile;
   isAuthenticated: boolean;
   isGuest: boolean;
   isLockedByPin: boolean;
-  authView: AuthView;
+  authView: AuthState;
   pendingEmail: string;
-  login: (email: string, pass: string) => Promise<{ ok: boolean; emailNotConfirmed?: boolean }>;
-  loginWithBiometrics: () => Promise<boolean>;
-  register: (name: string, email: string, pass: string) => Promise<boolean>;
+  setPendingEmail: (email: string) => void;
+  setAuthView: (view: AuthState) => void;
+  sendOtp: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  verifyOtp: (email: string, token: string) => Promise<{ ok: boolean; error?: string }>;
+  resendOtp: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  signInWithOAuth: (provider: 'google' | 'apple') => Promise<void>;
+  enterGuestMode: () => void;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<UserProfile>) => void;
   unlockPin: (pin: string) => boolean;
   lockApp: () => void;
-  verify2FA: (otpCode: string) => Promise<boolean>;
-  pending2FA: boolean;
-  cancel2FA: () => void;
-  enterGuestMode: () => void;
-  signInWithOAuth: (provider: 'google' | 'apple') => Promise<void>;
-  verifyEmailOtp: (email: string, token: string) => Promise<{ ok: boolean; error?: string }>;
   saveOnboardingProfile: (data: {
     name: string;
     dob?: string;
@@ -46,9 +47,6 @@ interface AuthContextType {
     categories?: string[];
   }) => Promise<void>;
   completeOnboarding: () => Promise<void>;
-  resendVerificationEmail: (email: string) => Promise<void>;
-  setPendingEmail: (email: string) => void;
-  setAuthView: (view: AuthView) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -63,319 +61,237 @@ const GUEST_FLAG_KEY = 'centra_is_guest_v2';
 // Provider
 // ---------------------------------------------------------------------------
 
-const ONBOARDING_STEP_KEY = 'centra_onboarding_step';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => CentraDB.getUser());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [isLockedByPin, setIsLockedByPin] = useState<boolean>(false);
-  const [pending2FA, setPending2FA] = useState<boolean>(false);
-  const [authView, setAuthView] = useState<AuthView>(() => {
-    // URL verification callback check
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('code') || window.location.hash.includes('access_token=')) {
-      return 'callback';
-    }
-    // Guest session restoration check
-    if (localStorage.getItem(GUEST_FLAG_KEY) === 'true') {
-      return 'app';
-    }
-    // Demo session restoration
-    if (!isSupabaseConfigured() && CentraDB.getAuthSession()) {
-      return 'app';
-    }
-    // Mid-onboarding check
-    const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
-    if (savedStep && Number(savedStep) > 0) {
-      return 'onboarding';
-    }
-    return 'intro';
-  });
   const [pendingEmail, setPendingEmail] = useState<string>('');
+  const [authView, setAuthView] = useState<AuthState>('loading');
+
+  const lastUserIdRef = useRef<string | null>(null);
 
   // -------------------------------------------------------------------------
-  // On mount: detect callback URL params and restore guest session
+  // Handle authenticated session and route appropriately
   // -------------------------------------------------------------------------
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const hasCode = params.has('code');
-    const hasHashToken = window.location.hash.includes('access_token=');
+  const handleSession = useCallback(async (session: any) => {
+    if (!session?.user) return;
 
-    if (hasCode || hasHashToken) {
-      // Callback from email-verification link — show processing screen first
-      setAuthView('callback');
-      return;
-    }
+    const userId = session.user.id;
+    const userEmail = session.user.email || session.user.user_metadata?.email || '';
+    const userName =
+      session.user.user_metadata?.full_name ||
+      session.user.user_metadata?.name ||
+      '';
 
-    // Restore guest session from storage
-    const guestFlag = localStorage.getItem(GUEST_FLAG_KEY);
-    if (guestFlag === 'true') {
-      setIsGuest(true);
-      setIsAuthenticated(true);
-      setAuthView('app');
-      return;
-    }
+    lastUserIdRef.current = userId;
 
-    // Let the Supabase listener below handle real session restoration
-  }, []);
-
-  // -------------------------------------------------------------------------
-  // Supabase Auth session listener
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      // Demo mode: restore local auth session
-      const localSession = CentraDB.getAuthSession();
-      if (localSession) {
-        setIsAuthenticated(true);
-        setAuthView('app');
-      }
-      return;
-    }
-
-    const handleSession = async (session: any) => {
-      if (!session?.user) return;
-
-      const isOAuth =
-        session.user.app_metadata?.provider === 'google' ||
-        session.user.app_metadata?.provider === 'apple' ||
-        (Array.isArray(session.user.app_metadata?.providers) &&
-          (session.user.app_metadata.providers.includes('google') ||
-           session.user.app_metadata.providers.includes('apple'))) ||
-        (Array.isArray(session.user.identities) &&
-          session.user.identities.some(
-            (i: any) => i.provider === 'google' || i.provider === 'apple'
-          ));
-
-      const userId = session.user.id;
-      const userEmail = session.user.email || session.user.user_metadata?.email || '';
-      const userName =
-        session.user.user_metadata?.full_name ||
-        session.user.user_metadata?.name ||
-        '';
-      const userAvatar =
-        session.user.user_metadata?.avatar_url ||
-        session.user.user_metadata?.picture ||
-        undefined;
-
-      // Query Supabase for user profile to check onboarding_completed
+    // Check onboarding status once from Supabase profile
+    try {
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, onboarding_completed, name, email, avatar_url, base_currency')
         .eq('id', userId)
         .maybeSingle();
 
-      if (isOAuth) {
-        // Never route OAuth users to OTP (step 2/5), even briefly!
-        if (profile?.onboarding_completed) {
-          // Returning Google/Apple user: skip onboarding wizard entirely, go straight to Dashboard
-          setIsAuthenticated(true);
-          setIsGuest(false);
-          setAuthView('app');
-          CentraDB.saveAuthSession(true);
-          localStorage.removeItem(ONBOARDING_STEP_KEY);
-          await CentraDB.syncFromSupabase(userId, userEmail, userName);
-          setUser(CentraDB.getUser());
-        } else {
-          // First-time Google/Apple sign-up or abandoned mid-onboarding:
-          // Route straight into step 3/5, Profile Info
-          if (!profile) {
-            await CentraDB.createBlankUserData(userId, userEmail, userName, userAvatar);
-          } else {
-            const existingUser: UserProfile = {
-              id: profile.id,
-              name: userName || profile.name || '',
-              email: userEmail || profile.email || '',
-              avatarUrl: userAvatar || profile.avatar_url || undefined,
-              baseCurrency: profile.base_currency || null,
-              onboardingCompleted: false,
-              createdAt: new Date().toISOString(),
-            };
-            CentraDB.saveUser(existingUser);
-          }
-          setUser(CentraDB.getUser());
-          setIsAuthenticated(true);
-          setIsGuest(false);
-          CentraDB.saveAuthSession(true);
-          localStorage.setItem(ONBOARDING_STEP_KEY, 'profile');
-          setAuthView('onboarding');
-        }
+      await CentraDB.syncFromSupabase(userId, userEmail, userName);
+      const currentUser = CentraDB.getUser();
+      setUser(currentUser);
+      setIsAuthenticated(true);
+      setIsGuest(false);
+
+      if (profile?.onboarding_completed) {
+        setAuthView('app');
+      } else {
+        setAuthView('onboarding');
+      }
+    } catch (err) {
+      console.warn('Failed to resolve user profile:', err);
+      // Fallback: stay authenticated and proceed to app
+      setIsAuthenticated(true);
+      setIsGuest(false);
+      setAuthView('app');
+    }
+  }, []);
+
+  // -------------------------------------------------------------------------
+  // Cold start initialization
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    const initAuth = async () => {
+      // 1. Guest mode check
+      const isGuestMode = localStorage.getItem(GUEST_FLAG_KEY) === 'true';
+      if (isGuestMode) {
+        setIsGuest(true);
+        setIsAuthenticated(true);
+        setAuthView('guest');
         return;
       }
 
-      // Email / Password flow
-      if (session.user.email_confirmed_at) {
-        setIsAuthenticated(true);
-        setIsGuest(false);
-        CentraDB.saveAuthSession(true);
-        await CentraDB.syncFromSupabase(userId, userEmail, userName);
-        const currentUser = CentraDB.getUser();
-        setUser(currentUser);
+      // 2. Supabase configuration check
+      if (!isSupabaseConfigured()) {
+        setAuthView('signedOut');
+        return;
+      }
 
-        if (currentUser.onboardingCompleted) {
-          setAuthView('app');
-          localStorage.removeItem(ONBOARDING_STEP_KEY);
+      // 3. Supabase session check
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await handleSession(session);
         } else {
-          const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
-          if (!savedStep || savedStep === 'signup' || savedStep === 'verify') {
-            localStorage.setItem(ONBOARDING_STEP_KEY, 'profile');
-          }
-          setAuthView('onboarding');
+          setAuthView('signedOut');
         }
-      } else {
-        // Signed in but email not confirmed yet
-        if (authView !== 'callback') {
-          setAuthView('check-email');
-        }
+      } catch (err) {
+        console.warn('Cold start getSession error:', err);
+        setAuthView('signedOut');
       }
     };
 
-    // Check existing session on load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        handleSession(session);
-      }
-    });
+    initAuth();
+  }, [handleSession]);
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-        await handleSession(session);
-      } else if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false);
-        setIsGuest(false);
-        setAuthView('intro');
-        CentraDB.saveAuthSession(false);
-      }
+  // -------------------------------------------------------------------------
+  // Supabase Auth listener (non-blocking handoff, skip redundant syncs)
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Hand off asynchronously via setTimeout to avoid awaiting in callback
+      setTimeout(() => {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+          // Skip redundant full syncs if user hasn't changed and already active
+          if (lastUserIdRef.current === session.user.id && (authView === 'app' || authView === 'guest')) {
+            return;
+          }
+          handleSession(session);
+        } else if (event === 'SIGNED_OUT') {
+          lastUserIdRef.current = null;
+          setIsAuthenticated(false);
+          setIsGuest(false);
+          setPendingEmail('');
+          setAuthView('signedOut');
+          CentraDB.clearAllData();
+          setUser(CentraDB.getUser());
+        }
+      }, 0);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authView, handleSession]);
 
+  // Keep local user persistence in sync
   useEffect(() => {
-    CentraDB.saveUser(user);
+    if (user && user.id) {
+      CentraDB.saveUser(user);
+    }
   }, [user]);
 
   // -------------------------------------------------------------------------
-  // Login
+  // Send Email OTP
   // -------------------------------------------------------------------------
-  const login = async (
-    email: string,
-    pass: string
-  ): Promise<{ ok: boolean; emailNotConfirmed?: boolean }> => {
-    // Check if 2FA is active
-    const settings = CentraDB.getSettings();
-    if (settings.security.twoFactorEnabled) {
-      setPending2FA(true);
-      return { ok: false };
+  const sendOtp = async (email: string): Promise<{ ok: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { ok: false, error: 'Please enter a valid email address.' };
     }
 
-    if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: pass,
-      });
-
-      if (error) {
-        // Supabase returns "Email not confirmed" with code email_not_confirmed
-        const isUnconfirmed =
-          error.message?.toLowerCase().includes('email not confirmed') ||
-          (error as any).code === 'email_not_confirmed';
-
-        if (isUnconfirmed) {
-          setPendingEmail(email);
-          return { ok: false, emailNotConfirmed: true };
-        }
-
-        // Other errors (wrong password, etc.)
-        return { ok: false };
-      }
-
-      if (data.user) {
-        if (!data.user.email_confirmed_at) {
-          // Account exists but email still unconfirmed
-          setPendingEmail(email);
-          return { ok: false, emailNotConfirmed: true };
-        }
-
-        await CentraDB.syncFromSupabase(data.user.id, data.user.email || email);
-        const currentUser = CentraDB.getUser();
-        setUser(currentUser);
-        setIsAuthenticated(true);
-        if (currentUser.onboardingCompleted) {
-          setAuthView('app');
-          localStorage.removeItem(ONBOARDING_STEP_KEY);
-        } else {
-          localStorage.setItem(ONBOARDING_STEP_KEY, 'profile');
-          setAuthView('onboarding');
-        }
-        return { ok: true };
-      }
-
-      return { ok: false };
+    if (!isSupabaseConfigured()) {
+      return { ok: false, error: 'Supabase backend is not configured.' };
     }
 
-    // Demo / local-only mode (Supabase not configured)
-    const updatedUser = { ...user, email: email || user.email };
-    setUser(updatedUser);
-    setIsAuthenticated(true);
-    CentraDB.saveAuthSession(true);
-    setAuthView('app');
-    return { ok: true };
-  };
-
-  // -------------------------------------------------------------------------
-  // Register
-  // -------------------------------------------------------------------------
-  const register = async (name: string, email: string, pass: string): Promise<boolean> => {
-    if (!email) {
-      throw new Error('Email is required.');
-    }
-    const cleanName = name?.trim() || '';
-    if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: pass || 'Password123!',
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: cleanEmail,
         options: {
-          data: { name: cleanName },
+          shouldCreateUser: true,
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        // Real signups start with genuinely blank data!
-        await CentraDB.createBlankUserData(data.user.id, email, cleanName);
-        setUser(CentraDB.getUser());
-        setPendingEmail(email);
-        return true;
+      if (error) {
+        return { ok: false, error: error.message };
       }
 
-      return false;
+      setPendingEmail(cleanEmail);
+      setAuthView('otp');
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: err?.message || 'Failed to send verification code.' };
     }
-
-    // Demo / local-only mode: genuinely blank start
-    const newUser: UserProfile = {
-      id: `usr_${Date.now()}`,
-      name: cleanName,
-      email: email,
-      onboardingCompleted: false,
-      createdAt: new Date().toISOString(),
-    };
-    await CentraDB.createBlankUserData(newUser.id, email, cleanName);
-    setUser(newUser);
-    setPendingEmail(email);
-    return true;
   };
 
   // -------------------------------------------------------------------------
-  // Guest Mode
+  // Verify Email OTP
+  // -------------------------------------------------------------------------
+  const verifyOtp = async (email: string, token: string): Promise<{ ok: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanToken = token.trim();
+
+    if (!cleanEmail || !cleanToken) {
+      return { ok: false, error: 'Email and 6-digit code are required.' };
+    }
+
+    if (!isSupabaseConfigured()) {
+      return { ok: false, error: 'Supabase backend is not configured.' };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanToken,
+        type: 'email',
+      });
+
+      if (error) {
+        return { ok: false, error: error.message };
+      }
+
+      if (data.session) {
+        await handleSession(data.session);
+      } else {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData.session) {
+          await handleSession(sessionData.session);
+        }
+      }
+
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: err?.message || 'Verification failed. Please try again.' };
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // Resend OTP
+  // -------------------------------------------------------------------------
+  const resendOtp = async (email: string): Promise<{ ok: boolean; error?: string }> => {
+    return sendOtp(email);
+  };
+
+  // -------------------------------------------------------------------------
+  // OAuth (Google / Apple)
+  // -------------------------------------------------------------------------
+  const signInWithOAuth = async (provider: 'google' | 'apple') => {
+    if (!isSupabaseConfigured()) {
+      throw new Error('Supabase backend is not configured.');
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) throw error;
+  };
+
+  // -------------------------------------------------------------------------
+  // Guest Mode (Explicit local-only demo)
   // -------------------------------------------------------------------------
   const enterGuestMode = useCallback(() => {
     const guestId = `guest_${Date.now()}`;
@@ -383,19 +299,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(CentraDB.getUser());
     });
     localStorage.setItem(GUEST_FLAG_KEY, 'true');
-    localStorage.removeItem(ONBOARDING_STEP_KEY);
     setIsGuest(true);
     setIsAuthenticated(true);
-    CentraDB.saveAuthSession(false); // not a real cloud session
-    setAuthView('app');
-  }, []);
-
-  // -------------------------------------------------------------------------
-  // Resend verification email
-  // -------------------------------------------------------------------------
-  const resendVerificationEmail = useCallback(async (email: string) => {
-    if (!isSupabaseConfigured()) return;
-    await supabase.auth.resend({ type: 'signup', email });
+    setAuthView('guest');
   }, []);
 
   // -------------------------------------------------------------------------
@@ -409,38 +315,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Supabase signOut error:', err);
       }
     }
-    localStorage.removeItem(GUEST_FLAG_KEY);
-    localStorage.removeItem(ONBOARDING_STEP_KEY);
+
+    // Clear all centra_* localStorage keys and local cache
+    CentraDB.clearAllData();
+    setUser(CentraDB.getUser());
+    lastUserIdRef.current = null;
     setIsAuthenticated(false);
     setIsGuest(false);
-    setPending2FA(false);
     setIsLockedByPin(false);
-    setAuthView('intro');
-    CentraDB.saveAuthSession(false);
+    setPendingEmail('');
+    setAuthView('signedOut');
   };
 
   // -------------------------------------------------------------------------
-  // Biometric login
-  // -------------------------------------------------------------------------
-  const loginWithBiometrics = async (): Promise<boolean> => {
-    try {
-      if (window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()) {
-        // Trigger local platform biometric/passkey challenge
-        setIsAuthenticated(true);
-        setIsLockedByPin(false);
-        CentraDB.saveAuthSession(true);
-        setAuthView('app');
-        return true;
-      }
-      throw new Error('Biometric hardware not available on this device');
-    } catch (err) {
-      console.warn('Biometric auth error:', err);
-      throw err;
-    }
-  };
-
-  // -------------------------------------------------------------------------
-  // Profile / PIN / 2FA helpers
+  // User Profile, PIN Lock Stubs (Phase 2)
   // -------------------------------------------------------------------------
   const updateUser = (updates: Partial<UserProfile>) => {
     setUser(prev => {
@@ -464,77 +352,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const settings = CentraDB.getSettings();
     if (settings.security.pinLockEnabled) {
       setIsLockedByPin(true);
+      setAuthView('locked');
     }
   };
 
-  const verify2FA = async (otpCode: string): Promise<boolean> => {
-    if (otpCode.length === 6) {
-      setPending2FA(false);
-      setIsAuthenticated(true);
-      CentraDB.saveAuthSession(true);
-      setAuthView('app');
-      return true;
-    }
-    return false;
-  };
-
-  const cancel2FA = () => {
-    setPending2FA(false);
-  };
-
-  const signInWithOAuth = async (provider: 'google' | 'apple') => {
-    if (isSupabaseConfigured()) {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) throw error;
-    } else {
-      // Demo / offline mode: route directly into Profile Info step 3/5 with blank data
-      const demoUser: UserProfile = {
-        id: `${provider}_${Date.now()}`,
-        name: provider === 'google' ? 'Google Account' : 'Apple ID',
-        email: `${provider}.user@centra.io`,
-        onboardingCompleted: false,
-        createdAt: new Date().toISOString(),
-      };
-      await CentraDB.createBlankUserData(demoUser.id, demoUser.email, demoUser.name);
-      setUser(demoUser);
-      setIsAuthenticated(true);
-      localStorage.setItem(ONBOARDING_STEP_KEY, 'profile');
-      setAuthView('onboarding');
-    }
-  };
-
-  const verifyEmailOtp = async (email: string, token: string): Promise<{ ok: boolean; error?: string }> => {
-    if (isSupabaseConfigured()) {
-      try {
-        const { data, error } = await supabase.auth.verifyOtp({
-          email,
-          token,
-          type: 'signup',
-        });
-        if (error) {
-          const fallback = await supabase.auth.verifyOtp({
-            email,
-            token,
-            type: 'email',
-          });
-          if (fallback.error) {
-            return { ok: false, error: error.message || fallback.error.message };
-          }
-        }
-        return { ok: true };
-      } catch (err: any) {
-        return { ok: false, error: err?.message || 'Verification failed. Please check the code.' };
-      }
-    }
-    // Demo / offline mode always accepts 5-digit OTP
-    return { ok: true };
-  };
-
+  // -------------------------------------------------------------------------
+  // Onboarding Helpers
+  // -------------------------------------------------------------------------
   const saveOnboardingProfile = async (data: {
     name: string;
     dob?: string;
@@ -569,7 +393,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (data.categories !== undefined) {
-      localStorage.setItem('centra_onboarding_categories', JSON.stringify(data.categories));
       const defaultIncomeAndSystemCategories: Category[] = [
         { id: 'cat_salary', name: 'Salary & Wages', icon: 'Briefcase', color: '#1FAE71', type: 'income' },
         { id: 'cat_freelance', name: 'Freelance & Bonus', icon: 'TrendingUp', color: '#00B894', type: 'income' },
@@ -588,7 +411,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           icon: meta.icon,
           color: meta.color,
           type: meta.type,
-          budgetLimit: undefined, // Explicitly no hardcoded limits
+          budgetLimit: undefined,
         };
       });
       const categories: Category[] = [...expenseCategories, ...defaultIncomeAndSystemCategories];
@@ -601,16 +424,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await CentraDB.markOnboardingCompleted(user.id);
       setUser(prev => ({ ...prev, onboardingCompleted: true }));
     }
-    localStorage.setItem('centra_onboarding_done_v1', 'true');
-    localStorage.removeItem(ONBOARDING_STEP_KEY);
     setIsAuthenticated(true);
-    CentraDB.saveAuthSession(true);
     setAuthView('app');
   };
 
-  // -------------------------------------------------------------------------
-  // Context value
-  // -------------------------------------------------------------------------
   return (
     <AuthContext.Provider
       value={{
@@ -620,24 +437,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLockedByPin,
         authView,
         pendingEmail,
-        login,
-        loginWithBiometrics,
-        register,
+        setPendingEmail,
+        setAuthView,
+        sendOtp,
+        verifyOtp,
+        resendOtp,
+        signInWithOAuth,
+        enterGuestMode,
         logout,
         updateUser,
         unlockPin,
         lockApp,
-        verify2FA,
-        pending2FA,
-        cancel2FA,
-        enterGuestMode,
-        resendVerificationEmail,
-        signInWithOAuth,
-        verifyEmailOtp,
         saveOnboardingProfile,
         completeOnboarding,
-        setPendingEmail,
-        setAuthView,
       }}
     >
       {children}

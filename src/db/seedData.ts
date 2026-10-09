@@ -461,9 +461,6 @@ export const INITIAL_SETTINGS: AppSettings = {
     biometricEnabled: true,
     pinLockEnabled: true,
     pinCode: '1234',
-    twoFactorEnabled: true,
-    twoFactorType: 'authenticator',
-    twoFactorContact: '+1 (555) 392-8812',
     lastLogin: new Date().toISOString(),
   },
   notifications: {

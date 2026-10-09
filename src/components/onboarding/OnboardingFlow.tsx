@@ -1,28 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { IntroScreen } from './IntroScreen';
-import { CreateAccountScreen } from './CreateAccountScreen';
-import { VerifyEmailScreen } from './VerifyEmailScreen';
 import { ProfileInfoScreen } from './ProfileInfoScreen';
 import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { SpendingCategoriesScreen } from './SpendingCategoriesScreen';
 import { AccountReadyScreen } from './AccountReadyScreen';
-import logoImg from '../../assets/brand/logo.png';
-import { ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
 
 export type OnboardingStep =
-  | 'intro'
-  | 'signup'
-  | 'verify'
   | 'profile'
   | 'theme'
   | 'categories'
   | 'ready';
 
 const STEP_ORDER: OnboardingStep[] = [
-  'intro',
-  'signup',
-  'verify',
   'profile',
   'theme',
   'categories',
@@ -30,60 +19,24 @@ const STEP_ORDER: OnboardingStep[] = [
 ];
 
 const ONBOARDING_STEP_STORAGE_KEY = 'centra_onboarding_step';
-const ONBOARDING_EMAIL_STORAGE_KEY = 'centra_pending_onboarding_email';
 
-interface OnboardingFlowProps {
-  initialView?: 'intro' | 'onboarding';
-}
+export const OnboardingFlow: React.FC = () => {
+  const { logout } = useAuth();
 
-export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialView = 'intro' }) => {
-  const { setAuthView, pendingEmail, setPendingEmail } = useAuth();
-
-  // Restore step from localStorage if returning user was mid-onboarding
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(() => {
     const savedStep = localStorage.getItem(ONBOARDING_STEP_STORAGE_KEY);
     if (savedStep && STEP_ORDER.includes(savedStep as OnboardingStep)) {
-      // If user had reached signup or beyond, resume there
       return savedStep as OnboardingStep;
     }
-    return initialView === 'onboarding' ? 'signup' : 'intro';
-  });
-
-  const [signupEmail, setSignupEmail] = useState<string>(() => {
-    return (
-      pendingEmail ||
-      localStorage.getItem(ONBOARDING_EMAIL_STORAGE_KEY) ||
-      ''
-    );
+    return 'profile';
   });
 
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward');
 
-  // React to external changes in saved step (e.g. Google / Apple sign-in setting step to 'profile')
-  useEffect(() => {
-    const savedStep = localStorage.getItem(ONBOARDING_STEP_STORAGE_KEY);
-    if (savedStep && STEP_ORDER.includes(savedStep as OnboardingStep)) {
-      setCurrentStep(savedStep as OnboardingStep);
-    }
-  }, [initialView]);
-
-  // Sync step to localStorage
   const goToStep = (step: OnboardingStep, direction: 'forward' | 'backward' = 'forward') => {
     setTransitionDirection(direction);
     setCurrentStep(step);
-
-    if (step === 'intro') {
-      localStorage.removeItem(ONBOARDING_STEP_STORAGE_KEY);
-    } else {
-      localStorage.setItem(ONBOARDING_STEP_STORAGE_KEY, step);
-    }
-  };
-
-  const handleSignedUp = (email: string) => {
-    setSignupEmail(email);
-    setPendingEmail(email);
-    localStorage.setItem(ONBOARDING_EMAIL_STORAGE_KEY, email);
-    goToStep('verify', 'forward');
+    localStorage.setItem(ONBOARDING_STEP_STORAGE_KEY, step);
   };
 
   return (
@@ -94,10 +47,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialView = 'i
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Main Container: Mobile is edge-to-edge native app feel; Desktop is centered sleek app container */}
+      {/* Main Container */}
       <div className="w-full h-full min-h-screen md:min-h-[720px] md:h-auto md:max-w-lg lg:max-w-xl md:my-8 bg-white dark:bg-[#0D1220] md:rounded-[36px] md:border md:border-gray-200/80 md:dark:border-[#1e263c] md:shadow-2xl md:shadow-black/20 flex flex-col justify-between relative overflow-hidden transition-all">
-        
-        {/* Animated Step Container with Slide & Fade Transitions */}
         <div
           key={currentStep}
           className={`w-full flex-1 flex flex-col justify-between ${
@@ -106,38 +57,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ initialView = 'i
               : 'animate-slide-right-fade'
           }`}
         >
-          {currentStep === 'intro' && (
-            <IntroScreen
-              onGetStarted={() => goToStep('signup', 'forward')}
-              onSignIn={() => setAuthView('login')}
-            />
-          )}
-
-          {currentStep === 'signup' && (
-            <CreateAccountScreen
-              onBack={() => goToStep('intro', 'backward')}
-              onSignedUp={handleSignedUp}
-              onSwitchToSignIn={() => setAuthView('login')}
-            />
-          )}
-
-          {currentStep === 'verify' && (
-            <VerifyEmailScreen
-              email={signupEmail}
-              onBack={() => goToStep('signup', 'backward')}
-              onVerified={() => goToStep('profile', 'forward')}
-            />
-          )}
-
           {currentStep === 'profile' && (
             <ProfileInfoScreen
               onBack={() => {
-                // Google/Apple OAuth users must never see verify OTP screen
-                const isOAuth = !signupEmail && !pendingEmail;
-                if (isOAuth) {
-                  goToStep('intro', 'backward');
-                } else {
-                  goToStep('verify', 'backward');
+                if (window.confirm('Sign out and exit setup?')) {
+                  logout();
                 }
               }}
               onContinue={() => goToStep('theme', 'forward')}
