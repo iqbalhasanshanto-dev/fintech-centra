@@ -753,6 +753,14 @@ export const CentraDB = {
       if (settingsData) {
         cache.settings = mapSettingsFromDb(settingsData);
         safeSet(STORAGE_KEYS.SETTINGS, cache.settings);
+      } else {
+        try {
+          await supabase.from('settings').upsert(mapSettingsToDb(INITIAL_SETTINGS, userId), { onConflict: 'user_id' });
+        } catch (settingsInsertErr) {
+          console.warn('Fallback settings insert error:', settingsInsertErr);
+        }
+        cache.settings = INITIAL_SETTINGS;
+        safeSet(STORAGE_KEYS.SETTINGS, cache.settings);
       }
 
       return { ok: true, profile: profileData };

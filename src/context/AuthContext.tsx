@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const effectiveMode = storedIntent || authMode;
 
     try {
-      const { data: profile, error: profileErr } = await supabase
+      let { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('id, onboarding_completed, name, email, avatar_url, base_currency')
         .eq('id', userId)
@@ -115,8 +115,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // If user has completed onboarding, go straight to main app
-      if (profile?.onboarding_completed) {
+      let isNewUser = false;
+
+      // If profile row is missing after login, create it with insert-if-missing and treat as NEW
+      if (!profile) {
+        const userAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null;
+        const { data: newProfile, error: insertProfileErr } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            name: userName || '',
+            email: userEmail || null,
+            avatar_url: userAvatar,
+            base_currency: null,
+            is_pro: false,
+            plan_expiry: null,
+            onboarding_completed: false,
+          })
+          .select('id, onboarding_completed, name, email, avatar_url, base_currency')
+          .maybeSingle();
+
+        if (insertProfileErr) {
+          console.warn('Insert-if-missing profile error:', insertProfileErr);
+        } else {
+          profile = newProfile;
+        }
+        isNewUser = true;
+      }
+
+      // Ensure settings row exists (insert-if-missing)
+      const { data: existingSettings } = await supabase
+        .from('settings')
+        .select('user_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!existingSettings) {
+        await supabase.from('settings').upsert({
+          user_id: userId,
+          id: `settings_${userId}`,
+          theme: 'light',
+          base_currency: null,
+          privacy_mode: false,
+          security: { biometricEnabled: false, pinLockEnabled: false },
+          notifications: {
+            transactionAlerts: true,
+            budgetOverruns: true,
+            securityAlerts: true,
+            billReminders: true,
+            weeklyDigest: true,
+          },
+        }, { onConflict: 'user_id' });
+      }
+
+      // If user is existing and has completed onboarding, go straight to main app
+      if (!isNewUser && profile?.onboarding_completed) {
         await CentraDB.syncFromSupabase(userId, userEmail, userName);
         const currentUser = CentraDB.getUser();
         setUser(currentUser);
@@ -126,11 +179,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Account onboarding is not complete
+      // User is either newly created or has not completed onboarding
       setIsAuthenticated(true);
       setIsGuest(false);
 
-      if (effectiveMode === 'signin') {
+      if (effectiveMode === 'signin' && !isNewUser) {
         const isOAuth =
           session.user.app_metadata?.provider === 'google' ||
           session.user.app_metadata?.provider === 'apple';
@@ -143,10 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setAuthView('accountIncomplete');
         }
       } else {
-        // Sign-up intent: proceed into onboarding wizard
-        if (!profile) {
-          await CentraDB.createBlankUserData(userId, userEmail, userName);
-        }
+        // Sign-up intent or brand-new user missing profile: proceed into onboarding wizard
+        await CentraDB.createBlankUserData(userId, userEmail, userName);
         setUser(CentraDB.getUser());
         setAuthView('onboarding');
       }

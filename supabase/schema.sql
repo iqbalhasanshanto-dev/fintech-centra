@@ -245,20 +245,12 @@ CREATE TRIGGER trg_settings_updated_at
 CREATE OR REPLACE FUNCTION public.protect_profiles_columns()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = ''
 AS $$
-DECLARE
-  caller_role TEXT;
 BEGIN
-  -- Obtain caller's JWT role
-  caller_role := COALESCE(
-    current_setting('request.jwt.claim.role', true),
-    (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb->>'role')
-  );
-
-  -- 1. If caller is normal authenticated client, block changes to is_pro and plan_expiry
-  IF caller_role = 'authenticated' THEN
+  -- 1. If caller is normal client role, block changes to is_pro and plan_expiry
+  IF current_user IN ('authenticated', 'anon') THEN
     IF NEW.is_pro IS DISTINCT FROM OLD.is_pro THEN
       RAISE EXCEPTION 'Clients are not permitted to modify is_pro.';
     END IF;
@@ -359,6 +351,7 @@ BEGIN
   RETURN NEW;
 EXCEPTION
   WHEN OTHERS THEN
+    RAISE WARNING 'handle_new_user failed for %: %', NEW.id, SQLERRM;
     -- Never raise error or block user creation in auth.users
     RETURN NEW;
 END;

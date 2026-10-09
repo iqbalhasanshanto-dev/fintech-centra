@@ -1,17 +1,26 @@
 -- ==============================================================================
 -- CENTRA FINTECH - SCHEMA VERIFICATION & CROSS-USER ISOLATION TEST SUITE
 -- ==============================================================================
--- This script contains two test suites:
--- Part 1: Schema Structure & Integrity Checks (Static, non-destructive queries)
--- Part 2: Cross-User RLS Isolation & Immutability Trigger Test (Runs in a transaction that ends with ROLLBACK)
+-- INSTRUCTIONS FOR SUPABASE SQL EDITOR:
+-- RUN PART 1 AND PART 2 SEPARATELY.
 --
--- Instructions: Run this script in the Supabase SQL Editor after applying
--- 20261009000000_initial_schema.sql.
--- Look for "PASS" in the status column of all output tables.
+-- STEP 1: Copy and run PART 1 first.
+--   - Verifies tables, RLS enablement, composite PKs, constraints, triggers,
+--     privileges (anon has no access), and clean settings defaults.
+--   - Expected Output: A result table where EVERY row shows status = 'PASS'.
+--
+-- STEP 2: Copy and run PART 2 second.
+--   - Runs a transactional cross-user isolation and trigger test (User A vs User B).
+--   - Proves User B cannot read, update, or delete User A's rows, cannot modify is_pro,
+--     and cannot downgrade onboarding_completed.
+--   - Expected Output: Intentionally raises an exception prefixed with "RESULTS:",
+--     printing the complete 15-test PASS summary in the editor and automatically
+--     rolling back all mock users and changes.
 -- ==============================================================================
 
+
 -- ==============================================================================
--- PART 1: SCHEMA STRUCTURE & INTEGRITY CHECKS
+-- PART 1: SCHEMA STRUCTURE & INTEGRITY CHECKS (RUN SEPARATELY)
 -- ==============================================================================
 
 WITH expected_tables AS (
@@ -31,7 +40,19 @@ table_rls_check AS (
 ),
 pk_checks AS (
   SELECT
-    'accounts' AS table_name,
+    'profiles' AS table_name,
+    CASE WHEN (
+      SELECT string_agg(a.attname, ',' ORDER BY a.attnum)
+      FROM pg_constraint con
+      JOIN pg_class cl ON cl.oid = con.conrelid
+      JOIN pg_namespace ns ON ns.oid = cl.relnamespace
+      JOIN pg_attribute a ON a.attrelid = cl.oid AND a.attnum = ANY(con.conkey)
+      WHERE ns.nspname = 'public' AND cl.relname = 'profiles' AND con.contype = 'p'
+    ) = 'id' THEN 'PASS' ELSE 'FAIL: Expected PK (id)' END AS status,
+    'Primary Key (id)' AS details
+  UNION ALL
+  SELECT
+    'accounts',
     CASE WHEN (
       SELECT string_agg(a.attname, ',' ORDER BY a.attnum)
       FROM pg_constraint con
@@ -39,8 +60,8 @@ pk_checks AS (
       JOIN pg_namespace ns ON ns.oid = cl.relnamespace
       JOIN pg_attribute a ON a.attrelid = cl.oid AND a.attnum = ANY(con.conkey)
       WHERE ns.nspname = 'public' AND cl.relname = 'accounts' AND con.contype = 'p'
-    ) = 'user_id,id' THEN 'PASS' ELSE 'FAIL: Expected PK (user_id, id)' END AS status,
-    'Composite PK (user_id, id)' AS details
+    ) = 'user_id,id' THEN 'PASS' ELSE 'FAIL: Expected PK (user_id, id)' END,
+    'Composite PK (user_id, id)'
   UNION ALL
   SELECT
     'categories',
@@ -132,7 +153,7 @@ constraint_checks AS (
       JOIN pg_class cl ON cl.oid = con.conrelid
       JOIN pg_namespace ns ON ns.oid = cl.relnamespace
       WHERE ns.nspname = 'public' AND cl.relname = 'transactions' AND con.contype = 'c'
-      AND pg_get_constraintdef(con.oid) LIKE '%amount > 0%'
+      AND pg_get_constraintdef(con.oid) ~* 'amount\s*>\s*\(?0'
     ) THEN 'PASS' ELSE 'FAIL: Missing CHECK (amount > 0)' END,
     'Check constraint (amount > 0)'
   UNION ALL
@@ -147,30 +168,69 @@ constraint_checks AS (
       AND pg_get_constraintdef(con.oid) LIKE '%weekly%'
     ) THEN 'PASS' ELSE 'FAIL: Missing CHECK period IN (monthly, weekly)' END,
     'Check constraint period IN (monthly, weekly)'
+),
+trigger_checks AS (
+  SELECT
+    'auth.users' AS table_name,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM pg_trigger t
+      JOIN pg_class c ON c.oid = t.tgrelid
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'auth' AND c.relname = 'users' AND t.tgname = 'on_auth_user_created'
+    ) THEN 'PASS' ELSE 'FAIL: Missing trigger on_auth_user_created' END AS status,
+    'Trigger on_auth_user_created on auth.users' AS details
+  UNION ALL
+  SELECT
+    'profiles',
+    CASE WHEN EXISTS (
+      SELECT 1 FROM pg_trigger t
+      JOIN pg_class c ON c.oid = t.tgrelid
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public' AND c.relname = 'profiles' AND t.tgname = 'trg_protect_profiles_columns'
+    ) THEN 'PASS' ELSE 'FAIL: Missing trigger trg_protect_profiles_columns' END,
+    'Trigger trg_protect_profiles_columns on profiles'
+),
+anon_privilege_checks AS (
+  SELECT
+    t.table_name,
+    CASE WHEN NOT (
+      has_table_privilege('anon', 'public.' || t.table_name, 'SELECT') OR
+      has_table_privilege('anon', 'public.' || t.table_name, 'INSERT') OR
+      has_table_privilege('anon', 'public.' || t.table_name, 'UPDATE') OR
+      has_table_privilege('anon', 'public.' || t.table_name, 'DELETE')
+    ) THEN 'PASS' ELSE 'FAIL: anon role has table privileges' END AS status,
+    'Revoke all privileges from anon' AS details
+  FROM expected_tables t
+),
+security_data_checks AS (
+  SELECT
+    'settings' AS table_name,
+    CASE WHEN NOT EXISTS (
+      SELECT 1 FROM public.settings WHERE security ? 'pinCode'
+    ) THEN 'PASS' ELSE 'FAIL: settings.security contains pinCode' END AS status,
+    'Clean security JSON (no pinCode stored)' AS details
 )
-SELECT 'RLS Check' AS category, table_name, status, details FROM table_rls_check
+SELECT '1. RLS Enabled' AS category, table_name, status, details FROM table_rls_check
 UNION ALL
-SELECT 'Primary Key Check', table_name, status, details FROM pk_checks
+SELECT '2. Primary Keys', table_name, status, details FROM pk_checks
 UNION ALL
-SELECT 'Constraint Check', table_name, status, details FROM constraint_checks
+SELECT '3. Constraints', table_name, status, details FROM constraint_checks
+UNION ALL
+SELECT '4. Triggers', table_name, status, details FROM trigger_checks
+UNION ALL
+SELECT '5. Anon Privileges', table_name, status, details FROM anon_privilege_checks
+UNION ALL
+SELECT '6. Data Safety', table_name, status, details FROM security_data_checks
 ORDER BY category, table_name;
 
 
 -- ==============================================================================
--- PART 2: CROSS-USER ISOLATION & TRIGGER TEST (RUNS IN ROLLBACK TRANSACTION)
+-- PART 2: CROSS-USER ISOLATION & TRIGGER TEST (RUN SEPARATELY)
 -- ==============================================================================
--- This test runs inside an isolated transaction. It creates two mock users,
--- simulates User A inserting data, switches role & JWT to User B, and tests:
---   1. User B reads User A data -> Returns 0 rows (PASS)
---   2. User B updates User A data -> Updates 0 rows (PASS)
---   3. User B deletes User A data -> Deletes 0 rows (PASS)
---   4. User B attempts client update to is_pro -> Trigger rejects with error (PASS)
---   5. User B attempts onboarding_completed revert (true -> false) -> Trigger forces true (PASS)
---
--- The transaction ends with ROLLBACK so no temporary data persists in your database.
+-- When executed, this block creates temporary test users, verifies isolation,
+-- and intentionally raises an exception with "RESULTS: ...", printing the full
+-- PASS report while automatically rolling back everything.
 -- ==============================================================================
-
-BEGIN;
 
 CREATE TEMP TABLE IF NOT EXISTS _isolation_test_results (
   test_num INT,
@@ -179,6 +239,10 @@ CREATE TEMP TABLE IF NOT EXISTS _isolation_test_results (
   actual TEXT,
   status TEXT
 ) ON COMMIT DROP;
+
+GRANT ALL ON TABLE _isolation_test_results TO authenticated;
+GRANT ALL ON TABLE _isolation_test_results TO anon;
+GRANT ALL ON TABLE _isolation_test_results TO public;
 
 DO $$
 DECLARE
@@ -189,9 +253,10 @@ DECLARE
   v_deleted INT;
   v_err_caught BOOLEAN := FALSE;
   v_onboarding_val BOOLEAN;
+  v_summary TEXT;
 BEGIN
   -- ----------------------------------------------------------------------------
-  -- Step 1: Create two fake users in auth.users
+  -- Step 1: Create two mock users in auth.users
   -- (Trigger on_auth_user_created automatically provisions profiles and settings)
   -- ----------------------------------------------------------------------------
   INSERT INTO auth.users (
@@ -410,17 +475,47 @@ BEGIN
     CASE WHEN v_onboarding_val = TRUE THEN 'PASS' ELSE 'FAIL' END
   );
 
+  -- ----------------------------------------------------------------------------
+  -- Step 9: Test CHECK (amount > 0) Constraint Enforcement
+  -- (User B attempts to insert transaction with amount = 0 as authenticated user)
+  -- ----------------------------------------------------------------------------
+  v_err_caught := FALSE;
+  BEGIN
+    INSERT INTO public.transactions (
+      user_id, id, type, amount, currency,
+      category_id, category_name, category_icon, category_color,
+      account_id, account_name, date
+    ) VALUES (
+      v_user_b, 'tx_b_invalid_amt', 'expense', 0.00, 'BDT',
+      'cat_b_1', 'Food & Dining', 'Utensils', '#FF7675',
+      'acc_b_1', 'Alpha Main Checking', NOW()
+    );
+  EXCEPTION
+    WHEN OTHERS THEN
+      v_err_caught := TRUE;
+  END;
+
+  INSERT INTO _isolation_test_results VALUES (
+    15, 'Insert transaction with amount = 0', 'Exception thrown',
+    CASE WHEN v_err_caught THEN 'Exception thrown' ELSE 'Allowed (VULNERABILITY!)' END,
+    CASE WHEN v_err_caught THEN 'PASS' ELSE 'FAIL' END
+  );
+
+  -- ----------------------------------------------------------------------------
+  -- Step 10: Aggregate and output results, then self-rollback via EXCEPTION
+  -- ----------------------------------------------------------------------------
+  SELECT string_agg(
+    format('[Test %s] %-42s | Expected: %-18s | Actual: %-22s | Status: %s',
+      lpad(test_num::text, 2, '0'),
+      test_name,
+      expected,
+      actual,
+      status
+    ),
+    E'\n' ORDER BY test_num
+  ) INTO v_summary
+  FROM _isolation_test_results;
+
+  RAISE EXCEPTION E'RESULTS:\n========================================================================================\nCROSS-USER ISOLATION TEST SUITE SUMMARY (ALL ROLLED BACK AUTOMATICALLY)\n========================================================================================\n%\n========================================================================================', v_summary;
+
 END $$;
-
--- Display all test results
-SELECT
-  test_num,
-  test_name,
-  expected,
-  actual,
-  status
-FROM _isolation_test_results
-ORDER BY test_num;
-
--- Cleanly rollback the transaction so no test users or modifications persist
-ROLLBACK;
