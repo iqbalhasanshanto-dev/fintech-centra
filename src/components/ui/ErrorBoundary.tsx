@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Something went wrong
             </h1>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-              Centra encountered an unexpected error. Your financial data is securely preserved.
+              Centra encountered an unexpected error. Your local data has been left untouched. Try reloading.
             </p>
 
             {this.state.error && (

@@ -34,7 +34,7 @@ const STORAGE_KEYS = {
 };
 
 // In-memory / local cache
-let cache = {
+const cache = {
   user: safeGet<UserProfile>(STORAGE_KEYS.USER, INITIAL_USER),
   accounts: safeGet<Account[]>(STORAGE_KEYS.ACCOUNTS, INITIAL_ACCOUNTS),
   categories: safeGet<Category[]>(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES),
