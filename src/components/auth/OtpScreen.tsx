@@ -6,7 +6,17 @@ import { useAuth } from '../../context/AuthContext';
 export const OTP_LENGTH = 6;
 
 export const OtpScreen: React.FC = () => {
-  const { pendingEmail, verifyOtp, resendOtp, setAuthView, setPendingEmail } = useAuth();
+  const {
+    pendingEmail,
+    authMode,
+    setAuthMode,
+    verifyOtp,
+    resendOtp,
+    sendOtp,
+    setAuthView,
+    setPendingEmail,
+  } = useAuth();
+
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -134,8 +144,22 @@ export const OtpScreen: React.FC = () => {
     setAuthView('signedOut');
   };
 
-  const code = digits.join('');
-  const isComplete = code.length === OTP_LENGTH && !digits.includes('');
+  const handleSwitchToCreateAccount = async () => {
+    setAuthMode('signup');
+    setDigits(Array(OTP_LENGTH).fill(''));
+    setErrorMessage('');
+    setIsLoading(true);
+    try {
+      await sendOtp(pendingEmail, 'signup');
+      setResendCooldown(60);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to send account creation code.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isComplete = digits.join('').length === OTP_LENGTH && !digits.includes('');
 
   return (
     <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center p-4 sm:p-6 transition-colors selection:bg-teal-500 selection:text-white">
@@ -178,12 +202,24 @@ export const OtpScreen: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
               Enter verification code
             </h1>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
-              We sent a 6-digit one-time code to{' '}
-              <span className="font-semibold text-gray-900 dark:text-gray-200 break-all">
-                {pendingEmail || 'your email'}
-              </span>
-            </p>
+
+            {/* Contextual description per specifications */}
+            {authMode === 'signin' ? (
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
+                If an account exists for{' '}
+                <span className="font-semibold text-gray-900 dark:text-gray-200 break-all">
+                  {pendingEmail || 'this email'}
+                </span>
+                , we've sent a 6-digit code.
+              </p>
+            ) : (
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
+                We sent a 6-digit verification code to{' '}
+                <span className="font-semibold text-gray-900 dark:text-gray-200 break-all">
+                  {pendingEmail || 'your email'}
+                </span>
+              </p>
+            )}
           </div>
 
           {errorMessage && (
@@ -236,6 +272,33 @@ export const OtpScreen: React.FC = () => {
               )}
             </button>
           </form>
+
+          {/* No code helper section */}
+          <div className="mt-4 text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              No code? Check spam,{' '}
+              <button
+                type="button"
+                onClick={handleDifferentEmail}
+                className="font-semibold text-gray-700 dark:text-gray-300 hover:underline cursor-pointer"
+              >
+                use a different email
+              </button>
+              {authMode === 'signin' && (
+                <>
+                  , or{' '}
+                  <button
+                    type="button"
+                    onClick={handleSwitchToCreateAccount}
+                    className="font-bold text-teal-600 dark:text-teal-400 hover:underline cursor-pointer"
+                  >
+                    create an account
+                  </button>
+                </>
+              )}
+              .
+            </p>
+          </div>
         </div>
 
         {/* Resend & Change Email Footer */}
@@ -254,17 +317,6 @@ export const OtpScreen: React.FC = () => {
                 <span>Resend code</span>
               </button>
             )}
-          </div>
-
-          <div>
-            <button
-              type="button"
-              onClick={handleDifferentEmail}
-              disabled={isLoading}
-              className="text-xs font-medium text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              Use a different email
-            </button>
           </div>
         </div>
       </div>

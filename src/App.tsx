@@ -9,6 +9,9 @@ import { PinLockScreen } from './components/auth/PinLockScreen';
 import { AuthCallbackScreen } from './components/auth/AuthCallbackScreen';
 import { LoadingSplashScreen } from './components/auth/LoadingSplashScreen';
 import { SupabaseConfigErrorScreen } from './components/auth/SupabaseConfigErrorScreen';
+import { NoAccountFoundScreen } from './components/auth/NoAccountFoundScreen';
+import { AccountIncompleteScreen } from './components/auth/AccountIncompleteScreen';
+import { ProfileErrorScreen } from './components/auth/ProfileErrorScreen';
 import { isSupabaseConfigured } from './lib/supabaseClient';
 
 const MainApp: React.FC = () => {
@@ -36,12 +39,27 @@ const MainApp: React.FC = () => {
     return <LoadingSplashScreen />;
   }
 
+  // Profile fetch failed -> Safe retry screen
+  if (authView === 'profileError') {
+    return <ProfileErrorScreen />;
+  }
+
+  // OAuth sign-in when no completed account exists
+  if (authView === 'noAccountFound') {
+    return <NoAccountFoundScreen />;
+  }
+
+  // Email sign-in when onboarding setup is not completed
+  if (authView === 'accountIncomplete') {
+    return <AccountIncompleteScreen />;
+  }
+
   // Email OTP verification screen
   if (authView === 'otp') {
     return <OtpScreen />;
   }
 
-  // Landing screen (Google, Apple, Email OTP, and Guest)
+  // Landing screen (Sign in / Create account tabs)
   if (authView === 'signedOut') {
     return <IntroScreen />;
   }

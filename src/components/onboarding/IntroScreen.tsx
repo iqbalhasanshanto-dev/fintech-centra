@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
 import { TrendingUp, PieChart, Sparkles, Shield, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import logoImg from '../../assets/brand/logo.png';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, AuthMode } from '../../context/AuthContext';
 
-export const IntroScreen: React.FC = () => {
-  const { sendOtp, signInWithOAuth, enterGuestMode } = useAuth();
-  const [email, setEmail] = useState('');
+interface IntroScreenProps {
+  initialMode?: AuthMode;
+  initialEmail?: string;
+}
+
+export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEmail }) => {
+  const { authMode, setAuthMode, sendOtp, signInWithOAuth, enterGuestMode } = useAuth();
+  const [activeTab, setActiveTab] = useState<AuthMode>(initialMode || authMode || 'signin');
+  const [email, setEmail] = useState(initialEmail || '');
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const handleTabChange = (tab: AuthMode) => {
+    setActiveTab(tab);
+    setAuthMode(tab);
+    setErrorMessage('');
+  };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +34,7 @@ export const IntroScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const res = await sendOtp(cleanEmail);
+      const res = await sendOtp(cleanEmail, activeTab);
       if (!res.ok) {
         setErrorMessage(res.error || 'Failed to send verification code. Please try again.');
       }
@@ -34,10 +46,11 @@ export const IntroScreen: React.FC = () => {
   };
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
+    if (provider === 'apple') return; // Disabled / coming soon
     setOauthLoading(provider);
     setErrorMessage('');
     try {
-      await signInWithOAuth(provider);
+      await signInWithOAuth(provider, activeTab);
     } catch (err: any) {
       setErrorMessage(err?.message || `${provider} sign-in failed. Please try again.`);
       setOauthLoading(null);
@@ -56,7 +69,7 @@ export const IntroScreen: React.FC = () => {
       <div className="w-full h-full min-h-screen md:min-h-[720px] md:h-auto md:max-w-lg lg:max-w-xl md:my-8 bg-white dark:bg-[#0D1220] md:rounded-[36px] md:border md:border-gray-200/80 md:dark:border-[#1e263c] md:shadow-2xl md:shadow-black/20 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden transition-all">
         {/* Top Header with Brand Logo */}
         <div>
-          <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center gap-3 mb-4">
             <img
               src={logoImg}
               alt="Centra"
@@ -77,15 +90,15 @@ export const IntroScreen: React.FC = () => {
           </p>
         </div>
 
-        {/* Product Visual: Sleek Personal Finance Dashboard Card / Analytics Preview */}
-        <div className="my-5 w-full flex items-center justify-center">
+        {/* Product Visual: Dashboard Preview Card */}
+        <div className="my-4 w-full flex items-center justify-center">
           <div className="relative w-full max-w-sm sm:max-w-md rounded-3xl p-5 sm:p-6 bg-gradient-to-b from-[#131722] via-[#0f131d] to-[#0a0d14] border border-[#1e2638] shadow-2xl shadow-black/40 overflow-hidden text-white group">
             {/* Ambient glows */}
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-teal-500/20 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
 
             {/* Top widget row */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
@@ -99,7 +112,7 @@ export const IntroScreen: React.FC = () => {
             </div>
 
             {/* Balance Tracker Display */}
-            <div className="mb-4">
+            <div className="mb-3">
               <span className="text-xs text-gray-400 font-medium block">Net Savings Rate</span>
               <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-0.5 flex items-baseline gap-1">
                 <span>92.4</span>
@@ -108,8 +121,8 @@ export const IntroScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Dynamic Visual: Multi-category Spend Distribution Bars */}
-            <div className="space-y-2 pt-1 pb-3 border-y border-[#1e2638]">
+            {/* Spend Distribution Bars */}
+            <div className="space-y-1.5 pt-1 pb-2.5 border-y border-[#1e2638]">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-300 font-medium flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-teal-400" />
@@ -117,7 +130,7 @@ export const IntroScreen: React.FC = () => {
                 </span>
                 <span className="text-gray-400 font-semibold">Under Budget</span>
               </div>
-              <div className="w-full h-2.5 bg-[#1e2638] rounded-full overflow-hidden flex gap-1 p-0.5">
+              <div className="w-full h-2 bg-[#1e2638] rounded-full overflow-hidden flex gap-1 p-0.5">
                 <div className="h-full bg-teal-400 rounded-full w-[45%]" />
                 <div className="h-full bg-emerald-400 rounded-full w-[30%]" />
                 <div className="h-full bg-amber-400 rounded-full w-[15%]" />
@@ -126,7 +139,7 @@ export const IntroScreen: React.FC = () => {
             </div>
 
             {/* Bottom Breakdown stats */}
-            <div className="grid grid-cols-3 gap-2 pt-3 text-center">
+            <div className="grid grid-cols-3 gap-2 pt-2.5 text-center">
               <div className="bg-[#1a2030]/70 rounded-xl p-2 border border-white/5">
                 <span className="text-[10px] text-gray-400 font-medium block">Tracking</span>
                 <span className="text-xs font-bold text-teal-300 flex items-center justify-center gap-0.5 mt-0.5">
@@ -149,8 +162,34 @@ export const IntroScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Authentication Options: Google, Apple, Email OTP, and Guest */}
-        <div className="w-full max-w-md mx-auto space-y-4">
+        {/* Authentication Options: Sign In vs Create Account */}
+        <div className="w-full max-w-md mx-auto space-y-3.5">
+          {/* Tabs: Sign in vs Create account */}
+          <div className="flex rounded-2xl bg-gray-100 dark:bg-[#131722] p-1 border border-gray-200/60 dark:border-[#1e2638]">
+            <button
+              type="button"
+              onClick={() => handleTabChange('signin')}
+              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                activeTab === 'signin'
+                  ? 'bg-white dark:bg-[#1e263c] text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('signup')}
+              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                activeTab === 'signup'
+                  ? 'bg-white dark:bg-[#1e263c] text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Create account
+            </button>
+          </div>
+
           {errorMessage && (
             <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-center gap-2 animate-shake">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -158,9 +197,9 @@ export const IntroScreen: React.FC = () => {
             </div>
           )}
 
-          {/* Email OTP Form */}
-          <form onSubmit={handleEmailSubmit} className="space-y-2.5">
-            <div className="relative">
+          {/* Email Form */}
+          <form onSubmit={handleEmailSubmit} className="space-y-2">
+            <div>
               <input
                 type="email"
                 value={email}
@@ -170,8 +209,13 @@ export const IntroScreen: React.FC = () => {
                 autoComplete="email"
                 required
                 disabled={isLoading || !!oauthLoading}
-                className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm disabled:opacity-50"
+                className="w-full px-5 py-3 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm disabled:opacity-50"
               />
+              {activeTab === 'signup' && (
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 ml-1">
+                  We'll email you a 6-digit code.
+                </p>
+              )}
             </div>
 
             <button
@@ -186,7 +230,7 @@ export const IntroScreen: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <span>Continue with Email</span>
+                  <span>{activeTab === 'signin' ? 'Sign in with Email' : 'Create Account with Email'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -194,9 +238,9 @@ export const IntroScreen: React.FC = () => {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center my-3">
+          <div className="flex items-center my-2">
             <div className="flex-1 h-px bg-gray-200 dark:bg-[#232c44]" />
-            <span className="px-3 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+            <span className="px-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
               or
             </span>
             <div className="flex-1 h-px bg-gray-200 dark:bg-[#232c44]" />
@@ -209,7 +253,7 @@ export const IntroScreen: React.FC = () => {
               type="button"
               onClick={() => handleOAuth('google')}
               disabled={isLoading || !!oauthLoading}
-              className="w-full py-3 px-4 rounded-full bg-gray-100 dark:bg-[#131722] hover:bg-gray-200 dark:hover:bg-[#1e2638] text-gray-800 dark:text-gray-200 font-semibold text-xs transition-all flex items-center justify-center gap-2 border border-gray-200/50 dark:border-[#1e2638] cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 px-4 rounded-full bg-gray-100 dark:bg-[#131722] hover:bg-gray-200 dark:hover:bg-[#1e2638] text-gray-800 dark:text-gray-200 font-semibold text-xs transition-all flex items-center justify-center gap-2 border border-gray-200/50 dark:border-[#1e2638] cursor-pointer disabled:opacity-50"
             >
               {oauthLoading === 'google' ? (
                 <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
@@ -236,26 +280,22 @@ export const IntroScreen: React.FC = () => {
               <span>Google</span>
             </button>
 
-            {/* Apple */}
+            {/* Apple (Disabled with Coming soon per specification) */}
             <button
               type="button"
-              onClick={() => handleOAuth('apple')}
-              disabled={isLoading || !!oauthLoading}
-              className="w-full py-3 px-4 rounded-full bg-gray-100 dark:bg-[#131722] hover:bg-gray-200 dark:hover:bg-[#1e2638] text-gray-800 dark:text-gray-200 font-semibold text-xs transition-all flex items-center justify-center gap-2 border border-gray-200/50 dark:border-[#1e2638] cursor-pointer disabled:opacity-50"
+              disabled
+              title="Apple sign in coming soon"
+              className="w-full py-2.5 px-4 rounded-full bg-gray-100/60 dark:bg-[#131722]/50 text-gray-400 dark:text-gray-500 font-semibold text-xs flex items-center justify-center gap-1.5 border border-dashed border-gray-200 dark:border-[#1e2638] cursor-not-allowed opacity-60"
             >
-              {oauthLoading === 'apple' ? (
-                <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-              ) : (
-                <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.85.94-2.93-1 .04-2.22.67-2.91 1.48-.61.7-1.14 1.81-1 2.87 1.12.09 2.26-.59 2.97-1.42z" />
-                </svg>
-              )}
-              <span>Apple</span>
+              <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.85.94-2.93-1 .04-2.22.67-2.91 1.48-.61.7-1.14 1.81-1 2.87 1.12.09 2.26-.59 2.97-1.42z" />
+              </svg>
+              <span>Apple (Coming soon)</span>
             </button>
           </div>
 
           {/* Guest Mode Demo Link */}
-          <div className="text-center pt-1">
+          <div className="text-center pt-0.5">
             <button
               type="button"
               onClick={enterGuestMode}
@@ -267,8 +307,8 @@ export const IntroScreen: React.FC = () => {
           </div>
 
           {/* Terms & Privacy */}
-          <p className="text-[10px] sm:text-[11px] text-center text-gray-400 dark:text-gray-500 leading-relaxed pt-2">
-            By proceeding, you confirm that you agree to the{' '}
+          <p className="text-[10px] text-center text-gray-400 dark:text-gray-500 leading-relaxed">
+            By proceeding, you agree to the{' '}
             <span className="underline underline-offset-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer">
               Terms of Service
             </span>{' '}

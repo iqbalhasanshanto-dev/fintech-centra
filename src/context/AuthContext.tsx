@@ -8,15 +8,19 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 // ---------------------------------------------------------------------------
 
 export type AuthState =
-  | 'loading'     // Cold start resolving session (splash screen)
-  | 'signedOut'   // Landing screen (Google, Apple, Email OTP)
-  | 'otp'         // 6-digit OTP verification screen
-  | 'onboarding'  // Setup wizard (Profile info, currency, theme, categories)
-  | 'locked'      // App lock screen (PIN lock)
-  | 'app'         // Authenticated user in the app
-  | 'guest';      // Local-only demo user
+  | 'loading'           // Cold start resolving session (splash screen)
+  | 'signedOut'         // Landing screen (Sign in / Create account)
+  | 'otp'               // 6-digit OTP verification screen
+  | 'onboarding'        // Setup wizard (Profile info, currency, theme, categories)
+  | 'locked'            // App lock screen (PIN lock)
+  | 'app'               // Authenticated user in the app
+  | 'guest'             // Local-only demo user
+  | 'accountIncomplete' // Email sign-in when account onboarding is incomplete
+  | 'noAccountFound'    // OAuth sign-in when no completed account exists
+  | 'profileError';     // Profile fetch failed -> Safe retry screen
 
 export type AuthView = AuthState;
+export type AuthMode = 'signin' | 'signup';
 
 interface AuthContextType {
   user: UserProfile;
@@ -24,13 +28,16 @@ interface AuthContextType {
   isGuest: boolean;
   isLockedByPin: boolean;
   authView: AuthState;
+  authMode: AuthMode;
   pendingEmail: string;
   setPendingEmail: (email: string) => void;
+  setAuthMode: (mode: AuthMode) => void;
   setAuthView: (view: AuthState) => void;
-  sendOtp: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  sendOtp: (email: string, mode?: AuthMode) => Promise<{ ok: boolean; error?: string }>;
   verifyOtp: (email: string, token: string) => Promise<{ ok: boolean; error?: string }>;
   resendOtp: (email: string) => Promise<{ ok: boolean; error?: string }>;
-  signInWithOAuth: (provider: 'google' | 'apple') => Promise<void>;
+  signInWithOAuth: (provider: 'google' | 'apple', mode?: AuthMode) => Promise<void>;
+  retryProfileFetch: () => Promise<void>;
   enterGuestMode: () => void;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<UserProfile>) => void;
@@ -56,6 +63,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const GUEST_FLAG_KEY = 'centra_is_guest_v2';
+const INTENT_STORAGE_KEY = 'centra_auth_intent';
 
 // ---------------------------------------------------------------------------
 // Provider
@@ -67,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [isLockedByPin, setIsLockedByPin] = useState<boolean>(false);
   const [pendingEmail, setPendingEmail] = useState<string>('');
+  const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [authView, setAuthView] = useState<AuthState>('loading');
 
   const lastUserIdRef = useRef<string | null>(null);
@@ -86,33 +95,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     lastUserIdRef.current = userId;
 
-    // Check onboarding status once from Supabase profile
+    // Read and clear stored OAuth intent if present
+    const storedIntent = localStorage.getItem(INTENT_STORAGE_KEY) as AuthMode | null;
+    if (storedIntent) {
+      localStorage.removeItem(INTENT_STORAGE_KEY);
+    }
+    const effectiveMode = storedIntent || authMode;
+
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('id, onboarding_completed, name, email, avatar_url, base_currency')
         .eq('id', userId)
         .maybeSingle();
 
-      await CentraDB.syncFromSupabase(userId, userEmail, userName);
-      const currentUser = CentraDB.getUser();
-      setUser(currentUser);
+      if (profileErr) {
+        console.warn('Profile fetch error from Supabase:', profileErr);
+        setAuthView('profileError');
+        return;
+      }
+
+      // If user has completed onboarding, go straight to main app
+      if (profile?.onboarding_completed) {
+        await CentraDB.syncFromSupabase(userId, userEmail, userName);
+        const currentUser = CentraDB.getUser();
+        setUser(currentUser);
+        setIsAuthenticated(true);
+        setIsGuest(false);
+        setAuthView('app');
+        return;
+      }
+
+      // Account onboarding is not complete
       setIsAuthenticated(true);
       setIsGuest(false);
 
-      if (profile?.onboarding_completed) {
-        setAuthView('app');
+      if (effectiveMode === 'signin') {
+        const isOAuth =
+          session.user.app_metadata?.provider === 'google' ||
+          session.user.app_metadata?.provider === 'apple';
+
+        if (isOAuth) {
+          // Google/Apple user on sign-in with no completed account
+          setAuthView('noAccountFound');
+        } else {
+          // Email user on sign-in with incomplete account
+          setAuthView('accountIncomplete');
+        }
       } else {
+        // Sign-up intent: proceed into onboarding wizard
+        if (!profile) {
+          await CentraDB.createBlankUserData(userId, userEmail, userName);
+        }
+        setUser(CentraDB.getUser());
         setAuthView('onboarding');
       }
     } catch (err) {
       console.warn('Failed to resolve user profile:', err);
-      // Fallback: stay authenticated and proceed to app
-      setIsAuthenticated(true);
-      setIsGuest(false);
-      setAuthView('app');
+      setAuthView('profileError');
     }
-  }, []);
+  }, [authMode]);
+
+  // -------------------------------------------------------------------------
+  // Retry profile fetch (for ProfileErrorScreen)
+  // -------------------------------------------------------------------------
+  const retryProfileFetch = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await handleSession(session);
+      } else {
+        setAuthView('signedOut');
+      }
+    } catch {
+      setAuthView('profileError');
+    }
+  };
 
   // -------------------------------------------------------------------------
   // Cold start initialization
@@ -158,10 +216,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isSupabaseConfigured()) return;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Hand off asynchronously via setTimeout to avoid awaiting in callback
       setTimeout(() => {
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-          // Skip redundant full syncs if user hasn't changed and already active
           if (lastUserIdRef.current === session.user.id && (authView === 'app' || authView === 'guest')) {
             return;
           }
@@ -191,9 +247,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   // -------------------------------------------------------------------------
-  // Send Email OTP
+  // Send Email OTP (Distinct Sign in vs Create account)
   // -------------------------------------------------------------------------
-  const sendOtp = async (email: string): Promise<{ ok: boolean; error?: string }> => {
+  const sendOtp = async (email: string, mode?: AuthMode): Promise<{ ok: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return { ok: false, error: 'Please enter a valid email address.' };
@@ -203,20 +259,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ok: false, error: 'Supabase backend is not configured.' };
     }
 
+    const currentMode = mode || authMode;
+    const shouldCreate = currentMode === 'signup';
+
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
-          shouldCreateUser: true,
+          shouldCreateUser: shouldCreate,
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
       if (error) {
+        if (import.meta.env.DEV) {
+          console.log('[Dev Auth] signInWithOtp response error:', {
+            mode: currentMode,
+            shouldCreateUser: shouldCreate,
+            status: (error as any).status,
+            name: error.name,
+            message: error.message,
+          });
+        }
+
+        // On Sign in mode, never reveal account enumeration:
+        // If user does not exist (status 422 or signup prevented message), treat as neutral success
+        const isUserNotFoundOrSignupPrevented =
+          !shouldCreate &&
+          ((error as any).status === 422 ||
+            (error as any).code === 'otp_disabled' ||
+            (error as any).code === 'user_not_found' ||
+            error.message?.toLowerCase().includes('signups not allowed') ||
+            error.message?.toLowerCase().includes('user not found'));
+
+        if (isUserNotFoundOrSignupPrevented) {
+          setPendingEmail(cleanEmail);
+          setAuthMode('signin');
+          setAuthView('otp');
+          return { ok: true };
+        }
+
         return { ok: false, error: error.message };
       }
 
       setPendingEmail(cleanEmail);
+      setAuthMode(currentMode);
       setAuthView('otp');
       return { ok: true };
     } catch (err: any) {
@@ -250,13 +337,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { ok: false, error: error.message };
       }
 
-      if (data.session) {
-        await handleSession(data.session);
-      } else {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session) {
-          await handleSession(sessionData.session);
-        }
+      const activeSession = data.session || (await supabase.auth.getSession()).data.session;
+      if (activeSession) {
+        await handleSession(activeSession);
       }
 
       return { ok: true };
@@ -269,16 +352,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Resend OTP
   // -------------------------------------------------------------------------
   const resendOtp = async (email: string): Promise<{ ok: boolean; error?: string }> => {
-    return sendOtp(email);
+    return sendOtp(email, authMode);
   };
 
   // -------------------------------------------------------------------------
-  // OAuth (Google / Apple)
+  // OAuth (Google / Apple) with intent tracking
   // -------------------------------------------------------------------------
-  const signInWithOAuth = async (provider: 'google' | 'apple') => {
+  const signInWithOAuth = async (provider: 'google' | 'apple', mode?: AuthMode) => {
     if (!isSupabaseConfigured()) {
       throw new Error('Supabase backend is not configured.');
     }
+
+    const currentMode = mode || authMode;
+    // Store intent in localStorage to survive the OAuth redirect
+    localStorage.setItem(INTENT_STORAGE_KEY, currentMode);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -287,7 +374,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
 
-    if (error) throw error;
+    if (error) {
+      localStorage.removeItem(INTENT_STORAGE_KEY);
+      throw error;
+    }
   };
 
   // -------------------------------------------------------------------------
@@ -316,7 +406,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Clear all centra_* localStorage keys and local cache
     CentraDB.clearAllData();
     setUser(CentraDB.getUser());
     lastUserIdRef.current = null;
@@ -324,6 +413,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsGuest(false);
     setIsLockedByPin(false);
     setPendingEmail('');
+    setAuthMode('signin');
     setAuthView('signedOut');
   };
 
@@ -421,7 +511,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const completeOnboarding = async () => {
     if (user?.id) {
-      await CentraDB.markOnboardingCompleted(user.id);
+      const ok = await CentraDB.markOnboardingCompleted(user.id);
+      if (!ok) {
+        throw new Error('Failed to save completed setup status. Please retry.');
+      }
       setUser(prev => ({ ...prev, onboardingCompleted: true }));
     }
     setIsAuthenticated(true);
@@ -436,13 +529,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isGuest,
         isLockedByPin,
         authView,
+        authMode,
         pendingEmail,
         setPendingEmail,
+        setAuthMode,
         setAuthView,
         sendOtp,
         verifyOtp,
         resendOtp,
         signInWithOAuth,
+        retryProfileFetch,
         enterGuestMode,
         logout,
         updateUser,

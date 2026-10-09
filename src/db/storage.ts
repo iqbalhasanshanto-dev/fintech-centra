@@ -281,19 +281,40 @@ export const CentraDB = {
   saveUser: async (user: UserProfile) => {
     cache.user = user;
     safeSet(STORAGE_KEYS.USER, user);
-    if (isSupabaseConfigured()) {
+    if (isSupabaseConfigured() && user.id) {
       try {
-        await supabase.from('profiles').upsert({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          avatar_url: user.avatarUrl,
-          base_currency: user.baseCurrency,
-          onboarding_completed: user.onboardingCompleted ?? false,
+        const updates: Record<string, any> = {
           updated_at: new Date().toISOString(),
-        });
+        };
+        if (user.name !== undefined) updates.name = user.name;
+        if (user.email !== undefined) updates.email = user.email;
+        if (user.avatarUrl !== undefined) updates.avatar_url = user.avatarUrl;
+        if (user.baseCurrency !== undefined) updates.base_currency = user.baseCurrency;
+        // Never downgrade onboarding_completed from true to false
+        if (user.onboardingCompleted === true) {
+          updates.onboarding_completed = true;
+        }
+
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('id, onboarding_completed')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (existing) {
+          if (existing.onboarding_completed) {
+            delete updates.onboarding_completed;
+          }
+          await supabase.from('profiles').update(updates).eq('id', user.id);
+        } else {
+          await supabase.from('profiles').insert({
+            id: user.id,
+            ...updates,
+            onboarding_completed: user.onboardingCompleted ?? false,
+          });
+        }
       } catch (err) {
-        console.warn('Supabase saveUser sync failed:', err);
+        console.warn('Supabase saveUser targeted update failed:', err);
       }
     }
   },
@@ -552,15 +573,23 @@ export const CentraDB = {
 
     if (isSupabaseConfigured()) {
       try {
-        await supabase.from('profiles').upsert({
-          id: userId,
-          name: userProfile.name || null,
-          email: userProfile.email || null,
-          avatar_url: userProfile.avatarUrl || null,
-          base_currency: userProfile.baseCurrency || null,
-          onboarding_completed: false,
-          updated_at: new Date().toISOString(),
-        });
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('id, onboarding_completed')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (!existing) {
+          await supabase.from('profiles').insert({
+            id: userId,
+            name: userProfile.name || null,
+            email: userProfile.email || null,
+            avatar_url: userProfile.avatarUrl || null,
+            base_currency: userProfile.baseCurrency || null,
+            onboarding_completed: false,
+            updated_at: new Date().toISOString(),
+          });
+        }
 
         if (categories.length > 0) {
           await supabase.from('categories').upsert(categories.map(c => mapCategoryToDb(c, userId)));
@@ -574,42 +603,52 @@ export const CentraDB = {
   },
 
   // Mark onboarding completed in cache, localStorage and Supabase
-  markOnboardingCompleted: async (userId: string) => {
+  markOnboardingCompleted: async (userId: string): Promise<boolean> => {
     if (cache.user) {
       cache.user = { ...cache.user, onboardingCompleted: true };
       safeSet(STORAGE_KEYS.USER, cache.user);
     }
     if (isSupabaseConfigured() && userId) {
       try {
-        await supabase.from('profiles').update({
+        const { error } = await supabase.from('profiles').update({
           onboarding_completed: true,
           updated_at: new Date().toISOString(),
         }).eq('id', userId);
+        if (error) {
+          console.error('Supabase markOnboardingCompleted failed:', error);
+          return false;
+        }
       } catch (err) {
         console.warn('Supabase markOnboardingCompleted failed:', err);
+        return false;
       }
     }
+    return true;
   },
 
   // Sync entire state from Supabase if user is logged in
-  syncFromSupabase: async (userId: string, userEmail?: string, userName?: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) return false;
+  syncFromSupabase: async (userId: string, userEmail?: string, userName?: string): Promise<{ ok: boolean; profile?: any; error?: any }> => {
+    if (!isSupabaseConfigured()) return { ok: true };
 
     try {
       // 1. Check if user profile exists
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (!profileData) {
-        // First login for this user (including Google / Apple OAuth): create genuinely blank rows!
-        await CentraDB.createBlankUserData(userId, userEmail, userName);
-        return true;
+      if (profileError) {
+        console.warn('Profile fetch error from Supabase:', profileError);
+        return { ok: false, error: profileError };
       }
 
-      // Profile exists: update user profile
+      if (!profileData) {
+        // Return profileData as null without forcing creation
+        return { ok: true, profile: null };
+      }
+
+      // Profile exists: update user profile cache
       cache.user = {
         id: profileData.id,
         name: profileData.name || userName || '',
@@ -701,10 +740,10 @@ export const CentraDB = {
         safeSet(STORAGE_KEYS.SETTINGS, cache.settings);
       }
 
-      return true;
+      return { ok: true, profile: profileData };
     } catch (err) {
       console.warn('Error syncing from Supabase:', err);
-      return false;
+      return { ok: false, error: err };
     }
   },
 
