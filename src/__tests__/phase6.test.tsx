@@ -11,8 +11,10 @@ import { AddActionModal } from '../components/modals/AddActionModal';
 import { AddAccountModal } from '../components/modals/AddAccountModal';
 import { FirstAccountScreen } from '../components/onboarding/FirstAccountScreen';
 import { GuestBanner } from '../components/layout/GuestBanner';
+import { SettingsScreen } from '../components/settings/SettingsScreen';
 import { SUPPORTED_CURRENCIES } from '../utils/currencies';
-import { Category, Account } from '../types';
+import { EXCHANGE_RATES_TO_USD } from '../utils/formatters';
+import { Category, Account, Goal } from '../types';
 
 function createDefaultChainable() {
   const queryResult = { data: [], error: null };
@@ -439,8 +441,22 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
 
     // Click "Create account to enable cloud sync." in GuestBanner
     const createBtn = screen.getByRole('button', { name: /Create account to enable cloud sync/i });
+    fireEvent.click(createBtn);
+
+    // ConfirmModal should appear
+    expect(screen.getByText('Create a real account? Your demo data will be discarded.')).toBeInTheDocument();
+
+    // 1. Cancel preserves guest data
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' });
+    fireEvent.click(cancelBtn);
+    expect(localStorage.getItem('centra:guest:custom_data')).toBe('test_data');
+    expect(authContextRef.isGuest).toBe(true);
+
+    // 2. Click create again and confirm
+    fireEvent.click(createBtn);
+    const confirmBtn = screen.getByRole('button', { name: 'Create Account' });
     await act(async () => {
-      fireEvent.click(createBtn);
+      fireEvent.click(confirmBtn);
     });
 
     // Verify guest namespace was cleared
@@ -545,5 +561,124 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
 
     // Both match SUPPORTED_CURRENCIES and each other exactly
     expect(firstAccountCurrencies).toEqual(addAccountCurrencies);
+  });
+
+  it('10. Contributing to a goal when goal_contribution category does not exist yet creates it and uses its UUID', async () => {
+    CentraDB.setActiveUser('user_goal_cat_test');
+    CentraDB.saveUser({
+      id: 'user_goal_cat_test',
+      name: 'Goal User',
+      email: 'goal@example.com',
+      baseCurrency: 'USD',
+      onboardingCompleted: true,
+      createdAt: new Date().toISOString(),
+    });
+
+    const acc: Account = {
+      id: 'acc_goal_donor',
+      name: 'Checking Donor',
+      type: 'checking',
+      balance: 1000,
+      currency: 'USD',
+      accountNumberMasked: '•••• 1234',
+      bankName: 'Test Bank',
+      color: '#6366F1',
+      isPrimary: true,
+    };
+    const goal: Goal = {
+      id: 'goal_test_1',
+      name: 'New Car',
+      icon: 'Target',
+      color: '#10B981',
+      targetAmount: 5000,
+      currentAmount: 0,
+      targetDate: '2026-12-31',
+      startDate: '2026-01-01',
+    };
+    await CentraDB.saveAccounts([acc]);
+    await CentraDB.saveGoals([goal]);
+    // Save empty categories (no goal_contribution category exists!)
+    await CentraDB.saveCategories([]);
+
+    let financeContextRef: any = null;
+    const TestConsumer: React.FC = () => {
+      financeContextRef = useFinance();
+      return <div>Ready</div>;
+    };
+
+    render(
+      <FinanceProvider userId="user_goal_cat_test">
+        <TestConsumer />
+      </FinanceProvider>
+    );
+
+    // Contribute to goal
+    await act(async () => {
+      await financeContextRef.contributeToGoal('goal_test_1', 100, 'acc_goal_donor');
+    });
+
+    // Verify system category was created
+    const categoriesAfter = CentraDB.getCategories();
+    const goalCat = categoriesAfter.find(c => c.systemKey === 'goal_contribution');
+    expect(goalCat).toBeDefined();
+    expect(goalCat?.id).not.toBe('goal_contribution');
+    expect(goalCat?.id).toBeTruthy();
+
+    // Verify transaction uses that exact UUID
+    const txs = CentraDB.getTransactions();
+    expect(txs.length).toBe(1);
+    expect(txs[0].categoryId).toBe(goalCat!.id);
+    expect(txs[0].categoryId).not.toBe('goal_contribution');
+  });
+
+  it('11. Every currency in SUPPORTED_CURRENCIES has an exchange rate and only supported currencies can be selected in onboarding, Add Account, and Settings', () => {
+    // 1. Every code in SUPPORTED_CURRENCIES has a valid positive exchange rate
+    expect(SUPPORTED_CURRENCIES.length).toBeGreaterThan(0);
+    for (const currency of SUPPORTED_CURRENCIES) {
+      const rate = EXCHANGE_RATES_TO_USD[currency.code];
+      expect(rate).toBeDefined();
+      expect(typeof rate).toBe('number');
+      expect(rate).toBeGreaterThan(0);
+    }
+
+    // 2. Onboarding (FirstAccountScreen) only lists SUPPORTED_CURRENCIES
+    const { container: firstContainer, unmount: unmountFirst } = render(
+      <AuthProvider>
+        <FirstAccountScreen onBack={() => {}} onContinue={() => {}} onSkip={() => {}} />
+      </AuthProvider>
+    );
+    const firstSelect = firstContainer.querySelector('select') as HTMLSelectElement;
+    const firstCodes = Array.from(firstSelect.options).map(o => o.value);
+    expect(firstCodes).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
+    // Verify no extraneous currency can be selected
+    expect(firstCodes).not.toContain('XYZ');
+    expect(firstCodes).not.toContain('BRL');
+    unmountFirst();
+
+    // 3. Add Account only lists SUPPORTED_CURRENCIES
+    const { container: addContainer, unmount: unmountAdd } = render(
+      <FinanceProvider userId="guest">
+        <AddAccountModal isOpen={true} onClose={() => {}} />
+      </FinanceProvider>
+    );
+    const addSelect = addContainer.querySelector('select') as HTMLSelectElement;
+    const addCodes = Array.from(addSelect.options).map(o => o.value);
+    expect(addCodes).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
+    expect(addCodes).not.toContain('XYZ');
+    expect(addCodes).not.toContain('BRL');
+    unmountAdd();
+
+    // 4. Settings only lists SUPPORTED_CURRENCIES
+    const { unmount: unmountSettings } = render(
+      <FinanceProvider userId="guest">
+        <SettingsScreen />
+      </FinanceProvider>
+    );
+    const settingsCurrencySelect = screen.getByDisplayValue(/USD/i).closest('select') as HTMLSelectElement;
+    const settingsCodes = Array.from(settingsCurrencySelect.options).map(o => o.value).filter(Boolean);
+    expect(settingsCodes).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
+    expect(settingsCodes).not.toContain('XYZ');
+    expect(settingsCodes).not.toContain('BRL');
+    unmountSettings();
   });
 });

@@ -582,7 +582,27 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   };
 
   const addTransaction = async (txData: Omit<Transaction, 'id'>): Promise<Transaction> => {
-    const res = await executeOperation(state => applyAddTransaction(state, txData));
+    let finalTxData = txData;
+    if (!txData.categoryId) {
+      let uncategorizedCat = latestStateRef.current.categories.find(c => c.systemKey === 'uncategorized');
+      if (!uncategorizedCat) {
+        const refreshed = await CentraDB.ensureSystemCategories(userId);
+        setCategories(refreshed);
+        latestStateRef.current = { ...latestStateRef.current, categories: refreshed };
+        uncategorizedCat = refreshed.find(c => c.systemKey === 'uncategorized');
+      }
+      if (!uncategorizedCat) {
+        throw new Error('Missing system category for uncategorized transaction');
+      }
+      finalTxData = {
+        ...txData,
+        categoryId: uncategorizedCat.id,
+        categoryName: uncategorizedCat.name,
+        categoryIcon: uncategorizedCat.icon,
+        categoryColor: uncategorizedCat.color,
+      };
+    }
+    const res = await executeOperation(state => applyAddTransaction(state, finalTxData));
     return res.createdTransaction!;
   };
 
@@ -648,6 +668,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     note?: string
   ): Promise<boolean> => {
     try {
+      let transferCat = latestStateRef.current.categories.find(c => c.systemKey === 'transfer');
+      if (!transferCat) {
+        const refreshed = await CentraDB.ensureSystemCategories(userId);
+        setCategories(refreshed);
+        latestStateRef.current = { ...latestStateRef.current, categories: refreshed };
+        transferCat = refreshed.find(c => c.systemKey === 'transfer');
+      }
+      if (!transferCat) {
+        throw new Error('Missing system category for transfer');
+      }
+
       await executeOperation(state => applyTransferFunds(state, { fromId, toId, amount, note }));
       return true;
     } catch (err) {
@@ -711,6 +742,18 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   const contributeToGoal = async (goalId: string, amount: number, accountId?: string): Promise<void> => {
     const accId = accountId || latestStateRef.current.accounts.find(a => a.isPrimary)?.id || latestStateRef.current.accounts[0]?.id;
     if (!accId) throw new Error('No account available for goal contribution');
+
+    let goalCat = latestStateRef.current.categories.find(c => c.systemKey === 'goal_contribution');
+    if (!goalCat) {
+      const refreshed = await CentraDB.ensureSystemCategories(userId);
+      setCategories(refreshed);
+      latestStateRef.current = { ...latestStateRef.current, categories: refreshed };
+      goalCat = refreshed.find(c => c.systemKey === 'goal_contribution');
+    }
+    if (!goalCat) {
+      throw new Error('Missing system category for goal contribution');
+    }
+
     await executeOperation(state => applyContributeToGoal(state, { goalId, amount, accountId: accId }));
   };
 

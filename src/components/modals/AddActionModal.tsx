@@ -15,6 +15,7 @@ import { AddAccountModal } from './AddAccountModal';
 import { formatCurrency } from '../../utils/formatters';
 import { getCurrencyInfo } from '../../utils/currencies';
 import { todayLocalDateKey } from '../../utils/dates';
+import { CentraDB } from '../../db/storage';
 
 interface AddActionModalProps {
   isOpen: boolean;
@@ -201,7 +202,21 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       return false;
     }
 
-    const selectedCat = categories.find(c => c.id === categoryId);
+    let finalCategoryId = categoryId;
+    let selectedCat = categories.find(c => c.id === categoryId);
+    if (!finalCategoryId || !selectedCat) {
+      let uncategorizedCat = categories.find(c => c.systemKey === 'uncategorized');
+      if (!uncategorizedCat) {
+        const refreshed = await CentraDB.ensureSystemCategories();
+        uncategorizedCat = refreshed.find(c => c.systemKey === 'uncategorized');
+      }
+      if (!uncategorizedCat) {
+        setErrorMessage('Missing system category for uncategorized transaction.');
+        return false;
+      }
+      finalCategoryId = uncategorizedCat.id;
+      selectedCat = uncategorizedCat;
+    }
     const selectedAcc = accounts.find(a => a.id === accountId);
     const type = activeTab === 'income' ? 'income' : 'expense';
 
@@ -209,10 +224,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       type,
       amount: parsedAmount,
       currency: selectedAcc?.currency || settings.baseCurrency || 'USD',
-      categoryId: categoryId || 'uncategorized',
-      categoryName: selectedCat?.name || 'General',
-      categoryIcon: selectedCat?.icon || 'HelpCircle',
-      categoryColor: selectedCat?.color || '#6366f1',
+      categoryId: finalCategoryId,
+      categoryName: selectedCat.name,
+      categoryIcon: selectedCat.icon,
+      categoryColor: selectedCat.color,
       accountId,
       accountName: selectedAcc?.name || 'Primary Account',
       merchant: merchant.trim() || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
@@ -291,17 +306,24 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
     if (deposit > 0 && accountId) {
       const selectedDepositAcc = accounts.find(a => a.id === accountId);
-      const goalContribCat = categories.find(c => c.systemKey === 'goal_contribution')
-        || categories.find(c => c.systemKey === 'transfer');
+      let goalContribCat = categories.find(c => c.systemKey === 'goal_contribution');
+      if (!goalContribCat) {
+        const refreshed = await CentraDB.ensureSystemCategories();
+        goalContribCat = refreshed.find(c => c.systemKey === 'goal_contribution');
+      }
+      if (!goalContribCat) {
+        setErrorMessage('Missing system category for goal contribution.');
+        return;
+      }
 
       await addTransaction({
         type: 'expense',
         amount: deposit,
         currency: selectedDepositAcc?.currency || settings.baseCurrency || 'USD',
-        categoryId: goalContribCat ? goalContribCat.id : 'goal_contribution',
-        categoryName: goalContribCat?.name || 'Goal Funding',
-        categoryIcon: goalContribCat?.icon || 'Target',
-        categoryColor: goalContribCat?.color || '#6366f1',
+        categoryId: goalContribCat.id,
+        categoryName: goalContribCat.name || 'Goal Funding',
+        categoryIcon: goalContribCat.icon || 'Target',
+        categoryColor: goalContribCat.color || '#6366f1',
         accountId: accountId,
         accountName: selectedDepositAcc?.name || 'Primary Account',
         merchant: `Goal: ${goalName.trim()}`,

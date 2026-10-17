@@ -44,6 +44,7 @@ export const SettingsScreen: React.FC = () => {
   const [showDeleteDataModal, setShowDeleteDataModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showUpgradeConfirm, setShowUpgradeConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -205,7 +206,7 @@ export const SettingsScreen: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={createAccountFromGuest}
+            onClick={() => setShowUpgradeConfirm(true)}
             className="shrink-0 bg-black dark:bg-white text-white dark:text-black hover:opacity-90 font-bold"
           >
             Create Full Account
@@ -834,6 +835,16 @@ export const SettingsScreen: React.FC = () => {
         message="Log out of Centra?"
         type="danger"
         confirmText="Log Out"
+      />
+
+      <ConfirmModal
+        isOpen={showUpgradeConfirm}
+        onClose={() => setShowUpgradeConfirm(false)}
+        onConfirm={createAccountFromGuest}
+        title="Create a Real Account"
+        message="Create a real account? Your demo data will be discarded."
+        type="warning"
+        confirmText="Create Account"
       />
 
     </div>
