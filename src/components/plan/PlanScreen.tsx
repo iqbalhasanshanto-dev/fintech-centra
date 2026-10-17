@@ -14,6 +14,7 @@ import { Goal } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { CircularProgress } from '../ui/CircularProgress';
 import { Modal } from '../ui/Modal';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
 import { formatCurrency, calculateGoalPace } from '../../utils/formatters';
 
@@ -30,6 +31,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
   const [fundAmount, setFundAmount] = useState('');
   const [fundSourceAccountId, setFundSourceAccountId] = useState(accounts[0]?.id || '');
   const [activeGoalMenuId, setActiveGoalMenuId] = useState<string | null>(null);
+  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
   const handleContribute = (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,9 +195,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                       <div className="absolute right-0 top-12 w-32 bg-white dark:bg-[#121A2C] rounded-xl shadow-2xl border border-gray-200 dark:border-[#232C45] py-1 z-30 animate-fade-in text-xs">
                         <button
                           onClick={() => {
-                            if (window.confirm(`Delete "${goal.name}"?`)) {
-                              deleteGoal(goal.id);
-                            }
+                            setGoalToDelete(goal);
                             setActiveGoalMenuId(null);
                           }}
                           className="w-full px-3.5 py-2.5 text-left text-rose-600 dark:text-rose-400 hover:bg-gray-100 dark:hover:bg-[#1A233A] flex items-center space-x-2 font-semibold cursor-pointer"
@@ -394,6 +394,21 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
           </Button>
         </form>
       </Modal>
+
+      <ConfirmModal
+        isOpen={goalToDelete !== null}
+        onClose={() => setGoalToDelete(null)}
+        onConfirm={() => {
+          if (goalToDelete) {
+            deleteGoal(goalToDelete.id);
+            setGoalToDelete(null);
+          }
+        }}
+        title="Delete Goal"
+        message={goalToDelete ? `Delete "${goalToDelete.name}"?` : ''}
+        type="danger"
+        confirmText="Delete"
+      />
 
     </div>
   );

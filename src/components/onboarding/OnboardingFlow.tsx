@@ -5,6 +5,7 @@ import { FirstAccountScreen } from './FirstAccountScreen';
 import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { SpendingCategoriesScreen } from './SpendingCategoriesScreen';
 import { AccountReadyScreen } from './AccountReadyScreen';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 export type OnboardingStep =
   | 'profile'
@@ -25,6 +26,7 @@ const ONBOARDING_STEP_STORAGE_KEY = 'centra_onboarding_step';
 
 export const OnboardingFlow: React.FC = () => {
   const { logout } = useAuth();
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(() => {
     const savedStep = localStorage.getItem(ONBOARDING_STEP_STORAGE_KEY);
@@ -62,11 +64,7 @@ export const OnboardingFlow: React.FC = () => {
         >
           {currentStep === 'profile' && (
             <ProfileInfoScreen
-              onBack={() => {
-                if (window.confirm('Sign out and exit setup?')) {
-                  logout();
-                }
-              }}
+              onBack={() => setShowExitConfirm(true)}
               onContinue={() => goToStep('first-account', 'forward')}
             />
           )}
@@ -96,6 +94,16 @@ export const OnboardingFlow: React.FC = () => {
           {currentStep === 'ready' && <AccountReadyScreen />}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        onConfirm={logout}
+        title="Exit Setup"
+        message="Sign out and exit setup?"
+        type="danger"
+        confirmText="Sign Out"
+      />
     </div>
   );
 };

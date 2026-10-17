@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Home,
   PieChart,
@@ -11,6 +11,7 @@ import {
 import { TabType } from './BottomNav';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import brandLogo from '../../assets/brand/logo.png';
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenAddAction,
 }) => {
   const { user, logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const navItems: { id: TabType; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'home', label: 'Dashboard', icon: Home },
@@ -133,11 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
           <button
-            onClick={() => {
-              if (window.confirm('Log out of Centra?')) {
-                logout();
-              }
-            }}
+            onClick={() => setShowLogoutConfirm(true)}
             className="p-1.5 text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
             title="Log out of session"
             aria-label="Log out"
@@ -146,6 +144,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={logout}
+        title="Log Out"
+        message="Log out of Centra?"
+        type="danger"
+        confirmText="Log Out"
+      />
 
     </aside>
   );

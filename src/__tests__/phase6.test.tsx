@@ -8,8 +8,10 @@ import { supabase } from '../lib/supabaseClient';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { FinanceProvider, useFinance } from '../context/FinanceContext';
 import { AddActionModal } from '../components/modals/AddActionModal';
+import { AddAccountModal } from '../components/modals/AddAccountModal';
 import { FirstAccountScreen } from '../components/onboarding/FirstAccountScreen';
 import { GuestBanner } from '../components/layout/GuestBanner';
+import { SUPPORTED_CURRENCIES } from '../utils/currencies';
 import { Category, Account } from '../types';
 
 function createDefaultChainable() {
@@ -340,10 +342,33 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     const transferTabBtn = screen.getByRole('button', { name: 'Transfer' });
     fireEvent.click(transferTabBtn);
 
-    // Transfer shows requirement for at least 2 accounts
+    // Transfer shows requirement for at least 2 accounts with 0 accounts
     expect(screen.getByText('Transfer requires at least 2 accounts')).toBeInTheDocument();
 
     unmount();
+
+    // Verify empty state also appears with exactly 1 account
+    const singleAcc: Account = {
+      id: 'acc_single',
+      name: 'Solo Account',
+      type: 'checking',
+      balance: 100,
+      currency: 'USD',
+      accountNumberMasked: '•••• 0001',
+      bankName: 'Solo Bank',
+      color: '#6366F1',
+    };
+    await CentraDB.saveAccounts([singleAcc]);
+
+    const { unmount: unmountSingle } = render(
+      <FinanceProvider userId="guest">
+        <AddActionModal isOpen={true} onClose={() => {}} defaultTab="transfer" />
+      </FinanceProvider>
+    );
+    expect(screen.getByText('Transfer requires at least 2 accounts')).toBeInTheDocument();
+    expect(screen.getByText(/You currently have 1 connected account/i)).toBeInTheDocument();
+
+    unmountSingle();
 
     // Now add 2 accounts and verify fromAccountId !== toAccountId
     const acc1: Account = {
@@ -426,5 +451,99 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     expect(authContextRef.authMode).toBe('signup');
     expect(authContextRef.authView).toBe('signedOut');
     expect(authContextRef.isGuest).toBe(false);
+  });
+
+  it('8. completeOnboarding sets onboarding_completed only when DB write succeeds and checks error', async () => {
+    CentraDB.setActiveUser('user_onboarding_check');
+    CentraDB.saveUser({
+      id: 'user_onboarding_check',
+      name: 'Onboard User',
+      email: 'onboard@example.com',
+      baseCurrency: 'USD',
+      onboardingCompleted: false,
+      createdAt: new Date().toISOString(),
+    });
+
+    let authContextRef: any = null;
+    const TestConsumer: React.FC = () => {
+      authContextRef = useAuth();
+      return <div>Ready</div>;
+    };
+
+    // 1. Mock failure on markOnboardingCompleted
+    vi.spyOn(CentraDB, 'markOnboardingCompleted').mockResolvedValueOnce(false);
+
+    const { unmount } = render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
+    );
+
+    // Should throw error if DB update fails
+    await expect(
+      act(async () => {
+        await authContextRef.completeOnboarding();
+      })
+    ).rejects.toThrow('Failed to save completed setup status');
+
+    expect(authContextRef.user.onboardingCompleted).toBe(false);
+    unmount();
+
+    // 2. Mock success on markOnboardingCompleted
+    vi.spyOn(CentraDB, 'markOnboardingCompleted').mockResolvedValueOnce(true);
+
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
+    );
+
+    await act(async () => {
+      await authContextRef.completeOnboarding();
+    });
+
+    expect(authContextRef.user.onboardingCompleted).toBe(true);
+    expect(authContextRef.authView).toBe('app');
+  });
+
+  it('9. FirstAccountScreen and AddAccountModal render the exact same restricted currency list', () => {
+    CentraDB.setActiveUser('user_curr_test');
+    CentraDB.saveUser({
+      id: 'user_curr_test',
+      name: 'Currency Test User',
+      email: 'curr@example.com',
+      baseCurrency: 'USD',
+      onboardingCompleted: false,
+      createdAt: new Date().toISOString(),
+    });
+
+    const { container: firstContainer, unmount: unmountFirst } = render(
+      <AuthProvider>
+        <FirstAccountScreen onBack={() => {}} onContinue={() => {}} onSkip={() => {}} />
+      </AuthProvider>
+    );
+
+    // Get currency options in FirstAccountScreen
+    const firstAccountSelect = firstContainer.querySelector('select') as HTMLSelectElement;
+    expect(firstAccountSelect).not.toBeNull();
+    const firstAccountCurrencies = Array.from(firstAccountSelect.options).map(o => o.value);
+    expect(firstAccountCurrencies).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
+
+    unmountFirst();
+
+    // Render AddAccountModal
+    const { container: addContainer } = render(
+      <FinanceProvider userId="guest">
+        <AddAccountModal isOpen={true} onClose={() => {}} />
+      </FinanceProvider>
+    );
+
+    const addAccountSelect = addContainer.querySelector('select') as HTMLSelectElement;
+    expect(addAccountSelect).not.toBeNull();
+    const addAccountCurrencies = Array.from(addAccountSelect.options).map(o => o.value);
+    expect(addAccountCurrencies).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
+
+    // Both match SUPPORTED_CURRENCIES and each other exactly
+    expect(firstAccountCurrencies).toEqual(addAccountCurrencies);
   });
 });

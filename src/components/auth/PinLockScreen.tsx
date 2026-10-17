@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Shield, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 export const PinLockScreen: React.FC = () => {
   const { unlockPin, logout } = useAuth();
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,13 +81,21 @@ export const PinLockScreen: React.FC = () => {
         {/* Sign-out escape hatch */}
         <button
           type="button"
-          onClick={() => {
-            if (window.confirm('Sign out of Centra?')) logout();
-          }}
+          onClick={() => setShowSignOutConfirm(true)}
           className="w-full mt-3 py-2 rounded-xl text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
         >
           Sign out instead
         </button>
+
+        <ConfirmModal
+          isOpen={showSignOutConfirm}
+          onClose={() => setShowSignOutConfirm(false)}
+          onConfirm={logout}
+          title="Sign Out"
+          message="Sign out of Centra?"
+          type="danger"
+          confirmText="Sign Out"
+        />
 
       </div>
     </div>

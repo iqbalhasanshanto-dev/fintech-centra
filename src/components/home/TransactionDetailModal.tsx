@@ -3,6 +3,7 @@ import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check } from '
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatFullDate, formatTime } from '../../utils/formatters';
 
@@ -22,6 +23,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   const [merchant, setMerchant] = useState('');
   const [note, setNote] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Reset form when transaction opens
   React.useEffect(() => {
@@ -49,16 +51,20 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this transaction? This will revert account balances.')) {
-      deleteTransaction(transaction.id);
-      onClose();
-    }
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    deleteTransaction(transaction.id);
+    setShowDeleteConfirm(false);
+    onClose();
   };
 
   const isIncome = transaction.type === 'income';
   const isExpense = transaction.type === 'expense';
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit Transaction' : 'Transaction Details'}>
       <div className="space-y-5">
         
@@ -256,5 +262,15 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
       </div>
     </Modal>
+    <ConfirmModal
+      isOpen={showDeleteConfirm}
+      onClose={() => setShowDeleteConfirm(false)}
+      onConfirm={handleConfirmDelete}
+      title="Delete Transaction"
+      message="Are you sure you want to delete this transaction? This will revert account balances."
+      type="danger"
+      confirmText="Delete"
+    />
+    </>
   );
 };

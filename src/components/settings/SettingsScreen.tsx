@@ -21,6 +21,7 @@ import {
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../ui/Modal';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
 import { Switch } from '../ui/Switch';
 import { CurrencyCode } from '../../types';
@@ -41,6 +42,8 @@ export const SettingsScreen: React.FC = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showDeleteDataModal, setShowDeleteDataModal] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -96,12 +99,14 @@ export const SettingsScreen: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  const handleResetGuestData = async () => {
-    if (window.confirm('Reset all transactions, accounts, and budgets to default demo state?')) {
-      await resetAllData();
-      setStatusToast('Application reset to seed data.');
-      setTimeout(() => setStatusToast(null), 3500);
-    }
+  const handleResetGuestData = () => {
+    setShowResetConfirm(true);
+  };
+
+  const handleConfirmResetGuestData = async () => {
+    await resetAllData();
+    setStatusToast('Application reset to seed data.');
+    setTimeout(() => setStatusToast(null), 3500);
   };
 
   const handleConfirmDeleteAllData = async () => {
@@ -528,9 +533,7 @@ export const SettingsScreen: React.FC = () => {
             variant="destructive"
             size="md"
             onClick={() => {
-              if (window.confirm('Log out of Centra?')) {
-                logout();
-              }
+              setShowLogoutConfirm(true);
             }}
             icon={<LogOut className="w-4 h-4" />}
           >
@@ -812,6 +815,26 @@ export const SettingsScreen: React.FC = () => {
           <span>✓ {statusToast}</span>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={handleConfirmResetGuestData}
+        title="Reset Demo Data"
+        message="Reset all transactions, accounts, and budgets to default demo state?"
+        type="warning"
+        confirmText="Reset Data"
+      />
+
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={logout}
+        title="Log Out"
+        message="Log out of Centra?"
+        type="danger"
+        confirmText="Log Out"
+      />
 
     </div>
   );
