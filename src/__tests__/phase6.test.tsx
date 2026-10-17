@@ -12,6 +12,7 @@ import { AddAccountModal } from '../components/modals/AddAccountModal';
 import { FirstAccountScreen } from '../components/onboarding/FirstAccountScreen';
 import { GuestBanner } from '../components/layout/GuestBanner';
 import { SettingsScreen } from '../components/settings/SettingsScreen';
+import { ProfileInfoScreen } from '../components/onboarding/ProfileInfoScreen';
 import { SUPPORTED_CURRENCIES } from '../utils/currencies';
 import { EXCHANGE_RATES_TO_USD } from '../utils/formatters';
 import { Category, Account, Goal } from '../types';
@@ -564,6 +565,48 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
   });
 
   it('10. Contributing to a goal when goal_contribution category does not exist yet creates it and uses its UUID', async () => {
+    (supabase.from as any).mockImplementation((table: string) => {
+      const chainable = createDefaultChainable();
+      if (table === 'settings') {
+        chainable.maybeSingle = vi.fn().mockResolvedValue({
+          data: { user_id: 'user_goal_cat_test', base_currency: 'USD' },
+          error: null,
+        });
+      }
+      if (table === 'accounts') {
+        const accData = [{
+          id: 'acc_goal_donor',
+          user_id: 'user_goal_cat_test',
+          name: 'Checking Donor',
+          type: 'checking',
+          balance: 1000,
+          currency: 'USD',
+          account_number_masked: '•••• 1234',
+          bank_name: 'Test Bank',
+          color: '#6366F1',
+          is_primary: true,
+        }];
+        chainable.order = vi.fn().mockResolvedValue({ data: accData, error: null });
+        chainable.then = (resolve: any) => Promise.resolve({ data: accData, error: null }).then(resolve);
+      }
+      if (table === 'goals') {
+        const goalData = [{
+          id: 'goal_test_1',
+          user_id: 'user_goal_cat_test',
+          name: 'New Car',
+          icon: 'Target',
+          color: '#10B981',
+          target_amount: 5000,
+          current_amount: 0,
+          target_date: '2026-12-31',
+          start_date: '2026-01-01',
+        }];
+        chainable.order = vi.fn().mockResolvedValue({ data: goalData, error: null });
+        chainable.then = (resolve: any) => Promise.resolve({ data: goalData, error: null }).then(resolve);
+      }
+      return chainable;
+    });
+
     CentraDB.setActiveUser('user_goal_cat_test');
     CentraDB.saveUser({
       id: 'user_goal_cat_test',
@@ -573,6 +616,8 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       onboardingCompleted: true,
       createdAt: new Date().toISOString(),
     });
+    localStorage.setItem('centra:user_goal_cat_test:last_synced_at', new Date().toISOString());
+    await CentraDB.saveSettings({ ...CentraDB.getSettings(), baseCurrency: 'USD' });
 
     const acc: Account = {
       id: 'acc_goal_donor',
@@ -612,6 +657,11 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       </FinanceProvider>
     );
 
+    // Wait for hydration before using context
+    await waitFor(() => {
+      expect(financeContextRef).not.toBeNull();
+    });
+
     // Contribute to goal
     await act(async () => {
       await financeContextRef.contributeToGoal('goal_test_1', 100, 'acc_goal_donor');
@@ -641,13 +691,24 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       expect(rate).toBeGreaterThan(0);
     }
 
-    // 2. Onboarding (FirstAccountScreen) only lists SUPPORTED_CURRENCIES
-    const { container: firstContainer, unmount: unmountFirst } = render(
+    // 2. Onboarding account (FirstAccountScreen) only lists SUPPORTED_CURRENCIES
+    CentraDB.setActiveUser('user_curr_test_11');
+    CentraDB.saveUser({
+      id: 'user_curr_test_11',
+      name: 'Currency Test User',
+      email: 'curr11@example.com',
+      baseCurrency: 'USD',
+      onboardingCompleted: false,
+      createdAt: new Date().toISOString(),
+    });
+
+    const { unmount: unmountFirst } = render(
       <AuthProvider>
         <FirstAccountScreen onBack={() => {}} onContinue={() => {}} onSkip={() => {}} />
       </AuthProvider>
     );
-    const firstSelect = firstContainer.querySelector('select') as HTMLSelectElement;
+    const firstSelect = screen.getByLabelText(/Currency/i) as HTMLSelectElement;
+    expect(firstSelect).toBeInTheDocument();
     const firstCodes = Array.from(firstSelect.options).map(o => o.value);
     expect(firstCodes).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
     // Verify no extraneous currency can be selected
@@ -656,25 +717,52 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     unmountFirst();
 
     // 3. Add Account only lists SUPPORTED_CURRENCIES
-    const { container: addContainer, unmount: unmountAdd } = render(
+    const { unmount: unmountAdd } = render(
       <FinanceProvider userId="guest">
         <AddAccountModal isOpen={true} onClose={() => {}} />
       </FinanceProvider>
     );
-    const addSelect = addContainer.querySelector('select') as HTMLSelectElement;
+    const addSelect = screen.getByLabelText(/Currency/i) as HTMLSelectElement;
+    expect(addSelect).toBeInTheDocument();
     const addCodes = Array.from(addSelect.options).map(o => o.value);
     expect(addCodes).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
     expect(addCodes).not.toContain('XYZ');
     expect(addCodes).not.toContain('BRL');
     unmountAdd();
 
-    // 4. Settings only lists SUPPORTED_CURRENCIES
-    const { unmount: unmountSettings } = render(
-      <FinanceProvider userId="guest">
-        <SettingsScreen />
-      </FinanceProvider>
+    // 4. Onboarding profile (ProfileInfoScreen) custom dropdown only lists SUPPORTED_CURRENCIES
+    const { unmount: unmountProfile } = render(
+      <AuthProvider>
+        <ProfileInfoScreen onBack={() => {}} onContinue={() => {}} />
+      </AuthProvider>
     );
-    const settingsCurrencySelect = screen.getByDisplayValue(/USD/i).closest('select') as HTMLSelectElement;
+    const currencyDropdownBtn = screen.getByRole('button', { name: /Base Currency/i });
+    expect(currencyDropdownBtn).toBeInTheDocument();
+    fireEvent.click(currencyDropdownBtn);
+
+    const currencyOptionButtons = screen.getAllByRole('button').filter(btn => {
+      return SUPPORTED_CURRENCIES.some(c => btn.textContent?.includes(c.code));
+    });
+    const profileCodes = currencyOptionButtons.map(btn => {
+      const match = SUPPORTED_CURRENCIES.find(c => btn.textContent?.includes(c.code));
+      return match ? match.code : '';
+    }).filter(Boolean);
+    expect(profileCodes).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
+    expect(profileCodes).not.toContain('XYZ');
+    expect(profileCodes).not.toContain('BRL');
+    unmountProfile();
+
+    // 5. Settings only lists SUPPORTED_CURRENCIES
+    const { unmount: unmountSettings } = render(
+      <AuthProvider>
+        <FinanceProvider userId="guest">
+          <SettingsScreen />
+        </FinanceProvider>
+      </AuthProvider>
+    );
+    const baseCurrencyLabel = screen.getByText('Base Currency');
+    const settingsCurrencySelect = baseCurrencyLabel.closest('div.flex')!.parentElement!.querySelector('select') as HTMLSelectElement;
+    expect(settingsCurrencySelect).toBeInTheDocument();
     const settingsCodes = Array.from(settingsCurrencySelect.options).map(o => o.value).filter(Boolean);
     expect(settingsCodes).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
     expect(settingsCodes).not.toContain('XYZ');

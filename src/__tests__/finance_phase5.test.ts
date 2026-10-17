@@ -21,6 +21,9 @@ import {
 import { CentraDB } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
 import { Account, Budget, Category, Goal, NotificationItem, Transaction } from '../types';
+import React from 'react';
+import { render, waitFor } from '@testing-library/react';
+import { FinanceProvider, useFinance } from '../context/FinanceContext';
 
 vi.mock('../lib/supabaseClient', () => ({
   supabase: {
@@ -76,6 +79,36 @@ function createMockState(overrides?: Partial<FinanceState>): FinanceState {
     type: 'expense',
   };
 
+  const transferCategory: Category = {
+    id: 'b1a2c3d4-e5f6-4a1b-8c2d-3e4f5a6b7c8d',
+    name: 'Transfer',
+    icon: 'ArrowLeftRight',
+    color: '#6B7280',
+    type: 'expense',
+    systemKey: 'transfer',
+    hidden: true,
+  };
+
+  const goalContribCategory: Category = {
+    id: 'c2d3e4f5-a6b7-4c1d-9e2f-4a5b6c7d8e9f',
+    name: 'Goal Contribution',
+    icon: 'Target',
+    color: '#10B981',
+    type: 'expense',
+    systemKey: 'goal_contribution',
+    hidden: true,
+  };
+
+  const uncategorizedCategory: Category = {
+    id: 'd3e4f5a6-b7c8-4d1e-af3a-5b6c7d8e9f0a',
+    name: 'Uncategorized',
+    icon: 'HelpCircle',
+    color: '#9CA3AF',
+    type: 'expense',
+    systemKey: 'uncategorized',
+    hidden: true,
+  };
+
   const budget: Budget = {
     id: 'bud_dining',
     categoryId: 'cat_dining',
@@ -105,7 +138,7 @@ function createMockState(overrides?: Partial<FinanceState>): FinanceState {
   return {
     accounts: [baseAccount, bdtAccount, creditAccount],
     transactions: [],
-    categories: [category],
+    categories: [category, transferCategory, goalContribCategory, uncategorizedCategory],
     goals: [goal],
     budgets: [budget],
     notifications: [],
@@ -644,6 +677,117 @@ describe('Phase 5: Financial Logic & Correctness', () => {
       const csvStr = CentraDB.exportTransactionsCSV();
       // Should be valid CSV format with quoted headers
       expect(csvStr).toContain('"ID","Date","Type","Merchant/Payee"');
+    });
+  });
+
+  describe('13. System Categories Dynamic Resolution & Fallback Elimination', () => {
+    it('(a) applyTransferFunds and applyContributeToGoal return a clear error when system category is missing', () => {
+      const stateWithoutSysCats = createMockState({ categories: [] });
+
+      const transferRes = applyTransferFunds(stateWithoutSysCats, {
+        fromId: 'acc_usd',
+        toId: 'acc_bdt',
+        amount: 50,
+      });
+      expect(transferRes.ok).toBe(false);
+      expect(transferRes.error).toBe('Missing system category for transfer');
+
+      const contribRes = applyContributeToGoal(stateWithoutSysCats, {
+        goalId: 'goal_vacation',
+        amount: 50,
+        accountId: 'acc_usd',
+      });
+      expect(contribRes.ok).toBe(false);
+      expect(contribRes.error).toBe('Missing system category for goal contribution');
+    });
+
+    it('(b) FinanceContext-level wrapper calls ensureSystemCategories first so transfer and goal contribution succeed', async () => {
+      CentraDB.setActiveUser('user_new_phase5');
+      CentraDB.saveUser({
+        id: 'user_new_phase5',
+        name: 'New User',
+        email: 'new@example.com',
+        baseCurrency: 'USD',
+        onboardingCompleted: true,
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem('centra:user_new_phase5:last_synced_at', new Date().toISOString());
+      CentraDB.saveSettings({ ...CentraDB.getSettings(), baseCurrency: 'USD' });
+
+      const acc1: Account = {
+        id: 'acc_p5_1',
+        name: 'Main Checking',
+        type: 'checking',
+        balance: 1000,
+        currency: 'USD',
+        accountNumberMasked: '•••• 1111',
+        bankName: 'Bank A',
+        color: '#6366F1',
+        isPrimary: true,
+      };
+      const acc2: Account = {
+        id: 'acc_p5_2',
+        name: 'Savings',
+        type: 'savings',
+        balance: 500,
+        currency: 'USD',
+        accountNumberMasked: '•••• 2222',
+        bankName: 'Bank B',
+        color: '#10B981',
+      };
+      const goal1: Goal = {
+        id: 'goal_p5_1',
+        name: 'Emergency Fund',
+        icon: 'Target',
+        color: '#10B981',
+        targetAmount: 5000,
+        currentAmount: 0,
+        startDate: '2026-01-01',
+        targetDate: '2026-12-31',
+      };
+
+      await CentraDB.saveAccounts([acc1, acc2]);
+      await CentraDB.saveGoals([goal1]);
+      await CentraDB.saveCategories([]); // ZERO categories in database!
+
+      let financeContextRef: any = null;
+      const TestConsumer = () => {
+        financeContextRef = useFinance();
+        return React.createElement('div', null, 'Ready');
+      };
+
+      render(React.createElement(FinanceProvider as any, { userId: 'user_new_phase5' }, React.createElement(TestConsumer)));
+
+      await waitFor(() => {
+        expect(financeContextRef).not.toBeNull();
+      });
+
+      // 1. Transfer funds when transfer system category is missing -> auto ensures system category
+      const transferSuccess = await financeContextRef.transferFunds('acc_p5_1', 'acc_p5_2', 100, 'Test transfer');
+      expect(transferSuccess).toBe(true);
+
+      const categoriesAfterTransfer = CentraDB.getCategories();
+      const transferCat = categoriesAfterTransfer.find(c => c.systemKey === 'transfer');
+      expect(transferCat).toBeDefined();
+      expect(transferCat?.id).toBeTruthy();
+      expect(transferCat?.id).not.toBe('transfer');
+
+      const transferTx = CentraDB.getTransactions().find(t => t.type === 'transfer');
+      expect(transferTx).toBeDefined();
+      expect(transferTx?.categoryId).toBe(transferCat!.id);
+
+      // 2. Goal contribution when goal_contribution system category does not exist -> auto ensures system category
+      await financeContextRef.contributeToGoal('goal_p5_1', 150, 'acc_p5_1');
+
+      const categoriesAfterGoal = CentraDB.getCategories();
+      const goalCat = categoriesAfterGoal.find(c => c.systemKey === 'goal_contribution');
+      expect(goalCat).toBeDefined();
+      expect(goalCat?.id).toBeTruthy();
+      expect(goalCat?.id).not.toBe('goal_contribution');
+
+      const goalTx = CentraDB.getTransactions().find(t => t.goalId === 'goal_p5_1');
+      expect(goalTx).toBeDefined();
+      expect(goalTx?.categoryId).toBe(goalCat!.id);
     });
   });
 });

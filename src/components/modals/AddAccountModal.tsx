@@ -174,10 +174,11 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         {/* Currency & Opening Balance */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+            <label htmlFor="add-account-currency" className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
               Currency
             </label>
             <select
+              id="add-account-currency"
               value={currency}
               onChange={e => setCurrency(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500"

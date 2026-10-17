@@ -210,12 +210,38 @@ export function applyAddTransaction(
     newBalance = addMoney(targetAccount.balance, txAmount, targetAccount.currency);
   }
 
+  let finalCategoryId = txInput.categoryId;
+  let finalCategoryName = txInput.categoryName;
+  let finalCategoryIcon = txInput.categoryIcon;
+  let finalCategoryColor = txInput.categoryColor;
+
+  if (!finalCategoryId || finalCategoryId === 'uncategorized') {
+    const uncat = state.categories.find(c => c.systemKey === 'uncategorized');
+    if (!uncat) {
+      return {
+        ok: false,
+        nextState: state,
+        mutated: {},
+        notificationsToEmit: [],
+        error: 'Missing system category for uncategorized transaction',
+      };
+    }
+    finalCategoryId = uncat.id;
+    finalCategoryName = uncat.name;
+    finalCategoryIcon = uncat.icon;
+    finalCategoryColor = uncat.color;
+  }
+
   const newTxId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const newTx: Transaction = {
     ...txInput,
     id: newTxId,
     amount: txAmount,
     currency: txInput.currency || targetAccount.currency,
+    categoryId: finalCategoryId,
+    categoryName: finalCategoryName,
+    categoryIcon: finalCategoryIcon,
+    categoryColor: finalCategoryColor,
     resultingBalance: newBalance,
     date: txInput.date || new Date().toISOString(),
   };
@@ -551,8 +577,7 @@ export function applyTransferFunds(
   const updatedTo: Account = { ...toAcc, balance: newToBalance };
 
   const txId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tx_tr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-  const transferCat = state.categories.find(c => c.systemKey === 'transfer')
-    || state.categories.find(c => c.name.toLowerCase().includes('transfer'));
+  const transferCat = state.categories.find(c => c.systemKey === 'transfer');
   if (!transferCat) {
     return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Missing system category for transfer' };
   }
@@ -681,8 +706,7 @@ export function applyContributeToGoal(
   };
 
   const txId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tx_goal_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-  const goalCat = state.categories.find(c => c.systemKey === 'goal_contribution')
-    || state.categories.find(c => c.name.toLowerCase().includes('goal'));
+  const goalCat = state.categories.find(c => c.systemKey === 'goal_contribution');
   if (!goalCat) {
     return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Missing system category for goal contribution' };
   }
