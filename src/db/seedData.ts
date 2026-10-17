@@ -458,10 +458,8 @@ export const INITIAL_SETTINGS: AppSettings = {
   baseCurrency: null,
   privacyMode: false,
   security: {
-    biometricEnabled: true,
-    pinLockEnabled: true,
-    pinCode: '1234',
-    lastLogin: new Date().toISOString(),
+    biometricEnabled: false,
+    pinLockEnabled: false,
   },
   notifications: {
     transactionAlerts: true,

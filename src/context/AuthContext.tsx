@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { UserProfile, Category } from '../types';
 import { CentraDB, CATEGORY_STYLE_MAP } from '../db/storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import { hasDevicePin, verifyDevicePin } from '../utils/pinLock';
 
 // ---------------------------------------------------------------------------
 // Types & State Machine
@@ -41,7 +42,7 @@ interface AuthContextType {
   enterGuestMode: () => void;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<UserProfile>) => void;
-  unlockPin: (pin: string) => boolean;
+  unlockPin: (pin: string) => Promise<{ ok: boolean; error?: string }>;
   lockApp: () => void;
   saveOnboardingProfile: (data: {
     name: string;
@@ -60,7 +61,7 @@ interface AuthContextType {
 // Context
 // ---------------------------------------------------------------------------
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const GUEST_FLAG_KEY = 'centra_is_guest_v2';
 const INTENT_STORAGE_KEY = 'centra_auth_intent';
@@ -79,6 +80,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authView, setAuthView] = useState<AuthState>('loading');
 
   const lastUserIdRef = useRef<string | null>(null);
+
+  const lockApp = useCallback(() => {
+    setIsLockedByPin(true);
+    setAuthView('locked');
+  }, []);
 
   // -------------------------------------------------------------------------
   // Handle authenticated session and route appropriately
@@ -177,7 +183,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(currentUser);
         setIsAuthenticated(true);
         setIsGuest(false);
-        setAuthView('app');
+
+        // Cold start lock trigger
+        const settings = CentraDB.getSettings();
+        if (settings.security.pinLockEnabled && hasDevicePin(userId)) {
+          lockApp();
+        } else {
+          setAuthView('app');
+        }
         return;
       }
 
@@ -481,23 +494,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const unlockPin = (pin: string): boolean => {
-    const settings = CentraDB.getSettings();
-    const targetPin = settings.security.pinCode || '1234';
-    if (pin === targetPin) {
+  const unlockPin = async (pin: string): Promise<{ ok: boolean; error?: string }> => {
+    const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id || 'guest';
+    const result = await verifyDevicePin(activeUid, pin);
+    if (result.ok) {
       setIsLockedByPin(false);
-      return true;
+      setAuthView('app');
+      return { ok: true };
     }
-    return false;
+    if (result.maxAttemptsExceeded) {
+      await logout();
+      return { ok: false, error: result.error };
+    }
+    return { ok: false, error: result.error };
   };
 
-  const lockApp = () => {
-    const settings = CentraDB.getSettings();
-    if (settings.security.pinLockEnabled) {
-      setIsLockedByPin(true);
-      setAuthView('locked');
-    }
-  };
+  // Background lock trigger (5 minutes timeout when app/tab is backgrounded)
+  useEffect(() => {
+    let hiddenTimestamp: number | null = null;
+    const BACKGROUND_TIMEOUT_MS = 5 * 60 * 1000;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenTimestamp = Date.now();
+      } else if (document.visibilityState === 'visible') {
+        if (hiddenTimestamp && Date.now() - hiddenTimestamp >= BACKGROUND_TIMEOUT_MS) {
+          const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id;
+          if (activeUid && activeUid !== 'guest') {
+            const settings = CentraDB.getSettings();
+            if (settings.security.pinLockEnabled && hasDevicePin(activeUid)) {
+              lockApp();
+            }
+          }
+        }
+        hiddenTimestamp = null;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // -------------------------------------------------------------------------
   // Onboarding Helpers

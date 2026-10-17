@@ -346,7 +346,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
         <form onSubmit={handleContribute} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-              Deposit Amount ({settings.baseCurrency || 'BDT'})
+              Deposit Amount ({settings.baseCurrency || 'USD'})
             </label>
             <input
               type="number"

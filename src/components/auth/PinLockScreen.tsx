@@ -6,18 +6,24 @@ export const PinLockScreen: React.FC = () => {
   const { unlockPin, logout } = useAuth();
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     if (!pin) {
       setErrorMsg('Please enter your PIN.');
       return;
     }
-    const ok = unlockPin(pin);
-    if (!ok) {
-      setErrorMsg('Incorrect PIN. Please try again.');
-      setPin('');
+    setIsSubmitting(true);
+    try {
+      const res = await unlockPin(pin);
+      if (!res.ok) {
+        setErrorMsg(res.error || 'Incorrect PIN. Please try again.');
+        setPin('');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

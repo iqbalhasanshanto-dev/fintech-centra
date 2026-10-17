@@ -21,7 +21,7 @@ import {
   INITIAL_SETTINGS,
 } from './seedData';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
-import { OutboxQueue } from './outbox';
+import { OutboxQueue, OutboxItem } from './outbox';
 
 // Helper for namespaced storage keys: centra:{userId}:{entity}
 export function getUserStorageKey(userId: string | null | undefined, entity: string): string {
@@ -62,11 +62,34 @@ export function onSyncStatusChange(callback: (status: SyncStatus) => void): () =
   };
 }
 
+const dataChangeListeners = new Set<() => void>();
+
+export function onDataChanged(callback: () => void): () => void {
+  dataChangeListeners.add(callback);
+  return () => {
+    dataChangeListeners.delete(callback);
+  };
+}
+
+export function notifyDataChanged(): void {
+  dataChangeListeners.forEach(listener => {
+    try {
+      listener();
+    } catch (err) {
+      console.warn('Data change listener error:', err);
+    }
+  });
+}
+
 function safeGet<T>(key: string, fallback: T): T {
   try {
     const item = localStorage.getItem(key);
     if (!item) return fallback;
-    return JSON.parse(item);
+    try {
+      return JSON.parse(item);
+    } catch {
+      return item as unknown as T;
+    }
   } catch (err) {
     console.warn(`Error reading localStorage key ${key}:`, err);
     return fallback;
@@ -353,6 +376,60 @@ export const CATEGORY_STYLE_MAP: Record<string, { icon: string; color: string; t
   'Salary & Wages': { icon: 'Briefcase', color: '#1FAE71', type: 'income' },
 };
 
+// Merge rule after a successful fetch of an entity:
+// cache = remote records + local records with a pending upsert - records with a pending delete.
+// Remote deletions from other devices remove the local copy.
+function mergeEntityWithOutbox<T extends { id: string }>(
+  entityName: 'accounts' | 'categories' | 'transactions' | 'goals' | 'budgets' | 'notifications',
+  remoteItems: T[],
+  localCacheItems: T[],
+  pendingItems: OutboxItem[]
+): T[] {
+  const pendingForEntity = pendingItems.filter(item => item.entity === entityName);
+  const pendingDeletes = new Set(
+    pendingForEntity.filter(item => item.op === 'delete').map(item => item.recordId)
+  );
+  const pendingUpserts = new Map<string, T>();
+  pendingForEntity
+    .filter(item => item.op === 'upsert')
+    .forEach(item => {
+      const local = localCacheItems.find(loc => loc.id === item.recordId);
+      if (local) {
+        pendingUpserts.set(item.recordId, local);
+      }
+    });
+
+  const result: T[] = [];
+  const seenIds = new Set<string>();
+
+  for (const remote of remoteItems) {
+    if (pendingDeletes.has(remote.id)) {
+      continue; // Remote record was deleted locally: pending delete wins
+    }
+    if (pendingUpserts.has(remote.id)) {
+      result.push(pendingUpserts.get(remote.id)!); // Local pending edit wins over remote
+      seenIds.add(remote.id);
+    } else {
+      result.push(remote);
+      seenIds.add(remote.id);
+    }
+  }
+
+  // Include any local records with pending upserts that do not exist yet in remote
+  for (const [id, localItem] of pendingUpserts) {
+    if (!seenIds.has(id) && !pendingDeletes.has(id)) {
+      result.push(localItem);
+      seenIds.add(id);
+    }
+  }
+
+  return result;
+}
+
+const activeSyncPromisesByUser = new Map<string, Promise<{ ok: boolean; profile?: any; error?: any; throttled?: boolean }>>();
+const lastPullTimestampByUser = new Map<string, number>();
+const PULL_THROTTLE_MS = 30_000;
+
 // Initialize cache for guest mode by default
 reloadCacheForUser(null);
 
@@ -361,6 +438,18 @@ export const CentraDB = {
   getSyncStatus,
   setSyncStatus,
   onSyncStatusChange,
+
+  // Re-hydration Data Change Subscriptions
+  onDataChanged,
+  notifyDataChanged,
+
+  // First-Sync Gating Check (per-user lastSyncedAt marker)
+  hasCachedData: (userId?: string | null): boolean => {
+    const uid = userId || currentActiveUserId || cache.user?.id;
+    if (!uid || uid === 'guest') return true;
+    const lastSynced = safeGet<string | null>(getUserStorageKey(uid, 'last_synced_at'), null);
+    return !!lastSynced;
+  },
 
   // Set active user and load namespaced storage
   setActiveUser: (userId: string | null) => {
@@ -857,7 +946,7 @@ export const CentraDB = {
   },
 
   // ---------------------------------------------------------------------------
-  // OUTBOX PROCESSOR (DRAIN PENDING OFFLINE MUTATIONS)
+  // OUTBOX PROCESSOR (DRAIN PENDING OFFLINE MUTATIONS - UNTHROTTLED)
   // ---------------------------------------------------------------------------
   processOutbox: async (): Promise<{ processed: number; errors: number }> => {
     const userId = getActiveUserId();
@@ -906,202 +995,248 @@ export const CentraDB = {
       setSyncStatus('synced');
     }
 
+    if (processed > 0) {
+      notifyDataChanged();
+    }
+
     return { processed, errors };
   },
 
   // ---------------------------------------------------------------------------
-  // FAIL-SAFE REMOTE SYNC
+  // FAIL-SAFE REMOTE SYNC (THROTTLED PULL WITH IN-FLIGHT GUARD & MERGE RULE)
   // ---------------------------------------------------------------------------
   syncFromSupabase: async (
     userId: string,
     userEmail?: string,
-    userName?: string
-  ): Promise<{ ok: boolean; profile?: any; error?: any }> => {
+    userName?: string,
+    options?: { force?: boolean }
+  ): Promise<{ ok: boolean; profile?: any; error?: any; throttled?: boolean }> => {
     if (!isSupabaseConfigured() || isGuestUser(userId)) {
       return { ok: true };
     }
 
-    // Set active user before syncing
-    currentActiveUserId = userId;
-
-    // Drain outbox first if available
+    // 1. Drain outbox first (unthrottled!)
     await CentraDB.processOutbox();
 
-    try {
-      setSyncStatus('syncing');
-
-      // 1. Fetch Profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (profileError) {
-        console.warn('Profile fetch error from Supabase:', profileError);
-        setSyncStatus('error');
-        return { ok: false, error: profileError };
-      }
-
-      if (!profileData) {
-        return { ok: true, profile: null };
-      }
-
-      cache.user = {
-        id: profileData.id,
-        name: profileData.name || userName || '',
-        email: profileData.email || userEmail || '',
-        avatarUrl: profileData.avatar_url || undefined,
-        baseCurrency: (profileData.base_currency as any) || null,
-        onboardingCompleted: profileData.onboarding_completed ?? false,
-        createdAt: profileData.created_at || new Date().toISOString(),
-      };
-      safeSet(getUserStorageKey(userId, 'user'), cache.user);
-
-      let anyFetchError = false;
-
-      // 2. Fetch Accounts (Never wipe on error)
-      const { data: accountsData, error: accountsError } = await supabase
-        .from('accounts')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (!accountsError && accountsData) {
-        cache.accounts = accountsData.map(mapAccountFromDb);
-        safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
-      } else if (accountsError) {
-        console.warn('Failed to fetch accounts:', accountsError);
-        anyFetchError = true;
-      }
-
-      // 3. Fetch Categories
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (!categoriesError && categoriesData) {
-        cache.categories = categoriesData.map(mapCategoryFromDb);
-        safeSet(getUserStorageKey(userId, 'categories'), cache.categories);
-      } else if (categoriesError) {
-        console.warn('Failed to fetch categories:', categoriesError);
-        anyFetchError = true;
-      }
-
-      // 4. Fetch Transactions
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('date', { ascending: false });
-
-      if (!transactionsError && transactionsData) {
-        cache.transactions = transactionsData.map(mapTransactionFromDb);
-        safeSet(getUserStorageKey(userId, 'transactions'), cache.transactions);
-      } else if (transactionsError) {
-        console.warn('Failed to fetch transactions:', transactionsError);
-        anyFetchError = true;
-      }
-
-      // 5. Fetch Goals
-      const { data: goalsData, error: goalsError } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (!goalsError && goalsData) {
-        cache.goals = goalsData.map(mapGoalFromDb);
-        safeSet(getUserStorageKey(userId, 'goals'), cache.goals);
-      } else if (goalsError) {
-        console.warn('Failed to fetch goals:', goalsError);
-        anyFetchError = true;
-      }
-
-      // 6. Fetch Budgets
-      const { data: budgetsData, error: budgetsError } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (!budgetsError && budgetsData) {
-        cache.budgets = budgetsData.map(mapBudgetFromDb);
-        safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
-      } else if (budgetsError) {
-        console.warn('Failed to fetch budgets:', budgetsError);
-        anyFetchError = true;
-      }
-
-      // 7. Fetch Notifications
-      const { data: notifData, error: notifError } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('timestamp', { ascending: false });
-
-      if (!notifError && notifData) {
-        cache.notifications = notifData.map(mapNotificationFromDb);
-        safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
-      } else if (notifError) {
-        console.warn('Failed to fetch notifications:', notifError);
-        anyFetchError = true;
-      }
-
-      // 8. Fetch Settings
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('settings')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (!settingsError && settingsData) {
-        cache.settings = mapSettingsFromDb(settingsData);
-        safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
-      } else if (!settingsError && !settingsData) {
-        // Missing settings fallback
-        try {
-          await supabase.from('settings').upsert(mapSettingsToDb(INITIAL_SETTINGS, userId), { onConflict: 'user_id' });
-        } catch (settingsInsertErr) {
-          console.warn('Fallback settings insert error:', settingsInsertErr);
-        }
-        cache.settings = INITIAL_SETTINGS;
-        safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
-      } else if (settingsError) {
-        console.warn('Failed to fetch settings:', settingsError);
-        anyFetchError = true;
-      }
-
-      setSyncStatus(anyFetchError ? 'error' : 'synced');
-      return { ok: !anyFetchError, profile: profileData };
-    } catch (err) {
-      console.warn('Error syncing from Supabase:', err);
-      setSyncStatus('error');
-      return { ok: false, error: err };
+    // 2. In-flight guard: prevent concurrent sync executions for the same user
+    const inFlight = activeSyncPromisesByUser.get(userId);
+    if (inFlight) {
+      return inFlight;
     }
+
+    const runSync = async () => {
+      // Throttle only the PULL (30-second cooldown per user, unless forced)
+      const now = Date.now();
+      const lastPull = lastPullTimestampByUser.get(userId) || 0;
+      if (!options?.force && now - lastPull < PULL_THROTTLE_MS) {
+        return { ok: true, throttled: true };
+      }
+
+      currentActiveUserId = userId;
+
+      try {
+        setSyncStatus('syncing');
+
+        // 1. Fetch Profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (profileError) {
+          console.warn('Profile fetch error from Supabase:', profileError);
+          setSyncStatus('error');
+          return { ok: false, error: profileError };
+        }
+
+        if (profileData) {
+          cache.user = {
+            id: profileData.id,
+            name: profileData.name || userName || '',
+            email: profileData.email || userEmail || '',
+            avatarUrl: profileData.avatar_url || undefined,
+            baseCurrency: (profileData.base_currency as any) || null,
+            onboardingCompleted: profileData.onboarding_completed ?? false,
+            createdAt: profileData.created_at || new Date().toISOString(),
+          };
+          safeSet(getUserStorageKey(userId, 'user'), cache.user);
+        }
+
+        let anyFetchError = false;
+        const pending = OutboxQueue.getPending(userId);
+
+        // 2. Fetch Accounts
+        const { data: accountsData, error: accountsError } = await supabase
+          .from('accounts')
+          .select('*')
+          .eq('user_id', userId);
+
+        if (!accountsError && accountsData) {
+          const remote = accountsData.map(mapAccountFromDb);
+          cache.accounts = mergeEntityWithOutbox('accounts', remote, cache.accounts, pending);
+          safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
+        } else if (accountsError) {
+          console.warn('Failed to fetch accounts:', accountsError);
+          anyFetchError = true;
+        }
+
+        // 3. Fetch Categories
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('user_id', userId);
+
+        if (!categoriesError && categoriesData) {
+          const remote = categoriesData.map(mapCategoryFromDb);
+          cache.categories = mergeEntityWithOutbox('categories', remote, cache.categories, pending);
+          safeSet(getUserStorageKey(userId, 'categories'), cache.categories);
+        } else if (categoriesError) {
+          console.warn('Failed to fetch categories:', categoriesError);
+          anyFetchError = true;
+        }
+
+        // 4. Fetch Transactions
+        const { data: transactionsData, error: transactionsError } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', userId)
+          .order('date', { ascending: false });
+
+        if (!transactionsError && transactionsData) {
+          const remote = transactionsData.map(mapTransactionFromDb);
+          cache.transactions = mergeEntityWithOutbox('transactions', remote, cache.transactions, pending);
+          safeSet(getUserStorageKey(userId, 'transactions'), cache.transactions);
+        } else if (transactionsError) {
+          console.warn('Failed to fetch transactions:', transactionsError);
+          anyFetchError = true;
+        }
+
+        // 5. Fetch Goals
+        const { data: goalsData, error: goalsError } = await supabase
+          .from('goals')
+          .select('*')
+          .eq('user_id', userId);
+
+        if (!goalsError && goalsData) {
+          const remote = goalsData.map(mapGoalFromDb);
+          cache.goals = mergeEntityWithOutbox('goals', remote, cache.goals, pending);
+          safeSet(getUserStorageKey(userId, 'goals'), cache.goals);
+        } else if (goalsError) {
+          console.warn('Failed to fetch goals:', goalsError);
+          anyFetchError = true;
+        }
+
+        // 6. Fetch Budgets
+        const { data: budgetsData, error: budgetsError } = await supabase
+          .from('budgets')
+          .select('*')
+          .eq('user_id', userId);
+
+        if (!budgetsError && budgetsData) {
+          const remote = budgetsData.map(mapBudgetFromDb);
+          cache.budgets = mergeEntityWithOutbox('budgets', remote, cache.budgets, pending);
+          safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
+        } else if (budgetsError) {
+          console.warn('Failed to fetch budgets:', budgetsError);
+          anyFetchError = true;
+        }
+
+        // 7. Fetch Notifications
+        const { data: notifData, error: notifError } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .order('timestamp', { ascending: false });
+
+        if (!notifError && notifData) {
+          const remote = notifData.map(mapNotificationFromDb);
+          cache.notifications = mergeEntityWithOutbox('notifications', remote, cache.notifications, pending);
+          safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
+        } else if (notifError) {
+          console.warn('Failed to fetch notifications:', notifError);
+          anyFetchError = true;
+        }
+
+        // 8. Fetch Settings
+        const { data: settingsData, error: settingsError } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        const pendingSettings = pending.find(item => item.entity === 'settings');
+        if (!settingsError && settingsData) {
+          if (!pendingSettings) {
+            cache.settings = mapSettingsFromDb(settingsData);
+            safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
+          }
+        } else if (!settingsError && !settingsData) {
+          if (!pendingSettings) {
+            try {
+              await supabase.from('settings').upsert(mapSettingsToDb(INITIAL_SETTINGS, userId), { onConflict: 'user_id' });
+            } catch (settingsInsertErr) {
+              console.warn('Fallback settings insert error:', settingsInsertErr);
+            }
+            cache.settings = INITIAL_SETTINGS;
+            safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
+          }
+        } else if (settingsError) {
+          console.warn('Failed to fetch settings:', settingsError);
+          anyFetchError = true;
+        }
+
+        if (!anyFetchError) {
+          lastPullTimestampByUser.set(userId, Date.now());
+          safeSet(getUserStorageKey(userId, 'last_synced_at'), new Date().toISOString());
+          setSyncStatus('synced');
+          notifyDataChanged();
+          return { ok: true, profile: profileData };
+        } else {
+          setSyncStatus('error');
+          return { ok: false, profile: profileData };
+        }
+      } catch (err) {
+        console.warn('Error syncing from Supabase:', err);
+        setSyncStatus('error');
+        return { ok: false, error: err };
+      }
+    };
+
+    const syncPromise = runSync().finally(() => {
+      activeSyncPromisesByUser.delete(userId);
+    });
+    activeSyncPromisesByUser.set(userId, syncPromise);
+    return syncPromise;
   },
 
   // ---------------------------------------------------------------------------
   // DATA DELETION & RESET
   // ---------------------------------------------------------------------------
 
-  // Real user: Scoped real DELETE queries on Supabase + clear local storage
+  // Real user: Scoped real DELETE queries on Supabase + clear local storage ONLY on success
   deleteAllUserData: async (userId: string): Promise<{ ok: boolean; error: any }> => {
     if (isGuestUser(userId)) {
       CentraDB.resetToSeedData();
+      notifyDataChanged();
       return { ok: true, error: null };
     }
 
     try {
       setSyncStatus('syncing');
       if (isSupabaseConfigured() && userId) {
-        await supabase.from('transactions').delete().eq('user_id', userId);
-        await supabase.from('budgets').delete().eq('user_id', userId);
-        await supabase.from('goals').delete().eq('user_id', userId);
-        await supabase.from('accounts').delete().eq('user_id', userId);
-        await supabase.from('notifications').delete().eq('user_id', userId);
-        await supabase.from('categories').delete().eq('user_id', userId);
+        const tables = ['transactions', 'budgets', 'goals', 'accounts', 'notifications', 'categories'] as const;
+        for (const table of tables) {
+          const { error } = await supabase.from(table).delete().eq('user_id', userId);
+          if (error) {
+            console.error(`Failed to delete remote records from ${table}:`, error);
+            setSyncStatus('error');
+            return { ok: false, error };
+          }
+        }
       }
 
-      // Clear outbox & local user data
+      // Clear outbox & local user data ONLY if all remote deletions succeeded
       OutboxQueue.clear(userId);
       cache.accounts = [];
       cache.categories = [];
@@ -1118,6 +1253,7 @@ export const CentraDB = {
       safeSet(getUserStorageKey(userId, 'notifications'), []);
 
       setSyncStatus('synced');
+      notifyDataChanged();
       return { ok: true, error: null };
     } catch (err: any) {
       console.error('Failed to delete user data:', err);
@@ -1146,6 +1282,7 @@ export const CentraDB = {
     safeSet(getUserStorageKey('guest', 'notifications'), cache.notifications);
     safeSet(getUserStorageKey('guest', 'settings'), cache.settings);
     OutboxQueue.clear('guest');
+    notifyDataChanged();
   },
 
   // Logout/clear all local data
@@ -1154,6 +1291,8 @@ export const CentraDB = {
     if (userId) {
       OutboxQueue.clear(userId);
     }
+    lastPullTimestampByUser.clear();
+    activeSyncPromisesByUser.clear();
     try {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -1166,7 +1305,9 @@ export const CentraDB = {
     } catch {
       // Ignore
     }
-    reloadCacheForUser('guest');
+    currentActiveUserId = null;
+    reloadCacheForUser(null);
+    notifyDataChanged();
   },
 
   // Seed demo data for testing
@@ -1407,17 +1548,28 @@ export const CentraDB = {
   },
 };
 
-// Global network & visibility listeners for automatic outbox draining
+// Global network & visibility listeners for automatic outbox draining and pull sync
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    CentraDB.processOutbox();
+    CentraDB.processOutbox().then(() => {
+      const activeUid = getActiveUserId();
+      if (activeUid && !isGuestUser(activeUid)) {
+        CentraDB.syncFromSupabase(activeUid);
+      }
+    });
   });
   window.addEventListener('offline', () => {
     setSyncStatus('offline');
   });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      CentraDB.processOutbox();
+      CentraDB.processOutbox().then(() => {
+        const activeUid = getActiveUserId();
+        if (activeUid && !isGuestUser(activeUid)) {
+          CentraDB.syncFromSupabase(activeUid);
+        }
+      });
     }
   });
 }
+

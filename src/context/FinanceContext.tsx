@@ -14,6 +14,8 @@ import {
 import { CentraDB } from '../db/storage';
 import { convertCurrency } from '../utils/formatters';
 import { getPeriodDateRange } from '../utils/dates';
+import { LoadingSplashScreen } from '../components/auth/LoadingSplashScreen';
+import { SyncRetryScreen } from '../components/auth/SyncRetryScreen';
 import brandLogo from '../assets/brand/logo.png';
 
 interface CategoryBreakdownItem {
@@ -88,13 +90,24 @@ interface FinanceContextType {
   clearNotifications: () => void;
 
   updateSettings: (updates: Partial<AppSettings>) => void;
-  resetAllData: () => Promise<void>;
+  resetAllData: () => Promise<{ ok: boolean; error?: any }>;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
-export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isHydrated, setIsHydrated] = useState(false);
+export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: string }> = ({ children, userId: propUserId }) => {
+  const activeUser = CentraDB.getUser();
+  const userId = propUserId || activeUser?.id;
+  const isGuest = !userId || userId === 'guest';
+  const hasCache = CentraDB.hasCachedData(userId);
+
+  // First-sync gating: if real user has no cached data, gate with loading screen until sync completes
+  const [firstSyncState, setFirstSyncState] = useState<'ready' | 'loading' | 'error'>(() => {
+    if (isGuest || hasCache) return 'ready';
+    return 'loading';
+  });
+
+  const [isHydrated, setIsHydrated] = useState(() => isGuest || hasCache);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => CentraDB.getSyncStatus());
 
   const [accounts, setAccounts] = useState<Account[]>(() => CentraDB.getAccounts());
@@ -106,8 +119,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [settings, setSettings] = useState<AppSettings>(() => CentraDB.getSettings());
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('this_month');
 
-  // Hydration and sync status subscriptions (no mount-time bulk overwrite pushes!)
-  useEffect(() => {
+  // Helper to reload state from in-memory cache without triggering any persistence effects
+  const reloadFromCache = React.useCallback(() => {
     setAccounts(CentraDB.getAccounts());
     setTransactions(CentraDB.getTransactions());
     setCategories(CentraDB.getCategories());
@@ -115,13 +128,104 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setBudgets(CentraDB.getBudgets());
     setNotifications(CentraDB.getNotifications());
     setSettings(CentraDB.getSettings());
+  }, []);
+
+  // Sync active user in storage layer when userId changes
+  useEffect(() => {
+    CentraDB.setActiveUser(userId || null);
+    reloadFromCache();
+  }, [userId, reloadFromCache]);
+
+  // Hydration, sync status, and data change subscriptions
+  useEffect(() => {
+    reloadFromCache();
     setIsHydrated(true);
 
-    const unsubscribe = CentraDB.onSyncStatusChange(status => {
+    const unsubscribeData = CentraDB.onDataChanged(() => {
+      reloadFromCache();
+    });
+
+    const unsubscribeSync = CentraDB.onSyncStatusChange(status => {
       setSyncStatus(status);
     });
-    return unsubscribe;
-  }, []);
+
+    return () => {
+      unsubscribeData();
+      unsubscribeSync();
+    };
+  }, [reloadFromCache]);
+
+  // First-sync gating runner: executes when user has no cache on this device
+  useEffect(() => {
+    if (firstSyncState === 'loading' && userId && !isGuest) {
+      let isMounted = true;
+      CentraDB.syncFromSupabase(userId, undefined, undefined, { force: true })
+        .then(res => {
+          if (!isMounted) return;
+          if (res.ok) {
+            reloadFromCache();
+            setIsHydrated(true);
+            setFirstSyncState('ready');
+          } else {
+            // Failed: if still no cache on device, show retry screen
+            if (!CentraDB.hasCachedData(userId)) {
+              setFirstSyncState('error');
+            } else {
+              setIsHydrated(true);
+              setFirstSyncState('ready');
+            }
+          }
+        })
+        .catch(() => {
+          if (!isMounted) return;
+          if (!CentraDB.hasCachedData(userId)) {
+            setFirstSyncState('error');
+          } else {
+            setIsHydrated(true);
+            setFirstSyncState('ready');
+          }
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [firstSyncState, userId, isGuest, reloadFromCache]);
+
+  // Background sync on mount for users who already have cached data
+  useEffect(() => {
+    if (firstSyncState === 'ready' && !isGuest && userId) {
+      CentraDB.syncFromSupabase(userId);
+    }
+  }, [userId, isGuest, firstSyncState]);
+
+  // Reconnect (online) and tab focus (visibilitychange) sync triggers
+  // Outbox drain is immediate; pull sync is subject to in-flight guard and 30s throttle
+  useEffect(() => {
+    if (isGuest || !userId) return;
+
+    const handleOnline = () => {
+      CentraDB.processOutbox().then(() => {
+        CentraDB.syncFromSupabase(userId);
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        CentraDB.processOutbox().then(() => {
+          CentraDB.syncFromSupabase(userId);
+        });
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [userId, isGuest]);
 
   // Theme application
   useEffect(() => {
@@ -723,32 +827,28 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
-  const resetAllData = async () => {
+  const resetAllData = async (): Promise<{ ok: boolean; error?: any }> => {
     const activeUid = CentraDB.getUser()?.id;
     if (!activeUid || activeUid === 'guest') {
       await CentraDB.resetToSeedData();
+      reloadFromCache();
+      return { ok: true, error: null };
     } else {
-      await CentraDB.deleteAllUserData(activeUid);
+      const res = await CentraDB.deleteAllUserData(activeUid);
+      if (res.ok) {
+        reloadFromCache();
+      }
+      return res;
     }
-    setAccounts(CentraDB.getAccounts());
-    setTransactions(CentraDB.getTransactions());
-    setCategories(CentraDB.getCategories());
-    setGoals(CentraDB.getGoals());
-    setBudgets(CentraDB.getBudgets());
-    setNotifications(CentraDB.getNotifications());
-    setSettings(CentraDB.getSettings());
   };
 
   // Render clean loader before hydration completes
-  if (!isHydrated) {
-    return (
-      <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] flex items-center justify-center p-6">
-        <div className="flex flex-col items-center gap-3 animate-pulse">
-          <img src={brandLogo} alt="Centra" className="w-10 h-10 object-contain select-none" />
-          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Loading your finances...</span>
-        </div>
-      </div>
-    );
+  if (firstSyncState === 'loading' || !isHydrated) {
+    return <LoadingSplashScreen />;
+  }
+
+  if (firstSyncState === 'error') {
+    return <SyncRetryScreen onRetry={() => setFirstSyncState('loading')} />;
   }
 
   return (

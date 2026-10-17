@@ -114,7 +114,6 @@ export interface UserProfile {
 export interface SecuritySettings {
   biometricEnabled: boolean;
   pinLockEnabled: boolean;
-  pinCode?: string;
   lastLogin?: string;
 }
 

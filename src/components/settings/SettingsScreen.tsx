@@ -14,7 +14,9 @@ import {
   EyeOff,
   Edit2,
   Camera,
-  Trash2
+  Trash2,
+  Lock,
+  KeyRound
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -24,6 +26,7 @@ import { Switch } from '../ui/Switch';
 import { CurrencyCode } from '../../types';
 import { CentraDB } from '../../db/storage';
 import { ISO_CURRENCIES } from '../../utils/currencies';
+import { hasDevicePin, setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLock';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -31,14 +34,23 @@ export const SettingsScreen: React.FC = () => {
     updateSettings,
     resetAllData
   } = useFinance();
-  const { user, updateUser, logout, isGuest } = useAuth();
+  const { user, updateUser, logout, lockApp, isGuest } = useAuth();
 
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showDeleteDataModal, setShowDeleteDataModal] = useState(false);
-  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // PIN lock setup / disable state
+  const [showSetPinModal, setShowSetPinModal] = useState(false);
+  const [showDisablePinModal, setShowDisablePinModal] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [currentPin, setCurrentPin] = useState('');
+  const [pinModalError, setPinModalError] = useState<string | null>(null);
 
   // Edit Profile Form
   const [profileName, setProfileName] = useState(user.name);
@@ -90,25 +102,61 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const handleConfirmDeleteAllData = async () => {
+    if (deleteConfirmText.trim() !== 'DELETE') return;
     setIsDeleting(true);
+    setDeleteError(null);
     try {
-      await resetAllData();
+      const res = await resetAllData();
+      if (!res.ok) {
+        setDeleteError('Failed to delete remote records from Supabase. Your local data has been preserved.');
+        return;
+      }
       setShowDeleteDataModal(false);
+      setDeleteConfirmText('');
       alert('All your financial records have been wiped from both cloud and local storage.');
+    } catch (err: any) {
+      setDeleteError(err?.message || 'Error occurred during deletion.');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleConfirmDeleteAccount = async () => {
-    setIsDeleting(true);
-    try {
-      await resetAllData();
-      setShowDeleteAccountModal(false);
-      await logout();
-    } finally {
-      setIsDeleting(false);
+  const handleSaveNewPin = async () => {
+    setPinModalError(null);
+    if (!newPin || newPin.length < 4 || newPin.length > 8) {
+      setPinModalError('PIN must be between 4 and 8 digits.');
+      return;
     }
+    if (newPin !== confirmPin) {
+      setPinModalError('PIN confirmation does not match.');
+      return;
+    }
+    try {
+      await setDevicePin(user.id || 'guest', newPin);
+      updateSettings({ security: { ...settings.security, pinLockEnabled: true } });
+      setShowSetPinModal(false);
+      setNewPin('');
+      setConfirmPin('');
+    } catch (err: any) {
+      setPinModalError(err?.message || 'Failed to save PIN.');
+    }
+  };
+
+  const handleDisablePin = async () => {
+    setPinModalError(null);
+    if (!currentPin) {
+      setPinModalError('Enter your current PIN to disable PIN lock.');
+      return;
+    }
+    const res = await verifyDevicePin(user.id || 'guest', currentPin);
+    if (!res.ok) {
+      setPinModalError(res.error || 'Incorrect PIN.');
+      return;
+    }
+    clearDevicePin(user.id || 'guest');
+    updateSettings({ security: { ...settings.security, pinLockEnabled: false } });
+    setShowDisablePinModal(false);
+    setCurrentPin('');
   };
 
   const avatarsList = [
@@ -216,16 +264,65 @@ export const SettingsScreen: React.FC = () => {
 
         <div className="space-y-3 divide-y divide-gray-100 dark:divide-[#232C45] text-xs">
 
+          {/* App PIN Lock Toggle */}
+          <div
+            onClick={() => {
+              if (settings.security.pinLockEnabled) {
+                setShowDisablePinModal(true);
+              } else {
+                setShowSetPinModal(true);
+              }
+            }}
+            className="flex items-center justify-between pt-2 cursor-pointer select-none group gap-4"
+          >
+            <div className="flex items-center space-x-3 min-w-0">
+              <KeyRound className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white">App PIN Lock</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Lock app on launch &amp; background with device PIN</p>
+              </div>
+            </div>
+            <Switch
+              checked={settings.security.pinLockEnabled}
+              onChange={() => {
+                if (settings.security.pinLockEnabled) {
+                  setShowDisablePinModal(true);
+                } else {
+                  setShowSetPinModal(true);
+                }
+              }}
+              label="Toggle PIN Lock"
+            />
+          </div>
+
+          {/* Manual Lock Action Button */}
+          {settings.security.pinLockEnabled && (
+            <div className="flex items-center justify-between pt-3">
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white">Lock Centra Now</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Immediately lock the app until your PIN is entered</p>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={lockApp}
+                icon={<Lock className="w-3.5 h-3.5" />}
+              >
+                Lock Now
+              </Button>
+            </div>
+          )}
+
           {/* Biometrics Toggle */}
           <div
             onClick={() => updateSettings({ security: { ...settings.security, biometricEnabled: !settings.security.biometricEnabled } })}
-            className="flex items-center justify-between pt-2 cursor-pointer select-none group gap-4"
+            className="flex items-center justify-between pt-3 cursor-pointer select-none group gap-4"
           >
             <div className="flex items-center space-x-3 min-w-0">
               <Fingerprint className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Biometric / Passkey Login</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">TouchID, FaceID or device passkey</p>
+                <p className="font-semibold text-gray-900 dark:text-white">Biometric Login</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">TouchID / FaceID (Mobile devices only)</p>
               </div>
             </div>
             <Switch
@@ -385,6 +482,11 @@ export const SettingsScreen: React.FC = () => {
             </Button>
           ) : (
             <>
+              {/*
+                TODO: Account deletion requires a server-side Supabase Edge Function using the
+                service_role key to invoke supabase.auth.admin.deleteUser(userId).
+                Client-side RLS prevents authenticated users from deleting directly from auth.users.
+              */}
               <Button
                 variant="destructive"
                 size="md"
@@ -392,14 +494,6 @@ export const SettingsScreen: React.FC = () => {
                 icon={<Trash2 className="w-4 h-4" />}
               >
                 Delete All My Data
-              </Button>
-              <Button
-                variant="destructive"
-                size="md"
-                onClick={() => setShowDeleteAccountModal(true)}
-                icon={<Trash2 className="w-4 h-4" />}
-              >
-                Delete Account
               </Button>
             </>
           )}
@@ -529,10 +623,16 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </Modal>
 
-      {/* Delete All Data Modal */}
+      {/* Delete All Data Modal (Requires typing DELETE) */}
       <Modal
         isOpen={showDeleteDataModal}
-        onClose={() => !isDeleting && setShowDeleteDataModal(false)}
+        onClose={() => {
+          if (!isDeleting) {
+            setShowDeleteDataModal(false);
+            setDeleteConfirmText('');
+            setDeleteError(null);
+          }
+        }}
         title="Delete All Data"
       >
         <div className="space-y-4 text-xs">
@@ -540,13 +640,27 @@ export const SettingsScreen: React.FC = () => {
             Are you sure you want to delete all your data? This will permanently wipe all your accounts, transactions, categories, budgets, and goals from both your cloud database and local device storage.
           </p>
           <p className="text-red-600 dark:text-red-400 font-semibold">
-            This action cannot be undone.
+            This action cannot be undone. To proceed, please type <span className="font-mono bg-red-100 dark:bg-red-900/40 px-1 py-0.5 rounded text-red-700 dark:text-red-300 font-bold">DELETE</span> below:
           </p>
+          <input
+            type="text"
+            value={deleteConfirmText}
+            onChange={e => setDeleteConfirmText(e.target.value)}
+            placeholder="Type DELETE to confirm"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-[#232C45] bg-gray-50 dark:bg-[#0A0E1A] text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:border-red-500"
+          />
+          {deleteError && (
+            <p className="text-xs text-red-500 font-medium">{deleteError}</p>
+          )}
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button
               variant="secondary"
               size="md"
-              onClick={() => setShowDeleteDataModal(false)}
+              onClick={() => {
+                setShowDeleteDataModal(false);
+                setDeleteConfirmText('');
+                setDeleteError(null);
+              }}
               disabled={isDeleting}
             >
               Cancel
@@ -555,7 +669,7 @@ export const SettingsScreen: React.FC = () => {
               variant="destructive"
               size="md"
               onClick={handleConfirmDeleteAllData}
-              disabled={isDeleting}
+              disabled={isDeleting || deleteConfirmText.trim() !== 'DELETE'}
             >
               {isDeleting ? 'Deleting...' : 'Permanently Delete'}
             </Button>
@@ -563,35 +677,125 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </Modal>
 
-      {/* Delete Account Modal */}
+      {/* Set / Enable PIN Modal */}
       <Modal
-        isOpen={showDeleteAccountModal}
-        onClose={() => !isDeleting && setShowDeleteAccountModal(false)}
-        title="Delete Account"
+        isOpen={showSetPinModal}
+        onClose={() => {
+          setShowSetPinModal(false);
+          setNewPin('');
+          setConfirmPin('');
+          setPinModalError(null);
+        }}
+        title="Set App PIN"
       >
         <div className="space-y-4 text-xs">
           <p className="text-gray-600 dark:text-gray-300">
-            Permanently delete your Centra account? This will wipe all financial records and settings from cloud and local storage and log you out.
+            Choose a 4 to 8 digit PIN to protect your Centra app. Your PIN is hashed securely on this device and is never uploaded.
           </p>
-          <p className="text-red-600 dark:text-red-400 font-semibold">
-            All stored financial data will be immediately and irreversibly lost.
-          </p>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+              New PIN
+            </label>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={8}
+              value={newPin}
+              onChange={e => setNewPin(e.target.value)}
+              placeholder="Enter 4-8 digits"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-[#232C45] bg-gray-50 dark:bg-[#0A0E1A] text-gray-900 dark:text-white tracking-widest text-sm focus:outline-none focus:border-brand-500"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+              Confirm PIN
+            </label>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={8}
+              value={confirmPin}
+              onChange={e => setConfirmPin(e.target.value)}
+              placeholder="Confirm 4-8 digits"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-[#232C45] bg-gray-50 dark:bg-[#0A0E1A] text-gray-900 dark:text-white tracking-widest text-sm focus:outline-none focus:border-brand-500"
+            />
+          </div>
+          {pinModalError && (
+            <p className="text-xs text-rose-500 font-semibold">{pinModalError}</p>
+          )}
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button
               variant="secondary"
               size="md"
-              onClick={() => setShowDeleteAccountModal(false)}
-              disabled={isDeleting}
+              onClick={() => {
+                setShowSetPinModal(false);
+                setNewPin('');
+                setConfirmPin('');
+                setPinModalError(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleSaveNewPin}
+            >
+              Save PIN
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Disable PIN Modal */}
+      <Modal
+        isOpen={showDisablePinModal}
+        onClose={() => {
+          setShowDisablePinModal(false);
+          setCurrentPin('');
+          setPinModalError(null);
+        }}
+        title="Disable App PIN"
+      >
+        <div className="space-y-4 text-xs">
+          <p className="text-gray-600 dark:text-gray-300">
+            Please enter your current PIN to turn off PIN lock on this device.
+          </p>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+              Current PIN
+            </label>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={8}
+              value={currentPin}
+              onChange={e => setCurrentPin(e.target.value)}
+              placeholder="Enter your current PIN"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-[#232C45] bg-gray-50 dark:bg-[#0A0E1A] text-gray-900 dark:text-white tracking-widest text-sm focus:outline-none focus:border-brand-500"
+            />
+          </div>
+          {pinModalError && (
+            <p className="text-xs text-rose-500 font-semibold">{pinModalError}</p>
+          )}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => {
+                setShowDisablePinModal(false);
+                setCurrentPin('');
+                setPinModalError(null);
+              }}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               size="md"
-              onClick={handleConfirmDeleteAccount}
-              disabled={isDeleting}
+              onClick={handleDisablePin}
             >
-              {isDeleting ? 'Deleting...' : 'Delete Account & Sign Out'}
+              Turn Off PIN
             </Button>
           </div>
         </div>

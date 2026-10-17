@@ -35,12 +35,14 @@ export const EXCHANGE_RATES_TO_USD: Record<string, number> = {
 
 export function convertCurrency(
   amount: number,
-  from: CurrencyCode = 'USD',
-  to: CurrencyCode = 'USD'
+  from?: CurrencyCode | null,
+  to?: CurrencyCode | null
 ): number {
-  if (from === to) return amount;
-  const fromRate = EXCHANGE_RATES_TO_USD[from] || 1.0;
-  const toRate = EXCHANGE_RATES_TO_USD[to] || 1.0;
+  const safeFrom = from || 'USD';
+  const safeTo = to || 'USD';
+  if (safeFrom === safeTo) return amount;
+  const fromRate = EXCHANGE_RATES_TO_USD[safeFrom] || 1.0;
+  const toRate = EXCHANGE_RATES_TO_USD[safeTo] || 1.0;
   const amountInUSD = amount * fromRate;
   return amountInUSD / toRate;
 }
