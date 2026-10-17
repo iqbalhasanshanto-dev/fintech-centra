@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileInfoScreen } from './ProfileInfoScreen';
+import { FirstAccountScreen } from './FirstAccountScreen';
 import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { SpendingCategoriesScreen } from './SpendingCategoriesScreen';
 import { AccountReadyScreen } from './AccountReadyScreen';
 
 export type OnboardingStep =
   | 'profile'
+  | 'first-account'
   | 'theme'
   | 'categories'
   | 'ready';
 
 const STEP_ORDER: OnboardingStep[] = [
   'profile',
+  'first-account',
   'theme',
   'categories',
   'ready',
@@ -64,13 +67,21 @@ export const OnboardingFlow: React.FC = () => {
                   logout();
                 }
               }}
+              onContinue={() => goToStep('first-account', 'forward')}
+            />
+          )}
+
+          {currentStep === 'first-account' && (
+            <FirstAccountScreen
+              onBack={() => goToStep('profile', 'backward')}
               onContinue={() => goToStep('theme', 'forward')}
+              onSkip={() => goToStep('theme', 'forward')}
             />
           )}
 
           {currentStep === 'theme' && (
             <ThemeSelectionScreen
-              onBack={() => goToStep('profile', 'backward')}
+              onBack={() => goToStep('first-account', 'backward')}
               onContinue={() => goToStep('categories', 'forward')}
             />
           )}

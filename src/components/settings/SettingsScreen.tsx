@@ -35,7 +35,7 @@ export const SettingsScreen: React.FC = () => {
     updateSettings,
     resetAllData
   } = useFinance();
-  const { user, updateUser, logout, lockApp, isGuest } = useAuth();
+  const { user, updateUser, logout, lockApp, isGuest, createAccountFromGuest } = useAuth();
 
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -44,6 +44,7 @@ export const SettingsScreen: React.FC = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [statusToast, setStatusToast] = useState<string | null>(null);
 
   // PIN lock setup / disable state
   const [showSetPinModal, setShowSetPinModal] = useState(false);
@@ -98,7 +99,8 @@ export const SettingsScreen: React.FC = () => {
   const handleResetGuestData = async () => {
     if (window.confirm('Reset all transactions, accounts, and budgets to default demo state?')) {
       await resetAllData();
-      alert('Application reset to seed data.');
+      setStatusToast('Application reset to seed data.');
+      setTimeout(() => setStatusToast(null), 3500);
     }
   };
 
@@ -114,7 +116,8 @@ export const SettingsScreen: React.FC = () => {
       }
       setShowDeleteDataModal(false);
       setDeleteConfirmText('');
-      alert('All your financial records have been wiped from both cloud and local storage.');
+      setStatusToast('All your financial records have been wiped from both cloud and local storage.');
+      setTimeout(() => setStatusToast(null), 3500);
     } catch (err: any) {
       setDeleteError(err?.message || 'Error occurred during deletion.');
     } finally {
@@ -197,9 +200,7 @@ export const SettingsScreen: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => {
-              logout();
-            }}
+            onClick={createAccountFromGuest}
             className="shrink-0 bg-black dark:bg-white text-white dark:text-black hover:opacity-90 font-bold"
           >
             Create Full Account
@@ -805,6 +806,12 @@ export const SettingsScreen: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {statusToast && (
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 bg-emerald-600 text-white rounded-xl shadow-xl flex items-center gap-2 text-sm font-semibold animate-fade-in">
+          <span>✓ {statusToast}</span>
+        </div>
+      )}
 
     </div>
   );

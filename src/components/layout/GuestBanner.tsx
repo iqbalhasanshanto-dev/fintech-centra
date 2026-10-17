@@ -3,7 +3,7 @@ import { AlertTriangle, X, CloudOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const GuestBanner: React.FC = () => {
-  const { isGuest, logout } = useAuth();
+  const { isGuest, createAccountFromGuest } = useAuth();
   const [dismissed, setDismissed] = useState(false);
 
   // Not a guest, or dismissed for this session — render nothing
@@ -26,7 +26,7 @@ export const GuestBanner: React.FC = () => {
         <div className="flex items-center gap-2 mb-0.5">
           <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
           <span className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
-            Guest Mode
+            Guest Mode (Local Demo)
           </span>
         </div>
         <p className="text-xs text-amber-700 dark:text-amber-400/90 leading-relaxed">
@@ -34,10 +34,10 @@ export const GuestBanner: React.FC = () => {
           cloud. Clearing browser data, reinstalling the app, or switching devices will
           permanently lose your data.{' '}
           <button
-            onClick={logout}
+            onClick={createAccountFromGuest}
             className="font-bold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition-colors cursor-pointer"
           >
-            Sign up to enable cloud sync.
+            Create account to enable cloud sync.
           </button>
         </p>
       </div>

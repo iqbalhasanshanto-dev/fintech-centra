@@ -61,6 +61,7 @@ export interface Category {
   color: string;
   type: 'expense' | 'income';
   budgetLimit?: number;
+  hidden?: boolean;
 }
 
 export interface Goal {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Wallet, ArrowRightLeft, ArrowUpRight, MoreVertical } from 'lucide-react';
+import { Wallet, ArrowRightLeft, ArrowUpRight, MoreVertical, Plus } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
 import { Account } from '../../types';
+import { AddAccountModal } from '../modals/AddAccountModal';
 
 interface ConnectedAccountsRowProps {
   onSelectAccount?: (account: Account | null) => void;
@@ -15,6 +16,7 @@ export const ConnectedAccountsRow: React.FC<ConnectedAccountsRowProps> = ({
 }) => {
   const { accounts, totalBalance, settings } = useFinance();
   const [selectedAccountId, setSelectedAccountId] = useState<string | 'all'>('all');
+  const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
 
   const handleAccountClick = (accId: string | 'all') => {
     setSelectedAccountId(accId);
@@ -33,15 +35,24 @@ export const ConnectedAccountsRow: React.FC<ConnectedAccountsRowProps> = ({
             {accounts.length + 1}
           </span>
         </div>
-        {onOpenTransfer && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={onOpenTransfer}
-            className="text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1.5 cursor-pointer"
+            onClick={() => setIsAddAccountOpen(true)}
+            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <span>Transfer Funds</span>
-            <ArrowRightLeft className="w-3.5 h-3.5" />
+            <Plus className="w-3 h-3" />
+            <span>Add</span>
           </button>
-        )}
+          {onOpenTransfer && (
+            <button
+              onClick={onOpenTransfer}
+              className="text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Transfer</span>
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Responsive Grid breaking cleanly into vertical stacks on mobile */}
@@ -96,6 +107,11 @@ export const ConnectedAccountsRow: React.FC<ConnectedAccountsRowProps> = ({
           );
         })}
       </div>
+
+      <AddAccountModal
+        isOpen={isAddAccountOpen}
+        onClose={() => setIsAddAccountOpen(false)}
+      />
     </section>
   );
 };

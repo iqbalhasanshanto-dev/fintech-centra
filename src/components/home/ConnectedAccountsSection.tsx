@@ -1,8 +1,9 @@
-import React from 'react';
-import { Wallet, ArrowRightLeft, CreditCard, Building2, Landmark } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wallet, ArrowRightLeft, CreditCard, Building2, Landmark, Plus } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
 import { Account } from '../../types';
+import { AddAccountModal } from '../modals/AddAccountModal';
 
 interface ConnectedAccountsSectionProps {
   onSelectAccount?: (account: Account | null) => void;
@@ -14,6 +15,7 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
   onOpenTransfer,
 }) => {
   const { accounts, totalBalance, settings } = useFinance();
+  const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
 
   const getAccountIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -50,15 +52,25 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
           </p>
         </div>
 
-        {onOpenTransfer && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={onOpenTransfer}
-            className="text-xs font-semibold px-3.5 py-1.5 rounded-xl bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500/40 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            onClick={() => setIsAddAccountOpen(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500/40 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
-            <span>Transfer</span>
-            <ArrowRightLeft className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Account</span>
           </button>
-        )}
+
+          {onOpenTransfer && (
+            <button
+              onClick={onOpenTransfer}
+              className="text-xs font-semibold px-3.5 py-1.5 rounded-xl bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500/40 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <span>Transfer</span>
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Account Cards Grid */}
@@ -67,9 +79,16 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
           <div className="col-span-full p-8 rounded-2xl bg-white dark:bg-[#121A2C] border border-dashed border-gray-200 dark:border-[#232C45] text-center">
             <Wallet className="w-8 h-8 mx-auto text-gray-400 dark:text-gray-500 mb-2" />
             <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No accounts connected yet</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
               Connect a checking account, savings vault, or card to monitor your real-time balances.
             </p>
+            <button
+              onClick={() => setIsAddAccountOpen(true)}
+              className="px-4 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Your First Account</span>
+            </button>
           </div>
         ) : (
           accounts.map(acc => {
@@ -106,6 +125,11 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
           })
         )}
       </div>
+
+      <AddAccountModal
+        isOpen={isAddAccountOpen}
+        onClose={() => setIsAddAccountOpen(false)}
+      />
     </section>
   );
 };

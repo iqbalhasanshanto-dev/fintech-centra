@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { UserProfile, Category } from '../types';
-import { CentraDB, CATEGORY_STYLE_MAP } from '../db/storage';
+import { UserProfile, Category, Account } from '../types';
+import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS } from '../db/storage';
+import { OutboxQueue } from '../db/outbox';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { hasDevicePin, verifyDevicePin } from '../utils/pinLock';
 
@@ -55,6 +56,7 @@ interface AuthContextType {
     categories?: string[];
   }) => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  createAccountFromGuest: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -537,6 +539,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  const isCompletingRef = useRef(false);
+
+  const createAccountFromGuest = useCallback(() => {
+    CentraDB.clearGuestNamespace();
+    setIsGuest(false);
+    setIsAuthenticated(false);
+    setIsLockedByPin(false);
+    setPendingEmail('');
+    setAuthMode('signup');
+    setAuthView('signedOut');
+  }, []);
+
   // -------------------------------------------------------------------------
   // Onboarding Helpers
   // -------------------------------------------------------------------------
@@ -574,42 +588,149 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (data.categories !== undefined) {
-      const defaultIncomeAndSystemCategories: Category[] = [
-        { id: 'cat_salary', name: 'Salary & Wages', icon: 'Briefcase', color: '#1FAE71', type: 'income' },
-        { id: 'cat_freelance', name: 'Freelance & Bonus', icon: 'TrendingUp', color: '#00B894', type: 'income' },
-        { id: 'cat_invest_inc', name: 'Dividends & Yield', icon: 'Coins', color: '#55EFC4', type: 'income' },
-        { id: 'cat_transfer', name: 'Transfer & Payment', icon: 'ArrowRightLeft', color: '#636E72', type: 'expense' },
-      ];
-      const expenseCategories: Category[] = (data.categories || []).map((catName, index) => {
-        const meta = CATEGORY_STYLE_MAP[catName] || {
-          icon: 'Tag',
-          color: '#6366F1',
-          type: 'expense' as const,
-        };
-        return {
-          id: `cat_${catName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${index}`,
-          name: catName,
-          icon: meta.icon,
-          color: meta.color,
-          type: meta.type,
-          budgetLimit: undefined,
-        };
-      });
-      const categories: Category[] = [...expenseCategories, ...defaultIncomeAndSystemCategories];
-      await CentraDB.saveCategories(categories);
+      // 1. Load user's existing categories (idempotency: never duplicate category with same name & type)
+      const currentCategories = [...CentraDB.getCategories()];
+      const newCategoriesToAdd: Category[] = [];
+
+      // Sensible default expense categories if user selected none
+      const selectedOrDefaults = (data.categories && data.categories.length > 0)
+        ? data.categories
+        : ['Groceries', 'Food & Drinks', 'Bills & Utilities', 'Shopping', 'Transport'];
+
+      for (const catName of selectedOrDefaults) {
+        const nameLower = catName.trim().toLowerCase();
+        const alreadyExists = currentCategories.some(
+          c => c.name.trim().toLowerCase() === nameLower && c.type === 'expense'
+        );
+        if (!alreadyExists) {
+          const meta = CATEGORY_STYLE_MAP[catName] || {
+            icon: 'Tag',
+            color: '#6366F1',
+            type: 'expense' as const,
+          };
+          const newCat: Category = {
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            name: catName.trim(),
+            icon: meta.icon,
+            color: meta.color,
+            type: 'expense',
+            hidden: false,
+          };
+          newCategoriesToAdd.push(newCat);
+          currentCategories.push(newCat);
+        }
+      }
+
+      // Normal pickable income categories (Salary, Freelance, Investment)
+      for (const inc of DEFAULT_INCOME_CATEGORIES_DEFINITIONS) {
+        const incNameLower = inc.name.trim().toLowerCase();
+        const alreadyExists = currentCategories.some(
+          c => c.name.trim().toLowerCase() === incNameLower && c.type === 'income'
+        );
+        if (!alreadyExists) {
+          const newIncCat: Category = {
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cat_inc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            name: inc.name,
+            icon: inc.icon,
+            color: inc.color,
+            type: 'income',
+            hidden: false,
+          };
+          newCategoriesToAdd.push(newIncCat);
+          currentCategories.push(newIncCat);
+        }
+      }
+
+      // Save categories locally
+      await CentraDB.saveCategories(currentCategories);
+
+      // Ensure hidden system categories (transfer, goal_contribution, uncategorized)
+      await CentraDB.ensureSystemCategories(user?.id);
+
+      // If user is real/logged in, enqueue new custom categories to outbox as a group
+      if (newCategoriesToAdd.length > 0 && user?.id && !isGuest) {
+        const outboxItems = newCategoriesToAdd.map(cat => ({
+          userId: user.id,
+          entity: 'categories' as const,
+          op: 'upsert' as const,
+          recordId: cat.id,
+          payload: {
+            id: cat.id,
+            user_id: user.id,
+            system_key: cat.systemKey || null,
+            name: cat.name,
+            icon: cat.icon,
+            color: cat.color,
+            type: cat.type,
+            budget_limit: cat.budgetLimit || null,
+            updated_at: new Date().toISOString(),
+          },
+        }));
+        OutboxQueue.enqueueGroup(outboxItems);
+      }
     }
   };
 
   const completeOnboarding = async () => {
-    if (user?.id) {
-      const ok = await CentraDB.markOnboardingCompleted(user.id);
-      if (!ok) {
-        throw new Error('Failed to save completed setup status. Please retry.');
+    // Idempotency guard against double-submits of the last step
+    if (isCompletingRef.current) return;
+    isCompletingRef.current = true;
+
+    try {
+      // 1. Ensure accounts exist: never create a second default Cash account if the user already has an account
+      const existingAccounts = CentraDB.getAccounts();
+      if (existingAccounts.length === 0) {
+        const defaultCash: Account = {
+          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `acc_${Date.now()}`,
+          name: 'Cash',
+          type: 'cash',
+          balance: 0,
+          currency: user?.baseCurrency || 'USD',
+          accountNumberMasked: '•••• CASH',
+          bankName: 'Physical Cash',
+          color: '#10B981',
+          isPrimary: true,
+        };
+        await CentraDB.saveAccounts([defaultCash]);
+        if (user?.id && !isGuest) {
+          OutboxQueue.enqueue({
+            userId: user.id,
+            entity: 'accounts',
+            op: 'upsert',
+            recordId: defaultCash.id,
+            payload: {
+              id: defaultCash.id,
+              user_id: user.id,
+              name: defaultCash.name,
+              type: defaultCash.type,
+              balance: defaultCash.balance,
+              currency: defaultCash.currency,
+              account_number_masked: defaultCash.accountNumberMasked,
+              bank_name: defaultCash.bankName,
+              color: defaultCash.color,
+              is_primary: true,
+              updated_at: new Date().toISOString(),
+            },
+          });
+        }
       }
-      setUser(prev => ({ ...prev, onboardingCompleted: true }));
+
+      // 2. Ensure system categories exist
+      await CentraDB.ensureSystemCategories(user?.id);
+
+      // 3. Mark completed in DB
+      if (user?.id && !isGuest) {
+        const ok = await CentraDB.markOnboardingCompleted(user.id);
+        if (!ok) {
+          throw new Error('Failed to save completed setup status. Please retry.');
+        }
+        setUser(prev => ({ ...prev, onboardingCompleted: true }));
+      }
+      setIsAuthenticated(true);
+      setAuthView('app');
+    } finally {
+      isCompletingRef.current = false;
     }
-    setIsAuthenticated(true);
-    setAuthView('app');
   };
 
   return (
@@ -637,6 +758,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         lockApp,
         saveOnboardingProfile,
         completeOnboarding,
+        createAccountFromGuest,
       }}
     >
       {children}

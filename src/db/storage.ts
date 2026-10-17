@@ -81,6 +81,57 @@ export function notifyDataChanged(): void {
   });
 }
 
+export const SYSTEM_CATEGORIES_DEFINITIONS: Array<Omit<Category, 'id'>> = [
+  {
+    systemKey: 'transfer',
+    name: 'Transfer & Payment',
+    icon: 'ArrowRightLeft',
+    color: '#636E72',
+    type: 'expense',
+    hidden: true,
+  },
+  {
+    systemKey: 'goal_contribution',
+    name: 'Goal Contribution',
+    icon: 'Target',
+    color: '#10B981',
+    type: 'expense',
+    hidden: true,
+  },
+  {
+    systemKey: 'uncategorized',
+    name: 'Uncategorized',
+    icon: 'HelpCircle',
+    color: '#94A3B8',
+    type: 'expense',
+    hidden: true,
+  },
+];
+
+export const DEFAULT_INCOME_CATEGORIES_DEFINITIONS: Array<Omit<Category, 'id'>> = [
+  {
+    name: 'Salary & Wages',
+    icon: 'Briefcase',
+    color: '#1FAE71',
+    type: 'income',
+    hidden: false,
+  },
+  {
+    name: 'Freelance & Bonus',
+    icon: 'TrendingUp',
+    color: '#00B894',
+    type: 'income',
+    hidden: false,
+  },
+  {
+    name: 'Dividends & Yield',
+    icon: 'Coins',
+    color: '#55EFC4',
+    type: 'income',
+    hidden: false,
+  },
+];
+
 function safeGet<T>(key: string, fallback: T): T {
   try {
     const item = localStorage.getItem(key);
@@ -205,15 +256,19 @@ const mapCategoryToDb = (cat: Category, userId: string) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapCategoryFromDb = (row: any): Category => ({
-  id: row.id,
-  systemKey: row.system_key || undefined,
-  name: row.name,
-  icon: row.icon,
-  color: row.color,
-  type: row.type,
-  budgetLimit: row.budget_limit ? parseFloat(row.budget_limit) : undefined,
-});
+const mapCategoryFromDb = (row: any): Category => {
+  const isSystem = ['transfer', 'goal_contribution', 'uncategorized'].includes(row.system_key || '');
+  return {
+    id: row.id,
+    systemKey: row.system_key || undefined,
+    name: row.name,
+    icon: row.icon,
+    color: row.color,
+    type: row.type,
+    budgetLimit: row.budget_limit ? parseFloat(row.budget_limit) : undefined,
+    hidden: isSystem,
+  };
+};
 
 const mapTransactionToDb = (tx: Transaction, userId: string) => ({
   id: tx.id,
@@ -601,6 +656,101 @@ export const CentraDB = {
     }
   },
 
+  ensureSystemCategories: async (targetUserId?: string): Promise<Category[]> => {
+    const userId = targetUserId || getActiveUserId();
+    const isGuest = isGuestUser(userId);
+    const existing = [...cache.categories];
+    const toCreate: Category[] = [];
+
+    for (const def of SYSTEM_CATEGORIES_DEFINITIONS) {
+      const match = existing.find(c => c.systemKey === def.systemKey);
+      if (!match) {
+        const newCat: Category = {
+          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cat_${def.systemKey}_${Date.now()}`,
+          systemKey: def.systemKey,
+          name: def.name,
+          icon: def.icon,
+          color: def.color,
+          type: def.type,
+          hidden: true,
+        };
+        toCreate.push(newCat);
+        existing.push(newCat);
+      }
+    }
+
+    if (toCreate.length === 0) {
+      return cache.categories;
+    }
+
+    cache.categories = existing;
+    safeSet(getUserStorageKey(userId || 'guest', 'categories'), cache.categories);
+    notifyDataChanged();
+
+    if (!userId || isGuest || !isSupabaseConfigured()) {
+      return cache.categories;
+    }
+
+    // Persist newly created categories through the outbox as one group
+    const outboxItems = toCreate.map(cat => ({
+      userId,
+      entity: 'categories' as const,
+      op: 'upsert' as const,
+      recordId: cat.id,
+      payload: mapCategoryToDb(cat, userId),
+    }));
+    const enqueued = OutboxQueue.enqueueGroup(outboxItems);
+
+    if (navigator.onLine) {
+      try {
+        setSyncStatus('syncing');
+        const rows = toCreate.map(c => mapCategoryToDb(c, userId));
+        const { error } = await supabase.from('categories').upsert(rows, { onConflict: 'user_id,id' });
+
+        if (error) {
+          if (
+            error.code === '23505' ||
+            error.message?.includes('uq_categories_user_system_key') ||
+            error.message?.includes('system_key')
+          ) {
+            // Unique violation on (user_id, system_key): re-read and use existing row instead of failing
+            const { data: remoteRows } = await supabase
+              .from('categories')
+              .select('*')
+              .eq('user_id', userId)
+              .in('system_key', toCreate.map(c => c.systemKey!));
+
+            if (remoteRows && remoteRows.length > 0) {
+              const remoteCats = remoteRows.map(mapCategoryFromDb);
+              cache.categories = cache.categories.map(c => {
+                const found = remoteCats.find(r => r.systemKey === c.systemKey);
+                return found || c;
+              });
+              safeSet(getUserStorageKey(userId, 'categories'), cache.categories);
+              for (const item of enqueued) {
+                OutboxQueue.remove(userId, item.id);
+              }
+              setSyncStatus('synced');
+              notifyDataChanged();
+              return cache.categories;
+            }
+          }
+          setSyncStatus('error');
+        } else {
+          // Success: remove enqueued items from outbox
+          for (const item of enqueued) {
+            OutboxQueue.remove(userId, item.id);
+          }
+          setSyncStatus('synced');
+        }
+      } catch (err: any) {
+        setSyncStatus(navigator.onLine ? 'error' : 'offline');
+      }
+    }
+
+    return cache.categories;
+  },
+
   // TRANSACTIONS
   upsertTransaction: async (tx: Transaction): Promise<{ data: Transaction | null; error: any }> => {
     const existingIdx = cache.transactions.findIndex(t => t.id === tx.id);
@@ -985,8 +1135,37 @@ export const CentraDB = {
         }
 
         if (err) {
-          errors++;
-          OutboxQueue.update(userId, { ...item, retries: item.retries + 1, lastError: err.message });
+          if (
+            item.entity === 'categories' &&
+            item.payload?.system_key &&
+            (err.code === '23505' || err.message?.includes('uq_categories_user_system_key') || err.message?.includes('system_key'))
+          ) {
+            try {
+              const { data: remoteRow, error: fetchErr } = await supabase
+                .from('categories')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('system_key', item.payload.system_key)
+                .maybeSingle();
+
+              if (!fetchErr && remoteRow) {
+                const existingCat = mapCategoryFromDb(remoteRow);
+                cache.categories = cache.categories.map(c =>
+                  c.systemKey === existingCat.systemKey ? existingCat : c
+                );
+                safeSet(getUserStorageKey(userId, 'categories'), cache.categories);
+                OutboxQueue.remove(userId, item.id);
+                processed++;
+                err = null;
+              }
+            } catch {
+              // Ignore and proceed to retry
+            }
+          }
+          if (err) {
+            errors++;
+            OutboxQueue.update(userId, { ...item, retries: item.retries + 1, lastError: err.message });
+          }
         } else {
           processed++;
           OutboxQueue.remove(userId, item.id);
@@ -1315,6 +1494,41 @@ export const CentraDB = {
     }
     currentActiveUserId = null;
     reloadCacheForUser(null);
+    notifyDataChanged();
+  },
+
+  // Clear guest namespace completely (used when transitioning from guest to create account)
+  clearGuestNamespace: () => {
+    OutboxQueue.clear('guest');
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (
+          key &&
+          (key.startsWith('centra:guest:') ||
+            key === 'centra_guest_flag' ||
+            key === 'centra_is_guest' ||
+            key === 'centra_is_guest_v2' ||
+            key === 'centra_onboarding_step')
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch {
+      // Ignore
+    }
+    if (currentActiveUserId === 'guest' || !currentActiveUserId) {
+      cache.user = null as any;
+      cache.accounts = [];
+      cache.categories = [];
+      cache.transactions = [];
+      cache.goals = [];
+      cache.budgets = [];
+      cache.notifications = [];
+      cache.settings = INITIAL_SETTINGS;
+    }
     notifyDataChanged();
   },
 

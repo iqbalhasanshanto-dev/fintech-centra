@@ -86,10 +86,12 @@ export const INITIAL_CATEGORIES: Category[] = [
   { id: 'cat_health', name: 'Health & Wellness', icon: 'HeartPulse', color: '#00CEC9', type: 'expense', budgetLimit: 200 },
   { id: 'cat_subs', name: 'Subscriptions', icon: 'Repeat', color: '#E17055', type: 'expense', budgetLimit: 120 },
   { id: 'cat_travel', name: 'Travel & Vacation', icon: 'Plane', color: '#FDCB6E', type: 'expense', budgetLimit: 600 },
-  { id: 'cat_salary', name: 'Salary & Wages', icon: 'Briefcase', color: '#1FAE71', type: 'income' },
-  { id: 'cat_freelance', name: 'Freelance & Bonus', icon: 'TrendingUp', color: '#00B894', type: 'income' },
-  { id: 'cat_invest_inc', name: 'Dividends & Yield', icon: 'Coins', color: '#55EFC4', type: 'income' },
-  { id: 'cat_transfer', name: 'Transfer & Payment', icon: 'ArrowRightLeft', color: '#636E72', type: 'expense' },
+  { id: 'cat_salary', name: 'Salary & Wages', icon: 'Briefcase', color: '#1FAE71', type: 'income', hidden: false },
+  { id: 'cat_freelance', name: 'Freelance & Bonus', icon: 'TrendingUp', color: '#00B894', type: 'income', hidden: false },
+  { id: 'cat_invest_inc', name: 'Dividends & Yield', icon: 'Coins', color: '#55EFC4', type: 'income', hidden: false },
+  { id: 'cat_transfer', systemKey: 'transfer', name: 'Transfer & Payment', icon: 'ArrowRightLeft', color: '#636E72', type: 'expense', hidden: true },
+  { id: 'cat_goal_contrib', systemKey: 'goal_contribution', name: 'Goal Contribution', icon: 'Target', color: '#10B981', type: 'expense', hidden: true },
+  { id: 'cat_uncategorized', systemKey: 'uncategorized', name: 'Uncategorized', icon: 'HelpCircle', color: '#94A3B8', type: 'expense', hidden: true },
 ];
 
 const now = new Date();

@@ -551,15 +551,18 @@ export function applyTransferFunds(
   const updatedTo: Account = { ...toAcc, balance: newToBalance };
 
   const txId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tx_tr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const transferCat = state.categories.find(c => c.systemKey === 'transfer')
+    || state.categories.find(c => c.name.toLowerCase().includes('transfer'));
+
   const transferTx: Transaction = {
     id: txId,
     type: 'transfer',
     amount: safeAmount,
     currency: fromAcc.currency,
-    categoryId: 'cat_transfer',
-    categoryName: 'Transfer & Payment',
-    categoryIcon: 'ArrowRightLeft',
-    categoryColor: '#636E72',
+    categoryId: transferCat ? transferCat.id : 'transfer',
+    categoryName: transferCat?.name || 'Transfer & Payment',
+    categoryIcon: transferCat?.icon || 'ArrowRightLeft',
+    categoryColor: transferCat?.color || '#636E72',
     accountId: fromId,
     accountName: fromAcc.name,
     toAccountId: toId,
@@ -675,15 +678,18 @@ export function applyContributeToGoal(
   };
 
   const txId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tx_goal_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const goalCat = state.categories.find(c => c.systemKey === 'goal_contribution')
+    || state.categories.find(c => c.name.toLowerCase().includes('goal'));
+
   const goalTx: Transaction = {
     id: txId,
     type: 'expense',
     amount: safeAmount,
     currency: acc.currency,
-    categoryId: 'cat_goal_contrib',
-    categoryName: 'Goal Contribution',
-    categoryIcon: 'Target',
-    categoryColor: goal.color || '#10B981',
+    categoryId: goalCat ? goalCat.id : 'goal_contribution',
+    categoryName: goalCat?.name || 'Goal Contribution',
+    categoryIcon: goalCat?.icon || 'Target',
+    categoryColor: goal.color || goalCat?.color || '#10B981',
     accountId: acc.id,
     accountName: acc.name,
     goalId: goal.id,
