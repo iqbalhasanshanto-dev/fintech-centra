@@ -13,11 +13,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
-  ISO_CURRENCIES,
+  SUPPORTED_CURRENCIES,
   COUNTRY_LIST,
   suggestCurrencyForCountry,
   getCurrencyInfo,
 } from '../../utils/currencies';
+import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 
 interface ProfileInfoScreenProps {
@@ -130,7 +131,7 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     c.name.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
-  const filteredCurrencies = ISO_CURRENCIES.filter(
+  const filteredCurrencies = SUPPORTED_CURRENCIES.filter(
     c =>
       c.code.toLowerCase().includes(currencySearch.toLowerCase()) ||
       c.name.toLowerCase().includes(currencySearch.toLowerCase())
@@ -150,8 +151,12 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
       return;
     }
 
-    // Default currency to USD if somehow untouched
-    const finalCurrency = currency || 'USD';
+    if (!currency) {
+      setErrorMessage('Please select a base currency.');
+      return;
+    }
+
+    const finalCurrency = currency;
 
     // Save profile data into AuthContext / CentraDB
     await saveOnboardingProfile({
@@ -394,6 +399,9 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
                       {currency === c.code && <Check className="w-4 h-4 text-emerald-500" />}
                     </button>
                   ))}
+                </div>
+                <div className="p-2 border-t border-gray-100 dark:border-white/5 text-[10px] text-gray-400 text-center">
+                  Exchange rates updated: {RATES_LAST_UPDATED}
                 </div>
               </div>
             )}

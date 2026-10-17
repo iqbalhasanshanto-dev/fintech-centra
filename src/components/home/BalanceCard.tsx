@@ -13,7 +13,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   onSelectAccount,
   onOpenTransfer,
 }) => {
-  const { totalBalance, previousPeriodBalanceDelta, accounts, settings } = useFinance();
+  const { totalBalance, previousPeriodBalanceDelta, accounts, settings, periodFilter } = useFinance();
   const [selectedAccountId, setSelectedAccountId] = useState<string | 'all'>('all');
 
   const activeAccount = accounts.find(a => a.id === selectedAccountId) || null;
@@ -58,30 +58,32 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
           {formatCurrency(displayBalance, displayCurrency, settings.privacyMode)}
         </h2>
 
-        {/* Period-over-period delta */}
-        <div className="flex items-center space-x-2 mt-2">
-          <span
-            className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold ${
-              previousPeriodBalanceDelta.isPositive
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-            }`}
-          >
-            {previousPeriodBalanceDelta.isPositive ? (
-              <ArrowUpRight className="w-3 h-3 mr-0.5" />
-            ) : (
-              <ArrowDownRight className="w-3 h-3 mr-0.5" />
-            )}
-            <span>
-              {previousPeriodBalanceDelta.isPositive ? '+' : '-'}
-              {formatCurrency(previousPeriodBalanceDelta.amount, settings.baseCurrency, settings.privacyMode, false)}
+        {/* Period-over-period net savings delta (hidden for 'all' filter) */}
+        {periodFilter !== 'all' && (
+          <div className="flex items-center space-x-2 mt-2">
+            <span
+              className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+                previousPeriodBalanceDelta.isPositive
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {previousPeriodBalanceDelta.isPositive ? (
+                <ArrowUpRight className="w-3 h-3 mr-0.5" />
+              ) : (
+                <ArrowDownRight className="w-3 h-3 mr-0.5" />
+              )}
+              <span>
+                {previousPeriodBalanceDelta.isPositive ? '+' : '-'}
+                {formatCurrency(previousPeriodBalanceDelta.amount, settings.baseCurrency, settings.privacyMode, false)}
+              </span>
+              <span className="ml-1">
+                ({previousPeriodBalanceDelta.percentage.toFixed(0)}%)
+              </span>
             </span>
-            <span className="ml-1">
-              ({previousPeriodBalanceDelta.percentage.toFixed(0)}%)
-            </span>
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">vs last period</span>
-        </div>
+            <span className="text-xs text-gray-500 dark:text-gray-400">savings vs last period</span>
+          </div>
+        )}
       </div>
 
       {/* Account quick selector grid / tabs */}

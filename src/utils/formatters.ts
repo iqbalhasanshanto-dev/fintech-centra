@@ -33,16 +33,23 @@ export const EXCHANGE_RATES_TO_USD: Record<string, number> = {
   SAR: 0.27,
 };
 
+export const RATES_LAST_UPDATED = 'October 15, 2026';
+
 export function convertCurrency(
   amount: number,
   from?: CurrencyCode | null,
   to?: CurrencyCode | null
 ): number {
-  const safeFrom = from || 'USD';
-  const safeTo = to || 'USD';
+  const safeFrom = (from || 'BDT').toUpperCase();
+  const safeTo = (to || 'BDT').toUpperCase();
   if (safeFrom === safeTo) return amount;
-  const fromRate = EXCHANGE_RATES_TO_USD[safeFrom] || 1.0;
-  const toRate = EXCHANGE_RATES_TO_USD[safeTo] || 1.0;
+  const fromRate = EXCHANGE_RATES_TO_USD[safeFrom];
+  const toRate = EXCHANGE_RATES_TO_USD[safeTo];
+  if (!fromRate || !toRate) {
+    // If currency not in rate table, warn and keep amount or throw
+    console.warn(`[Currency] Missing rate for ${safeFrom} or ${safeTo}. Rates updated: ${RATES_LAST_UPDATED}`);
+    return amount;
+  }
   const amountInUSD = amount * fromRate;
   return amountInUSD / toRate;
 }

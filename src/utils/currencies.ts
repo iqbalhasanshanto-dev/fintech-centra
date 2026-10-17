@@ -136,6 +136,14 @@ export const COUNTRY_LIST: { code: string; name: string; currency: string; flag:
   { code: 'TZ', name: 'Tanzania', currency: 'TZS', flag: '🇹🇿' },
 ];
 
+export const SUPPORTED_CURRENCY_CODES = [
+  'BDT', 'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'SGD', 'AED', 'SAR'
+];
+
+export const SUPPORTED_CURRENCIES: Currency[] = ISO_CURRENCIES.filter(c =>
+  SUPPORTED_CURRENCY_CODES.includes(c.code)
+);
+
 export const getCurrencyInfo = (code?: string | null): Currency => {
   if (!code) return { code: 'USD', name: 'US Dollar', symbol: '$', flag: '🇺🇸' };
   const found = ISO_CURRENCIES.find(c => c.code.toUpperCase() === code.toUpperCase());

@@ -25,7 +25,8 @@ import { Button } from '../ui/Button';
 import { Switch } from '../ui/Switch';
 import { CurrencyCode } from '../../types';
 import { CentraDB } from '../../db/storage';
-import { ISO_CURRENCIES } from '../../utils/currencies';
+import { SUPPORTED_CURRENCIES } from '../../utils/currencies';
+import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { hasDevicePin, setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLock';
 
 export const SettingsScreen: React.FC = () => {
@@ -436,21 +437,25 @@ export const SettingsScreen: React.FC = () => {
                 <p className="text-xs text-gray-500 dark:text-gray-400">Converts all dashboard totals to this currency</p>
               </div>
             </div>
-            <select
-              value={settings.baseCurrency || 'USD'}
-              onChange={e => updateSettings({ baseCurrency: e.target.value as CurrencyCode })}
-              className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-brand-500 cursor-pointer text-xs max-w-[200px]"
-            >
-              {ISO_CURRENCIES.map(c => (
-                <option
-                  key={c.code}
-                  value={c.code}
-                  className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white"
-                >
-                  {c.flag} {c.code} ({c.symbol}) - {c.name}
-                </option>
-              ))}
-            </select>
+            <div className="text-right">
+              <select
+                value={settings.baseCurrency || ''}
+                onChange={e => updateSettings({ baseCurrency: (e.target.value as CurrencyCode) || null })}
+                className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-brand-500 cursor-pointer text-xs max-w-[200px]"
+              >
+                {!settings.baseCurrency && <option value="">Select currency...</option>}
+                {SUPPORTED_CURRENCIES.map(c => (
+                  <option
+                    key={c.code}
+                    value={c.code}
+                    className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white"
+                  >
+                    {c.flag} {c.code} ({c.symbol}) - {c.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Rates updated: {RATES_LAST_UPDATED}</p>
+            </div>
           </div>
         </div>
       </div>

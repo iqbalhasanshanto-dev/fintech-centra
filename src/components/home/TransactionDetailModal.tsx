@@ -165,13 +165,23 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 <span>{transaction.isPinned ? 'Pinned' : 'Pin'}</span>
               </button>
 
-              <button
-                onClick={() => setIsEditing(true)}
-                className="py-2.5 px-3 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#1A233A] text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-                <span>Edit</span>
-              </button>
+              {transaction.type !== 'transfer' ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="py-2.5 px-3 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#1A233A] text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </button>
+              ) : (
+                <div
+                  title="Transfers cannot be edited directly. Delete and recreate the transfer."
+                  className="py-2.5 px-3 rounded-xl bg-gray-50 dark:bg-[#0A0E1A] border border-gray-100 dark:border-[#1E2638] text-gray-400 dark:text-gray-600 text-xs font-medium flex items-center justify-center space-x-1.5 cursor-not-allowed select-none"
+                >
+                  <Edit2 className="w-3.5 h-3.5 opacity-40" />
+                  <span>Locked</span>
+                </div>
+              )}
 
               <button
                 onClick={handleDelete}

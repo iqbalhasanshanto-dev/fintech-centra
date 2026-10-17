@@ -13,6 +13,8 @@ export interface OutboxItem {
   timestamp: number;
   retries: number;
   lastError?: string;
+  groupId?: string;
+  order?: number;
 }
 
 function getOutboxKey(userId: string): string {
@@ -55,6 +57,35 @@ export const OutboxQueue = {
     filtered.push(fullItem);
     saveOutboxItems(item.userId, filtered);
     return fullItem;
+  },
+
+  enqueueGroup: (
+    rawItems: Array<Omit<OutboxItem, 'id' | 'timestamp' | 'retries'>>,
+    providedGroupId?: string
+  ): OutboxItem[] => {
+    if (rawItems.length === 0) return [];
+    const groupId = providedGroupId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `grp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
+    const now = Date.now();
+    const userId = rawItems[0].userId;
+
+    const fullItems: OutboxItem[] = rawItems.map((item, idx) => ({
+      ...item,
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `out_${now}_${idx}_${Math.random().toString(36).substring(2, 9)}`,
+      groupId,
+      order: idx,
+      timestamp: now,
+      retries: 0,
+    }));
+
+    const existingItems = getOutboxItems(userId);
+    // Remove individual matching records to be coalesced with this atomic operation
+    const filtered = existingItems.filter(existing =>
+      !fullItems.some(incoming => incoming.entity === existing.entity && incoming.recordId === existing.recordId)
+    );
+
+    const merged = [...filtered, ...fullItems];
+    saveOutboxItems(userId, merged);
+    return fullItems;
   },
 
   getPending: (userId: string): OutboxItem[] => {

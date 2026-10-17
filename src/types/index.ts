@@ -37,6 +37,9 @@ export interface Transaction {
   accountId: string;
   accountName: string;
   toAccountId?: string; // For transfers
+  convertedAmount?: number; // For cross-currency transfers & contributions
+  exchangeRate?: number; // Exact rate used at transaction time
+  goalId?: string; // Linked savings goal
   recipient?: string;
   date: string; // ISO String (YYYY-MM-DD or full ISO)
   note?: string;
@@ -84,6 +87,7 @@ export interface Budget {
   spentAmount: number;
   alertThreshold: number; // percentage, e.g. 80
   period: 'monthly' | 'weekly';
+  currency?: CurrencyCode;
 }
 
 export type NotificationType = 'budget' | 'security' | 'transaction' | 'goal' | 'system';

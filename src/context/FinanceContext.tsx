@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Account,
   Transaction,
@@ -12,8 +12,19 @@ import {
   SyncStatus,
 } from '../types';
 import { CentraDB } from '../db/storage';
-import { convertCurrency } from '../utils/formatters';
+import { convertCurrency, formatCurrency } from '../utils/formatters';
 import { getPeriodDateRange } from '../utils/dates';
+import {
+  FinanceState,
+  OperationResult,
+  deriveBudgetSpent,
+  applyAddTransaction,
+  applyUpdateTransaction,
+  applyDeleteTransaction,
+  applyTransferFunds,
+  applyContributeToGoal,
+  applyDeleteAccount,
+} from '../utils/financeOperations';
 import { LoadingSplashScreen } from '../components/auth/LoadingSplashScreen';
 import { SyncRetryScreen } from '../components/auth/SyncRetryScreen';
 import brandLogo from '../assets/brand/logo.png';
@@ -66,19 +77,19 @@ interface FinanceContextType {
   // Actions
   setPeriodFilter: (filter: PeriodFilter) => void;
   addTransaction: (tx: Omit<Transaction, 'id'>) => Promise<Transaction>;
-  updateTransaction: (id: string, updates: Partial<Transaction>) => void;
-  deleteTransaction: (id: string) => void;
+  updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
   togglePinTransaction: (id: string) => void;
 
   addAccount: (acc: Omit<Account, 'id'>) => void;
   updateAccount: (id: string, updates: Partial<Account>) => void;
-  deleteAccount: (id: string) => void;
+  deleteAccount: (id: string, mode?: 'block' | 'cascade') => Promise<void>;
   transferFunds: (fromId: string, toId: string, amount: number, note?: string) => Promise<boolean>;
 
   addGoal: (goal: Omit<Goal, 'id'>) => void;
   updateGoal: (id: string, updates: Partial<Goal>) => void;
   deleteGoal: (id: string) => void;
-  contributeToGoal: (goalId: string, amount: number, accountId?: string) => void;
+  contributeToGoal: (goalId: string, amount: number, accountId?: string) => Promise<void>;
 
   addBudget: (budget: Omit<Budget, 'id'>) => void;
   updateBudget: (id: string, updates: Partial<Budget>) => void;
@@ -119,15 +130,44 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   const [settings, setSettings] = useState<AppSettings>(() => CentraDB.getSettings());
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('this_month');
 
+  // Ref holding the LATEST state to run operations against (eliminates stale closures)
+  const latestStateRef = useRef<FinanceState>({
+    accounts: CentraDB.getAccounts(),
+    transactions: CentraDB.getTransactions(),
+    categories: CentraDB.getCategories(),
+    goals: CentraDB.getGoals(),
+    budgets: CentraDB.getBudgets(),
+    notifications: CentraDB.getNotifications(),
+    settings: CentraDB.getSettings(),
+  });
+
   // Helper to reload state from in-memory cache without triggering any persistence effects
-  const reloadFromCache = React.useCallback(() => {
-    setAccounts(CentraDB.getAccounts());
-    setTransactions(CentraDB.getTransactions());
-    setCategories(CentraDB.getCategories());
-    setGoals(CentraDB.getGoals());
-    setBudgets(CentraDB.getBudgets());
-    setNotifications(CentraDB.getNotifications());
-    setSettings(CentraDB.getSettings());
+  const reloadFromCache = useCallback(() => {
+    const accs = CentraDB.getAccounts();
+    const txs = CentraDB.getTransactions();
+    const cats = CentraDB.getCategories();
+    const gs = CentraDB.getGoals();
+    const buds = CentraDB.getBudgets();
+    const notifs = CentraDB.getNotifications();
+    const sets = CentraDB.getSettings();
+
+    latestStateRef.current = {
+      accounts: accs,
+      transactions: txs,
+      categories: cats,
+      goals: gs,
+      budgets: buds,
+      notifications: notifs,
+      settings: sets,
+    };
+
+    setAccounts(accs);
+    setTransactions(txs);
+    setCategories(cats);
+    setGoals(gs);
+    setBudgets(buds);
+    setNotifications(notifs);
+    setSettings(sets);
   }, []);
 
   // Sync active user in storage layer when userId changes
@@ -238,6 +278,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
 
   const baseCurrency: CurrencyCode = settings.baseCurrency || 'USD';
 
+  // Budgets: spent is DERIVED from transactions for the active period in the budget's currency
+  const derivedBudgets = useMemo(() => {
+    return budgets.map(b => ({
+      ...b,
+      spentAmount: deriveBudgetSpent(b, transactions, baseCurrency),
+    }));
+  }, [budgets, transactions, baseCurrency]);
+
   // Filter transactions by active period using centralized date boundaries
   const filteredTransactions = useMemo(() => {
     const { start, end } = getPeriodDateRange(periodFilter);
@@ -273,10 +321,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   }, [filteredTransactions, baseCurrency]);
 
   const netSavings = periodIncome - periodExpenses;
-  const savingsRate = periodIncome > 0 ? Math.max(0, (netSavings / periodIncome) * 100) : 0;
+  const savingsRate = periodIncome > 0
+    ? (netSavings / periodIncome) * 100
+    : (periodExpenses > 0 ? -100 : 0);
 
   // Period over period delta
   const previousPeriodBalanceDelta = useMemo(() => {
+    if (periodFilter === 'all') {
+      return { amount: 0, percentage: 0, isPositive: true };
+    }
     const now = new Date();
     const prevPeriodTransactions = transactions.filter(tx => {
       const txDate = new Date(tx.date);
@@ -299,7 +352,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       if (periodFilter === 'this_year') {
         return txDate.getFullYear() === now.getFullYear() - 1;
       }
-      return txDate.getFullYear() === now.getFullYear() - 1;
+      return false;
     });
 
     let prevIncome = 0;
@@ -472,6 +525,41 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     return notifications.filter(n => !n.isRead).length;
   }, [notifications]);
 
+  // Atomic execution runner: executes pure finance operation against latestStateRef,
+  // updates latestStateRef synchronously, applies React state, and persists mutated diffs in one group.
+  const executeOperation = useCallback(async (opRunner: (state: FinanceState) => OperationResult): Promise<OperationResult> => {
+    const currentState = latestStateRef.current;
+    const result = opRunner(currentState);
+    if (!result.ok) {
+      throw new Error(result.error || 'Operation failed');
+    }
+
+    // Advance ref synchronously so immediate subsequent calls in the same event tick read the updated state!
+    latestStateRef.current = result.nextState;
+
+    // React state updates
+    if (result.mutated.accountsToUpsert || result.mutated.accountsToDelete) {
+      setAccounts(result.nextState.accounts);
+    }
+    if (result.mutated.transactionsToUpsert || result.mutated.transactionsToDelete) {
+      setTransactions(result.nextState.transactions);
+    }
+    if (result.mutated.goalsToUpsert || result.mutated.goalsToDelete) {
+      setGoals(result.nextState.goals);
+    }
+    if (result.mutated.budgetsToUpsert || result.mutated.budgetsToDelete) {
+      setBudgets(result.nextState.budgets);
+    }
+    if (result.mutated.notificationsToUpsert || result.mutated.notificationsToDelete) {
+      setNotifications(result.nextState.notifications);
+    }
+
+    // Persist mutated records as a group
+    await CentraDB.persistBatch(result.mutated);
+
+    return result;
+  }, []);
+
   // Notification Trigger Helper
   const addNotification = (item: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead'>) => {
     const newNotif: NotificationItem = {
@@ -480,169 +568,77 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       timestamp: new Date().toISOString(),
       isRead: false,
     };
-    setNotifications(prev => [newNotif, ...prev]);
-    CentraDB.upsertNotification(newNotif);
+    executeOperation(state => ({
+      ok: true,
+      nextState: {
+        ...state,
+        notifications: [newNotif, ...state.notifications],
+      },
+      mutated: {
+        notificationsToUpsert: [newNotif],
+      },
+      notificationsToEmit: [newNotif],
+    }));
   };
 
-  // Add Transaction with balance adjustments and budget limit monitoring
   const addTransaction = async (txData: Omit<Transaction, 'id'>): Promise<Transaction> => {
-    const targetAccount = accounts.find(a => a.id === txData.accountId);
-    const txAmount = Number(txData.amount);
-
-    let newBalance = targetAccount ? targetAccount.balance : 0;
-    if (txData.type === 'expense') {
-      newBalance -= txAmount;
-    } else if (txData.type === 'income') {
-      newBalance += txAmount;
-    }
-
-    const newTx: Transaction = {
-      ...txData,
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tx_${Date.now()}`,
-      amount: txAmount,
-      resultingBalance: newBalance,
-    };
-
-    // 1. Optimistic React State update
-    setTransactions(prev => [newTx, ...prev]);
-
-    // 2. Persist transaction per-record
-    await CentraDB.upsertTransaction(newTx);
-
-    // 3. Update account balance
-    if (targetAccount) {
-      const updatedAccount: Account = { ...targetAccount, balance: newBalance };
-      setAccounts(prev =>
-        prev.map(acc => (acc.id === targetAccount.id ? updatedAccount : acc))
-      );
-      await CentraDB.upsertAccount(updatedAccount);
-    }
-
-    // 4. Budget limit alert check
-    if (txData.type === 'expense' && settings.notifications.budgetOverruns) {
-      const budget = budgets.find(b => b.categoryId === txData.categoryId);
-      if (budget) {
-        const newSpent = budget.spentAmount + txAmount;
-        const percentSpent = (newSpent / budget.limitAmount) * 100;
-        const updatedBudget: Budget = { ...budget, spentAmount: newSpent };
-
-        setBudgets(prev =>
-          prev.map(b => (b.id === budget.id ? updatedBudget : b))
-        );
-        CentraDB.upsertBudget(updatedBudget);
-
-        if (percentSpent >= 100) {
-          addNotification({
-            type: 'budget',
-            title: `Budget Exceeded: ${budget.categoryName}`,
-            message: `You've spent $${newSpent.toFixed(2)} of your $${budget.limitAmount.toFixed(2)} limit (${percentSpent.toFixed(0)}%).`,
-            severity: 'alert',
-          });
-        } else if (percentSpent >= budget.alertThreshold) {
-          addNotification({
-            type: 'budget',
-            title: `Budget Warning: ${budget.categoryName}`,
-            message: `You've reached ${percentSpent.toFixed(0)}% of your $${budget.limitAmount.toFixed(2)} budget.`,
-            severity: 'warning',
-          });
-        }
-      }
-    }
-
-    // High transaction alert
-    if (settings.notifications.transactionAlerts && txAmount >= 500) {
-      addNotification({
-        type: 'transaction',
-        title: `High Amount Transaction Alert`,
-        message: `${txData.type === 'income' ? 'Received' : 'Paid'} $${txAmount.toFixed(2)} (${txData.merchant || txData.categoryName}).`,
-        severity: 'info',
-      });
-    }
-
-    return newTx;
+    const res = await executeOperation(state => applyAddTransaction(state, txData));
+    return res.createdTransaction!;
   };
 
-  const updateTransaction = (id: string, updates: Partial<Transaction>) => {
-    setTransactions(prev => {
-      const next = prev.map(tx => (tx.id === id ? { ...tx, ...updates } : tx));
-      const updated = next.find(t => t.id === id);
-      if (updated) {
-        CentraDB.upsertTransaction(updated);
-      }
-      return next;
-    });
+  const updateTransaction = async (id: string, updates: Partial<Transaction>): Promise<void> => {
+    await executeOperation(state => applyUpdateTransaction(state, id, updates));
   };
 
-  const deleteTransaction = (id: string) => {
-    const tx = transactions.find(t => t.id === id);
-    if (!tx) return;
-
-    if (tx.type === 'transfer' && tx.toAccountId) {
-      const fromAcc = accounts.find(a => a.id === tx.accountId);
-      const toAcc = accounts.find(a => a.id === tx.toAccountId);
-      if (fromAcc) {
-        const revertedFrom = { ...fromAcc, balance: fromAcc.balance + tx.amount };
-        CentraDB.upsertAccount(revertedFrom);
-      }
-      if (toAcc) {
-        const revertedTo = { ...toAcc, balance: toAcc.balance - tx.amount };
-        CentraDB.upsertAccount(revertedTo);
-      }
-      setAccounts(prev => prev.map(acc => {
-        if (acc.id === tx.accountId) return { ...acc, balance: acc.balance + tx.amount };
-        if (acc.id === tx.toAccountId) return { ...acc, balance: acc.balance - tx.amount };
-        return acc;
-      }));
-    } else {
-      const acc = accounts.find(a => a.id === tx.accountId);
-      if (acc) {
-        const reverted = tx.type === 'expense'
-          ? acc.balance + tx.amount
-          : acc.balance - tx.amount;
-        const updatedAcc = { ...acc, balance: reverted };
-        CentraDB.upsertAccount(updatedAcc);
-        setAccounts(prev => prev.map(a => (a.id === tx.accountId ? updatedAcc : a)));
-      }
-    }
-
-    setTransactions(prev => prev.filter(t => t.id !== id));
-    CentraDB.deleteTransaction(id);
+  const deleteTransaction = async (id: string): Promise<void> => {
+    await executeOperation(state => applyDeleteTransaction(state, id));
   };
 
   const togglePinTransaction = (id: string) => {
-    setTransactions(prev => {
-      const next = prev.map(tx => (tx.id === id ? { ...tx, isPinned: !tx.isPinned } : tx));
-      const updated = next.find(t => t.id === id);
-      if (updated) {
-        CentraDB.upsertTransaction(updated);
-      }
-      return next;
+    executeOperation(state => {
+      const nextTxs = state.transactions.map(tx => tx.id === id ? { ...tx, isPinned: !tx.isPinned } : tx);
+      const updated = nextTxs.find(t => t.id === id);
+      return {
+        ok: true,
+        nextState: { ...state, transactions: nextTxs },
+        mutated: { transactionsToUpsert: updated ? [updated] : [] },
+        notificationsToEmit: [],
+      };
     });
   };
 
   const addAccount = (accData: Omit<Account, 'id'>) => {
+    if (!settings.baseCurrency) {
+      throw new Error('BASE_CURRENCY_REQUIRED: Please choose a base currency in Settings before adding an account.');
+    }
     const newAcc: Account = {
       ...accData,
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `acc_${Date.now()}`,
     };
-    setAccounts(prev => [...prev, newAcc]);
-    CentraDB.upsertAccount(newAcc);
+    executeOperation(state => ({
+      ok: true,
+      nextState: { ...state, accounts: [...state.accounts, newAcc] },
+      mutated: { accountsToUpsert: [newAcc] },
+      notificationsToEmit: [],
+      createdAccount: newAcc,
+    }));
   };
 
   const updateAccount = (id: string, updates: Partial<Account>) => {
-    setAccounts(prev => {
-      const next = prev.map(a => (a.id === id ? { ...a, ...updates } : a));
-      const updated = next.find(a => a.id === id);
-      if (updated) {
-        CentraDB.upsertAccount(updated);
-      }
-      return next;
+    executeOperation(state => {
+      const nextAccounts = state.accounts.map(a => a.id === id ? { ...a, ...updates } : a);
+      const updated = nextAccounts.find(a => a.id === id);
+      return {
+        ok: true,
+        nextState: { ...state, accounts: nextAccounts },
+        mutated: { accountsToUpsert: updated ? [updated] : [] },
+        notificationsToEmit: [],
+      };
     });
   };
 
-  const deleteAccount = (id: string) => {
-    setAccounts(prev => prev.filter(a => a.id !== id));
-    CentraDB.deleteAccount(id);
+  const deleteAccount = async (id: string, mode: 'block' | 'cascade' = 'cascade'): Promise<void> => {
+    await executeOperation(state => applyDeleteAccount(state, id, mode));
   };
 
   const transferFunds = async (
@@ -651,54 +647,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     amount: number,
     note?: string
   ): Promise<boolean> => {
-    const fromAcc = accounts.find(a => a.id === fromId);
-    const toAcc = accounts.find(a => a.id === toId);
-    if (!fromAcc || !toAcc || amount <= 0) return false;
-
-    const convertedAmount = convertCurrency(amount, fromAcc.currency, toAcc.currency);
-
-    const updatedFrom = { ...fromAcc, balance: fromAcc.balance - amount };
-    const updatedTo = { ...toAcc, balance: toAcc.balance + convertedAmount };
-
-    setAccounts(prev =>
-      prev.map(acc => {
-        if (acc.id === fromId) return updatedFrom;
-        if (acc.id === toId) return updatedTo;
-        return acc;
-      })
-    );
-    CentraDB.upsertAccount(updatedFrom);
-    CentraDB.upsertAccount(updatedTo);
-
-    const newTx: Transaction = {
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tx_tr_${Date.now()}`,
-      type: 'transfer',
-      amount,
-      currency: fromAcc.currency,
-      categoryId: 'cat_transfer',
-      categoryName: 'Transfer & Payment',
-      categoryIcon: 'ArrowRightLeft',
-      categoryColor: '#636E72',
-      accountId: fromId,
-      accountName: fromAcc.name,
-      toAccountId: toId,
-      recipient: toAcc.name,
-      date: new Date().toISOString(),
-      note: note || `Transfer to ${toAcc.name}`,
-      tags: ['Transfer'],
-    };
-
-    setTransactions(prev => [newTx, ...prev]);
-    CentraDB.upsertTransaction(newTx);
-
-    addNotification({
-      type: 'transaction',
-      title: 'Funds Transferred Successfully',
-      message: `Transferred $${amount.toFixed(2)} from ${fromAcc.name} to ${toAcc.name}.`,
-      severity: 'success',
-    });
-
-    return true;
+    try {
+      await executeOperation(state => applyTransferFunds(state, { fromId, toId, amount, note }));
+      return true;
+    } catch (err) {
+      console.warn('Transfer funds failed:', err);
+      return false;
+    }
   };
 
   const addGoal = (goalData: Omit<Goal, 'id'>) => {
@@ -706,125 +661,136 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       ...goalData,
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `goal_${Date.now()}`,
     };
-    setGoals(prev => [...prev, newGoal]);
-    CentraDB.upsertGoal(newGoal);
-
-    addNotification({
+    const notif: NotificationItem = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif_${Date.now()}`,
       type: 'goal',
       title: 'New Savings Target Created! 🎯',
-      message: `Started "${newGoal.name}" with target of $${newGoal.targetAmount.toLocaleString()}.`,
+      message: `Started "${newGoal.name}" with target of ${formatCurrency(newGoal.targetAmount, settings.baseCurrency)}.`,
+      timestamp: new Date().toISOString(),
+      isRead: false,
       severity: 'info',
-    });
+    };
+    executeOperation(state => ({
+      ok: true,
+      nextState: {
+        ...state,
+        goals: [...state.goals, newGoal],
+        notifications: [notif, ...state.notifications],
+      },
+      mutated: {
+        goalsToUpsert: [newGoal],
+        notificationsToUpsert: [notif],
+      },
+      notificationsToEmit: [notif],
+      createdGoal: newGoal,
+    }));
   };
 
   const updateGoal = (id: string, updates: Partial<Goal>) => {
-    setGoals(prev => {
-      const next = prev.map(g => (g.id === id ? { ...g, ...updates } : g));
-      const updated = next.find(g => g.id === id);
-      if (updated) {
-        CentraDB.upsertGoal(updated);
-      }
-      return next;
+    executeOperation(state => {
+      const nextGoals = state.goals.map(g => g.id === id ? { ...g, ...updates } : g);
+      const updated = nextGoals.find(g => g.id === id);
+      return {
+        ok: true,
+        nextState: { ...state, goals: nextGoals },
+        mutated: { goalsToUpsert: updated ? [updated] : [] },
+        notificationsToEmit: [],
+      };
     });
   };
 
   const deleteGoal = (id: string) => {
-    setGoals(prev => prev.filter(g => g.id !== id));
-    CentraDB.deleteGoal(id);
+    executeOperation(state => ({
+      ok: true,
+      nextState: { ...state, goals: state.goals.filter(g => g.id !== id) },
+      mutated: { goalsToDelete: [id] },
+      notificationsToEmit: [],
+    }));
   };
 
-  const contributeToGoal = (goalId: string, amount: number, accountId?: string) => {
-    setGoals(prev =>
-      prev.map(g => {
-        if (g.id === goalId) {
-          const newAmount = g.currentAmount + amount;
-          const isCompleted = newAmount >= g.targetAmount;
-          const updatedGoal = { ...g, currentAmount: newAmount, isCompleted };
-          CentraDB.upsertGoal(updatedGoal);
-
-          if (isCompleted && !g.isCompleted) {
-            addNotification({
-              type: 'goal',
-              title: `Goal Achieved! 🎉`,
-              message: `Congratulations! You reached your $${g.targetAmount.toLocaleString()} target for "${g.name}".`,
-              severity: 'success',
-            });
-          }
-          return updatedGoal;
-        }
-        return g;
-      })
-    );
-
-    if (accountId) {
-      setAccounts(prev =>
-        prev.map(acc => {
-          if (acc.id === accountId) {
-            const updatedAcc = { ...acc, balance: acc.balance - amount };
-            CentraDB.upsertAccount(updatedAcc);
-            return updatedAcc;
-          }
-          return acc;
-        })
-      );
-    }
+  const contributeToGoal = async (goalId: string, amount: number, accountId?: string): Promise<void> => {
+    const accId = accountId || latestStateRef.current.accounts.find(a => a.isPrimary)?.id || latestStateRef.current.accounts[0]?.id;
+    if (!accId) throw new Error('No account available for goal contribution');
+    await executeOperation(state => applyContributeToGoal(state, { goalId, amount, accountId: accId }));
   };
 
   const addBudget = (budgetData: Omit<Budget, 'id'>) => {
     const newBudget: Budget = {
       ...budgetData,
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `bud_${Date.now()}`,
+      spentAmount: 0,
     };
-    setBudgets(prev => [...prev, newBudget]);
-    CentraDB.upsertBudget(newBudget);
+    executeOperation(state => ({
+      ok: true,
+      nextState: { ...state, budgets: [...state.budgets, newBudget] },
+      mutated: { budgetsToUpsert: [newBudget] },
+      notificationsToEmit: [],
+      createdBudget: newBudget,
+    }));
   };
 
   const updateBudget = (id: string, updates: Partial<Budget>) => {
-    setBudgets(prev => {
-      const next = prev.map(b => (b.id === id ? { ...b, ...updates } : b));
-      const updated = next.find(b => b.id === id);
-      if (updated) {
-        CentraDB.upsertBudget(updated);
-      }
-      return next;
+    executeOperation(state => {
+      const nextBudgets = state.budgets.map(b => b.id === id ? { ...b, ...updates } : b);
+      const updated = nextBudgets.find(b => b.id === id);
+      return {
+        ok: true,
+        nextState: { ...state, budgets: nextBudgets },
+        mutated: { budgetsToUpsert: updated ? [updated] : [] },
+        notificationsToEmit: [],
+      };
     });
   };
 
   const deleteBudget = (id: string) => {
-    setBudgets(prev => prev.filter(b => b.id !== id));
-    CentraDB.deleteBudget(id);
+    executeOperation(state => ({
+      ok: true,
+      nextState: { ...state, budgets: state.budgets.filter(b => b.id !== id) },
+      mutated: { budgetsToDelete: [id] },
+      notificationsToEmit: [],
+    }));
   };
 
   const markNotificationAsRead = (id: string) => {
-    setNotifications(prev => {
-      const next = prev.map(n => (n.id === id ? { ...n, isRead: true } : n));
-      const updated = next.find(n => n.id === id);
-      if (updated) {
-        CentraDB.upsertNotification(updated);
-      }
-      return next;
+    executeOperation(state => {
+      const nextNotifs = state.notifications.map(n => n.id === id ? { ...n, isRead: true } : n);
+      const updated = nextNotifs.find(n => n.id === id);
+      return {
+        ok: true,
+        nextState: { ...state, notifications: nextNotifs },
+        mutated: { notificationsToUpsert: updated ? [updated] : [] },
+        notificationsToEmit: [],
+      };
     });
   };
 
   const markAllNotificationsAsRead = () => {
-    setNotifications(prev => {
-      const next = prev.map(n => ({ ...n, isRead: true }));
-      next.forEach(n => CentraDB.upsertNotification(n));
-      return next;
+    executeOperation(state => {
+      const nextNotifs = state.notifications.map(n => ({ ...n, isRead: true }));
+      return {
+        ok: true,
+        nextState: { ...state, notifications: nextNotifs },
+        mutated: { notificationsToUpsert: nextNotifs },
+        notificationsToEmit: [],
+      };
     });
   };
 
   const clearNotifications = () => {
-    setNotifications([]);
-    CentraDB.clearAllNotifications();
+    const notifIds = latestStateRef.current.notifications.map(n => n.id);
+    executeOperation(state => ({
+      ok: true,
+      nextState: { ...state, notifications: [] },
+      mutated: { notificationsToDelete: notifIds },
+      notificationsToEmit: [],
+    }));
   };
 
-  const updateSettings = (updates: Partial<AppSettings>) => {
-    setSettings(prev => {
-      const next = { ...prev, ...updates };
-      CentraDB.saveSettings(next);
-      return next;
-    });
+  const updateSettings = async (updates: Partial<AppSettings>) => {
+    const next = { ...latestStateRef.current.settings, ...updates };
+    latestStateRef.current.settings = next;
+    setSettings(next);
+    await CentraDB.saveSettings(next);
   };
 
   const resetAllData = async (): Promise<{ ok: boolean; error?: any }> => {
@@ -858,7 +824,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
         transactions,
         categories,
         goals,
-        budgets,
+        budgets: derivedBudgets,
         notifications,
         settings,
         periodFilter,

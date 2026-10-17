@@ -515,19 +515,21 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                       <div className="text-sm font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
                         {formatCurrency(item.total, settings.baseCurrency, settings.privacyMode)}
                       </div>
-                      <div className="flex items-center justify-end space-x-0.5 text-xs font-bold mt-0.5 tabular-nums">
-                        {item.trendPercentage > 0 ? (
-                          <span className="flex items-center" style={{ color: palette.negative }}>
-                            <TrendingUp className="w-3 h-3 mr-0.5" />
-                            +{item.trendPercentage.toFixed(0)}%
-                          </span>
-                        ) : (
-                          <span className="flex items-center" style={{ color: palette.positive }}>
-                            <TrendingDown className="w-3 h-3 mr-0.5" />
-                            {item.trendPercentage.toFixed(0)}%
-                          </span>
-                        )}
-                      </div>
+                      {item.previousPeriodTotal > 0 && (
+                        <div className="flex items-center justify-end space-x-0.5 text-xs font-bold mt-0.5 tabular-nums">
+                          {item.trendPercentage > 0 ? (
+                            <span className="flex items-center" style={{ color: palette.negative }}>
+                              <TrendingUp className="w-3 h-3 mr-0.5" />
+                              +{item.trendPercentage.toFixed(0)}%
+                            </span>
+                          ) : (
+                            <span className="flex items-center" style={{ color: palette.positive }}>
+                              <TrendingDown className="w-3 h-3 mr-0.5" />
+                              {item.trendPercentage.toFixed(0)}%
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <ChevronRight 

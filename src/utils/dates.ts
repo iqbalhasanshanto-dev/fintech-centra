@@ -112,3 +112,32 @@ export function getPeriodDateRange(
 
   return { start, end };
 }
+
+/**
+ * Returns the local date range boundary for budget periods ('monthly' | 'weekly').
+ */
+export function getBudgetPeriodDateRange(
+  period: 'monthly' | 'weekly',
+  referenceDate: Date = new Date()
+): { start: Date; end: Date } {
+  const now = referenceDate;
+  const start = new Date(now);
+  const end = new Date(now);
+
+  if (period === 'weekly') {
+    const day = now.getDay();
+    const diffToMonday = (day + 6) % 7;
+    start.setDate(now.getDate() - diffToMonday);
+    start.setHours(0, 0, 0, 0);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+  } else {
+    // monthly
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    end.setMonth(end.getMonth() + 1, 0);
+    end.setHours(23, 59, 59, 999);
+  }
+
+  return { start, end };
+}

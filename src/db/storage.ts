@@ -228,6 +228,9 @@ const mapTransactionToDb = (tx: Transaction, userId: string) => ({
   account_id: tx.accountId,
   account_name: tx.accountName,
   to_account_id: tx.toAccountId || null,
+  converted_amount: tx.convertedAmount !== undefined ? tx.convertedAmount : null,
+  exchange_rate: tx.exchangeRate !== undefined ? tx.exchangeRate : null,
+  goal_id: tx.goalId || null,
   recipient: tx.recipient || null,
   merchant: tx.merchant || null,
   date: tx.date,
@@ -252,6 +255,9 @@ const mapTransactionFromDb = (row: any): Transaction => ({
   accountId: row.account_id,
   accountName: row.account_name,
   toAccountId: row.to_account_id || undefined,
+  convertedAmount: row.converted_amount !== null && row.converted_amount !== undefined ? parseFloat(row.converted_amount) : undefined,
+  exchangeRate: row.exchange_rate !== null && row.exchange_rate !== undefined ? parseFloat(row.exchange_rate) : undefined,
+  goalId: row.goal_id || undefined,
   recipient: row.recipient || undefined,
   merchant: row.merchant || undefined,
   date: row.date,
@@ -299,9 +305,10 @@ const mapBudgetToDb = (b: Budget, userId: string) => ({
   category_icon: b.categoryIcon,
   category_color: b.categoryColor,
   limit_amount: b.limitAmount,
-  spent_amount: b.spentAmount,
+  spent_amount: b.spentAmount || 0,
   alert_threshold: b.alertThreshold,
   period: b.period,
+  currency: b.currency || null,
   updated_at: new Date().toISOString(),
 });
 
@@ -312,9 +319,10 @@ const mapBudgetFromDb = (row: any): Budget => ({
   categoryIcon: row.category_icon,
   categoryColor: row.category_color,
   limitAmount: parseFloat(row.limit_amount),
-  spentAmount: parseFloat(row.spent_amount),
+  spentAmount: parseFloat(row.spent_amount || '0'),
   alertThreshold: row.alert_threshold,
   period: row.period as any,
+  currency: row.currency || undefined,
 });
 
 const mapNotificationToDb = (n: NotificationItem, userId: string) => ({
@@ -1518,21 +1526,194 @@ export const CentraDB = {
     return JSON.stringify(payload, null, 2);
   },
 
+  persistBatch: async (mutated: {
+    accountsToUpsert?: Account[];
+    accountsToDelete?: string[];
+    transactionsToUpsert?: Transaction[];
+    transactionsToDelete?: string[];
+    goalsToUpsert?: Goal[];
+    goalsToDelete?: string[];
+    budgetsToUpsert?: Budget[];
+    budgetsToDelete?: string[];
+    notificationsToUpsert?: NotificationItem[];
+    notificationsToDelete?: string[];
+  }): Promise<{ ok: boolean; error?: any }> => {
+    // 1. Update in-memory cache and localStorage synchronously
+    if (mutated.accountsToUpsert) {
+      mutated.accountsToUpsert.forEach(acc => {
+        const idx = cache.accounts.findIndex(a => a.id === acc.id);
+        if (idx >= 0) cache.accounts[idx] = acc;
+        else cache.accounts.push(acc);
+      });
+      safeSet(getUserStorageKey(currentActiveUserId, 'accounts'), cache.accounts);
+    }
+    if (mutated.accountsToDelete) {
+      cache.accounts = cache.accounts.filter(a => !mutated.accountsToDelete!.includes(a.id));
+      safeSet(getUserStorageKey(currentActiveUserId, 'accounts'), cache.accounts);
+    }
+
+    if (mutated.transactionsToUpsert) {
+      mutated.transactionsToUpsert.forEach(tx => {
+        const idx = cache.transactions.findIndex(t => t.id === tx.id);
+        if (idx >= 0) cache.transactions[idx] = tx;
+        else cache.transactions = [tx, ...cache.transactions];
+      });
+      safeSet(getUserStorageKey(currentActiveUserId, 'transactions'), cache.transactions);
+    }
+    if (mutated.transactionsToDelete) {
+      cache.transactions = cache.transactions.filter(t => !mutated.transactionsToDelete!.includes(t.id));
+      safeSet(getUserStorageKey(currentActiveUserId, 'transactions'), cache.transactions);
+    }
+
+    if (mutated.goalsToUpsert) {
+      mutated.goalsToUpsert.forEach(goal => {
+        const idx = cache.goals.findIndex(g => g.id === goal.id);
+        if (idx >= 0) cache.goals[idx] = goal;
+        else cache.goals.push(goal);
+      });
+      safeSet(getUserStorageKey(currentActiveUserId, 'goals'), cache.goals);
+    }
+    if (mutated.goalsToDelete) {
+      cache.goals = cache.goals.filter(g => !mutated.goalsToDelete!.includes(g.id));
+      safeSet(getUserStorageKey(currentActiveUserId, 'goals'), cache.goals);
+    }
+
+    if (mutated.budgetsToUpsert) {
+      mutated.budgetsToUpsert.forEach(b => {
+        const idx = cache.budgets.findIndex(item => item.id === b.id);
+        if (idx >= 0) cache.budgets[idx] = b;
+        else cache.budgets.push(b);
+      });
+      safeSet(getUserStorageKey(currentActiveUserId, 'budgets'), cache.budgets);
+    }
+    if (mutated.budgetsToDelete) {
+      cache.budgets = cache.budgets.filter(b => !mutated.budgetsToDelete!.includes(b.id));
+      safeSet(getUserStorageKey(currentActiveUserId, 'budgets'), cache.budgets);
+    }
+
+    if (mutated.notificationsToUpsert) {
+      mutated.notificationsToUpsert.forEach(n => {
+        const idx = cache.notifications.findIndex(item => item.id === n.id);
+        if (idx >= 0) cache.notifications[idx] = n;
+        else cache.notifications = [n, ...cache.notifications];
+      });
+      safeSet(getUserStorageKey(currentActiveUserId, 'notifications'), cache.notifications);
+    }
+    if (mutated.notificationsToDelete) {
+      cache.notifications = cache.notifications.filter(n => !mutated.notificationsToDelete!.includes(n.id));
+      safeSet(getUserStorageKey(currentActiveUserId, 'notifications'), cache.notifications);
+    }
+
+    const userId = getActiveUserId();
+    if (isGuestUser(userId) || !isSupabaseConfigured() || !userId) {
+      return { ok: true };
+    }
+
+    // 2. Build grouped outbox items sharing an operation ID
+    const operationId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `op_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+    const outboxItems: Array<{
+      userId: string;
+      entity: 'accounts' | 'categories' | 'transactions' | 'goals' | 'budgets' | 'notifications' | 'settings' | 'profiles';
+      op: 'upsert' | 'delete';
+      recordId: string;
+      payload?: any;
+    }> = [];
+
+    if (mutated.accountsToUpsert) {
+      mutated.accountsToUpsert.forEach(acc => {
+        outboxItems.push({ userId, entity: 'accounts', op: 'upsert', recordId: acc.id, payload: mapAccountToDb(acc, userId) });
+      });
+    }
+    if (mutated.accountsToDelete) {
+      mutated.accountsToDelete.forEach(id => {
+        outboxItems.push({ userId, entity: 'accounts', op: 'delete', recordId: id });
+      });
+    }
+
+    if (mutated.transactionsToUpsert) {
+      mutated.transactionsToUpsert.forEach(tx => {
+        outboxItems.push({ userId, entity: 'transactions', op: 'upsert', recordId: tx.id, payload: mapTransactionToDb(tx, userId) });
+      });
+    }
+    if (mutated.transactionsToDelete) {
+      mutated.transactionsToDelete.forEach(id => {
+        outboxItems.push({ userId, entity: 'transactions', op: 'delete', recordId: id });
+      });
+    }
+
+    if (mutated.goalsToUpsert) {
+      mutated.goalsToUpsert.forEach(g => {
+        outboxItems.push({ userId, entity: 'goals', op: 'upsert', recordId: g.id, payload: mapGoalToDb(g, userId) });
+      });
+    }
+    if (mutated.goalsToDelete) {
+      mutated.goalsToDelete.forEach(id => {
+        outboxItems.push({ userId, entity: 'goals', op: 'delete', recordId: id });
+      });
+    }
+
+    if (mutated.budgetsToUpsert) {
+      mutated.budgetsToUpsert.forEach(b => {
+        outboxItems.push({ userId, entity: 'budgets', op: 'upsert', recordId: b.id, payload: mapBudgetToDb(b, userId) });
+      });
+    }
+    if (mutated.budgetsToDelete) {
+      mutated.budgetsToDelete.forEach(id => {
+        outboxItems.push({ userId, entity: 'budgets', op: 'delete', recordId: id });
+      });
+    }
+
+    if (mutated.notificationsToUpsert) {
+      mutated.notificationsToUpsert.forEach(n => {
+        outboxItems.push({ userId, entity: 'notifications', op: 'upsert', recordId: n.id, payload: mapNotificationToDb(n, userId) });
+      });
+    }
+    if (mutated.notificationsToDelete) {
+      mutated.notificationsToDelete.forEach(id => {
+        outboxItems.push({ userId, entity: 'notifications', op: 'delete', recordId: id });
+      });
+    }
+
+    if (outboxItems.length > 0) {
+      OutboxQueue.enqueueGroup(outboxItems, operationId);
+      if (navigator.onLine) {
+        CentraDB.processOutbox().catch(err => {
+          console.warn('Outbox process error after persistBatch:', err);
+        });
+      }
+    }
+
+    return { ok: true };
+  },
+
   exportTransactionsCSV: (): string => {
+    const escapeCsvField = (val: any): string => {
+      if (val === null || val === undefined) return '""';
+      let str = String(val);
+      // Neutralize CSV formula injection: characters =, +, -, @, \t, \r
+      if (/^[=+\-@\t\r]/.test(str)) {
+        str = "'" + str;
+      }
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
     const headers = ['ID', 'Date', 'Type', 'Merchant/Payee', 'Category', 'Account', 'Amount', 'Currency', 'Note', 'Tags'];
     const rows = cache.transactions.map(t => [
-      t.id,
-      t.date,
-      t.type,
-      `"${(t.merchant || '').replace(/"/g, '""')}"`,
-      `"${t.categoryName.replace(/"/g, '""')}"`,
-      `"${t.accountName.replace(/"/g, '""')}"`,
-      t.amount,
-      t.currency,
-      `"${(t.note || '').replace(/"/g, '""')}"`,
-      `"${(t.tags || []).join(';')}"`,
+      escapeCsvField(t.id),
+      escapeCsvField(t.date),
+      escapeCsvField(t.type),
+      escapeCsvField(t.merchant || ''),
+      escapeCsvField(t.categoryName),
+      escapeCsvField(t.accountName),
+      escapeCsvField(t.amount),
+      escapeCsvField(t.currency),
+      escapeCsvField(t.note || ''),
+      escapeCsvField((t.tags || []).join(';')),
     ]);
-    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    return [headers.map(escapeCsvField).join(','), ...rows.map(r => r.join(','))].join('\n');
   },
 
   seedUserData: async (userId: string, email?: string, name?: string) => {
