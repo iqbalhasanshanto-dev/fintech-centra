@@ -13,6 +13,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
 import { NotificationType } from '../../types';
 import { formatRelativeTime } from '../../utils/formatters';
+import { useBackHandler } from '../../utils/backButton';
 
 interface NotificationsModalProps {
   isOpen: boolean;
@@ -29,6 +30,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     markAllNotificationsAsRead, 
     clearNotifications 
   } = useFinance();
+
+  useBackHandler(isOpen, onClose);
 
   const [activeFilter, setActiveFilter] = useState<'all' | NotificationType>('all');
 

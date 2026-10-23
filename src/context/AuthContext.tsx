@@ -4,6 +4,11 @@ import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS } f
 import { OutboxQueue } from '../db/outbox';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { hasDevicePin, verifyDevicePin } from '../utils/pinLock';
+import { getAuthRedirectUrl } from '../utils/authRedirect';
+import { isNative } from '../utils/platform';
+import { startNativeOAuth, handleNativeDeepLink } from '../utils/nativeOAuth';
+import { initNativeApp } from '../utils/nativeApp';
+import { BackButtonManager } from '../utils/backButton';
 
 // ---------------------------------------------------------------------------
 // Types & State Machine
@@ -335,7 +340,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: cleanEmail,
         options: {
           shouldCreateUser: shouldCreate,
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthRedirectUrl(),
         },
       });
 
@@ -432,13 +437,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const currentMode = mode || authMode;
-    // Store intent in localStorage to survive the OAuth redirect
+
+    if (isNative()) {
+      await startNativeOAuth(provider, currentMode);
+      return;
+    }
+
+    // Store intent in localStorage to survive the web OAuth redirect
     localStorage.setItem(INTENT_STORAGE_KEY, currentMode);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: getAuthRedirectUrl(),
       },
     });
 
@@ -516,28 +527,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let hiddenTimestamp: number | null = null;
     const BACKGROUND_TIMEOUT_MS = 5 * 60 * 1000;
 
+    const checkAndTriggerLock = () => {
+      if (hiddenTimestamp && Date.now() - hiddenTimestamp >= BACKGROUND_TIMEOUT_MS) {
+        const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id;
+        if (activeUid && activeUid !== 'guest') {
+          const settings = CentraDB.getSettings();
+          if (settings.security.pinLockEnabled && hasDevicePin(activeUid)) {
+            lockApp();
+          }
+        }
+      }
+      hiddenTimestamp = null;
+    };
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         hiddenTimestamp = Date.now();
       } else if (document.visibilityState === 'visible') {
-        if (hiddenTimestamp && Date.now() - hiddenTimestamp >= BACKGROUND_TIMEOUT_MS) {
-          const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id;
-          if (activeUid && activeUid !== 'guest') {
-            const settings = CentraDB.getSettings();
-            if (settings.security.pinLockEnabled && hasDevicePin(activeUid)) {
-              lockApp();
-            }
-          }
-        }
-        hiddenTimestamp = null;
+        checkAndTriggerLock();
       }
     };
 
+    // Tauri Desktop window minimization / blur lock support
+    const handleWindowBlur = () => {
+      if (!hiddenTimestamp) {
+        hiddenTimestamp = Date.now();
+      }
+    };
+    const handleWindowFocus = () => {
+      checkAndTriggerLock();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
+
+    // Native mobile app initialization (Capacitor)
+    let cleanupNative: (() => Promise<void>) | null = null;
+    if (isNative()) {
+      initNativeApp({
+        onUrlOpen: async (url: string) => {
+          await handleNativeDeepLink(url, {
+            onSuccess: async (session) => {
+              if (session?.user) {
+                await handleSession(session);
+              }
+            },
+            onError: (err) => {
+              console.warn('Native deep link error:', err);
+            },
+          });
+        },
+        onAppStateChange: (isActive: boolean) => {
+          if (!isActive) {
+            hiddenTimestamp = Date.now();
+          } else {
+            checkAndTriggerLock();
+          }
+        },
+        onBackButton: () => {
+          BackButtonManager.handleBackButton();
+        },
+      }).then(cleanup => {
+        cleanupNative = cleanup;
+      });
+    }
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
+      if (cleanupNative) {
+        cleanupNative();
+      }
     };
-  }, []);
+  }, [handleSession, lockApp]);
 
   const isCompletingRef = useRef(false);
 

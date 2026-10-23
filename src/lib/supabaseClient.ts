@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { isNative } from '../utils/platform';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-ref.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'dummy_anon_key';
@@ -16,5 +17,13 @@ export const isSupabaseConfigured = (): boolean => {
 
 export const supabase: SupabaseClient = createClient(
   supabaseUrl.startsWith('http') ? supabaseUrl : 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'dummy'
+  supabaseAnonKey || 'dummy',
+  {
+    auth: {
+      flowType: 'pkce',
+      detectSessionInUrl: !isNative(),
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  }
 );

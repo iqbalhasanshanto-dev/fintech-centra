@@ -1,6 +1,39 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Repomix output
+repomix-output.xml
+
+# Environment variables & secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# macOS
 .DS_Store
+DerivedData/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/*.iml
+
+# iOS
+ios/App/Pods/
+ios/App/build/
+ios/App/.build/
+*.xcworkspace
+xcuserdata/
+
+# Tauri Desktop
+src-tauri/target/

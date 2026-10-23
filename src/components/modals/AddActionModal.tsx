@@ -16,6 +16,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { getCurrencyInfo } from '../../utils/currencies';
 import { todayLocalDateKey } from '../../utils/dates';
 import { CentraDB } from '../../db/storage';
+import { useBackHandler } from '../../utils/backButton';
 
 interface AddActionModalProps {
   isOpen: boolean;
@@ -43,6 +44,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   // Sub-modal for adding an account on the fly from empty states
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
+
+  // Android hardware back button closes modal
+  useBackHandler(isOpen, onClose);
 
   useEffect(() => {
     if (isOpen) {

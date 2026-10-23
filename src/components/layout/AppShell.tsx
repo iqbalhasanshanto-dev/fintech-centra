@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { Shield } from 'lucide-react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
@@ -10,13 +10,28 @@ import { PlanScreen } from '../plan/PlanScreen';
 import { SettingsScreen } from '../settings/SettingsScreen';
 import { AddActionModal } from '../modals/AddActionModal';
 import { NotificationsModal } from '../modals/NotificationsModal';
+import { ConfirmModal } from '../ui/ConfirmModal';
+import { BackButtonManager, exitNativeApp } from '../../utils/backButton';
 
 export const AppShell: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget'>('transaction');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const mainContentRef = useRef<HTMLElement>(null);
+
+  // Hardware back button root handler: switches to 'home' tab first, then prompts to exit app
+  useEffect(() => {
+    const unregister = BackButtonManager.registerRootHandler(() => {
+      if (activeTab !== 'home') {
+        setActiveTab('home');
+      } else {
+        setShowExitConfirm(true);
+      }
+    });
+    return unregister;
+  }, [activeTab]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -135,6 +150,21 @@ export const AppShell: React.FC = () => {
       <NotificationsModal
         isOpen={showNotificationsModal}
         onClose={() => setShowNotificationsModal(false)}
+      />
+
+      {/* Hardware Back Root Exit Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        onConfirm={() => {
+          setShowExitConfirm(false);
+          exitNativeApp();
+        }}
+        title="Exit Centra?"
+        message="Are you sure you want to exit the application?"
+        confirmText="Exit"
+        cancelText="Stay"
+        type="warning"
       />
 
     </div>

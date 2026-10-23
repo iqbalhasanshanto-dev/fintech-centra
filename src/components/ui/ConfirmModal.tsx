@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { AlertCircle, AlertTriangle, CheckCircle2, HelpCircle, Info, X } from 'lucide-react';
+import { useBackHandler } from '../../utils/backButton';
 
 export interface ConfirmModalProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   type = 'warning',
   isAlertOnly = false,
 }) => {
+  // Register with hardware back button (priority 10 so it closes before any underlying modal)
+  useBackHandler(isOpen, onClose, 10);
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {

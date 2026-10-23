@@ -7,6 +7,7 @@ import { Account, AccountType } from '../../types';
 import { SUPPORTED_CURRENCIES, getCurrencyInfo } from '../../utils/currencies';
 import { parseAmountInput } from '../../utils/money';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
+import { useBackHandler } from '../../utils/backButton';
 
 interface AddAccountModalProps {
   isOpen: boolean;
@@ -38,6 +39,9 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   onAccountCreated,
 }) => {
   const { addAccount, settings, accounts } = useFinance();
+
+  // Android hardware back button closes modal (priority 2 so it closes before parent modals)
+  useBackHandler(isOpen, onClose, 2);
 
   const [name, setName] = useState('');
   const [type, setType] = useState<AccountType>('checking');

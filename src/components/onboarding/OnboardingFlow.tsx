@@ -6,6 +6,7 @@ import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { SpendingCategoriesScreen } from './SpendingCategoriesScreen';
 import { AccountReadyScreen } from './AccountReadyScreen';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import { useBackHandler } from '../../utils/backButton';
 
 export type OnboardingStep =
   | 'profile'
@@ -37,6 +38,18 @@ export const OnboardingFlow: React.FC = () => {
   });
 
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward');
+
+  // Handle hardware back button during onboarding
+  useBackHandler(currentStep !== 'profile', () => {
+    const currentIndex = STEP_ORDER.indexOf(currentStep);
+    if (currentIndex > 0) {
+      goToStep(STEP_ORDER[currentIndex - 1], 'backward');
+    }
+  });
+
+  useBackHandler(currentStep === 'profile', () => {
+    setShowExitConfirm(true);
+  });
 
   const goToStep = (step: OnboardingStep, direction: 'forward' | 'backward' = 'forward') => {
     setTransitionDirection(direction);

@@ -6,6 +6,7 @@ import { Modal } from '../ui/Modal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatFullDate, formatTime } from '../../utils/formatters';
+import { useBackHandler } from '../../utils/backButton';
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -19,6 +20,9 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   onClose,
 }) => {
   const { togglePinTransaction, deleteTransaction, updateTransaction, settings, categories } = useFinance();
+
+  useBackHandler(isOpen, onClose);
+
   const [isEditing, setIsEditing] = useState(false);
   const [merchant, setMerchant] = useState('');
   const [note, setNote] = useState('');

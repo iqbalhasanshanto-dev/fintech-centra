@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { CentraDB } from '../db/storage';
+import { updateNativeStatusBar } from '../utils/nativeApp';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -43,6 +44,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.classList.remove('dark');
       root.style.colorScheme = 'light';
     }
+
+    try {
+      localStorage.setItem('centra_theme_hint', dark ? 'dark' : 'light');
+    } catch {
+      // Ignore storage error
+    }
+
+    updateNativeStatusBar(dark).catch(() => {});
   }, []);
 
   const setTheme = useCallback((newTheme: ThemeMode) => {
