@@ -1,4 +1,5 @@
-import { Browser, PluginListenerHandle } from '@capacitor/browser';
+import { Browser } from '@capacitor/browser';
+import type { PluginListenerHandle } from '@capacitor/core';
 import { supabase } from '../lib/supabaseClient';
 import { getAuthRedirectUrl, NATIVE_REDIRECT_SCHEME } from './authRedirect';
 import { isNative } from './platform';

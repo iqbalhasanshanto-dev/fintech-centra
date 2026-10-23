@@ -1,4 +1,5 @@
-import { App as CapApp, PluginListenerHandle } from '@capacitor/app';
+import { App as CapApp } from '@capacitor/app';
+import type { PluginListenerHandle } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { isNative } from './platform';
