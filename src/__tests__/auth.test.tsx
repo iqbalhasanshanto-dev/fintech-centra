@@ -37,6 +37,9 @@ vi.mock('../context/AuthContext', () => ({
     setPendingEmail: mockSetPendingEmail,
     enterGuestMode: mockEnterGuestMode,
     signInWithOAuth: mockSignInWithOAuth,
+    oauthLoading: null,
+    oauthError: null,
+    clearOauthError: vi.fn(),
     retryProfileFetch: mockRetryProfileFetch,
     logout: mockLogout,
   }),
@@ -83,10 +86,10 @@ describe('Phase 1 Follow-Up Auth Components', () => {
       });
     });
 
-    it('has Apple button disabled with Coming soon label', () => {
+    it('hides Apple button by default when VITE_ENABLE_APPLE_SIGNIN is not true', () => {
       render(<IntroScreen />);
-      const appleBtn = screen.getByRole('button', { name: /Apple \(Coming soon\)/i });
-      expect(appleBtn).toBeDisabled();
+      expect(screen.queryByText(/Apple/i)).not.toBeInTheDocument();
+      expect(screen.getByText('Google')).toBeInTheDocument();
     });
   });
 
@@ -227,6 +230,15 @@ describe('Phase 1 Follow-Up Auth Components', () => {
       expect(localStorage.getItem('centra_test_key_1')).toBeNull();
       expect(localStorage.getItem('centra_test_key_2')).toBeNull();
       expect(localStorage.getItem('other_app_key')).toBe('keep_me');
+    });
+  });
+
+  describe('IntroScreen OAuth Buttons', () => {
+    it('renders Google button and hides Apple button when VITE_ENABLE_APPLE_SIGNIN is off', () => {
+      render(<IntroScreen />);
+      expect(screen.getByText('Google')).toBeInTheDocument();
+      expect(screen.queryByText('Apple')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Apple \(Coming soon\)/i)).not.toBeInTheDocument();
     });
   });
 });

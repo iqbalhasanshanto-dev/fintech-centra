@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { App as CapApp } from '@capacitor/app';
 
 interface BackHandlerEntry {
@@ -98,7 +98,10 @@ export const BackButtonManager = new BackButtonManagerImpl();
  */
 export function useBackHandler(isOpen: boolean, onClose: () => void, priority = 0): void {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!isOpen) return;

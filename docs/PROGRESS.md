@@ -24,4 +24,19 @@
 - AUDIT SECTION 3: Completed Phase 7 original problem checklist audit (P1 to P10 statuses and pointers to tasks).
 - AUDIT SECTION 4: Completed regression spot check of Phases 0 to 6 (R0 to R8: all 9 checks verified and PASS).
 - AUDIT SECTION 5: Completed findings prioritization (5 High, 5 Medium, 2 Low bugs and gaps documented with file, impact, and fix).
-- AUDIT SECTION 6: Completed summary tables, completion metrics (53.8% DONE/NEEDS DEVICE TEST), follow-up prompt, and manual test list.
+- PHASE 7 CONTINUATION - TASK 0: DONE. Logged 12 findings from AUDIT_REPORT.md for tracking:
+  - [x] Finding 1: Native OAuth cancel leaves infinite spinner (Task 2)
+  - [ ] Finding 2: Viewport meta disabling pinch-to-zoom (Task 7)
+  - [ ] Finding 3: Missing theme-init.js causing dark-mode flash (Task 7)
+  - [ ] Finding 4: 1.16 MB monolithic bundle without code splitting (Task 8)
+  - [ ] Finding 5: False client-side encryption claims (Task 9)
+  - [ ] Finding 6: Android SDK 35 vs 36 compilation mismatch (Task 5)
+  - [ ] Finding 7: Missing @capacitor/network plugin (Task 6)
+  - [x] Finding 8: React hook & immutability linter violations (Task 1)
+  - [x] Finding 9: Missing hardware back-button on overlays (Task 3)
+  - [ ] Finding 10: Incomplete safe-area inset support (Task 7)
+  - [ ] Finding 11: Missing platform test guide & documentation (Task 11)
+  - [x] Finding 12: Dead variable imports (Task 1)
+- PHASE 7 CONTINUATION - TASK 1: DONE. Fixed 6 ESLint errors (Function type in nativeApp.test.ts, hiddenTimestamp in resumeLock.test.ts, goToStep declaration order in OnboardingFlow.tsx, onCloseRef render assignment moved to useLayoutEffect in backButton.ts) and removed dead imports (isTauri in authRedirect.ts, NATIVE_REDIRECT_SCHEME in nativeOAuth.ts). `npx eslint . --quiet` reports 0 errors.
+- PHASE 7 CONTINUATION - TASK 2: DONE. Implemented unified OAuth in-progress & error state in AuthContext exposed to IntroScreen; browserFinished listener with 1800ms grace period (deep link arriving during grace period wins; cancel triggers only after grace period); 2-minute safety timeout; duplicate PKCE exchange guard; strict URL validation (scheme com.centra.app, host auth, path /callback); conditional Apple button rendering gated on VITE_ENABLE_APPLE_SIGNIN flag; added tests in src/__tests__/oauth_native.test.ts and src/__tests__/auth.test.tsx (all 27 tests passing).
+- PHASE 7 CONTINUATION - TASK 3: DONE. Integrated useBackHandler into TransactionDrawer.tsx, DatePicker.tsx, and all SettingsScreen sub-modals (EditProfile, HelpModal, DeleteDataModal, SetPinModal, DisablePinModal); confirmed existing modals (AddActionModal, AddAccountModal, ConfirmModal, NotificationsModal, TransactionDetailModal, OnboardingFlow) retain handlers; added tests in src/__tests__/overlayBackButton.test.tsx (all 8 tests passing).

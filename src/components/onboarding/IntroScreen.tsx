@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TrendingUp, PieChart, Sparkles, Shield, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import logoImg from '../../assets/brand/logo.png';
 import { useAuth, AuthMode } from '../../context/AuthContext';
-import { isTauri } from '../../utils/platform';
+import { isTauri, getNativePlatform } from '../../utils/platform';
 
 interface IntroScreenProps {
   initialMode?: AuthMode;
@@ -10,22 +10,28 @@ interface IntroScreenProps {
 }
 
 export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEmail }) => {
-  const { authMode, setAuthMode, sendOtp, signInWithOAuth, enterGuestMode } = useAuth();
+  const { authMode, setAuthMode, sendOtp, signInWithOAuth, enterGuestMode, oauthLoading, oauthError, clearOauthError } = useAuth();
   const [activeTab, setActiveTab] = useState<AuthMode>(initialMode || authMode || 'signin');
   const [email, setEmail] = useState(initialEmail || '');
   const [isLoading, setIsLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const showAppleButton =
+    import.meta.env.VITE_ENABLE_APPLE_SIGNIN === 'true' &&
+    getNativePlatform() !== 'android' &&
+    !isTauri();
 
   const handleTabChange = (tab: AuthMode) => {
     setActiveTab(tab);
     setAuthMode(tab);
     setErrorMessage('');
+    clearOauthError();
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+    clearOauthError();
 
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
@@ -47,14 +53,13 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
   };
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
-    if (provider === 'apple') return; // Disabled / coming soon
-    setOauthLoading(provider);
+    if (provider === 'apple' && !showAppleButton) return;
     setErrorMessage('');
+    clearOauthError();
     try {
       await signInWithOAuth(provider, activeTab);
     } catch (err: any) {
       setErrorMessage(err?.message || `${provider} sign-in failed. Please try again.`);
-      setOauthLoading(null);
     }
   };
 
@@ -191,10 +196,10 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
             </button>
           </div>
 
-          {errorMessage && (
+          {(oauthError || errorMessage) && (
             <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-center gap-2 animate-shake">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMessage}</span>
+              <span>{oauthError || errorMessage}</span>
             </div>
           )}
 
@@ -253,7 +258,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
                 <div className="flex-1 h-px bg-gray-200 dark:bg-[#232c44]" />
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className={showAppleButton ? "grid grid-cols-2 gap-2.5" : "w-full"}>
                 {/* Google */}
                 <button
                   type="button"
@@ -286,18 +291,24 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
                   <span>Google</span>
                 </button>
 
-                {/* Apple (Disabled with Coming soon per specification) */}
-                <button
-                  type="button"
-                  disabled
-                  title="Apple sign in coming soon"
-                  className="w-full py-2.5 px-4 rounded-full bg-gray-100/60 dark:bg-[#131722]/50 text-gray-400 dark:text-gray-500 font-semibold text-xs flex items-center justify-center gap-1.5 border border-dashed border-gray-200 dark:border-[#1e2638] cursor-not-allowed opacity-60"
-                >
-                  <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.85.94-2.93-1 .04-2.22.67-2.91 1.48-.61.7-1.14 1.81-1 2.87 1.12.09 2.26-.59 2.97-1.42z" />
-                  </svg>
-                  <span>Apple (Coming soon)</span>
-                </button>
+                {/* Apple */}
+                {showAppleButton && (
+                  <button
+                    type="button"
+                    onClick={() => handleOAuth('apple')}
+                    disabled={isLoading || !!oauthLoading}
+                    className="w-full py-2.5 px-4 rounded-full bg-gray-100 dark:bg-[#131722] hover:bg-gray-200 dark:hover:bg-[#1e2638] text-gray-800 dark:text-gray-200 font-semibold text-xs transition-all flex items-center justify-center gap-2 border border-gray-200/50 dark:border-[#1e2638] cursor-pointer disabled:opacity-50"
+                  >
+                    {oauthLoading === 'apple' ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                    ) : (
+                      <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.85.94-2.93-1 .04-2.22.67-2.91 1.48-.61.7-1.14 1.81-1 2.87 1.12.09 2.26-.59 2.97-1.42z" />
+                      </svg>
+                    )}
+                    <span>Apple</span>
+                  </button>
+                )}
               </div>
             </>
           )}

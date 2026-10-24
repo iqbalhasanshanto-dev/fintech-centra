@@ -6,6 +6,7 @@ import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { IntroScreen } from './components/onboarding/IntroScreen';
 import { OtpScreen } from './components/auth/OtpScreen';
 import { PinLockScreen } from './components/auth/PinLockScreen';
+import { LockCoverScreen } from './components/auth/LockCoverScreen';
 import { AuthCallbackScreen } from './components/auth/AuthCallbackScreen';
 import { LoadingSplashScreen } from './components/auth/LoadingSplashScreen';
 import { SupabaseConfigErrorScreen } from './components/auth/SupabaseConfigErrorScreen';
@@ -14,8 +15,8 @@ import { AccountIncompleteScreen } from './components/auth/AccountIncompleteScre
 import { ProfileErrorScreen } from './components/auth/ProfileErrorScreen';
 import { isSupabaseConfigured } from './lib/supabaseClient';
 
-const MainApp: React.FC = () => {
-  const { authView, isLockedByPin, user, isGuest } = useAuth();
+export const MainApp: React.FC = () => {
+  const { authView, isLockedByPin, isAppCovered, user, isGuest } = useAuth();
 
   // If Supabase backend is missing and user is not in guest mode
   if (!isSupabaseConfigured() && authView !== 'guest') {
@@ -25,6 +26,11 @@ const MainApp: React.FC = () => {
   // App lock state (PIN lock)
   if (isLockedByPin || authView === 'locked') {
     return <PinLockScreen />;
+  }
+
+  // Opaque cover screen when app is backgrounded or evaluating resume lock
+  if (isAppCovered) {
+    return <LockCoverScreen />;
   }
 
   // OAuth return callback detected in URL

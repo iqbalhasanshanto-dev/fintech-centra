@@ -39,6 +39,12 @@ export const OnboardingFlow: React.FC = () => {
 
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward');
 
+  const goToStep = (step: OnboardingStep, direction: 'forward' | 'backward' = 'forward') => {
+    setTransitionDirection(direction);
+    setCurrentStep(step);
+    localStorage.setItem(ONBOARDING_STEP_STORAGE_KEY, step);
+  };
+
   // Handle hardware back button during onboarding
   useBackHandler(currentStep !== 'profile', () => {
     const currentIndex = STEP_ORDER.indexOf(currentStep);
@@ -50,12 +56,6 @@ export const OnboardingFlow: React.FC = () => {
   useBackHandler(currentStep === 'profile', () => {
     setShowExitConfirm(true);
   });
-
-  const goToStep = (step: OnboardingStep, direction: 'forward' | 'backward' = 'forward') => {
-    setTransitionDirection(direction);
-    setCurrentStep(step);
-    localStorage.setItem(ONBOARDING_STEP_STORAGE_KEY, step);
-  };
 
   return (
     <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center transition-colors overflow-x-hidden selection:bg-teal-500 selection:text-white">

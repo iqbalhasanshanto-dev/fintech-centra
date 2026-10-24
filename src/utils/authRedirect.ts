@@ -1,4 +1,4 @@
-import { isNative, isTauri } from './platform';
+import { isNative } from './platform';
 
 export const NATIVE_REDIRECT_SCHEME = 'com.centra.app://auth/callback';
 

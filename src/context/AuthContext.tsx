@@ -9,6 +9,7 @@ import { isNative } from '../utils/platform';
 import { startNativeOAuth, handleNativeDeepLink } from '../utils/nativeOAuth';
 import { initNativeApp } from '../utils/nativeApp';
 import { BackButtonManager } from '../utils/backButton';
+import { getAutoLockTimeout, shouldTriggerResumeLock } from '../utils/lockResume';
 
 // ---------------------------------------------------------------------------
 // Types & State Machine
@@ -34,6 +35,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isGuest: boolean;
   isLockedByPin: boolean;
+  isAppCovered: boolean;
   authView: AuthState;
   authMode: AuthMode;
   pendingEmail: string;
@@ -44,6 +46,9 @@ interface AuthContextType {
   verifyOtp: (email: string, token: string) => Promise<{ ok: boolean; error?: string }>;
   resendOtp: (email: string) => Promise<{ ok: boolean; error?: string }>;
   signInWithOAuth: (provider: 'google' | 'apple', mode?: AuthMode) => Promise<void>;
+  oauthLoading: 'google' | 'apple' | null;
+  oauthError: string | null;
+  clearOauthError: () => void;
   retryProfileFetch: () => Promise<void>;
   enterGuestMode: () => void;
   logout: () => Promise<void>;
@@ -82,9 +87,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [isLockedByPin, setIsLockedByPin] = useState<boolean>(false);
+  const [isAppCovered, setIsAppCovered] = useState<boolean>(false);
   const [pendingEmail, setPendingEmail] = useState<string>('');
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [authView, setAuthView] = useState<AuthState>('loading');
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+
+  const clearOauthError = useCallback(() => {
+    setOauthError(null);
+  }, []);
 
   const lastUserIdRef = useRef<string | null>(null);
 
@@ -437,25 +449,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const currentMode = mode || authMode;
+    setOauthLoading(provider);
+    setOauthError(null);
 
     if (isNative()) {
-      await startNativeOAuth(provider, currentMode);
+      try {
+        await startNativeOAuth(provider, currentMode, {
+          onCancel: () => {
+            setOauthError('Sign-in cancelled');
+            setOauthLoading(null);
+          },
+          onError: (msg: string) => {
+            setOauthError(msg || `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+            setOauthLoading(null);
+          },
+          onSuccess: async (session) => {
+            setOauthLoading(null);
+            setOauthError(null);
+            if (session?.user) {
+              await handleSession(session);
+            }
+          },
+          onResetLoading: () => {
+            setOauthLoading(null);
+          },
+        });
+      } catch (err: any) {
+        setOauthLoading(null);
+        setOauthError(err?.message || `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+      }
       return;
     }
 
-    // Store intent in localStorage to survive the web OAuth redirect
+    // Web path
     localStorage.setItem(INTENT_STORAGE_KEY, currentMode);
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: getAuthRedirectUrl(),
-      },
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: getAuthRedirectUrl(),
+        },
+      });
 
-    if (error) {
-      localStorage.removeItem(INTENT_STORAGE_KEY);
-      throw error;
+      if (error) {
+        localStorage.removeItem(INTENT_STORAGE_KEY);
+        setOauthLoading(null);
+        setOauthError(error.message);
+        throw error;
+      }
+    } catch (err: any) {
+      setOauthLoading(null);
+      setOauthError(err?.message || `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+      throw err;
     }
   };
 
@@ -522,40 +568,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { ok: false, error: result.error };
   };
 
-  // Background lock trigger (5 minutes timeout when app/tab is backgrounded)
+  // Background lock trigger (configurable timeout when app/tab is backgrounded)
   useEffect(() => {
     let hiddenTimestamp: number | null = null;
-    const BACKGROUND_TIMEOUT_MS = 5 * 60 * 1000;
 
-    const checkAndTriggerLock = () => {
-      if (hiddenTimestamp && Date.now() - hiddenTimestamp >= BACKGROUND_TIMEOUT_MS) {
-        const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id;
-        if (activeUid && activeUid !== 'guest') {
-          const settings = CentraDB.getSettings();
-          if (settings.security.pinLockEnabled && hasDevicePin(activeUid)) {
-            lockApp();
+    const triggerBackground = () => {
+      const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id;
+      if (activeUid && activeUid !== 'guest') {
+        const settings = CentraDB.getSettings();
+        if (settings.security.pinLockEnabled && hasDevicePin(activeUid) && !isLockedByPin) {
+          if (!hiddenTimestamp) {
+            hiddenTimestamp = Date.now();
           }
+          setIsAppCovered(true);
         }
       }
+    };
+
+    const triggerResume = () => {
+      const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id;
+      const settings = CentraDB.getSettings();
+      const timeoutMs = getAutoLockTimeout();
+      const shouldLock = shouldTriggerResumeLock(
+        hiddenTimestamp,
+        Date.now(),
+        timeoutMs,
+        Boolean(settings.security.pinLockEnabled),
+        Boolean(activeUid && hasDevicePin(activeUid)),
+        isLockedByPin
+      );
+
+      if (shouldLock) {
+        lockApp();
+      }
+      setIsAppCovered(false);
       hiddenTimestamp = null;
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        hiddenTimestamp = Date.now();
+        triggerBackground();
       } else if (document.visibilityState === 'visible') {
-        checkAndTriggerLock();
+        triggerResume();
       }
     };
 
     // Tauri Desktop window minimization / blur lock support
     const handleWindowBlur = () => {
-      if (!hiddenTimestamp) {
-        hiddenTimestamp = Date.now();
-      }
+      triggerBackground();
     };
     const handleWindowFocus = () => {
-      checkAndTriggerLock();
+      triggerResume();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -569,20 +632,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         onUrlOpen: async (url: string) => {
           await handleNativeDeepLink(url, {
             onSuccess: async (session) => {
+              setOauthLoading(null);
+              setOauthError(null);
               if (session?.user) {
                 await handleSession(session);
               }
             },
             onError: (err) => {
-              console.warn('Native deep link error:', err);
+              setOauthError(err || 'Google sign-in failed, please try again');
+              setOauthLoading(null);
+            },
+            onResetLoading: () => {
+              setOauthLoading(null);
             },
           });
         },
         onAppStateChange: (isActive: boolean) => {
           if (!isActive) {
-            hiddenTimestamp = Date.now();
+            triggerBackground();
           } else {
-            checkAndTriggerLock();
+            triggerResume();
           }
         },
         onBackButton: () => {
@@ -804,6 +873,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         isGuest,
         isLockedByPin,
+        isAppCovered,
         authView,
         authMode,
         pendingEmail,
@@ -814,6 +884,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         verifyOtp,
         resendOtp,
         signInWithOAuth,
+        oauthLoading,
+        oauthError,
+        clearOauthError,
         retryProfileFetch,
         enterGuestMode,
         logout,

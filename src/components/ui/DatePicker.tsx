@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useBackHandler } from '../../utils/backButton';
 
 interface DatePickerProps {
   value: string; // YYYY-MM-DD
@@ -26,6 +27,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  useBackHandler(isOpen, () => setIsOpen(false), 5);
 
   // Parse current value or fallback to today
   const initialDate = value ? new Date(value + 'T00:00:00') : new Date();

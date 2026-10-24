@@ -10,10 +10,10 @@ vi.mock('../utils/platform', () => ({
 }));
 
 vi.mock('@capacitor/app', () => {
-  const listeners: Record<string, Function[]> = {};
+  const listeners: Record<string, ((...args: unknown[]) => void)[]> = {};
   return {
     App: {
-      addListener: vi.fn((eventName: string, listener: Function) => {
+      addListener: vi.fn((eventName: string, listener: (...args: unknown[]) => void) => {
         if (!listeners[eventName]) listeners[eventName] = [];
         listeners[eventName].push(listener);
         return Promise.resolve({

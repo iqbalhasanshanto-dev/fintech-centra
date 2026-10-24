@@ -87,6 +87,7 @@ cp .env.example .env
 |---|---|
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Your Supabase project anon/public API key |
+| `VITE_ENABLE_APPLE_SIGNIN` | Set to `'true'` to display the Apple Sign-In button (web/iOS only; requires configured Apple provider in Supabase) |
 
 ### 4. Set up the database
 Run the SQL in `supabase/schema.sql` (or the files in `supabase/migrations/`) against your Supabase project — either via the Supabase SQL editor or the Supabase CLI.

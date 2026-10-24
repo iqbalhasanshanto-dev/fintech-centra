@@ -6,7 +6,7 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
-  Fingerprint,
+  Clock,
   Globe,
   Download,
   RotateCcw,
@@ -28,7 +28,9 @@ import { CurrencyCode } from '../../types';
 import { CentraDB } from '../../db/storage';
 import { SUPPORTED_CURRENCIES } from '../../utils/currencies';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
+import { useBackHandler } from '../../utils/backButton';
 import { hasDevicePin, setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLock';
+import { AUTOLOCK_OPTIONS, getAutoLockTimeout, setAutoLockTimeout } from '../../utils/lockResume';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -57,6 +59,27 @@ export const SettingsScreen: React.FC = () => {
   const [confirmPin, setConfirmPin] = useState('');
   const [currentPin, setCurrentPin] = useState('');
   const [pinModalError, setPinModalError] = useState<string | null>(null);
+  const [autoLockTimeout, setAutoLockTimeoutState] = useState<number>(() => getAutoLockTimeout());
+
+  // Hardware back button handlers for all settings sub-modals
+  useBackHandler(showEditProfile, () => setShowEditProfile(false));
+  useBackHandler(showHelpModal, () => setShowHelpModal(false));
+  useBackHandler(showDeleteDataModal, () => {
+    setShowDeleteDataModal(false);
+    setDeleteConfirmText('');
+    setDeleteError(null);
+  });
+  useBackHandler(showSetPinModal, () => {
+    setShowSetPinModal(false);
+    setNewPin('');
+    setConfirmPin('');
+    setPinModalError(null);
+  });
+  useBackHandler(showDisablePinModal, () => {
+    setShowDisablePinModal(false);
+    setCurrentPin('');
+    setPinModalError(null);
+  });
 
   // Edit Profile Form
   const [profileName, setProfileName] = useState(user.name);
@@ -321,24 +344,34 @@ export const SettingsScreen: React.FC = () => {
             </div>
           )}
 
-          {/* Biometrics Toggle */}
-          <div
-            onClick={() => updateSettings({ security: { ...settings.security, biometricEnabled: !settings.security.biometricEnabled } })}
-            className="flex items-center justify-between pt-3 cursor-pointer select-none group gap-4"
-          >
-            <div className="flex items-center space-x-3 min-w-0">
-              <Fingerprint className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
-              <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Biometric Login</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">TouchID / FaceID (Mobile devices only)</p>
+          {/* Auto-lock Timeout Selector */}
+          {settings.security.pinLockEnabled && (
+            <div className="flex items-center justify-between pt-3 gap-4">
+              <div className="flex items-center space-x-3 min-w-0">
+                <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white">Auto-lock Timeout</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Lock automatically when inactive or in background</p>
+                </div>
               </div>
+              <select
+                value={autoLockTimeout}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setAutoLockTimeoutState(val);
+                  setAutoLockTimeout(val);
+                }}
+                className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500"
+                aria-label="Auto-lock Timeout"
+              >
+                {AUTOLOCK_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
-            <Switch
-              checked={settings.security.biometricEnabled}
-              onChange={(val) => updateSettings({ security: { ...settings.security, biometricEnabled: val } })}
-              label="Toggle Biometric Login"
-            />
-          </div>
+          )}
 
           {/* Privacy Mask Toggle */}
           <div

@@ -6,6 +6,7 @@ import { Modal } from '../ui/Modal';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatFullDate } from '../../utils/formatters';
 import { CentraDB } from '../../db/storage';
+import { useBackHandler } from '../../utils/backButton';
 
 interface TransactionDrawerProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
   onClose,
   onSelectTransaction,
 }) => {
+  useBackHandler(isOpen, onClose);
+
   const { transactions, categories, accounts, settings } = useFinance();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
