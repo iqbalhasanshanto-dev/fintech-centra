@@ -141,3 +141,43 @@ export function getBudgetPeriodDateRange(
 
   return { start, end };
 }
+
+/**
+ * Returns the local date range boundary for the previous equivalent period.
+ * For 'all', returns null because there is no previous period.
+ */
+export function getPreviousPeriodDateRange(
+  period: PeriodFilter,
+  referenceDate: Date = new Date()
+): { start: Date; end: Date } | null {
+  const now = referenceDate;
+  switch (period) {
+    case 'this_month': {
+      // Previous equivalent period is last month
+      return getPeriodDateRange('last_month', now);
+    }
+    case 'last_month': {
+      // Two months ago
+      const twoMonthsAgoRef = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      return getPeriodDateRange('last_month', twoMonthsAgoRef);
+    }
+    case 'last_90_days': {
+      // The 90-day window right before the current 90-day window
+      const currentRange = getPeriodDateRange('last_90_days', now);
+      const end = new Date(currentRange.start);
+      end.setMilliseconds(end.getMilliseconds() - 1);
+      const start = new Date(end);
+      start.setDate(start.getDate() - 90);
+      start.setHours(0, 0, 0, 0);
+      return { start, end };
+    }
+    case 'this_year': {
+      // Previous calendar year
+      const prevYearRef = new Date(now.getFullYear() - 1, 0, 1);
+      return getPeriodDateRange('this_year', prevYearRef);
+    }
+    case 'all':
+    default:
+      return null;
+  }
+}

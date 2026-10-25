@@ -104,14 +104,17 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
             <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
 
             {/* Top widget row */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider truncate">
                   Financial Health
                 </span>
+                <span className="text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-full bg-white/10 text-gray-300 border border-white/10 shrink-0">
+                  Sample preview
+                </span>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 shrink-0">
                 <TrendingUp className="w-3 h-3" />
                 +18.4% this month
               </span>

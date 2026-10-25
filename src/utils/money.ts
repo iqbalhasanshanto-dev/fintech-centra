@@ -1,5 +1,6 @@
-import { CurrencyCode, Account } from '../types';
-import { EXCHANGE_RATES_TO_USD, RATES_LAST_UPDATED } from './formatters';
+import { CurrencyCode, Account, Transaction, PeriodFilter } from '../types';
+import { EXCHANGE_RATES_TO_USD, RATES_LAST_UPDATED, convertCurrency } from './formatters';
+import { getPreviousPeriodDateRange } from './dates';
 
 /**
  * Currency Minor Unit Decimals mapping.
@@ -187,5 +188,120 @@ export function validateAccountFunds(
     hasFunds,
     available,
     error: hasFunds ? undefined : `Insufficient funds. Account balance: ${available} ${account.currency}`,
+  };
+}
+
+export interface PeriodChangeBadge {
+  percentage: number;
+  formatted: string;
+  trend: 'up' | 'down' | 'neutral';
+  isGood: boolean;
+}
+
+/**
+ * Calculates real percentage change between current and previous period.
+ *
+ * Rules:
+ * - When previous period has no data or previous total is 0, returns null (hide badge completely).
+ * - Zero previous never divides by zero.
+ * - Never returns NaN, Infinity, or capped numbers like 999%.
+ * - For expenses: a decrease is good (isGood = true).
+ * - For income: an increase is good (isGood = true).
+ */
+export function calculatePercentageChange(
+  current: number,
+  previous: number,
+  type: 'income' | 'expense'
+): PeriodChangeBadge | null {
+  if (
+    typeof previous !== 'number' ||
+    typeof current !== 'number' ||
+    isNaN(previous) ||
+    isNaN(current) ||
+    !isFinite(previous) ||
+    !isFinite(current) ||
+    previous <= 0
+  ) {
+    return null;
+  }
+
+  const rawChange = ((current - previous) / previous) * 100;
+
+  if (isNaN(rawChange) || !isFinite(rawChange)) {
+    return null;
+  }
+
+  const rounded = Number(rawChange.toFixed(1));
+  const percentage = Object.is(rounded, -0) ? 0 : rounded;
+
+  const trend: 'up' | 'down' | 'neutral' =
+    percentage > 0 ? 'up' : percentage < 0 ? 'down' : 'neutral';
+
+  const isGood = type === 'income' ? percentage >= 0 : percentage <= 0;
+
+  const sign = percentage > 0 ? '+' : '';
+  const formatted = `${sign}${percentage.toFixed(1)}%`;
+
+  return {
+    percentage,
+    formatted,
+    trend,
+    isGood,
+  };
+}
+
+/**
+ * Computes the total income and expenses for the equivalent previous period,
+ * properly converting transaction amounts to the base currency.
+ */
+export function computePreviousPeriodTotals(
+  transactions: Transaction[],
+  period: PeriodFilter,
+  baseCurrency?: CurrencyCode | null,
+  referenceDate: Date = new Date()
+): {
+  previousIncome: number;
+  previousExpenses: number;
+  previousIncomeCount: number;
+  previousExpenseCount: number;
+  hasPreviousPeriod: boolean;
+} {
+  const prevRange = getPreviousPeriodDateRange(period, referenceDate);
+  if (!prevRange) {
+    return {
+      previousIncome: 0,
+      previousExpenses: 0,
+      previousIncomeCount: 0,
+      previousExpenseCount: 0,
+      hasPreviousPeriod: false,
+    };
+  }
+
+  const targetCurrency = baseCurrency || 'USD';
+  let previousIncome = 0;
+  let previousExpenses = 0;
+  let previousIncomeCount = 0;
+  let previousExpenseCount = 0;
+
+  for (const tx of transactions) {
+    const txDate = new Date(tx.date);
+    if (txDate >= prevRange.start && txDate <= prevRange.end) {
+      const amountInBase = convertCurrency(tx.amount, tx.currency, targetCurrency);
+      if (tx.type === 'income') {
+        previousIncome = addMoney(previousIncome, amountInBase, targetCurrency);
+        previousIncomeCount++;
+      } else if (tx.type === 'expense') {
+        previousExpenses = addMoney(previousExpenses, amountInBase, targetCurrency);
+        previousExpenseCount++;
+      }
+    }
+  }
+
+  return {
+    previousIncome,
+    previousExpenses,
+    previousIncomeCount,
+    previousExpenseCount,
+    hasPreviousPeriod: true,
   };
 }
