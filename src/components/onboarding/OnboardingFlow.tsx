@@ -58,7 +58,15 @@ export const OnboardingFlow: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center transition-colors overflow-x-hidden selection:bg-teal-500 selection:text-white">
+    <div
+      className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center transition-colors overflow-x-hidden selection:bg-teal-500 selection:text-white"
+      style={{
+        paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
+        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+        paddingLeft: 'calc(1rem + env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
+        paddingRight: 'calc(1rem + env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
+      }}
+    >
       {/* Desktop Ambient Background Accents */}
       <div className="fixed inset-0 pointer-events-none hidden md:block overflow-hidden">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />

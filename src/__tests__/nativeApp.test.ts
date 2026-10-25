@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { initNativeApp, cleanupNativeApp, updateNativeStatusBar, hideSplashScreen } from '../utils/nativeApp';
+import { initNativeApp, cleanupNativeApp, updateNativeStatusBar, hideSplashScreen, _resetNativeSyncThrottleForTesting } from '../utils/nativeApp';
 import * as platform from '../utils/platform';
+import { CentraDB } from '../db/storage';
 import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -43,6 +44,35 @@ vi.mock('@capacitor/splash-screen', () => ({
   SplashScreen: {
     hide: vi.fn().mockResolvedValue(undefined),
   },
+}));
+
+let currentNetworkListener: ((status: { connected: boolean; connectionType: string }) => void) | null = null;
+
+vi.mock('@capacitor/network', () => ({
+  Network: {
+    addListener: vi.fn((eventName: string, listener: (status: { connected: boolean; connectionType: string }) => void) => {
+      if (eventName === 'networkStatusChange') {
+        currentNetworkListener = listener;
+      }
+      return Promise.resolve({
+        remove: vi.fn(async () => {
+          currentNetworkListener = null;
+        }),
+      });
+    }),
+  },
+}));
+
+vi.mock('../db/storage', () => ({
+  CentraDB: {
+    getUser: vi.fn(() => ({ id: 'test-user-sync' })),
+    processOutbox: vi.fn().mockResolvedValue(undefined),
+    syncFromSupabase: vi.fn().mockResolvedValue({ ok: true }),
+  },
+  isGuestUser: vi.fn((id: string) => id === 'guest'),
+  getActiveUserId: vi.fn(() => 'test-user-sync'),
+  setSyncStatus: vi.fn(),
+  GUEST_USER_ID: 'guest',
 }));
 
 describe('Native Bootstrap (src/utils/nativeApp.ts)', () => {
@@ -123,5 +153,50 @@ describe('Native Bootstrap (src/utils/nativeApp.ts)', () => {
     await initNativeApp({ onUrlOpen });
 
     expect(onUrlOpen).toHaveBeenCalledWith('com.centra.app://auth/callback?code=cold_start_code');
+  });
+
+  describe('Mobile Network Reconnect Sync & Throttling (Task 6)', () => {
+    beforeEach(() => {
+      _resetNativeSyncThrottleForTesting();
+    });
+
+    it('triggers outbox flush and remote sync once when connection is regained', async () => {
+      vi.mocked(platform.isNative).mockReturnValue(true);
+      const cleanup = await initNativeApp();
+
+      expect(currentNetworkListener).toBeTypeOf('function');
+
+      // Trigger reconnect event
+      await currentNetworkListener!({ connected: true, connectionType: 'wifi' });
+
+      expect(CentraDB.processOutbox).toHaveBeenCalledTimes(1);
+      expect(CentraDB.syncFromSupabase).toHaveBeenCalledWith('test-user-sync');
+
+      await cleanup();
+    });
+
+    it('throttles rapid duplicate network status change events', async () => {
+      vi.mocked(platform.isNative).mockReturnValue(true);
+      const cleanup = await initNativeApp();
+
+      // First event triggers sync
+      await currentNetworkListener!({ connected: true, connectionType: 'wifi' });
+      expect(CentraDB.processOutbox).toHaveBeenCalledTimes(1);
+
+      // Rapid duplicate event within throttle interval should NOT trigger second sync
+      await currentNetworkListener!({ connected: true, connectionType: 'wifi' });
+      expect(CentraDB.processOutbox).toHaveBeenCalledTimes(1);
+
+      await cleanup();
+    });
+
+    it('cleans up network listener when cleanupNativeApp is invoked', async () => {
+      vi.mocked(platform.isNative).mockReturnValue(true);
+      const cleanup = await initNativeApp();
+      expect(currentNetworkListener).toBeTypeOf('function');
+
+      await cleanup();
+      expect(currentNetworkListener).toBeNull();
+    });
   });
 });

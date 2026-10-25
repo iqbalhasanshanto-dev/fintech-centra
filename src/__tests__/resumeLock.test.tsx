@@ -158,5 +158,20 @@ describe('App Resume Lock Timing and Cover Replacement (Phase 7 Task 4)', () => 
       expect(screen.queryByTestId('lock-cover-screen')).not.toBeInTheDocument();
       expect(screen.queryByTestId('app-shell')).not.toBeInTheDocument();
     });
+
+    it('uses latest lock state without stale closure on background and resume evaluation', () => {
+      // Test verifying that shouldTriggerResumeLock receives the fresh isLockedByPin state
+      const hidden = Date.now() - 600000; // 10 minutes ago
+      const now = Date.now();
+      const timeoutMs = 300000; // 5 min
+
+      // When initially not locked, resume should trigger lock
+      let isLocked = false;
+      expect(shouldTriggerResumeLock(hidden, now, timeoutMs, true, true, isLocked)).toBe(true);
+
+      // Once locked, subsequent resume checks with updated lock state must NOT trigger redundant lock
+      isLocked = true;
+      expect(shouldTriggerResumeLock(hidden, now, timeoutMs, true, true, isLocked)).toBe(false);
+    });
   });
 });

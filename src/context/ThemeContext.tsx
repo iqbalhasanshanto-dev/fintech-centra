@@ -23,16 +23,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
-  const getEffectiveIsDark = useCallback((mode: ThemeMode): boolean => {
-    if (mode === 'dark') return true;
-    if (mode === 'light') return false;
+  const [systemIsDark, setSystemIsDark] = useState<boolean>(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
     return false;
-  }, []);
+  });
 
-  const [isDark, setIsDark] = useState<boolean>(() => getEffectiveIsDark(theme));
+  const isDark = theme === 'dark' ? true : theme === 'light' ? false : systemIsDark;
 
   const applyThemeToDOM = useCallback((dark: boolean) => {
     if (typeof document === 'undefined') return;
@@ -51,14 +49,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Ignore storage error
     }
 
+    // Update theme-color meta tags
+    const themeColorMetas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+    const color = dark ? '#0A0E1A' : '#FAFAFA';
+    themeColorMetas.forEach(meta => {
+      meta.setAttribute('content', color);
+    });
+
     updateNativeStatusBar(dark).catch(() => {});
   }, []);
 
   const setTheme = useCallback((newTheme: ThemeMode) => {
     setThemeState(newTheme);
-    const dark = getEffectiveIsDark(newTheme);
-    setIsDark(dark);
-    applyThemeToDOM(dark);
 
     try {
       const currentSettings = CentraDB.getSettings();
@@ -69,28 +71,28 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (err) {
       console.warn('Failed to persist theme setting:', err);
     }
-  }, [getEffectiveIsDark, applyThemeToDOM]);
+  }, []);
 
   const toggleTheme = useCallback(() => {
     setTheme(isDark ? 'light' : 'dark');
   }, [isDark, setTheme]);
 
+  // Sync DOM and meta with effective theme
+  useEffect(() => {
+    applyThemeToDOM(isDark);
+  }, [isDark, applyThemeToDOM]);
+
   // Sync with system preference if in 'system' mode
   useEffect(() => {
-    const dark = getEffectiveIsDark(theme);
-    setIsDark(dark);
-    applyThemeToDOM(dark);
-
     if (theme === 'system' && typeof window !== 'undefined' && window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const listener = (e: MediaQueryListEvent) => {
-        setIsDark(e.matches);
-        applyThemeToDOM(e.matches);
+        setSystemIsDark(e.matches);
       };
       mediaQuery.addEventListener('change', listener);
       return () => mediaQuery.removeEventListener('change', listener);
     }
-  }, [theme, getEffectiveIsDark, applyThemeToDOM]);
+  }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, isDark, setTheme, toggleTheme }}>

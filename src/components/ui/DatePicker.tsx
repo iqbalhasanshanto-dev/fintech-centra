@@ -143,7 +143,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
       {/* Modal / Dialog */}
       {isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          style={{
+            paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
+            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+            paddingLeft: 'calc(1rem + env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
+            paddingRight: 'calc(1rem + env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
+          }}
+        >
           <div
             ref={modalRef}
             className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#0D1220] border border-gray-200 dark:border-[#1e263c] shadow-2xl p-5 text-gray-900 dark:text-white animate-scale-up"

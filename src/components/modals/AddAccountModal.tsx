@@ -208,6 +208,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
               </span>
               <input
                 type="text"
+                inputMode="decimal"
                 value={balance}
                 onChange={e => setBalance(e.target.value)}
                 placeholder="0.00"
@@ -229,6 +230,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
               </span>
               <input
                 type="text"
+                inputMode="decimal"
                 value={creditLimit}
                 onChange={e => setCreditLimit(e.target.value)}
                 placeholder="e.g. 5,000.00"

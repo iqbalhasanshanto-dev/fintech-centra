@@ -252,6 +252,7 @@ export const FirstAccountScreen: React.FC<FirstAccountScreenProps> = ({
                 </span>
                 <input
                   type="text"
+                  inputMode="decimal"
                   value={balance}
                   onChange={e => setBalance(e.target.value)}
                   placeholder="0.00"

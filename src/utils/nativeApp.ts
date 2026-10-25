@@ -2,16 +2,49 @@ import { App as CapApp } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { Network, ConnectionStatus } from '@capacitor/network';
 import { isNative } from './platform';
+import { CentraDB, isGuestUser, getActiveUserId, setSyncStatus } from '../db/storage';
 
 export interface NativeAppHandlers {
   onUrlOpen?: (url: string) => void;
   onAppStateChange?: (isActive: boolean) => void;
   onBackButton?: () => void;
+  onNetworkStatusChange?: (status: ConnectionStatus) => void;
 }
 
 let isInitialized = false;
 let activeListenerHandles: PluginListenerHandle[] = [];
+let lastNativeSyncTrigger = 0;
+const NATIVE_SYNC_THROTTLE_MS = 2000;
+
+export const _resetNativeSyncThrottleForTesting = (): void => {
+  lastNativeSyncTrigger = 0;
+};
+
+/**
+ * Triggers outbox processing and remote sync on native reconnect or resume.
+ * Protected against duplicate rapid calls and guest accounts.
+ */
+export const triggerNativeSync = async (): Promise<void> => {
+  const now = Date.now();
+  if (now - lastNativeSyncTrigger < NATIVE_SYNC_THROTTLE_MS) {
+    return;
+  }
+  lastNativeSyncTrigger = now;
+
+  const activeUid = CentraDB.getUser()?.id || getActiveUserId();
+  if (!activeUid || isGuestUser(activeUid)) {
+    return;
+  }
+
+  try {
+    await CentraDB.processOutbox();
+    await CentraDB.syncFromSupabase(activeUid);
+  } catch (err) {
+    console.warn('Native background/network sync failed:', err);
+  }
+};
 
 /**
  * Hides the splash screen once the initial React render is complete.
@@ -93,6 +126,9 @@ export const initNativeApp = async (handlers?: NativeAppHandlers): Promise<() =>
 
     // 4. Register app background / resume state listener
     const stateHandle = await CapApp.addListener('appStateChange', state => {
+      if (state.isActive) {
+        triggerNativeSync();
+      }
       if (handlers?.onAppStateChange) {
         handlers.onAppStateChange(state.isActive);
       }
@@ -106,6 +142,19 @@ export const initNativeApp = async (handlers?: NativeAppHandlers): Promise<() =>
       }
     });
     activeListenerHandles.push(backHandle);
+
+    // 6. Register network connection status listener
+    const networkHandle = await Network.addListener('networkStatusChange', status => {
+      if (handlers?.onNetworkStatusChange) {
+        handlers.onNetworkStatusChange(status);
+      }
+      if (status.connected) {
+        triggerNativeSync();
+      } else {
+        setSyncStatus('offline');
+      }
+    });
+    activeListenerHandles.push(networkHandle);
 
     // 6. Check for cold-start launch URL (when app was opened directly from a deep link)
     const launchUrl = await CapApp.getLaunchUrl();

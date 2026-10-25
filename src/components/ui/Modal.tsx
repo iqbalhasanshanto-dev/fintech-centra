@@ -57,6 +57,11 @@ export const Modal: React.FC<ModalProps> = ({
         className={`relative z-[101] w-full ${maxWidth} bg-white dark:bg-[#121A2C] rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] flex flex-col border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-gray-100 transition-colors ${
           isBottomSheet ? 'animate-slide-up sm:animate-fade-in' : 'animate-fade-in'
         }`}
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px))',
+          paddingLeft: 'env(safe-area-inset-left, var(--safe-area-inset-left, 0px))',
+          paddingRight: 'env(safe-area-inset-right, var(--safe-area-inset-right, 0px))',
+        }}
         role="dialog"
         aria-modal="true"
       >

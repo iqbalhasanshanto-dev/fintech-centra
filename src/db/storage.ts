@@ -253,7 +253,7 @@ function reloadCacheForUser(userId: string | null): void {
 }
 
 // Helpers to get active authenticated user id
-const getActiveUserId = (): string | null => {
+export const getActiveUserId = (): string | null => {
   return currentActiveUserId || cache.user?.id || null;
 };
 
@@ -2010,6 +2010,7 @@ export const CentraDB = {
   isGuestUser,
   isValidUuid,
   cleanupLegacyGuestData,
+  getActiveUserId,
 };
 
 // Global network & visibility listeners for automatic outbox draining and pull sync

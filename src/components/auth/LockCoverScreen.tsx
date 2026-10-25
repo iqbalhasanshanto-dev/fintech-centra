@@ -10,6 +10,12 @@ export const LockCoverScreen: React.FC = () => {
     <div
       data-testid="lock-cover-screen"
       className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex flex-col items-center justify-center p-6 select-none"
+      style={{
+        paddingTop: 'calc(1.5rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
+        paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+        paddingLeft: 'calc(1.5rem + env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
+        paddingRight: 'calc(1.5rem + env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
+      }}
     >
       <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#131722] p-2.5 shadow-xl border border-gray-200/80 dark:border-[#1e2638] flex items-center justify-center mb-3">
         <img

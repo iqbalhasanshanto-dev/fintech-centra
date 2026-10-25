@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { UserProfile, Category, Account } from '../types';
 import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS, GUEST_USER_ID, isGuestUser, cleanupLegacyGuestData } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
@@ -89,6 +89,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [isLockedByPin, setIsLockedByPin] = useState<boolean>(false);
+  const isLockedByPinRef = useRef<boolean>(isLockedByPin);
+  useLayoutEffect(() => {
+    isLockedByPinRef.current = isLockedByPin;
+  }, [isLockedByPin]);
   const [isAppCovered, setIsAppCovered] = useState<boolean>(false);
   const [pendingEmail, setPendingEmail] = useState<string>('');
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
@@ -241,7 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('Failed to resolve user profile:', err);
       setAuthView('profileError');
     }
-  }, [authMode]);
+  }, [authMode, lockApp]);
 
   // -------------------------------------------------------------------------
   // Retry profile fetch (for ProfileErrorScreen)
@@ -623,7 +627,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id;
       if (activeUid && !isGuestUser(activeUid)) {
         const settings = CentraDB.getSettings();
-        if (settings.security.pinLockEnabled && hasDevicePin(activeUid) && !isLockedByPin) {
+        if (settings.security.pinLockEnabled && hasDevicePin(activeUid) && !isLockedByPinRef.current) {
           if (!hiddenTimestamp) {
             hiddenTimestamp = Date.now();
           }
@@ -642,7 +646,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         timeoutMs,
         Boolean(settings.security.pinLockEnabled),
         Boolean(activeUid && hasDevicePin(activeUid)),
-        isLockedByPin
+        isLockedByPinRef.current
       );
 
       if (shouldLock) {

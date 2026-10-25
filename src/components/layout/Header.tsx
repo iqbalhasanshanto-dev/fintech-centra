@@ -54,7 +54,15 @@ export const Header: React.FC<HeaderProps> = ({
   const currentPeriodLabel = periods.find(p => p.id === periodFilter)?.label || 'This Month';
 
   return (
-    <header id="header" className="border-b border-gray-200 dark:border-[#232C45] bg-white/80 dark:bg-[#0A0E1A]/80 backdrop-blur-md sticky top-0 z-40 transition-colors w-full pt-[env(safe-area-inset-top,0px)]">
+    <header
+      id="header"
+      className="border-b border-gray-200 dark:border-[#232C45] bg-white/80 dark:bg-[#0A0E1A]/80 backdrop-blur-md sticky top-0 z-40 transition-colors w-full"
+      style={{
+        paddingTop: 'env(safe-area-inset-top, var(--safe-area-inset-top, 0px))',
+        paddingLeft: 'env(safe-area-inset-left, var(--safe-area-inset-left, 0px))',
+        paddingRight: 'env(safe-area-inset-right, var(--safe-area-inset-right, 0px))',
+      }}
+    >
       <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
         {/* Brand Logo & Wordmark (Visible on mobile/tablet below lg where sidebar is hidden) */}

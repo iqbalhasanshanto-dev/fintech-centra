@@ -78,7 +78,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       className={`fixed left-0 right-0 z-40 w-full bg-white/95 dark:bg-[#121A2C]/95 backdrop-blur-md border-t border-gray-200 dark:border-[#232C45] px-3 pt-1.5 md:hidden shadow-lg select-none ${isInputFocused ? 'hidden' : ''}`}
       style={{
         bottom: `${isInputFocused ? 0 : viewportBottom}px`,
-        paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+        paddingLeft: 'env(safe-area-inset-left, var(--safe-area-inset-left, 0px))',
+        paddingRight: 'env(safe-area-inset-right, var(--safe-area-inset-right, 0px))',
         transform: 'translate3d(0, 0, 0)',
         WebkitTransform: 'translate3d(0, 0, 0)',
         willChange: 'transform',
