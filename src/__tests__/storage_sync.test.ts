@@ -25,7 +25,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
   describe('Outbox Queue Mechanics', () => {
     it('enqueues pending operations and retrieves them per user', () => {
       const item1 = OutboxQueue.enqueue({
-        userId: 'user_123',
+        userId: '11111111-1111-4111-8111-111111111111',
         entity: 'transactions',
         op: 'upsert',
         recordId: 'tx_1',
@@ -33,9 +33,9 @@ describe('Phase 3: Storage & Sync Engine', () => {
       });
 
       expect(item1.id).toBeDefined();
-      expect(OutboxQueue.count('user_123')).toBe(1);
+      expect(OutboxQueue.count('11111111-1111-4111-8111-111111111111')).toBe(1);
 
-      const pending = OutboxQueue.getPending('user_123');
+      const pending = OutboxQueue.getPending('11111111-1111-4111-8111-111111111111');
       expect(pending).toHaveLength(1);
       expect(pending[0].recordId).toBe('tx_1');
       expect(pending[0].payload.amount).toBe(50);
@@ -43,7 +43,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
 
     it('coalesces duplicate updates for the same entity and recordId', () => {
       OutboxQueue.enqueue({
-        userId: 'user_123',
+        userId: '11111111-1111-4111-8111-111111111111',
         entity: 'transactions',
         op: 'upsert',
         recordId: 'tx_1',
@@ -51,29 +51,29 @@ describe('Phase 3: Storage & Sync Engine', () => {
       });
 
       OutboxQueue.enqueue({
-        userId: 'user_123',
+        userId: '11111111-1111-4111-8111-111111111111',
         entity: 'transactions',
         op: 'upsert',
         recordId: 'tx_1',
         payload: { id: 'tx_1', amount: 75 },
       });
 
-      const pending = OutboxQueue.getPending('user_123');
+      const pending = OutboxQueue.getPending('11111111-1111-4111-8111-111111111111');
       expect(pending).toHaveLength(1);
       expect(pending[0].payload.amount).toBe(75);
     });
 
     it('removes item from outbox by item ID', () => {
       const item = OutboxQueue.enqueue({
-        userId: 'user_123',
+        userId: '11111111-1111-4111-8111-111111111111',
         entity: 'accounts',
         op: 'delete',
         recordId: 'acc_1',
       });
 
-      expect(OutboxQueue.count('user_123')).toBe(1);
-      OutboxQueue.remove('user_123', item.id);
-      expect(OutboxQueue.count('user_123')).toBe(0);
+      expect(OutboxQueue.count('11111111-1111-4111-8111-111111111111')).toBe(1);
+      OutboxQueue.remove('11111111-1111-4111-8111-111111111111', item.id);
+      expect(OutboxQueue.count('11111111-1111-4111-8111-111111111111')).toBe(0);
     });
   });
 
@@ -121,7 +121,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       });
 
       // Switch to a real user
-      CentraDB.setActiveUser('real_user_456');
+      CentraDB.setActiveUser('22222222-2222-4222-8222-222222222222');
       const userTxs = CentraDB.getTransactions();
       // Real user starts with an empty list, NOT demo or guest data
       expect(userTxs).toHaveLength(0);
@@ -131,7 +131,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       expect(JSON.parse(localStorage.getItem('centra:guest:transactions')!)).toEqual(
         expect.arrayContaining([expect.objectContaining({ id: 'tx_guest_p1' })])
       );
-      expect(localStorage.getItem('centra:real_user_456:transactions')).toBeNull();
+      expect(localStorage.getItem('centra:22222222-2222-4222-8222-222222222222:transactions')).toBeNull();
 
       // Writing a transaction as real user writes strictly to real user namespace
       await CentraDB.upsertTransaction({
@@ -149,8 +149,8 @@ describe('Phase 3: Storage & Sync Engine', () => {
         date: '2026-10-09T12:00:00.000Z',
       });
 
-      expect(localStorage.getItem('centra:real_user_456:transactions')).not.toBeNull();
-      expect(JSON.parse(localStorage.getItem('centra:real_user_456:transactions')!)).toEqual(
+      expect(localStorage.getItem('centra:22222222-2222-4222-8222-222222222222:transactions')).not.toBeNull();
+      expect(JSON.parse(localStorage.getItem('centra:22222222-2222-4222-8222-222222222222:transactions')!)).toEqual(
         expect.arrayContaining([expect.objectContaining({ id: 'tx_real_p1' })])
       );
     });
@@ -158,7 +158,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
 
   describe('Safe Remote Sync & Error Handling', () => {
     it('preserves local records if remote fetch returns an error (no destructive wipe)', async () => {
-      CentraDB.setActiveUser('user_real_999');
+      CentraDB.setActiveUser('33333333-3333-4333-8333-333333333333');
 
       // Add a local transaction (simulating local write)
       await CentraDB.upsertTransaction({
@@ -183,7 +183,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 maybeSingle: vi.fn().mockResolvedValue({
-                  data: { id: 'user_real_999', name: 'Test User' },
+                  data: { id: '33333333-3333-4333-8333-333333333333', name: 'Test User' },
                   error: null,
                 }),
               }),
@@ -195,7 +195,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 maybeSingle: vi.fn().mockResolvedValue({
-                  data: { user_id: 'user_real_999', base_currency: 'USD' },
+                  data: { user_id: '33333333-3333-4333-8333-333333333333', base_currency: 'USD' },
                   error: null,
                 }),
               }),
@@ -215,7 +215,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       });
 
       // Trigger sync
-      await CentraDB.syncFromSupabase('user_real_999');
+      await CentraDB.syncFromSupabase('33333333-3333-4333-8333-333333333333');
 
       // Invariant: Local transactions must NOT be wiped
       const localTxs = CentraDB.getTransactions();
@@ -227,7 +227,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
 
   describe('Per-Record Delete Scoping', () => {
     it('executes .delete().eq("id", id) when deleting a transaction for real user', async () => {
-      CentraDB.setActiveUser('user_real_888');
+      CentraDB.setActiveUser('44444444-4444-4444-8444-444444444444');
 
       const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
       const mockDelete = vi.fn().mockReturnValue({ eq: mockEq });
@@ -251,14 +251,14 @@ describe('Phase 3: Storage & Sync Engine', () => {
         delete: mockDelete,
       });
 
-      await CentraDB.deleteAllUserData('user_real_888');
+      await CentraDB.deleteAllUserData('44444444-4444-4444-8444-444444444444');
 
       expect(supabase.from).toHaveBeenCalledWith('transactions');
       expect(supabase.from).toHaveBeenCalledWith('accounts');
       expect(supabase.from).toHaveBeenCalledWith('categories');
       expect(supabase.from).toHaveBeenCalledWith('budgets');
       expect(supabase.from).toHaveBeenCalledWith('goals');
-      expect(mockEq).toHaveBeenCalledWith('user_id', 'user_real_888');
+      expect(mockEq).toHaveBeenCalledWith('user_id', '44444444-4444-4444-8444-444444444444');
 
       // Cache should be completely empty
       expect(CentraDB.getTransactions()).toHaveLength(0);
@@ -266,10 +266,10 @@ describe('Phase 3: Storage & Sync Engine', () => {
     });
 
     it('deleteAllUserData preserves local data and outbox if remote deletion fails', async () => {
-      CentraDB.setActiveUser('user_fail_delete');
+      CentraDB.setActiveUser('55555555-5555-4555-8555-555555555555');
       // Add a dummy transaction in cache
-      localStorage.setItem('centra:user_fail_delete:transactions', JSON.stringify([{ id: 'tx_stay' }]));
-      CentraDB.setActiveUser('user_fail_delete');
+      localStorage.setItem('centra:55555555-5555-4555-8555-555555555555:transactions', JSON.stringify([{ id: 'tx_stay' }]));
+      CentraDB.setActiveUser('55555555-5555-4555-8555-555555555555');
 
       // Simulate remote delete error
       (supabase.from as any).mockReturnValue({
@@ -278,7 +278,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
         }),
       });
 
-      const res = await CentraDB.deleteAllUserData('user_fail_delete');
+      const res = await CentraDB.deleteAllUserData('55555555-5555-4555-8555-555555555555');
       expect(res.ok).toBe(false);
 
       // Local data must NOT be wiped
@@ -289,7 +289,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
 
   describe('Entity Merge Rule & Outbox Priority', () => {
     it('preserves local records with pending upsert over remote data (local pending wins)', async () => {
-      const uid = 'user_merge_1';
+      const uid = '66666666-6666-4666-8666-666666666661';
       CentraDB.setActiveUser(uid);
 
       // Enqueue an offline local edit for an account
@@ -348,7 +348,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
     });
 
     it('remote deletion from another device removes the local copy', async () => {
-      const uid = 'user_merge_2';
+      const uid = '66666666-6666-4666-8666-666666666662';
       CentraDB.setActiveUser(uid);
 
       // Locally user had acc_to_be_deleted in cache
@@ -395,7 +395,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
 
   describe('User Isolation and Logout Cleanup', () => {
     it('sign out clears cache and outbox completely', () => {
-      const uid = 'user_logout_test';
+      const uid = '77777777-7777-4777-8777-777777777777';
       CentraDB.setActiveUser(uid);
 
       OutboxQueue.enqueue({
@@ -417,16 +417,18 @@ describe('Phase 3: Storage & Sync Engine', () => {
     });
 
     it('switching users shows no data from the previous user', () => {
+      const userA = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+      const userB = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
       // User A
-      CentraDB.setActiveUser('user_A');
-      localStorage.setItem('centra:user_A:accounts', JSON.stringify([
+      CentraDB.setActiveUser(userA);
+      localStorage.setItem(`centra:${userA}:accounts`, JSON.stringify([
         { id: 'acc_A', name: 'User A Secret Vault', balance: 99999, type: 'savings', currency: 'USD' }
       ]));
-      CentraDB.setActiveUser('user_A');
+      CentraDB.setActiveUser(userA);
       expect(CentraDB.getAccounts()[0].name).toBe('User A Secret Vault');
 
       // Switch to User B (brand new)
-      CentraDB.setActiveUser('user_B');
+      CentraDB.setActiveUser(userB);
       expect(CentraDB.getAccounts()).toHaveLength(0);
       expect(CentraDB.getTransactions()).toHaveLength(0);
     });
@@ -434,7 +436,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
 
   describe('Rehydration Purity', () => {
     it('rehydration triggers no storage writes', async () => {
-      const uid = 'user_pure_rehydrate';
+      const uid = '88888888-8888-4888-8888-888888888888';
       CentraDB.setActiveUser(uid);
 
       const notifySpy = vi.fn();

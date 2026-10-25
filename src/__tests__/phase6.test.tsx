@@ -118,7 +118,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
   });
 
   it('2. Onboarding is idempotent: re-entry with existing accounts does not create duplicate default Cash account', async () => {
-    CentraDB.setActiveUser('user_test_onboarding');
+    CentraDB.setActiveUser('22222222-1111-4111-8111-111111111111');
     const existingAccount: Account = {
       id: 'acc_existing',
       name: 'Existing Checking',
@@ -156,7 +156,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
   });
 
   it('3. Onboarding idempotency: categories double-submit and category deduplication', async () => {
-    CentraDB.setActiveUser('user_cat_dedup');
+    CentraDB.setActiveUser('22222222-2222-4222-8222-222222222222');
     let authContextRef: any = null;
     const TestConsumer: React.FC = () => {
       authContextRef = useAuth();
@@ -212,7 +212,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
   });
 
   it('4. ensureSystemCategories persists as a group and re-reads on (user_id, system_key) unique violation', async () => {
-    const userId = 'user_unique_violation_test';
+    const userId = '22222222-3333-4333-8333-333333333333';
     CentraDB.setActiveUser(userId);
 
     // Mock remote Supabase returning 23505 unique violation on upsert
@@ -271,9 +271,10 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     const mockOnSkip = vi.fn();
 
     // 1. Gating check: render when user has NO base currency
-    CentraDB.setActiveUser('user_no_base');
+    const noBaseUid = '22222222-4444-4444-8444-444444444444';
+    CentraDB.setActiveUser(noBaseUid);
     CentraDB.saveUser({
-      id: 'user_no_base',
+      id: noBaseUid,
       name: 'No Base User',
       email: 'test@example.com',
       baseCurrency: '' as any,
@@ -291,9 +292,10 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     unmount();
 
     // 2. Render when base currency IS configured
-    CentraDB.setActiveUser('user_base_set');
+    const baseSetUid = '22222222-5555-4555-8555-555555555555';
+    CentraDB.setActiveUser(baseSetUid);
     CentraDB.saveUser({
-      id: 'user_base_set',
+      id: baseSetUid,
       name: 'Test User',
       email: 'test@example.com',
       baseCurrency: 'USD',
@@ -471,9 +473,10 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
   });
 
   it('8. completeOnboarding sets onboarding_completed only when DB write succeeds and checks error', async () => {
-    CentraDB.setActiveUser('user_onboarding_check');
+    const onboardUid = '22222222-6666-4666-8666-666666666666';
+    CentraDB.setActiveUser(onboardUid);
     CentraDB.saveUser({
-      id: 'user_onboarding_check',
+      id: onboardUid,
       name: 'Onboard User',
       email: 'onboard@example.com',
       baseCurrency: 'USD',
@@ -524,9 +527,10 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
   });
 
   it('9. FirstAccountScreen and AddAccountModal render the exact same restricted currency list', () => {
-    CentraDB.setActiveUser('user_curr_test');
+    const currUid = '22222222-7777-4777-8777-777777777777';
+    CentraDB.setActiveUser(currUid);
     CentraDB.saveUser({
-      id: 'user_curr_test',
+      id: currUid,
       name: 'Currency Test User',
       email: 'curr@example.com',
       baseCurrency: 'USD',
@@ -569,14 +573,14 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       const chainable = createDefaultChainable();
       if (table === 'settings') {
         chainable.maybeSingle = vi.fn().mockResolvedValue({
-          data: { user_id: 'user_goal_cat_test', base_currency: 'USD' },
+          data: { user_id: '22222222-8888-4888-8888-888888888888', base_currency: 'USD' },
           error: null,
         });
       }
       if (table === 'accounts') {
         const accData = [{
           id: 'acc_goal_donor',
-          user_id: 'user_goal_cat_test',
+          user_id: '22222222-8888-4888-8888-888888888888',
           name: 'Checking Donor',
           type: 'checking',
           balance: 1000,
@@ -592,7 +596,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       if (table === 'goals') {
         const goalData = [{
           id: 'goal_test_1',
-          user_id: 'user_goal_cat_test',
+          user_id: '22222222-8888-4888-8888-888888888888',
           name: 'New Car',
           icon: 'Target',
           color: '#10B981',
@@ -607,16 +611,16 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       return chainable;
     });
 
-    CentraDB.setActiveUser('user_goal_cat_test');
+    CentraDB.setActiveUser('22222222-8888-4888-8888-888888888888');
     CentraDB.saveUser({
-      id: 'user_goal_cat_test',
+      id: '22222222-8888-4888-8888-888888888888',
       name: 'Goal User',
       email: 'goal@example.com',
       baseCurrency: 'USD',
       onboardingCompleted: true,
       createdAt: new Date().toISOString(),
     });
-    localStorage.setItem('centra:user_goal_cat_test:last_synced_at', new Date().toISOString());
+    localStorage.setItem('centra:22222222-8888-4888-8888-888888888888:last_synced_at', new Date().toISOString());
     await CentraDB.saveSettings({ ...CentraDB.getSettings(), baseCurrency: 'USD' });
 
     const acc: Account = {
@@ -652,7 +656,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     };
 
     render(
-      <FinanceProvider userId="user_goal_cat_test">
+      <FinanceProvider userId="22222222-8888-4888-8888-888888888888">
         <TestConsumer />
       </FinanceProvider>
     );
@@ -692,9 +696,10 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     }
 
     // 2. Onboarding account (FirstAccountScreen) only lists SUPPORTED_CURRENCIES
-    CentraDB.setActiveUser('user_curr_test_11');
+    const curr11Uid = '22222222-9999-4999-8999-999999999999';
+    CentraDB.setActiveUser(curr11Uid);
     CentraDB.saveUser({
-      id: 'user_curr_test_11',
+      id: curr11Uid,
       name: 'Currency Test User',
       email: 'curr11@example.com',
       baseCurrency: 'USD',

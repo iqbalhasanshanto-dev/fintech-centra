@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { UserProfile, Category, Account } from '../types';
-import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS } from '../db/storage';
+import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS, GUEST_USER_ID, isGuestUser, cleanupLegacyGuestData } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { hasDevicePin, verifyDevicePin } from '../utils/pinLock';
@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Handle authenticated session and route appropriately
   // -------------------------------------------------------------------------
   const handleSession = useCallback(async (session: any) => {
-    if (!session?.user) return;
+    if (!session?.user || isGuestUser(session.user.id)) return;
 
     const userId = session.user.id;
     const userEmail = session.user.email || session.user.user_metadata?.email || '';
@@ -265,6 +265,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 1. Guest mode check
       const isGuestMode = localStorage.getItem(GUEST_FLAG_KEY) === 'true';
       if (isGuestMode) {
+        cleanupLegacyGuestData();
+        CentraDB.setActiveUser(GUEST_USER_ID);
+        setUser(CentraDB.getUser());
         setIsGuest(true);
         setIsAuthenticated(true);
         setAuthView('guest');
@@ -509,8 +512,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Guest Mode (Explicit local-only demo)
   // -------------------------------------------------------------------------
   const enterGuestMode = useCallback(() => {
-    const guestId = `guest_${Date.now()}`;
-    CentraDB.seedUserData(guestId, 'guest@centra.local', 'Guest User').then(() => {
+    cleanupLegacyGuestData();
+    CentraDB.setActiveUser(GUEST_USER_ID);
+    CentraDB.seedUserData(GUEST_USER_ID, 'guest@centra.local', 'Guest User').then(() => {
       setUser(CentraDB.getUser());
     });
     localStorage.setItem(GUEST_FLAG_KEY, 'true');
@@ -554,7 +558,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const unlockPin = async (pin: string): Promise<{ ok: boolean; error?: string }> => {
-    const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id || 'guest';
+    const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id || GUEST_USER_ID;
     const result = await verifyDevicePin(activeUid, pin);
     if (result.ok) {
       setIsLockedByPin(false);
@@ -574,7 +578,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const triggerBackground = () => {
       const activeUid = lastUserIdRef.current || CentraDB.getUser()?.id;
-      if (activeUid && activeUid !== 'guest') {
+      if (activeUid && !isGuestUser(activeUid)) {
         const settings = CentraDB.getSettings();
         if (settings.security.pinLockEnabled && hasDevicePin(activeUid) && !isLockedByPin) {
           if (!hiddenTimestamp) {

@@ -23,14 +23,54 @@ import {
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { OutboxQueue, OutboxItem } from './outbox';
 
-// Helper for namespaced storage keys: centra:{userId}:{entity}
-export function getUserStorageKey(userId: string | null | undefined, entity: string): string {
-  const uid = userId && userId !== 'guest' ? userId : 'guest';
-  return `centra:${uid}:${entity}`;
+export const GUEST_USER_ID = 'guest';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isValidUuid(id?: string | null): boolean {
+  if (!id || typeof id !== 'string') return false;
+  return UUID_REGEX.test(id.trim());
 }
 
 // Current active user ID tracked in memory
 let currentActiveUserId: string | null = null;
+
+export function isGuestUser(userId?: string | null): boolean {
+  const uid = userId !== undefined ? userId : (currentActiveUserId || cache?.user?.id);
+  if (!uid || typeof uid !== 'string') return true;
+  const trimmed = uid.trim();
+  if (!trimmed || trimmed === GUEST_USER_ID || trimmed.startsWith('guest')) {
+    return true;
+  }
+  return !isValidUuid(trimmed);
+}
+
+// Clean up legacy guest_<timestamp> namespaces left from earlier versions
+export function cleanupLegacyGuestData(): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('centra:guest_')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch {
+    // Ignore in non-browser or disabled environments
+  }
+}
+
+if (typeof window !== 'undefined') {
+  cleanupLegacyGuestData();
+}
+
+// Helper for namespaced storage keys: centra:{userId}:{entity}
+export function getUserStorageKey(userId: string | null | undefined, entity: string): string {
+  const uid = isGuestUser(userId) ? GUEST_USER_ID : userId!;
+  return `centra:${uid}:${entity}`;
+}
 
 // Sync status state machine
 let currentSyncStatus: SyncStatus = 'synced';
@@ -155,11 +195,6 @@ function safeSet<T>(key: string, value: T): void {
   }
 }
 
-function isGuestUser(userId?: string | null): boolean {
-  const uid = userId || currentActiveUserId || cache.user?.id;
-  return !uid || uid === 'guest';
-}
-
 // In-memory cache for fast local access
 const cache = {
   user: INITIAL_USER as UserProfile,
@@ -174,19 +209,22 @@ const cache = {
 
 // Initialize cache for active user
 function reloadCacheForUser(userId: string | null): void {
-  currentActiveUserId = userId;
   const isGuest = isGuestUser(userId);
+  currentActiveUserId = isGuest ? GUEST_USER_ID : userId;
 
   if (isGuest) {
     // Guest starts with demo seed data
-    cache.user = safeGet<UserProfile>(getUserStorageKey('guest', 'user'), INITIAL_USER);
-    cache.accounts = safeGet<Account[]>(getUserStorageKey('guest', 'accounts'), INITIAL_ACCOUNTS);
-    cache.categories = safeGet<Category[]>(getUserStorageKey('guest', 'categories'), INITIAL_CATEGORIES);
-    cache.transactions = safeGet<Transaction[]>(getUserStorageKey('guest', 'transactions'), INITIAL_TRANSACTIONS);
-    cache.goals = safeGet<Goal[]>(getUserStorageKey('guest', 'goals'), INITIAL_GOALS);
-    cache.budgets = safeGet<Budget[]>(getUserStorageKey('guest', 'budgets'), INITIAL_BUDGETS);
-    cache.notifications = safeGet<NotificationItem[]>(getUserStorageKey('guest', 'notifications'), INITIAL_NOTIFICATIONS);
-    cache.settings = safeGet<AppSettings>(getUserStorageKey('guest', 'settings'), INITIAL_SETTINGS);
+    cache.user = safeGet<UserProfile>(getUserStorageKey(GUEST_USER_ID, 'user'), {
+      ...INITIAL_USER,
+      id: GUEST_USER_ID,
+    });
+    cache.accounts = safeGet<Account[]>(getUserStorageKey(GUEST_USER_ID, 'accounts'), INITIAL_ACCOUNTS);
+    cache.categories = safeGet<Category[]>(getUserStorageKey(GUEST_USER_ID, 'categories'), INITIAL_CATEGORIES);
+    cache.transactions = safeGet<Transaction[]>(getUserStorageKey(GUEST_USER_ID, 'transactions'), INITIAL_TRANSACTIONS);
+    cache.goals = safeGet<Goal[]>(getUserStorageKey(GUEST_USER_ID, 'goals'), INITIAL_GOALS);
+    cache.budgets = safeGet<Budget[]>(getUserStorageKey(GUEST_USER_ID, 'budgets'), INITIAL_BUDGETS);
+    cache.notifications = safeGet<NotificationItem[]>(getUserStorageKey(GUEST_USER_ID, 'notifications'), INITIAL_NOTIFICATIONS);
+    cache.settings = safeGet<AppSettings>(getUserStorageKey(GUEST_USER_ID, 'settings'), INITIAL_SETTINGS);
   } else {
     // Real users start empty; no demo data fallbacks
     const emptyUser: UserProfile = {
@@ -508,8 +546,8 @@ export const CentraDB = {
 
   // First-Sync Gating Check (per-user lastSyncedAt marker)
   hasCachedData: (userId?: string | null): boolean => {
-    const uid = userId || currentActiveUserId || cache.user?.id;
-    if (!uid || uid === 'guest') return true;
+    const uid = userId !== undefined ? userId : (currentActiveUserId || cache.user?.id);
+    if (isGuestUser(uid)) return true;
     const lastSynced = safeGet<string | null>(getUserStorageKey(uid, 'last_synced_at'), null);
     return !!lastSynced;
   },
@@ -684,7 +722,7 @@ export const CentraDB = {
     }
 
     cache.categories = existing;
-    safeSet(getUserStorageKey(userId || 'guest', 'categories'), cache.categories);
+    safeSet(getUserStorageKey(userId || GUEST_USER_ID, 'categories'), cache.categories);
     notifyDataChanged();
 
     if (!userId || isGuest || !isSupabaseConfigured()) {
@@ -1451,7 +1489,7 @@ export const CentraDB = {
 
   // Reset to initial demo data (GUEST ONLY)
   resetToSeedData: async () => {
-    cache.user = INITIAL_USER;
+    cache.user = { ...INITIAL_USER, id: GUEST_USER_ID };
     cache.accounts = INITIAL_ACCOUNTS;
     cache.categories = INITIAL_CATEGORIES;
     cache.transactions = INITIAL_TRANSACTIONS;
@@ -1460,15 +1498,15 @@ export const CentraDB = {
     cache.notifications = INITIAL_NOTIFICATIONS;
     cache.settings = INITIAL_SETTINGS;
 
-    safeSet(getUserStorageKey('guest', 'user'), cache.user);
-    safeSet(getUserStorageKey('guest', 'accounts'), cache.accounts);
-    safeSet(getUserStorageKey('guest', 'categories'), cache.categories);
-    safeSet(getUserStorageKey('guest', 'transactions'), cache.transactions);
-    safeSet(getUserStorageKey('guest', 'goals'), cache.goals);
-    safeSet(getUserStorageKey('guest', 'budgets'), cache.budgets);
-    safeSet(getUserStorageKey('guest', 'notifications'), cache.notifications);
-    safeSet(getUserStorageKey('guest', 'settings'), cache.settings);
-    OutboxQueue.clear('guest');
+    safeSet(getUserStorageKey(GUEST_USER_ID, 'user'), cache.user);
+    safeSet(getUserStorageKey(GUEST_USER_ID, 'accounts'), cache.accounts);
+    safeSet(getUserStorageKey(GUEST_USER_ID, 'categories'), cache.categories);
+    safeSet(getUserStorageKey(GUEST_USER_ID, 'transactions'), cache.transactions);
+    safeSet(getUserStorageKey(GUEST_USER_ID, 'goals'), cache.goals);
+    safeSet(getUserStorageKey(GUEST_USER_ID, 'budgets'), cache.budgets);
+    safeSet(getUserStorageKey(GUEST_USER_ID, 'notifications'), cache.notifications);
+    safeSet(getUserStorageKey(GUEST_USER_ID, 'settings'), cache.settings);
+    OutboxQueue.clear(GUEST_USER_ID);
     notifyDataChanged();
   },
 
@@ -1499,7 +1537,7 @@ export const CentraDB = {
 
   // Clear guest namespace completely (used when transitioning from guest to create account)
   clearGuestNamespace: () => {
-    OutboxQueue.clear('guest');
+    OutboxQueue.clear(GUEST_USER_ID);
     try {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -1507,6 +1545,7 @@ export const CentraDB = {
         if (
           key &&
           (key.startsWith('centra:guest:') ||
+            key.startsWith('centra:guest_') ||
             key === 'centra_guest_flag' ||
             key === 'centra_is_guest' ||
             key === 'centra_is_guest_v2' ||
@@ -1519,7 +1558,7 @@ export const CentraDB = {
     } catch {
       // Ignore
     }
-    if (currentActiveUserId === 'guest' || !currentActiveUserId) {
+    if (isGuestUser(currentActiveUserId)) {
       cache.user = null as any;
       cache.accounts = [];
       cache.categories = [];
@@ -1532,9 +1571,13 @@ export const CentraDB = {
     notifyDataChanged();
   },
 
-  // Seed demo data for testing
-  seedDemoData: async (userId: string) => {
-    cache.user = { ...INITIAL_USER, id: userId, onboardingCompleted: true };
+  // Seed demo data for testing or guest
+  seedDemoData: async (userId: string = GUEST_USER_ID) => {
+    const isGuest = isGuestUser(userId);
+    const targetId = isGuest ? GUEST_USER_ID : userId;
+    currentActiveUserId = targetId;
+
+    cache.user = { ...INITIAL_USER, id: targetId, onboardingCompleted: true };
     cache.accounts = INITIAL_ACCOUNTS;
     cache.categories = INITIAL_CATEGORIES;
     cache.transactions = INITIAL_TRANSACTIONS;
@@ -1543,16 +1586,22 @@ export const CentraDB = {
     cache.notifications = INITIAL_NOTIFICATIONS;
     cache.settings = INITIAL_SETTINGS;
 
-    safeSet(getUserStorageKey(userId, 'user'), cache.user);
-    safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
-    safeSet(getUserStorageKey(userId, 'categories'), cache.categories);
-    safeSet(getUserStorageKey(userId, 'transactions'), cache.transactions);
-    safeSet(getUserStorageKey(userId, 'goals'), cache.goals);
-    safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
-    safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
-    safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
+    safeSet(getUserStorageKey(targetId, 'user'), cache.user);
+    safeSet(getUserStorageKey(targetId, 'accounts'), cache.accounts);
+    safeSet(getUserStorageKey(targetId, 'categories'), cache.categories);
+    safeSet(getUserStorageKey(targetId, 'transactions'), cache.transactions);
+    safeSet(getUserStorageKey(targetId, 'goals'), cache.goals);
+    safeSet(getUserStorageKey(targetId, 'budgets'), cache.budgets);
+    safeSet(getUserStorageKey(targetId, 'notifications'), cache.notifications);
+    safeSet(getUserStorageKey(targetId, 'settings'), cache.settings);
 
-    if (isSupabaseConfigured() && userId && userId !== 'guest') {
+    if (isGuest) {
+      OutboxQueue.clear(GUEST_USER_ID);
+      notifyDataChanged();
+      return;
+    }
+
+    if (isSupabaseConfigured() && !isGuestUser(userId)) {
       try {
         const { data: existingProfile } = await supabase
           .from('profiles')
@@ -1660,7 +1709,7 @@ export const CentraDB = {
     safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
     safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
 
-    if (isSupabaseConfigured() && userId && userId !== 'guest') {
+    if (isSupabaseConfigured() && !isGuestUser(userId)) {
       try {
         const { data: existing } = await supabase
           .from('profiles')
@@ -1702,7 +1751,7 @@ export const CentraDB = {
       cache.user = { ...cache.user, onboardingCompleted: true };
       safeSet(getUserStorageKey(userId, 'user'), cache.user);
     }
-    if (isSupabaseConfigured() && userId && userId !== 'guest') {
+    if (isSupabaseConfigured() && !isGuestUser(userId)) {
       try {
         const { error } = await supabase.from('profiles').update({
           onboarding_completed: true,
@@ -1930,17 +1979,24 @@ export const CentraDB = {
     return [headers.map(escapeCsvField).join(','), ...rows.map(r => r.join(','))].join('\n');
   },
 
-  seedUserData: async (userId: string, email?: string, name?: string) => {
-    await CentraDB.seedDemoData(userId);
+  seedUserData: async (userId: string = GUEST_USER_ID, email?: string, name?: string) => {
+    const targetId = isGuestUser(userId) ? GUEST_USER_ID : userId;
+    await CentraDB.seedDemoData(targetId);
     if (email || name) {
       cache.user = {
         ...cache.user,
         ...(email ? { email } : {}),
         ...(name ? { name } : {}),
       };
-      safeSet(getUserStorageKey(userId, 'user'), cache.user);
+      safeSet(getUserStorageKey(targetId, 'user'), cache.user);
     }
   },
+
+  // Exported constants and helpers
+  GUEST_USER_ID,
+  isGuestUser,
+  isValidUuid,
+  cleanupLegacyGuestData,
 };
 
 // Global network & visibility listeners for automatic outbox draining and pull sync

@@ -14,6 +14,7 @@ import { NoAccountFoundScreen } from './components/auth/NoAccountFoundScreen';
 import { AccountIncompleteScreen } from './components/auth/AccountIncompleteScreen';
 import { ProfileErrorScreen } from './components/auth/ProfileErrorScreen';
 import { isSupabaseConfigured } from './lib/supabaseClient';
+import { GUEST_USER_ID } from './db/storage';
 
 export const MainApp: React.FC = () => {
   const { authView, isLockedByPin, isAppCovered, user, isGuest } = useAuth();
@@ -77,7 +78,7 @@ export const MainApp: React.FC = () => {
 
   // Authenticated user (or guest demo) inside main app
   return (
-    <FinanceProvider key={user?.id || (isGuest ? 'guest' : 'anon')}>
+    <FinanceProvider key={isGuest ? GUEST_USER_ID : (user?.id || 'anon')}>
       <AppShell />
     </FinanceProvider>
   );

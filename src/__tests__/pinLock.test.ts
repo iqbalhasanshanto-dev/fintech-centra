@@ -8,7 +8,7 @@ import {
 } from '../utils/pinLock';
 
 describe('Phase 2 PIN Lock & WebCrypto PBKDF2', () => {
-  const userId = 'user_test_pin_123';
+  const userId = '33333333-3333-4333-8333-333333333333';
 
   beforeEach(() => {
     localStorage.clear();

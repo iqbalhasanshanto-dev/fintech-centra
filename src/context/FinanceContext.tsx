@@ -11,7 +11,7 @@ import {
   CurrencyCode,
   SyncStatus,
 } from '../types';
-import { CentraDB } from '../db/storage';
+import { CentraDB, isGuestUser } from '../db/storage';
 import { convertCurrency, formatCurrency } from '../utils/formatters';
 import { getPeriodDateRange } from '../utils/dates';
 import {
@@ -109,7 +109,7 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: string }> = ({ children, userId: propUserId }) => {
   const activeUser = CentraDB.getUser();
   const userId = propUserId || activeUser?.id;
-  const isGuest = !userId || userId === 'guest';
+  const isGuest = isGuestUser(userId);
   const hasCache = CentraDB.hasCachedData(userId);
 
   // First-sync gating: if real user has no cached data, gate with loading screen until sync completes
@@ -197,6 +197,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
 
   // First-sync gating runner: executes when user has no cache on this device
   useEffect(() => {
+    if (isGuest) {
+      setFirstSyncState('ready');
+      setIsHydrated(true);
+      return;
+    }
     if (firstSyncState === 'loading' && userId && !isGuest) {
       let isMounted = true;
       CentraDB.syncFromSupabase(userId, undefined, undefined, { force: true })
@@ -838,7 +843,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
 
   const resetAllData = async (): Promise<{ ok: boolean; error?: any }> => {
     const activeUid = CentraDB.getUser()?.id;
-    if (!activeUid || activeUid === 'guest') {
+    if (isGuestUser(activeUid)) {
       await CentraDB.resetToSeedData();
       reloadFromCache();
       return { ok: true, error: null };
@@ -851,12 +856,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     }
   };
 
-  // Render clean loader before hydration completes
-  if (firstSyncState === 'loading' || !isHydrated) {
+  // Render clean loader before hydration completes (real users only)
+  if (!isGuest && (firstSyncState === 'loading' || !isHydrated)) {
     return <LoadingSplashScreen />;
   }
 
-  if (firstSyncState === 'error') {
+  // First-sync failed for real user with no local cache -> Retry screen (real users only)
+  if (!isGuest && firstSyncState === 'error') {
     return <SyncRetryScreen onRetry={() => setFirstSyncState('loading')} />;
   }
 

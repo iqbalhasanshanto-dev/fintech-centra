@@ -8,6 +8,8 @@
  * and NEVER included in data exports.
  */
 
+import { isGuestUser, GUEST_USER_ID } from '../db/storage';
+
 const PBKDF2_ITERATIONS = 150_000;
 const SALT_BYTE_LENGTH = 16;
 const KEY_BYTE_LENGTH = 32;
@@ -23,7 +25,7 @@ interface DevicePinRecord {
 }
 
 function getPinStorageKey(userId: string): string {
-  const uid = userId && userId !== 'guest' ? userId : 'guest';
+  const uid = isGuestUser(userId) ? GUEST_USER_ID : userId;
   return `centra:device_lock:${uid}`;
 }
 

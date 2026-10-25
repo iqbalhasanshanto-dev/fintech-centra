@@ -38,9 +38,9 @@ function createSupabaseMock(handlers: Record<string, any> = {}) {
       return handlers[table]();
     }
     const defaultData = table === 'profiles'
-      ? { id: 'test_user', onboarding_completed: true }
+      ? { id: '00000000-0000-4000-8000-000000000000', onboarding_completed: true }
       : table === 'settings'
-      ? { user_id: 'test_user', base_currency: 'USD' }
+      ? { user_id: '00000000-0000-4000-8000-000000000000', base_currency: 'USD' }
       : [];
     const query = createMockQuery(defaultData, null);
     return {
@@ -81,7 +81,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
   });
 
   it('user with empty cache sees the loading screen until the first sync ends', async () => {
-    const uid = 'user_new_empty_device';
+    const uid = '11111111-1111-4111-8111-111111111111';
     CentraDB.setActiveUser(uid);
     expect(CentraDB.hasCachedData(uid)).toBe(false);
 
@@ -125,7 +125,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
   });
 
   it('first sync fails with no cache -> shows retry screen, not an empty app', async () => {
-    const uid = 'user_sync_failed_no_cache';
+    const uid = '22222222-2222-4222-8222-222222222222';
     CentraDB.setActiveUser(uid);
     expect(CentraDB.hasCachedData(uid)).toBe(false);
 
@@ -158,7 +158,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
   });
 
   it('sync completes -> state updates without any user action', async () => {
-    const uid = 'user_auto_rehydrate';
+    const uid = '33333333-3333-4333-8333-333333333333';
     // User already has cached data
     localStorage.setItem(`centra:${uid}:last_synced_at`, new Date().toISOString());
     localStorage.setItem(`centra:${uid}:accounts`, JSON.stringify([
@@ -200,7 +200,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
   });
 
   it('pending outbox item wins over stale remote data in React state', async () => {
-    const uid = 'user_outbox_wins_react';
+    const uid = '44444444-4444-4444-8444-444444444444';
     localStorage.setItem(`centra:${uid}:last_synced_at`, new Date().toISOString());
     localStorage.setItem(`centra:${uid}:accounts`, JSON.stringify([
       { id: 'acc_1', name: 'Local Draft Account', balance: 500, type: 'checking', currency: 'USD' }
@@ -246,7 +246,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
   });
 
   it('remote deletion from another device removes the local copy in React state', async () => {
-    const uid = 'user_remote_del_react';
+    const uid = '55555555-5555-4555-8555-555555555555';
     localStorage.setItem(`centra:${uid}:last_synced_at`, new Date().toISOString());
     localStorage.setItem(`centra:${uid}:accounts`, JSON.stringify([
       { id: 'acc_to_remove', name: 'Account Deleted Remotely', balance: 350, type: 'checking', currency: 'USD' }
@@ -286,7 +286,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
     createSupabaseMock();
 
     // User 1 setup
-    const uid1 = 'user_switch_1';
+    const uid1 = '66666666-6666-4666-8666-666666666661';
     localStorage.setItem(`centra:${uid1}:last_synced_at`, new Date().toISOString());
     localStorage.setItem(`centra:${uid1}:accounts`, JSON.stringify([
       { id: 'acc_u1', name: 'User 1 Confidential Account', balance: 9999, type: 'checking', currency: 'USD' }
@@ -303,7 +303,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
     unmount();
 
     // User 2 setup (clean user)
-    const uid2 = 'user_switch_2';
+    const uid2 = '66666666-6666-4666-8666-666666666662';
     localStorage.setItem(`centra:${uid2}:last_synced_at`, new Date().toISOString());
     CentraDB.setActiveUser(uid2);
 
@@ -320,7 +320,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
   it('null baseCurrency does not crash formatters, conversions, or calculations', async () => {
     createSupabaseMock();
 
-    const uid = 'user_null_curr';
+    const uid = '77777777-7777-4777-8777-777777777777';
     localStorage.setItem(`centra:${uid}:last_synced_at`, new Date().toISOString());
     // Settings with baseCurrency: null
     localStorage.setItem(`centra:${uid}:settings`, JSON.stringify({

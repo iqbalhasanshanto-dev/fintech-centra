@@ -3,6 +3,8 @@
  * Stores pending mutations per user in localStorage: centra:{userId}:outbox
  */
 
+import { isGuestUser, GUEST_USER_ID } from './storage';
+
 export interface OutboxItem {
   id: string;
   userId: string;
@@ -18,7 +20,7 @@ export interface OutboxItem {
 }
 
 function getOutboxKey(userId: string): string {
-  const uid = userId && userId !== 'guest' ? userId : 'guest';
+  const uid = isGuestUser(userId) ? GUEST_USER_ID : userId;
   return `centra:${uid}:outbox`;
 }
 
@@ -51,6 +53,11 @@ export const OutboxQueue = {
       retries: 0,
     };
 
+    // Guest mutations must NEVER be queued in outbox
+    if (isGuestUser(item.userId)) {
+      return fullItem;
+    }
+
     const items = getOutboxItems(item.userId);
     // Deduplicate / coalesce if updating same record
     const filtered = items.filter(existing => !(existing.entity === item.entity && existing.recordId === item.recordId));
@@ -64,9 +71,15 @@ export const OutboxQueue = {
     providedGroupId?: string
   ): OutboxItem[] => {
     if (rawItems.length === 0) return [];
+    const userId = rawItems[0].userId;
+
+    // Guest mutations must NEVER be queued in outbox
+    if (isGuestUser(userId)) {
+      return [];
+    }
+
     const groupId = providedGroupId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `grp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
     const now = Date.now();
-    const userId = rawItems[0].userId;
 
     const fullItems: OutboxItem[] = rawItems.map((item, idx) => ({
       ...item,
@@ -89,6 +102,7 @@ export const OutboxQueue = {
   },
 
   getPending: (userId: string): OutboxItem[] => {
+    if (isGuestUser(userId)) return [];
     return getOutboxItems(userId);
   },
 
@@ -111,6 +125,7 @@ export const OutboxQueue = {
   },
 
   count: (userId: string): number => {
+    if (isGuestUser(userId)) return 0;
     return getOutboxItems(userId).length;
   },
 };

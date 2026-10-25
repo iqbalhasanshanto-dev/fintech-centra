@@ -653,9 +653,10 @@ describe('Phase 5: Financial Logic & Correctness', () => {
 
   describe('11. Grouped Outbox Operations', () => {
     it('enqueues multi-record operations with a shared groupId and preserves order', () => {
+      const validUserId = '11111111-2222-4333-8444-555555555555';
       const opItems = [
-        { userId: 'user_1', entity: 'transactions' as const, op: 'upsert' as const, recordId: 'tx_1', payload: { id: 'tx_1' } },
-        { userId: 'user_1', entity: 'accounts' as const, op: 'upsert' as const, recordId: 'acc_1', payload: { id: 'acc_1' } },
+        { userId: validUserId, entity: 'transactions' as const, op: 'upsert' as const, recordId: 'tx_1', payload: { id: 'tx_1' } },
+        { userId: validUserId, entity: 'accounts' as const, op: 'upsert' as const, recordId: 'acc_1', payload: { id: 'acc_1' } },
       ];
 
       const enqueued = OutboxQueue.enqueueGroup(opItems, 'grp_shared_123');
@@ -665,7 +666,7 @@ describe('Phase 5: Financial Logic & Correctness', () => {
       expect(enqueued[0].order).toBe(0);
       expect(enqueued[1].order).toBe(1);
 
-      const pending = OutboxQueue.getPending('user_1');
+      const pending = OutboxQueue.getPending(validUserId);
       expect(pending).toHaveLength(2);
       expect(pending[0].groupId).toBe('grp_shared_123');
       expect(pending[1].groupId).toBe('grp_shared_123');
@@ -702,16 +703,17 @@ describe('Phase 5: Financial Logic & Correctness', () => {
     });
 
     it('(b) FinanceContext-level wrapper calls ensureSystemCategories first so transfer and goal contribution succeed', async () => {
-      CentraDB.setActiveUser('user_new_phase5');
+      const realUserId = '99999999-9999-4999-8999-999999999999';
+      CentraDB.setActiveUser(realUserId);
       CentraDB.saveUser({
-        id: 'user_new_phase5',
+        id: realUserId,
         name: 'New User',
         email: 'new@example.com',
         baseCurrency: 'USD',
         onboardingCompleted: true,
         createdAt: new Date().toISOString(),
       });
-      localStorage.setItem('centra:user_new_phase5:last_synced_at', new Date().toISOString());
+      localStorage.setItem(`centra:${realUserId}:last_synced_at`, new Date().toISOString());
       CentraDB.saveSettings({ ...CentraDB.getSettings(), baseCurrency: 'USD' });
 
       const acc1: Account = {
@@ -756,7 +758,7 @@ describe('Phase 5: Financial Logic & Correctness', () => {
         return React.createElement('div', null, 'Ready');
       };
 
-      render(React.createElement(FinanceProvider as any, { userId: 'user_new_phase5' }, React.createElement(TestConsumer)));
+      render(React.createElement(FinanceProvider as any, { userId: realUserId }, React.createElement(TestConsumer)));
 
       await waitFor(() => {
         expect(financeContextRef).not.toBeNull();

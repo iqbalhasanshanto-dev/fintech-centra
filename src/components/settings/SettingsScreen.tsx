@@ -25,7 +25,7 @@ import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
 import { Switch } from '../ui/Switch';
 import { CurrencyCode } from '../../types';
-import { CentraDB } from '../../db/storage';
+import { CentraDB, GUEST_USER_ID } from '../../db/storage';
 import { SUPPORTED_CURRENCIES } from '../../utils/currencies';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
@@ -165,7 +165,7 @@ export const SettingsScreen: React.FC = () => {
       return;
     }
     try {
-      await setDevicePin(user.id || 'guest', newPin);
+      await setDevicePin(user.id || GUEST_USER_ID, newPin);
       updateSettings({ security: { ...settings.security, pinLockEnabled: true } });
       setShowSetPinModal(false);
       setNewPin('');
@@ -181,12 +181,12 @@ export const SettingsScreen: React.FC = () => {
       setPinModalError('Enter your current PIN to disable PIN lock.');
       return;
     }
-    const res = await verifyDevicePin(user.id || 'guest', currentPin);
+    const res = await verifyDevicePin(user.id || GUEST_USER_ID, currentPin);
     if (!res.ok) {
       setPinModalError(res.error || 'Incorrect PIN.');
       return;
     }
-    clearDevicePin(user.id || 'guest');
+    clearDevicePin(user.id || GUEST_USER_ID);
     updateSettings({ security: { ...settings.security, pinLockEnabled: false } });
     setShowDisablePinModal(false);
     setCurrentPin('');
