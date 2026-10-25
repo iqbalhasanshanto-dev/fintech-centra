@@ -10,6 +10,7 @@ import {
   OAUTH_SAFETY_TIMEOUT_MS,
 } from '../utils/nativeOAuth';
 import { supabase } from '../lib/supabaseClient';
+import type { AuthError } from '@supabase/supabase-js';
 import { Browser } from '@capacitor/browser';
 import * as platform from '../utils/platform';
 
@@ -129,7 +130,7 @@ describe('Native OAuth and Deep Link (src/utils/nativeOAuth.ts)', () => {
     it('handles code exchange failure gracefully with error message and reset', async () => {
       vi.mocked(supabase.auth.exchangeCodeForSession).mockResolvedValueOnce({
         data: { session: null } as any,
-        error: { message: 'Invalid or expired code', name: 'AuthApiError', status: 400 },
+        error: { message: 'Invalid or expired code', name: 'AuthApiError', status: 400 } as unknown as AuthError,
       });
 
       const onError = vi.fn();
