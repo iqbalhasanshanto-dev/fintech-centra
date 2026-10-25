@@ -4,6 +4,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { PeriodFilter } from '../../types';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import brandLogo from '../../assets/brand/logo.png';
 
 interface HeaderProps {
@@ -18,8 +19,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAddAction,
 }) => {
   const { periodFilter, setPeriodFilter, unreadNotificationsCount, syncStatus } = useFinance();
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, createAccountFromGuest } = useAuth();
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
+  const [showGuestConfirm, setShowGuestConfirm] = useState(false);
 
   const syncLabel = isGuest
     ? 'Local Demo'
@@ -142,9 +144,9 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* User Profile Avatar (or Guest badge) */}
             <button
-              onClick={onNavigateToSettings}
+              onClick={isGuest ? () => setShowGuestConfirm(true) : onNavigateToSettings}
               className="relative cursor-pointer flex items-center gap-2"
-              aria-label="Open user settings"
+              aria-label={isGuest ? "Guest demo mode - create account" : "Open user settings"}
             >
               {isGuest ? (
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-300/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
@@ -162,6 +164,16 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showGuestConfirm}
+        onClose={() => setShowGuestConfirm(false)}
+        onConfirm={createAccountFromGuest}
+        title="Create a Real Account"
+        message="Create a real account? Your demo data will be discarded."
+        type="warning"
+        confirmText="Create Account"
+      />
     </header>
   );
 };

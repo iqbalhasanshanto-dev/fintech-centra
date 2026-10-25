@@ -32,6 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
     try {
       localStorage.removeItem('centra_db_auth_token_v2');
       localStorage.removeItem('centra_is_guest_v2');
+      sessionStorage.removeItem('centra_is_guest_session');
     } catch {}
     window.location.href = '/';
   };

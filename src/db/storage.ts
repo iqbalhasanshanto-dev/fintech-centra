@@ -45,14 +45,20 @@ export function isGuestUser(userId?: string | null): boolean {
   return !isValidUuid(trimmed);
 }
 
-// Clean up legacy guest_<timestamp> namespaces left from earlier versions
+// Clean up legacy guest_<timestamp> namespaces and persistent guest flags left from earlier versions
 export function cleanupLegacyGuestData(): void {
   try {
     if (typeof localStorage === 'undefined') return;
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith('centra:guest_')) {
+      if (
+        key &&
+        (key.startsWith('centra:guest_') ||
+          key === 'centra_is_guest_v2' ||
+          key === 'centra_is_guest' ||
+          key === 'centra_guest_flag')
+      ) {
         keysToRemove.push(key);
       }
     }
@@ -1555,6 +1561,13 @@ export const CentraDB = {
         }
       }
       keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch {
+      // Ignore
+    }
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem('centra_is_guest_session');
+      }
     } catch {
       // Ignore
     }

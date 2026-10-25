@@ -67,6 +67,7 @@ interface AuthContextType {
   }) => Promise<void>;
   completeOnboarding: () => Promise<void>;
   createAccountFromGuest: () => void;
+  exitGuestMode: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -75,6 +76,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export const GUEST_SESSION_FLAG_KEY = 'centra_is_guest_session';
 const GUEST_FLAG_KEY = 'centra_is_guest_v2';
 const INTENT_STORAGE_KEY = 'centra_auth_intent';
 
@@ -262,10 +264,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // -------------------------------------------------------------------------
   useEffect(() => {
     const initAuth = async () => {
-      // 1. Guest mode check
-      const isGuestMode = localStorage.getItem(GUEST_FLAG_KEY) === 'true';
-      if (isGuestMode) {
-        cleanupLegacyGuestData();
+      // 0. Clean up any stale persistent guest flags from older versions in localStorage
+      cleanupLegacyGuestData();
+
+      // 1. Session-scoped guest mode check (CURRENT session only via sessionStorage)
+      let isGuestSession = false;
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          isGuestSession = sessionStorage.getItem(GUEST_SESSION_FLAG_KEY) === 'true';
+        }
+      } catch {
+        // Ignore
+      }
+
+      if (isGuestSession) {
         CentraDB.setActiveUser(GUEST_USER_ID);
         setUser(CentraDB.getUser());
         setIsGuest(true);
@@ -509,24 +521,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // -------------------------------------------------------------------------
-  // Guest Mode (Explicit local-only demo)
+  // Guest Mode (Explicit local-only demo, session-scoped)
   // -------------------------------------------------------------------------
   const enterGuestMode = useCallback(() => {
     cleanupLegacyGuestData();
     CentraDB.setActiveUser(GUEST_USER_ID);
-    CentraDB.seedUserData(GUEST_USER_ID, 'guest@centra.local', 'Guest User').then(() => {
+    const existingAccounts = CentraDB.getAccounts();
+    if (!existingAccounts || existingAccounts.length === 0) {
+      CentraDB.seedUserData(GUEST_USER_ID, 'guest@centra.local', 'Guest User').then(() => {
+        setUser(CentraDB.getUser());
+      });
+    } else {
       setUser(CentraDB.getUser());
-    });
-    localStorage.setItem(GUEST_FLAG_KEY, 'true');
+    }
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(GUEST_SESSION_FLAG_KEY, 'true');
+      }
+    } catch {}
     setIsGuest(true);
     setIsAuthenticated(true);
     setAuthView('guest');
+  }, []);
+
+  const exitGuestMode = useCallback(() => {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+      }
+    } catch {}
+    CentraDB.setActiveUser(null);
+    setUser(CentraDB.getUser());
+    lastUserIdRef.current = null;
+    setIsGuest(false);
+    setIsAuthenticated(false);
+    setIsLockedByPin(false);
+    setPendingEmail('');
+    setAuthMode('signin');
+    setAuthView('signedOut');
   }, []);
 
   // -------------------------------------------------------------------------
   // Logout
   // -------------------------------------------------------------------------
   const logout = async () => {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+      }
+    } catch {}
     if (isSupabaseConfigured()) {
       try {
         await supabase.auth.signOut();
@@ -680,6 +723,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const createAccountFromGuest = useCallback(() => {
     CentraDB.clearGuestNamespace();
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+      }
+    } catch {}
     setIsGuest(false);
     setIsAuthenticated(false);
     setIsLockedByPin(false);
@@ -900,6 +948,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         saveOnboardingProfile,
         completeOnboarding,
         createAccountFromGuest,
+        exitGuestMode,
       }}
     >
       {children}

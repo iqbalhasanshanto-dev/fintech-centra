@@ -417,6 +417,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
   it('7. When "Create account" is chosen from guest mode: signs out, clears guest namespace, starts signup flow', async () => {
     localStorage.setItem('centra:guest:custom_data', 'test_data');
     localStorage.setItem('centra_is_guest_v2', 'true');
+    sessionStorage.setItem('centra_is_guest_session', 'true');
     CentraDB.setActiveUser('guest');
 
     let authContextRef: any = null;

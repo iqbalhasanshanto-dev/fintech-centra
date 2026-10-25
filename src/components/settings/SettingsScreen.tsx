@@ -38,7 +38,7 @@ export const SettingsScreen: React.FC = () => {
     updateSettings,
     resetAllData
   } = useFinance();
-  const { user, updateUser, logout, lockApp, isGuest, createAccountFromGuest } = useAuth();
+  const { user, updateUser, logout, lockApp, isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
 
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -46,6 +46,7 @@ export const SettingsScreen: React.FC = () => {
   const [showDeleteDataModal, setShowDeleteDataModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showExitDemoConfirm, setShowExitDemoConfirm] = useState(false);
   const [showUpgradeConfirm, setShowUpgradeConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -561,18 +562,51 @@ export const SettingsScreen: React.FC = () => {
           <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
         </button>
 
-        {/* Standard button width for Logout with left-aligned icon & text */}
-        <div className="flex justify-start">
-          <Button
-            variant="destructive"
-            size="md"
-            onClick={() => {
-              setShowLogoutConfirm(true);
-            }}
-            icon={<LogOut className="w-4 h-4" />}
+        {/* Exit Demo row in Settings */}
+        {isGuest && (
+          <button
+            type="button"
+            onClick={() => setShowExitDemoConfirm(true)}
+            className="w-full py-3.5 px-5 rounded-2xl flex items-center justify-between border border-amber-300/60 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 hover:bg-amber-100/60 dark:hover:bg-amber-950/20 transition-colors cursor-pointer group select-none shadow-xs"
           >
-            Log Out of Session
-          </Button>
+            <div className="flex items-center gap-3 min-w-0">
+              <LogOut className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div className="text-left">
+                <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white block">
+                  Exit Demo
+                </span>
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 block">
+                  Leave demo mode and return to the landing page
+                </span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+          </button>
+        )}
+
+        {/* Standard button width for Logout or Exit Demo with left-aligned icon & text */}
+        <div className="flex justify-start">
+          {isGuest ? (
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={() => setShowExitDemoConfirm(true)}
+              icon={<LogOut className="w-4 h-4" />}
+            >
+              Exit Demo
+            </Button>
+          ) : (
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={() => {
+                setShowLogoutConfirm(true);
+              }}
+              icon={<LogOut className="w-4 h-4" />}
+            >
+              Log Out of Session
+            </Button>
+          )}
         </div>
       </div>
 
@@ -878,6 +912,16 @@ export const SettingsScreen: React.FC = () => {
         message="Create a real account? Your demo data will be discarded."
         type="warning"
         confirmText="Create Account"
+      />
+
+      <ConfirmModal
+        isOpen={showExitDemoConfirm}
+        onClose={() => setShowExitDemoConfirm(false)}
+        onConfirm={exitGuestMode}
+        title="Exit Demo Mode"
+        message="Exit demo mode and return to the landing page? Your demo data will be saved locally on this device."
+        type="warning"
+        confirmText="Exit Demo"
       />
 
     </div>

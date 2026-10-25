@@ -163,6 +163,7 @@ describe('Guest Mode Fix & Invariant Verification', () => {
   it('(d) "Create account" from guest mode still shows the confirmation and clears the guest namespace', async () => {
     localStorage.setItem('centra:guest:custom_data', 'test_data');
     localStorage.setItem('centra_is_guest_v2', 'true');
+    sessionStorage.setItem('centra_is_guest_session', 'true');
     CentraDB.setActiveUser(GUEST_USER_ID);
     await CentraDB.seedDemoData(GUEST_USER_ID);
 
