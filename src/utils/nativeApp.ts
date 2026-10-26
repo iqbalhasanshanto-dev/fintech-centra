@@ -5,6 +5,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { Network, ConnectionStatus } from '@capacitor/network';
 import { isNative } from './platform';
 import { CentraDB, isGuestUser, getActiveUserId, setSyncStatus } from '../db/storage';
+import { logger } from './logger';
 
 export interface NativeAppHandlers {
   onUrlOpen?: (url: string) => void;
@@ -42,7 +43,7 @@ export const triggerNativeSync = async (): Promise<void> => {
     await CentraDB.processOutbox();
     await CentraDB.syncFromSupabase(activeUid);
   } catch (err) {
-    console.warn('Native background/network sync failed:', err);
+    logger.warn('Native background/network sync failed:', err);
   }
 };
 
@@ -162,7 +163,7 @@ export const initNativeApp = async (handlers?: NativeAppHandlers): Promise<() =>
       handlers.onUrlOpen(launchUrl.url);
     }
   } catch (err) {
-    console.warn('Native Capacitor initialization error:', err);
+    logger.warn('Native Capacitor initialization error:', err);
   }
 
   return cleanupNativeApp;

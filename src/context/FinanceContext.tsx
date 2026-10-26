@@ -27,6 +27,7 @@ import {
 } from '../utils/financeOperations';
 import { LoadingSplashScreen } from '../components/auth/LoadingSplashScreen';
 import { SyncRetryScreen } from '../components/auth/SyncRetryScreen';
+import { logger } from '../utils/logger';
 
 interface CategoryBreakdownItem {
   category: Category;
@@ -689,7 +690,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       await executeOperation(state => applyTransferFunds(state, { fromId, toId, amount, note }));
       return true;
     } catch (err) {
-      console.warn('Transfer funds failed:', err);
+      logger.warn('Transfer funds failed:', err);
       return false;
     }
   };

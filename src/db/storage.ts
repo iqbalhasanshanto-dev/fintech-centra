@@ -32,6 +32,7 @@ import {
   SettingsRow,
   ProfileRow,
 } from './dbTypes';
+import { logger } from '../utils/logger';
 
 export const GUEST_USER_ID = 'guest';
 
@@ -105,7 +106,7 @@ export function setSyncStatus(status: SyncStatus): void {
     try {
       listener(status);
     } catch (err) {
-      console.warn('Sync status listener error:', err);
+      logger.warn('Sync status listener error:', err);
     }
   });
 }
@@ -132,7 +133,7 @@ export function notifyDataChanged(): void {
     try {
       listener();
     } catch (err) {
-      console.warn('Data change listener error:', err);
+      logger.warn('Data change listener error:', err);
     }
   });
 }
@@ -198,7 +199,7 @@ function safeGet<T>(key: string, fallback: T): T {
       return item as unknown as T;
     }
   } catch (err) {
-    console.warn(`Error reading localStorage key ${key}:`, err);
+    logger.warn(`Error reading localStorage key ${key}:`, err);
     return fallback;
   }
 }
@@ -207,7 +208,7 @@ function safeSet<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
-    console.error(`Error writing localStorage key ${key}:`, err);
+    logger.error(`Error writing localStorage key ${key}:`, err);
   }
 }
 
@@ -609,7 +610,7 @@ export const CentraDB = {
       setSyncStatus('syncing');
       const { error } = await supabase.from('accounts').upsert(dbRow, { onConflict: 'user_id,id' });
       if (error) {
-        console.warn('Supabase upsertAccount failed, queueing in outbox:', error);
+        logger.warn('Supabase upsertAccount failed, queueing in outbox:', error);
         OutboxQueue.enqueue({ userId, entity: 'accounts', op: 'upsert', recordId: acc.id, payload: dbRow });
         setSyncStatus('error');
         return { data: acc, error };
@@ -617,7 +618,7 @@ export const CentraDB = {
       setSyncStatus('synced');
       return { data: acc, error: null };
     } catch (err: unknown) {
-      console.warn('Network error during upsertAccount, queueing in outbox:', err);
+      logger.warn('Network error during upsertAccount, queueing in outbox:', err);
       OutboxQueue.enqueue({ userId, entity: 'accounts', op: 'upsert', recordId: acc.id, payload: dbRow });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { data: acc, error: err };
@@ -637,7 +638,7 @@ export const CentraDB = {
       setSyncStatus('syncing');
       const { error } = await supabase.from('accounts').delete().eq('id', id);
       if (error) {
-        console.warn('Supabase deleteAccount failed, queueing in outbox:', error);
+        logger.warn('Supabase deleteAccount failed, queueing in outbox:', error);
         OutboxQueue.enqueue({ userId, entity: 'accounts', op: 'delete', recordId: id });
         setSyncStatus('error');
         return { ok: false, error };
@@ -1080,7 +1081,7 @@ export const CentraDB = {
       setSyncStatus('syncing');
       const { error } = await supabase.from('settings').upsert(dbRow, { onConflict: 'user_id' });
       if (error) {
-        console.warn('Supabase saveSettings failed, queueing in outbox:', error);
+        logger.warn('Supabase saveSettings failed, queueing in outbox:', error);
         OutboxQueue.enqueue({ userId, entity: 'settings', op: 'upsert', recordId: userId, payload: dbRow });
         setSyncStatus('error');
         return { data: settings, error };
@@ -1119,7 +1120,7 @@ export const CentraDB = {
       setSyncStatus('syncing');
       const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
       if (error) {
-        console.warn('Supabase saveUser failed:', error);
+        logger.warn('Supabase saveUser failed:', error);
         setSyncStatus('error');
         return { data: user, error };
       }
@@ -1287,7 +1288,7 @@ export const CentraDB = {
           .maybeSingle();
 
         if (profileError) {
-          console.warn('Profile fetch error from Supabase:', profileError);
+          logger.warn('Profile fetch error from Supabase:', profileError);
           setSyncStatus('error');
           return { ok: false, error: profileError };
         }
@@ -1320,7 +1321,7 @@ export const CentraDB = {
           cache.accounts = mergeEntityWithOutbox('accounts', remote, cache.accounts, pending);
           safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
         } else if (accountsError) {
-          console.warn('Failed to fetch accounts:', accountsError);
+          logger.warn('Failed to fetch accounts:', accountsError);
           anyFetchError = true;
         }
 
@@ -1335,7 +1336,7 @@ export const CentraDB = {
           cache.categories = mergeEntityWithOutbox('categories', remote, cache.categories, pending);
           safeSet(getUserStorageKey(userId, 'categories'), cache.categories);
         } else if (categoriesError) {
-          console.warn('Failed to fetch categories:', categoriesError);
+          logger.warn('Failed to fetch categories:', categoriesError);
           anyFetchError = true;
         }
 
@@ -1351,7 +1352,7 @@ export const CentraDB = {
           cache.transactions = mergeEntityWithOutbox('transactions', remote, cache.transactions, pending);
           safeSet(getUserStorageKey(userId, 'transactions'), cache.transactions);
         } else if (transactionsError) {
-          console.warn('Failed to fetch transactions:', transactionsError);
+          logger.warn('Failed to fetch transactions:', transactionsError);
           anyFetchError = true;
         }
 
@@ -1366,7 +1367,7 @@ export const CentraDB = {
           cache.goals = mergeEntityWithOutbox('goals', remote, cache.goals, pending);
           safeSet(getUserStorageKey(userId, 'goals'), cache.goals);
         } else if (goalsError) {
-          console.warn('Failed to fetch goals:', goalsError);
+          logger.warn('Failed to fetch goals:', goalsError);
           anyFetchError = true;
         }
 
@@ -1381,7 +1382,7 @@ export const CentraDB = {
           cache.budgets = mergeEntityWithOutbox('budgets', remote, cache.budgets, pending);
           safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
         } else if (budgetsError) {
-          console.warn('Failed to fetch budgets:', budgetsError);
+          logger.warn('Failed to fetch budgets:', budgetsError);
           anyFetchError = true;
         }
 
@@ -1397,7 +1398,7 @@ export const CentraDB = {
           cache.notifications = mergeEntityWithOutbox('notifications', remote, cache.notifications, pending);
           safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
         } else if (notifError) {
-          console.warn('Failed to fetch notifications:', notifError);
+          logger.warn('Failed to fetch notifications:', notifError);
           anyFetchError = true;
         }
 
@@ -1419,13 +1420,13 @@ export const CentraDB = {
             try {
               await supabase.from('settings').upsert(mapSettingsToDb(INITIAL_SETTINGS, userId), { onConflict: 'user_id' });
             } catch (settingsInsertErr) {
-              console.warn('Fallback settings insert error:', settingsInsertErr);
+              logger.warn('Fallback settings insert error:', settingsInsertErr);
             }
             cache.settings = INITIAL_SETTINGS;
             safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
           }
         } else if (settingsError) {
-          console.warn('Failed to fetch settings:', settingsError);
+          logger.warn('Failed to fetch settings:', settingsError);
           anyFetchError = true;
         }
 
@@ -1440,7 +1441,7 @@ export const CentraDB = {
           return { ok: false, profile: profileData };
         }
       } catch (err) {
-        console.warn('Error syncing from Supabase:', err);
+        logger.warn('Error syncing from Supabase:', err);
         setSyncStatus('error');
         return { ok: false, error: err };
       }
@@ -1472,7 +1473,7 @@ export const CentraDB = {
         for (const table of tables) {
           const { error } = await supabase.from(table).delete().eq('user_id', userId);
           if (error) {
-            console.error(`Failed to delete remote records from ${table}:`, error);
+            logger.error(`Failed to delete remote records from ${table}:`, error);
             setSyncStatus('error');
             return { ok: false, error };
           }
@@ -1499,7 +1500,7 @@ export const CentraDB = {
       notifyDataChanged();
       return { ok: true, error: null };
     } catch (err: unknown) {
-      console.error('Failed to delete user data:', err);
+      logger.error('Failed to delete user data:', err);
       setSyncStatus('error');
       return { ok: false, error: err };
     }
@@ -1660,7 +1661,7 @@ export const CentraDB = {
         await supabase.from('notifications').upsert(INITIAL_NOTIFICATIONS.map(n => mapNotificationToDb(n, userId)), { onConflict: 'user_id,id' });
         await supabase.from('settings').upsert(mapSettingsToDb(INITIAL_SETTINGS, userId), { onConflict: 'user_id' });
       } catch (err) {
-        console.warn('Error seeding Supabase rows:', err);
+        logger.warn('Error seeding Supabase rows:', err);
       }
     }
   },
@@ -1765,7 +1766,7 @@ export const CentraDB = {
         await supabase.from('notifications').upsert(welcomeNotification.map(n => mapNotificationToDb(n, userId)), { onConflict: 'user_id,id' });
         await supabase.from('settings').upsert(mapSettingsToDb(userSettings, userId), { onConflict: 'user_id' });
       } catch (err) {
-        console.warn('Error creating blank Supabase rows:', err);
+        logger.warn('Error creating blank Supabase rows:', err);
       }
     }
   },
@@ -1783,11 +1784,11 @@ export const CentraDB = {
           updated_at: new Date().toISOString(),
         }).eq('id', userId);
         if (error) {
-          console.error('Supabase markOnboardingCompleted failed:', error);
+          logger.error('Supabase markOnboardingCompleted failed:', error);
           return false;
         }
       } catch (err) {
-        console.warn('Supabase markOnboardingCompleted failed:', err);
+        logger.warn('Supabase markOnboardingCompleted failed:', err);
         return false;
       }
     }
@@ -1969,7 +1970,7 @@ export const CentraDB = {
       OutboxQueue.enqueueGroup(outboxItems, operationId);
       if (navigator.onLine) {
         CentraDB.processOutbox().catch(err => {
-          console.warn('Outbox process error after persistBatch:', err);
+          logger.warn('Outbox process error after persistBatch:', err);
         });
       }
     }

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { CentraDB } from '../db/storage';
 import { updateNativeStatusBar } from '../utils/nativeApp';
+import { logger } from '../utils/logger';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -69,7 +70,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         theme: newTheme,
       });
     } catch (err) {
-      console.warn('Failed to persist theme setting:', err);
+      logger.warn('Failed to persist theme setting:', err);
     }
   }, []);
 

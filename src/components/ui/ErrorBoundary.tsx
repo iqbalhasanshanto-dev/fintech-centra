@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertOctagon, RefreshCw, Home } from 'lucide-react';
+import { logger } from '../../utils/logger';
 
 interface Props {
   children: ReactNode;
@@ -21,7 +22,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Centra Global Uncaught Error:', error, errorInfo);
+    logger.error('Centra Global Uncaught Error:', error, errorInfo);
   }
 
   private handleReload = () => {

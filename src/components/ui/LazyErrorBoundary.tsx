@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { logger } from '../../utils/logger';
 
 interface Props {
   children: ReactNode;
@@ -23,7 +24,7 @@ export class LazyErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.warn('Lazy chunk load failed:', error, errorInfo);
+    logger.warn('Lazy chunk load failed:', error, errorInfo);
   }
 
   handleRetry = () => {

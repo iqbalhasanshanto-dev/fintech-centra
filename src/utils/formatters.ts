@@ -1,5 +1,6 @@
 import { CurrencyCode } from '../types';
 import { getCurrencyInfo } from './currencies';
+import { logger } from './logger';
 
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   BDT: '৳',
@@ -47,7 +48,7 @@ export function convertCurrency(
   const toRate = EXCHANGE_RATES_TO_USD[safeTo];
   if (!fromRate || !toRate) {
     // If currency not in rate table, warn and keep amount or throw
-    console.warn(`[Currency] Missing rate for ${safeFrom} or ${safeTo}. Rates updated: ${RATES_LAST_UPDATED}`);
+    logger.warn(`[Currency] Missing rate for ${safeFrom} or ${safeTo}. Rates updated: ${RATES_LAST_UPDATED}`);
     return amount;
   }
   const amountInUSD = amount * fromRate;

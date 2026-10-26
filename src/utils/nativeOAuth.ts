@@ -5,6 +5,11 @@ import type { Session } from '@supabase/supabase-js';
 import { getAuthRedirectUrl } from './authRedirect';
 import { isNative } from './platform';
 import { AuthMode } from '../context/AuthContext';
+import {
+  isNetworkConnected,
+  isNetworkError,
+  NO_INTERNET_ERROR_MESSAGE,
+} from './networkErrors';
 
 export const INTENT_STORAGE_KEY = 'centra_auth_intent';
 export const OAUTH_GRACE_PERIOD_MS = 1800; // 1.5 - 2.0s grace period for deep link arrival after browserFinished
@@ -132,7 +137,10 @@ export const handleNativeDeepLink = async (
 
     if (exchangeError) {
       localStorage.removeItem(INTENT_STORAGE_KEY);
-      cb.onError?.('Google sign-in failed, please try again');
+      const msg = isNetworkError(exchangeError)
+        ? NO_INTERNET_ERROR_MESSAGE
+        : 'Google sign-in failed, please try again';
+      cb.onError?.(msg);
       cb.onResetLoading?.();
       activeCallbacks = null;
       return true;
@@ -151,9 +159,12 @@ export const handleNativeDeepLink = async (
     cb.onResetLoading?.();
     activeCallbacks = null;
     return true;
-  } catch {
+  } catch (err: unknown) {
     localStorage.removeItem(INTENT_STORAGE_KEY);
-    cb.onError?.('Google sign-in failed, please try again');
+    const msg = isNetworkError(err)
+      ? NO_INTERNET_ERROR_MESSAGE
+      : 'Google sign-in failed, please try again';
+    cb.onError?.(msg);
     cb.onResetLoading?.();
     activeCallbacks = null;
     return true;
@@ -178,6 +189,11 @@ export const startNativeOAuth = async (
 
   activeCallbacks = options || null;
 
+  // 1. Check network connectivity before starting native OAuth
+  if (!(await isNetworkConnected())) {
+    throw new Error(NO_INTERNET_ERROR_MESSAGE);
+  }
+
   // 2. Store intent in localStorage BEFORE launching system browser
   localStorage.setItem(INTENT_STORAGE_KEY, mode);
 
@@ -193,6 +209,9 @@ export const startNativeOAuth = async (
   if (error || !data?.url) {
     localStorage.removeItem(INTENT_STORAGE_KEY);
     activeCallbacks = null;
+    if (isNetworkError(error)) {
+      throw new Error(NO_INTERNET_ERROR_MESSAGE);
+    }
     throw error || new Error('Failed to retrieve authentication URL.');
   }
 

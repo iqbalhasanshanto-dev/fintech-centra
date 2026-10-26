@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
+import { logger } from '../../utils/logger';
 import logoImg from '../../assets/brand/logo.png';
 
 export const AuthCallbackScreen: React.FC = () => {
@@ -43,7 +44,7 @@ export const AuthCallbackScreen: React.FC = () => {
         }
         return false;
       } catch (err: unknown) {
-        console.warn('Callback session check error:', err);
+        logger.warn('Callback session check error:', err);
         return false;
       }
     };

@@ -4,6 +4,7 @@
  */
 
 import { isGuestUser, GUEST_USER_ID } from './storage';
+import { logger } from '../utils/logger';
 
 export interface OutboxItem {
   id: string;
@@ -38,7 +39,7 @@ function saveOutboxItems(userId: string, items: OutboxItem[]): void {
   try {
     localStorage.setItem(getOutboxKey(userId), JSON.stringify(items));
   } catch (err) {
-    console.error('Failed to persist outbox items:', err);
+    logger.error('Failed to persist outbox items:', err);
   }
 }
 

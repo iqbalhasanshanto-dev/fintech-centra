@@ -9,6 +9,7 @@ import {
   Wallet 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { logger } from '../../utils/logger';
 import { useFinance } from '../../context/FinanceContext';
 import { Goal } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
@@ -50,7 +51,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
           colors: ['#6366F1', '#10B981', '#818CF8', '#F59E0B'],
         });
       } catch (err) {
-        console.warn('Confetti animation failed:', err);
+        logger.warn('Confetti animation failed:', err);
       }
     }
 

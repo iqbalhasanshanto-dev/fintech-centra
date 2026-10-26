@@ -1,25 +1,44 @@
 # Dependencies
 node_modules/
 
-# Production build
+# Production build outputs
 dist/
 
-# TypeScript build info
+# TypeScript build info cache
+*.tsbuildinfo
 tsconfig.tsbuildinfo
 
 # Repomix output
+repomix-output.*
 repomix-output.xml
 
 # Environment variables & secrets
 .env
 .env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 !.env.example
 
-# macOS
+# OS generated files
 .DS_Store
-DerivedData/
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Android
+# Xcode & iOS build outputs
+DerivedData/
+ios/App/Pods/
+ios/App/build/
+ios/App/.build/
+*.xcworkspace
+xcuserdata/
+
+# Android build outputs
 android/.gradle/
 android/build/
 android/app/build/
@@ -27,13 +46,7 @@ android/local.properties
 android/.idea/
 android/*.iml
 android/app/*.iml
+.cxx/
 
-# iOS
-ios/App/Pods/
-ios/App/build/
-ios/App/.build/
-*.xcworkspace
-xcuserdata/
-
-# Tauri Desktop
+# Tauri Desktop build outputs
 src-tauri/target/

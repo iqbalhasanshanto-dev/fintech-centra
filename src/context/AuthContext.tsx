@@ -11,6 +11,13 @@ import { startNativeOAuth, handleNativeDeepLink } from '../utils/nativeOAuth';
 import { initNativeApp } from '../utils/nativeApp';
 import { BackButtonManager } from '../utils/backButton';
 import { getAutoLockTimeout, shouldTriggerResumeLock } from '../utils/lockResume';
+import { logger } from '../utils/logger';
+import {
+  isNetworkConnected,
+  isNetworkError,
+  getFriendlyAuthErrorMessage,
+  NO_INTERNET_ERROR_MESSAGE,
+} from '../utils/networkErrors';
 
 // ---------------------------------------------------------------------------
 // Types & State Machine
@@ -141,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (profileErr) {
-        console.warn('Profile fetch error from Supabase:', profileErr);
+        logger.warn('Profile fetch error from Supabase:', profileErr);
         setAuthView('profileError');
         return;
       }
@@ -169,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .maybeSingle();
 
         if (insertProfileErr) {
-          console.warn('Insert-if-missing profile error:', insertProfileErr);
+          logger.warn('Insert-if-missing profile error:', insertProfileErr);
         } else {
           profile = newProfile;
         }
@@ -242,7 +249,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthView('onboarding');
       }
     } catch (err) {
-      console.warn('Failed to resolve user profile:', err);
+      logger.warn('Failed to resolve user profile:', err);
       setAuthView('profileError');
     }
   }, [authMode, lockApp]);
@@ -305,7 +312,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setAuthView('signedOut');
         }
       } catch (err) {
-        console.warn('Cold start getSession error:', err);
+        logger.warn('Cold start getSession error:', err);
         setAuthView('signedOut');
       }
     };
@@ -359,6 +366,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ok: false, error: 'Please enter a valid email address.' };
     }
 
+    if (!(await isNetworkConnected())) {
+      return { ok: false, error: NO_INTERNET_ERROR_MESSAGE };
+    }
+
     if (!isSupabaseConfigured()) {
       return { ok: false, error: 'Supabase backend is not configured.' };
     }
@@ -376,9 +387,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
+        if (isNetworkError(error)) {
+          return { ok: false, error: NO_INTERNET_ERROR_MESSAGE };
+        }
+
         const authErr = error as AuthError & { status?: number; code?: string };
         if (import.meta.env.DEV) {
-          console.log('[Dev Auth] signInWithOtp response error:', {
+          logger.debug('[Dev Auth] signInWithOtp response error:', {
             mode: currentMode,
             shouldCreateUser: shouldCreate,
             status: authErr.status,
@@ -412,7 +427,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthView('otp');
       return { ok: true };
     } catch (err: unknown) {
-      return { ok: false, error: err instanceof Error ? err.message : 'Failed to send verification code.' };
+      return { ok: false, error: getFriendlyAuthErrorMessage(err, 'Failed to send verification code.') };
     }
   };
 
@@ -427,6 +442,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ok: false, error: 'Email and 6-digit code are required.' };
     }
 
+    if (!(await isNetworkConnected())) {
+      return { ok: false, error: NO_INTERNET_ERROR_MESSAGE };
+    }
+
     if (!isSupabaseConfigured()) {
       return { ok: false, error: 'Supabase backend is not configured.' };
     }
@@ -439,6 +458,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
+        if (isNetworkError(error)) {
+          return { ok: false, error: NO_INTERNET_ERROR_MESSAGE };
+        }
         return { ok: false, error: error.message };
       }
 
@@ -449,7 +471,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { ok: true };
     } catch (err: unknown) {
-      return { ok: false, error: err instanceof Error ? err.message : 'Verification failed. Please try again.' };
+      return { ok: false, error: getFriendlyAuthErrorMessage(err, 'Verification failed. Please try again.') };
     }
   };
 
@@ -472,6 +494,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOauthLoading(provider);
     setOauthError(null);
 
+    if (!(await isNetworkConnected())) {
+      setOauthLoading(null);
+      setOauthError(NO_INTERNET_ERROR_MESSAGE);
+      return;
+    }
+
     if (isNative()) {
       try {
         await startNativeOAuth(provider, currentMode, {
@@ -480,7 +508,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setOauthLoading(null);
           },
           onError: (msg: string) => {
-            setOauthError(msg || `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+            const friendly = getFriendlyAuthErrorMessage(msg, `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+            setOauthError(friendly);
             setOauthLoading(null);
           },
           onSuccess: async (session) => {
@@ -496,7 +525,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       } catch (err: unknown) {
         setOauthLoading(null);
-        setOauthError(err instanceof Error ? err.message : `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+        setOauthError(getFriendlyAuthErrorMessage(err, `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`));
       }
       return;
     }
@@ -515,12 +544,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         localStorage.removeItem(INTENT_STORAGE_KEY);
         setOauthLoading(null);
-        setOauthError(error.message);
+        setOauthError(getFriendlyAuthErrorMessage(error, error.message));
         throw error;
       }
     } catch (err: unknown) {
       setOauthLoading(null);
-      setOauthError(err instanceof Error ? err.message : `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+      setOauthError(getFriendlyAuthErrorMessage(err, `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`));
       throw err;
     }
   };
@@ -579,7 +608,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await supabase.auth.signOut();
       } catch (err) {
-        console.warn('Supabase signOut error:', err);
+        logger.warn('Supabase signOut error:', err);
       }
     }
 

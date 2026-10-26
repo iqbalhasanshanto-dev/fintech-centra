@@ -2,6 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Loader2, Mail, RefreshCw, AlertCircle } from 'lucide-react';
 import logoImg from '../../assets/brand/logo.png';
 import { useAuth } from '../../context/AuthContext';
+import {
+  isNetworkConnected,
+  getFriendlyAuthErrorMessage,
+  NO_INTERNET_ERROR_MESSAGE,
+} from '../../utils/networkErrors';
 
 export const OTP_LENGTH = 6;
 
@@ -101,6 +106,11 @@ export const OtpScreen: React.FC = () => {
       return;
     }
 
+    if (!(await isNetworkConnected())) {
+      setErrorMessage(NO_INTERNET_ERROR_MESSAGE);
+      return;
+    }
+
     setIsLoading(true);
     setErrorMessage('');
     try {
@@ -109,7 +119,7 @@ export const OtpScreen: React.FC = () => {
         setErrorMessage(result.error || 'Invalid or expired code. Please try again.');
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
+      const msg = getFriendlyAuthErrorMessage(err, 'Verification failed. Please try again.');
       setErrorMessage(msg);
     } finally {
       setIsLoading(false);
@@ -125,6 +135,13 @@ export const OtpScreen: React.FC = () => {
     if (resendCooldown > 0 || resendStatus === 'sending' || isLoading) return;
     setResendStatus('sending');
     setErrorMessage('');
+
+    if (!(await isNetworkConnected())) {
+      setErrorMessage(NO_INTERNET_ERROR_MESSAGE);
+      setResendStatus('idle');
+      return;
+    }
+
     try {
       const res = await resendOtp(pendingEmail);
       if (res.ok) {
@@ -135,7 +152,7 @@ export const OtpScreen: React.FC = () => {
         setResendStatus('idle');
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to resend verification code.';
+      const msg = getFriendlyAuthErrorMessage(err, 'Failed to resend verification code.');
       setErrorMessage(msg);
       setResendStatus('idle');
     }

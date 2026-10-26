@@ -3,6 +3,11 @@ import { TrendingUp, PieChart, Sparkles, Shield, ArrowRight, Loader2, AlertCircl
 import logoImg from '../../assets/brand/logo.png';
 import { useAuth, AuthMode } from '../../context/AuthContext';
 import { isTauri, getNativePlatform } from '../../utils/platform';
+import {
+  isNetworkConnected,
+  getFriendlyAuthErrorMessage,
+  NO_INTERNET_ERROR_MESSAGE,
+} from '../../utils/networkErrors';
 
 interface IntroScreenProps {
   initialMode?: AuthMode;
@@ -39,6 +44,11 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
       return;
     }
 
+    if (!(await isNetworkConnected())) {
+      setErrorMessage(NO_INTERNET_ERROR_MESSAGE);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await sendOtp(cleanEmail, activeTab);
@@ -46,7 +56,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
         setErrorMessage(res.error || 'Failed to send verification code. Please try again.');
       }
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setErrorMessage(getFriendlyAuthErrorMessage(err, 'Something went wrong. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -56,10 +66,16 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
     if (provider === 'apple' && !showAppleButton) return;
     setErrorMessage('');
     clearOauthError();
+
+    if (!(await isNetworkConnected())) {
+      setErrorMessage(NO_INTERNET_ERROR_MESSAGE);
+      return;
+    }
+
     try {
       await signInWithOAuth(provider, activeTab);
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : `${provider} sign-in failed. Please try again.`);
+      setErrorMessage(getFriendlyAuthErrorMessage(err, `${provider} sign-in failed. Please try again.`));
     }
   };
 

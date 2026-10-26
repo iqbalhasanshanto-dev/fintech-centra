@@ -9,6 +9,7 @@
  */
 
 import { isGuestUser, GUEST_USER_ID } from '../db/storage';
+import { logger } from './logger';
 
 const PBKDF2_ITERATIONS = 150_000;
 const SALT_BYTE_LENGTH = 16;
@@ -57,7 +58,7 @@ function saveRecord(userId: string, record: DevicePinRecord): void {
   try {
     localStorage.setItem(getPinStorageKey(userId), JSON.stringify(record));
   } catch (err) {
-    console.error('Failed to save device PIN record:', err);
+    logger.error('Failed to save device PIN record:', err);
   }
 }
 
