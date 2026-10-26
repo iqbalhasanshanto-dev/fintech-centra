@@ -166,7 +166,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
               <div className="bg-[#1a2030]/70 rounded-xl p-2 border border-white/5">
                 <span className="text-[10px] text-gray-400 font-medium block">Security</span>
                 <span className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-0.5 mt-0.5">
-                  <Shield className="w-3 h-3" /> Encrypted
+                  <Shield className="w-3 h-3" /> Secure sync
                 </span>
               </div>
               <div className="bg-[#1a2030]/70 rounded-xl p-2 border border-white/5">

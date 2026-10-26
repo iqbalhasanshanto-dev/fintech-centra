@@ -1,17 +1,19 @@
-import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef, lazy, Suspense } from 'react';
 import { Shield } from 'lucide-react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav, TabType } from './BottomNav';
 import { GuestBanner } from './GuestBanner';
 import { HomeScreen } from '../home/HomeScreen';
-import { ReportScreen } from '../report/ReportScreen';
-import { PlanScreen } from '../plan/PlanScreen';
-import { SettingsScreen } from '../settings/SettingsScreen';
+import { LazyErrorBoundary, ScreenLoadingFallback } from '../ui/LazyErrorBoundary';
 import { AddActionModal } from '../modals/AddActionModal';
 import { NotificationsModal } from '../modals/NotificationsModal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { BackButtonManager, exitNativeApp } from '../../utils/backButton';
+
+const ReportScreen = lazy(() => import('../report/ReportScreen').then(m => ({ default: m.ReportScreen })));
+const PlanScreen = lazy(() => import('../plan/PlanScreen').then(m => ({ default: m.PlanScreen })));
+const SettingsScreen = lazy(() => import('../settings/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 
 export const AppShell: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -99,17 +101,29 @@ export const AppShell: React.FC = () => {
           )}
 
           {activeTab === 'report' && (
-            <ReportScreen />
+            <LazyErrorBoundary fallbackTitle="Unable to load Report">
+              <Suspense fallback={<ScreenLoadingFallback />}>
+                <ReportScreen />
+              </Suspense>
+            </LazyErrorBoundary>
           )}
 
           {activeTab === 'plan' && (
-            <PlanScreen
-              onOpenAddGoal={() => handleOpenAddWithTab('goal')}
-            />
+            <LazyErrorBoundary fallbackTitle="Unable to load Goals & Budgets">
+              <Suspense fallback={<ScreenLoadingFallback />}>
+                <PlanScreen
+                  onOpenAddGoal={() => handleOpenAddWithTab('goal')}
+                />
+              </Suspense>
+            </LazyErrorBoundary>
           )}
 
           {activeTab === 'settings' && (
-            <SettingsScreen />
+            <LazyErrorBoundary fallbackTitle="Unable to load Settings">
+              <Suspense fallback={<ScreenLoadingFallback />}>
+                <SettingsScreen />
+              </Suspense>
+            </LazyErrorBoundary>
           )}
         </main>
 

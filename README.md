@@ -99,6 +99,52 @@ npm run dev
 
 ---
 
+## 📱 Mobile & Desktop Apps
+
+Centra is engineered as a cross-platform application supporting Mobile (Android & iOS via Capacitor 8) and Desktop (macOS, Windows, Linux via Tauri 2).
+
+### Android (Capacitor 8)
+- Target SDK 36 (Android 16) & AGP 8.13.0 with JDK 21 requirement.
+- Edge-to-edge drawing support with automatic safe-area insets.
+- Predictive back gesture navigation for dismissing overlays and modals.
+- Offline-first cache with automatic background sync upon network reconnection.
+- Deep-linking OAuth authentication (`com.centra.app://auth/callback`).
+
+```bash
+# Build and sync Android native project
+npm run cap:build:android
+
+# Open in Android Studio
+npm run cap:open:android
+```
+
+### iOS (Capacitor 8)
+- Built for Xcode 16+ and Swift Package Manager (SPM).
+- Safe-area insets for dynamic island, notch, and home indicator.
+
+```bash
+# Build and sync iOS native project
+npm run cap:build:ios
+
+# Open in Xcode
+npm run cap:open:ios
+```
+
+### Desktop (Tauri 2)
+- Lightweight desktop binaries powered by Rust and native platform WebViews (WebKit / WebView2).
+- Minimum window sizing constraints (420x650) to guarantee responsive UI integrity.
+- Email OTP authentication flow tailored for desktop security policies.
+
+```bash
+# Run desktop app in development
+npm run tauri:dev
+
+# Build standalone desktop bundle
+npm run tauri:build
+```
+
+---
+
 ## 📜 Available Scripts
 
 | Command | Description |

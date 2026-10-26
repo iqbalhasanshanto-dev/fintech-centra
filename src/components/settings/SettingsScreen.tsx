@@ -224,7 +224,7 @@ export const SettingsScreen: React.FC = () => {
               Upgrade to a Full Centra Account
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Your financial data is currently stored locally. Create a free account to enable encrypted cloud backup and sync across devices.
+              Your financial data is currently stored locally. Create a free account to enable cloud sync across devices and access your data anywhere.
             </p>
           </div>
           <Button
@@ -687,7 +687,7 @@ export const SettingsScreen: React.FC = () => {
           </div>
           <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] space-y-1">
             <h4 className="font-bold text-gray-900 dark:text-white">How do I export my data?</h4>
-            <p className="text-gray-500 dark:text-gray-400">Navigate to Data Management in Settings and click "Export JSON" to download your complete encrypted local database.</p>
+            <p className="text-gray-500 dark:text-gray-400">Navigate to Data Management in Settings and click "Export JSON" to download your complete data as a JSON file.</p>
           </div>
           <Button
             variant="primary"

@@ -158,6 +158,30 @@ describe('Period Comparison & Percentage Change Calculations', () => {
     it('returns null for all filter', () => {
       expect(getPreviousPeriodDateRange('all', fixedNow)).toBeNull();
     });
+
+    it('correctly handles January boundary (previous month is December of previous year)', () => {
+      const janDate = new Date(2026, 0, 15, 12, 0, 0); // Jan 15, 2026
+      const prev = getPreviousPeriodDateRange('this_month', janDate);
+      expect(prev).not.toBeNull();
+      expect(prev!.start.getFullYear()).toBe(2025);
+      expect(prev!.start.getMonth()).toBe(11); // December
+      expect(prev!.start.getDate()).toBe(1);
+      expect(prev!.end.getFullYear()).toBe(2025);
+      expect(prev!.end.getMonth()).toBe(11);
+      expect(prev!.end.getDate()).toBe(31);
+    });
+
+    it('correctly handles leap year February in previous period calculation', () => {
+      const marchLeapYear = new Date(2024, 2, 10, 12, 0, 0); // March 10, 2024 (leap year)
+      const prev = getPreviousPeriodDateRange('this_month', marchLeapYear);
+      expect(prev).not.toBeNull();
+      expect(prev!.start.getFullYear()).toBe(2024);
+      expect(prev!.start.getMonth()).toBe(1); // February
+      expect(prev!.start.getDate()).toBe(1);
+      expect(prev!.end.getFullYear()).toBe(2024);
+      expect(prev!.end.getMonth()).toBe(1);
+      expect(prev!.end.getDate()).toBe(29); // 29 days in Feb 2024
+    });
   });
 
   describe('computePreviousPeriodTotals with currency conversion', () => {

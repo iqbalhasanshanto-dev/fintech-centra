@@ -101,7 +101,7 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
                     : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                 }`}
               >
-                ● Active
+                ● Theme Preview
               </span>
             </div>
 
