@@ -12,6 +12,7 @@ This directory contains technical documentation, audit reports, testing guidelin
 | **[AUDIT_REPORT.md](file:///Users/shanto/Developer/Fintech-Centra/docs/AUDIT_REPORT.md)** | **Repository Audit & Architecture Review**<br>In-depth inspection of codebase health, 12 prioritized findings (OAuth lifecycle, back-button handlers, build alignments, code splitting), and resolution plans. |
 | **[PHASE7_TESTING.md](file:///Users/shanto/Developer/Fintech-Centra/docs/PHASE7_TESTING.md)** | **Cross-Platform Testing Matrix & Setup Guide**<br>Full testing guide for Android (Studio, ADB deep links, Chrome remote debugging), iOS (Xcode SPM, simctl), and Desktop (Tauri 2), including a 16-scenario manual QA matrix. |
 | **[DATA_PROTECTION.md](file:///Users/shanto/Developer/Fintech-Centra/docs/DATA_PROTECTION.md)** | **Storage Topology & Security Disclosures**<br>Detailed disclosure of client-side caching (plain `localStorage`), WebCrypto PBKDF2 device PIN locking, session-scoped guest isolation, and honest data protection assurances. |
+| **[SECURITY_AUDIT.md](file:///Users/shanto/Developer/Fintech-Centra/docs/SECURITY_AUDIT.md)** | **Full Security Audit & Hardening Report**<br>Comprehensive 13-point security audit: API keys, RLS authorization, XSS sanitization, rate limiting, CORS, security headers, passwordless/PIN PBKDF2 cryptography, and git secret scan. |
 
 ---
 

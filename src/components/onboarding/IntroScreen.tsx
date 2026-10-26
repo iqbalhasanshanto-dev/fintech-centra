@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { TrendingUp, PieChart, Sparkles, Shield, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import logoImg from '../../assets/brand/logo.png';
 import { useAuth, AuthMode } from '../../context/AuthContext';
@@ -8,6 +8,7 @@ import {
   getFriendlyAuthErrorMessage,
   NO_INTERNET_ERROR_MESSAGE,
 } from '../../utils/networkErrors';
+import { sanitizeEmail } from '../../utils/sanitize';
 
 interface IntroScreenProps {
   initialMode?: AuthMode;
@@ -20,6 +21,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
   const [email, setEmail] = useState(initialEmail || '');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const lastSubmitTimeRef = useRef<number>(0);
 
   const showAppleButton =
     import.meta.env.VITE_ENABLE_APPLE_SIGNIN === 'true' &&
@@ -38,8 +40,14 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
     setErrorMessage('');
     clearOauthError();
 
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
+    const now = Date.now();
+    if (now - lastSubmitTimeRef.current < 2500) {
+      setErrorMessage('Please wait a moment before trying again.');
+      return;
+    }
+
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail || !cleanEmail.includes('@') || cleanEmail.length < 5) {
       setErrorMessage('Please enter a valid email address.');
       return;
     }
@@ -49,6 +57,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
       return;
     }
 
+    lastSubmitTimeRef.current = now;
     setIsLoading(true);
     try {
       const res = await sendOtp(cleanEmail, activeTab);

@@ -17,6 +17,7 @@ import { getCurrencyInfo } from '../../utils/currencies';
 import { todayLocalDateKey } from '../../utils/dates';
 import { CentraDB } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
+import { sanitizeText } from '../../utils/sanitize';
 
 interface AddActionModalProps {
   isOpen: boolean;
@@ -236,9 +237,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       categoryColor: selectedCat.color,
       accountId,
       accountName: selectedAcc?.name || 'Primary Account',
-      merchant: merchant.trim() || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
+      merchant: sanitizeText(merchant, 100) || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
       date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
-      note: note.trim() + (receiptName ? ` [Attached: ${receiptName}]` : ''),
+      note: sanitizeText(note, 300) + (receiptName ? ` [Attached: ${sanitizeText(receiptName, 100)}]` : ''),
       tags: [type === 'income' ? 'Income' : 'Spend'],
     });
 
@@ -272,7 +273,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       return false;
     }
 
-    await transferFunds(fromAccountId, toAccountId, parsedAmount, transferNote || note);
+    await transferFunds(fromAccountId, toAccountId, parsedAmount, sanitizeText(transferNote || note, 200));
 
     if (keepOpen) {
       setAmount('');
@@ -294,13 +295,14 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     setErrorMessage(null);
     const target = parseFloat(amount.replace(',', '.'));
     const deposit = parseFloat(goalInitialDeposit.replace(',', '.')) || 0;
-    if (!goalName.trim() || !target || target <= 0) {
+    const cleanGoalName = sanitizeText(goalName, 100);
+    if (!cleanGoalName || !target || target <= 0) {
       setErrorMessage('Please enter a goal name and valid target amount.');
       return false;
     }
 
     addGoal({
-      name: goalName.trim(),
+      name: cleanGoalName,
       icon: 'Target',
       color: '#6366f1',
       targetAmount: target,
@@ -332,9 +334,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         categoryColor: goalContribCat.color || '#6366f1',
         accountId: accountId,
         accountName: selectedDepositAcc?.name || 'Primary Account',
-        merchant: `Goal: ${goalName.trim()}`,
+        merchant: `Goal: ${cleanGoalName}`,
         date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
-        note: `Initial deposit for goal: ${goalName.trim()}`,
+        note: `Initial deposit for goal: ${cleanGoalName}`,
         tags: ['Goal', 'Savings'],
       });
     }

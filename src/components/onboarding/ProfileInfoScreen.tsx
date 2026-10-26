@@ -18,6 +18,7 @@ import {
 } from '../../utils/currencies';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
+import { sanitizeText } from '../../utils/sanitize';
 
 interface ProfileInfoScreenProps {
   initialName?: string;
@@ -157,22 +158,25 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     }
 
     const finalCurrency = currency;
+    const cleanName = sanitizeText(fullName, 100);
+    const cleanDob = sanitizeText(dob, 20);
+    const cleanAddress = sanitizeText(address, 200);
 
     // Save profile data into AuthContext / CentraDB
     await saveOnboardingProfile({
-      name: fullName.trim(),
-      dob: dob.trim(),
+      name: cleanName,
+      dob: cleanDob,
       country,
-      address: address.trim(),
+      address: cleanAddress,
       avatarUrl,
       currency: finalCurrency,
     });
 
     onContinue({
-      name: fullName.trim(),
-      dob: dob.trim(),
+      name: cleanName,
+      dob: cleanDob,
       country,
-      address: address.trim(),
+      address: cleanAddress,
       avatarUrl,
       currency: finalCurrency,
     });

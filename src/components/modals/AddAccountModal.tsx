@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { Account, AccountType } from '../../types';
 import { SUPPORTED_CURRENCIES, getCurrencyInfo } from '../../utils/currencies';
 import { parseAmountInput } from '../../utils/money';
+import { sanitizeText } from '../../utils/sanitize';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
 
@@ -89,13 +90,16 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     const sanitizedCreditLimit = type === 'credit' ? parseAmountInput(creditLimit, currency) : undefined;
 
     try {
+      const cleanName = sanitizeText(name, 100);
+      const cleanBankName = sanitizeText(bankName, 100);
+
       const newAccData: Omit<Account, 'id'> = {
-        name: name.trim(),
+        name: cleanName,
         type,
         balance: sanitizedBalance,
         currency,
         accountNumberMasked: type === 'cash' ? '•••• CASH' : `•••• ${Math.floor(1000 + Math.random() * 9000)}`,
-        bankName: bankName.trim() || (type === 'cash' ? 'Cash' : 'Personal Account'),
+        bankName: cleanBankName || (type === 'cash' ? 'Cash' : 'Personal Account'),
         color,
         isPrimary,
         creditLimit: sanitizedCreditLimit,

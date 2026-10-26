@@ -7,6 +7,7 @@ import { ConfirmModal } from '../ui/ConfirmModal';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatFullDate, formatTime } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
+import { sanitizeText } from '../../utils/sanitize';
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -45,8 +46,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   const handleSaveEdit = () => {
     const chosenCategory = categories.find(c => c.id === categoryId);
     updateTransaction(transaction.id, {
-      merchant,
-      note,
+      merchant: sanitizeText(merchant, 100) || transaction.categoryName,
+      note: sanitizeText(note, 300),
       categoryId,
       categoryName: chosenCategory ? chosenCategory.name : transaction.categoryName,
       categoryIcon: chosenCategory ? chosenCategory.icon : transaction.categoryIcon,
