@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle2, HelpCircle, Info, X } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
 
 export interface ConfirmModalProps {

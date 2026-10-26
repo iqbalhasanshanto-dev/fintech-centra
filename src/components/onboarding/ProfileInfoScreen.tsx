@@ -2,14 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft,
   Camera,
-  Calendar,
   ChevronDown,
   User,
   MapPin,
   Coins,
   Check,
   Search,
-  Upload,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -53,11 +51,13 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
   // Sync Google / Apple OAuth prefilled name & avatar
   useEffect(() => {
     if (!fullName && user.name) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Pre-fill OAuth profile name when user object loads asynchronously
       setFullName(user.name);
     }
     if (!avatarUrl && user.avatarUrl) {
       setAvatarUrl(user.avatarUrl);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only sync when user prop updates to avoid overwriting active user edits
   }, [user.name, user.avatarUrl]);
 
   // Dropdown UI states

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { initNativeApp, cleanupNativeApp, updateNativeStatusBar, hideSplashScreen, _resetNativeSyncThrottleForTesting } from '../utils/nativeApp';
+import { initNativeApp, cleanupNativeApp, updateNativeStatusBar, _resetNativeSyncThrottleForTesting } from '../utils/nativeApp';
 import * as platform from '../utils/platform';
 import { CentraDB } from '../db/storage';
 import { App as CapApp } from '@capacitor/app';

@@ -7,7 +7,6 @@ import {
   computePreviousPeriodTotals,
 } from '../utils/money';
 import {
-  getPeriodDateRange,
   getPreviousPeriodDateRange,
 } from '../utils/dates';
 import { YourMoneySection } from '../components/home/YourMoneySection';

@@ -13,6 +13,42 @@ interface TotalSpendSummaryProps {
   onNavigateToReport: () => void;
 }
 
+interface SpendTooltipPayloadItem {
+  payload?: {
+    name?: string;
+    value?: number;
+    percentage?: number;
+  };
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: SpendTooltipPayloadItem[];
+  baseCurrency?: string | null;
+  privacyMode: boolean;
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({
+  active,
+  payload,
+  baseCurrency,
+  privacyMode,
+}) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    if (!data) return null;
+    return (
+      <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
+        <p className="text-xs font-bold text-gray-900 dark:text-white">{data.name}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium tabular-nums mt-0.5">
+          {formatCurrency(Number(data.value || 0), baseCurrency, privacyMode)} ({data.percentage?.toFixed(0)}%)
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
   onNavigateToReport,
 }) => {
@@ -29,20 +65,6 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
   // Top spend percentage
   const topSpendPercent = chartData.length > 0 ? `${chartData[0].percentage.toFixed(0)}%` : '0%';
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
-          <p className="text-xs font-bold text-gray-900 dark:text-white">{data.name}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium tabular-nums mt-0.5">
-            {formatCurrency(data.value, settings.baseCurrency, settings.privacyMode)} ({data.percentage?.toFixed(0)}%)
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <section id="spending-analytics" className="mb-10 bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl p-6 sm:p-8 transition-colors shadow-xs">
@@ -90,7 +112,7 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
             <>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <RechartsTooltip content={<CustomTooltip />} isAnimationActive={false} />
+                  <RechartsTooltip content={<CustomTooltip baseCurrency={settings.baseCurrency} privacyMode={settings.privacyMode} />} isAnimationActive={false} />
                   <Pie
                     data={chartData}
                     cx="50%"

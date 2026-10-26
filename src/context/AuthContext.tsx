@@ -3,6 +3,7 @@ import { UserProfile, Category, Account } from '../types';
 import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS, GUEST_USER_ID, isGuestUser, cleanupLegacyGuestData } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import type { Session, AuthError } from '@supabase/supabase-js';
 import { hasDevicePin, verifyDevicePin } from '../utils/pinLock';
 import { getAuthRedirectUrl } from '../utils/authRedirect';
 import { isNative } from '../utils/platform';
@@ -61,7 +62,7 @@ interface AuthContextType {
     country?: string;
     address?: string;
     avatarUrl?: string;
-    currency?: any;
+    currency?: string;
     theme?: 'dark' | 'light';
     categories?: string[];
   }) => Promise<void>;
@@ -77,7 +78,6 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const GUEST_SESSION_FLAG_KEY = 'centra_is_guest_session';
-const GUEST_FLAG_KEY = 'centra_is_guest_v2';
 const INTENT_STORAGE_KEY = 'centra_auth_intent';
 
 // ---------------------------------------------------------------------------
@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // -------------------------------------------------------------------------
   // Handle authenticated session and route appropriately
   // -------------------------------------------------------------------------
-  const handleSession = useCallback(async (session: any) => {
+  const handleSession = useCallback(async (session: Session | null) => {
     if (!session?.user || isGuestUser(session.user.id)) return;
 
     const userId = session.user.id;
@@ -376,11 +376,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
+        const authErr = error as AuthError & { status?: number; code?: string };
         if (import.meta.env.DEV) {
           console.log('[Dev Auth] signInWithOtp response error:', {
             mode: currentMode,
             shouldCreateUser: shouldCreate,
-            status: (error as any).status,
+            status: authErr.status,
             name: error.name,
             message: error.message,
           });
@@ -390,9 +391,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // If user does not exist (status 422 or signup prevented message), treat as neutral success
         const isUserNotFoundOrSignupPrevented =
           !shouldCreate &&
-          ((error as any).status === 422 ||
-            (error as any).code === 'otp_disabled' ||
-            (error as any).code === 'user_not_found' ||
+          (authErr.status === 422 ||
+            authErr.code === 'otp_disabled' ||
+            authErr.code === 'user_not_found' ||
             error.message?.toLowerCase().includes('signups not allowed') ||
             error.message?.toLowerCase().includes('user not found'));
 
@@ -410,8 +411,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthMode(currentMode);
       setAuthView('otp');
       return { ok: true };
-    } catch (err: any) {
-      return { ok: false, error: err?.message || 'Failed to send verification code.' };
+    } catch (err: unknown) {
+      return { ok: false, error: err instanceof Error ? err.message : 'Failed to send verification code.' };
     }
   };
 
@@ -447,8 +448,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       return { ok: true };
-    } catch (err: any) {
-      return { ok: false, error: err?.message || 'Verification failed. Please try again.' };
+    } catch (err: unknown) {
+      return { ok: false, error: err instanceof Error ? err.message : 'Verification failed. Please try again.' };
     }
   };
 
@@ -493,9 +494,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setOauthLoading(null);
           },
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         setOauthLoading(null);
-        setOauthError(err?.message || `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+        setOauthError(err instanceof Error ? err.message : `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
       }
       return;
     }
@@ -517,9 +518,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setOauthError(error.message);
         throw error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setOauthLoading(null);
-      setOauthError(err?.message || `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
+      setOauthError(err instanceof Error ? err.message : `${provider === 'apple' ? 'Apple' : 'Google'} sign-in failed, please try again`);
       throw err;
     }
   };
@@ -749,7 +750,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     country?: string;
     address?: string;
     avatarUrl?: string;
-    currency?: any;
+    currency?: string;
     theme?: 'dark' | 'light';
     categories?: string[];
   }) => {

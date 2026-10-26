@@ -108,8 +108,9 @@ export const OtpScreen: React.FC = () => {
       if (!result.ok) {
         setErrorMessage(result.error || 'Invalid or expired code. Please try again.');
       }
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Verification failed. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }
@@ -133,8 +134,9 @@ export const OtpScreen: React.FC = () => {
         setErrorMessage(res.error || 'Failed to resend code.');
         setResendStatus('idle');
       }
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Failed to resend verification code.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to resend verification code.';
+      setErrorMessage(msg);
       setResendStatus('idle');
     }
   };
@@ -152,8 +154,9 @@ export const OtpScreen: React.FC = () => {
     try {
       await sendOtp(pendingEmail, 'signup');
       setResendCooldown(60);
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Failed to send account creation code.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to send account creation code.';
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }

@@ -4,7 +4,6 @@ import {
   PieChart,
   Target,
   SlidersHorizontal,
-  Shield,
   LogOut,
   Plus,
 } from 'lucide-react';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Moon, Sun, TrendingUp, PieChart, Sparkles, Shield, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logoImg from '../../assets/brand/logo.png';
 

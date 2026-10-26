@@ -50,6 +50,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize active tab with defaultTab prop when modal opens
       if (defaultTab === 'transfer') setActiveTab('transfer');
       else if (defaultTab === 'goal') setActiveTab('goal');
       else if (defaultTab === 'budget') setActiveTab('budget');
@@ -108,6 +109,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   // Dynamic state synchronization effect (runs whenever modal opens, data changes, or tab changes)
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize category and account selection defaults when modal opens or available data changes
       setErrorMessage(null);
 
       // Validate categoryId

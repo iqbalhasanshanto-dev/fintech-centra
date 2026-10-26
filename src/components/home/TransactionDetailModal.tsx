@@ -32,6 +32,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   // Reset form when transaction opens
   React.useEffect(() => {
     if (transaction) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Form state must synchronize when active transaction prop changes
       setMerchant(transaction.merchant || transaction.categoryName);
       setNote(transaction.note || '');
       setCategoryId(transaction.categoryId);

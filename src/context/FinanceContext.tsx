@@ -27,7 +27,6 @@ import {
 } from '../utils/financeOperations';
 import { LoadingSplashScreen } from '../components/auth/LoadingSplashScreen';
 import { SyncRetryScreen } from '../components/auth/SyncRetryScreen';
-import brandLogo from '../assets/brand/logo.png';
 
 interface CategoryBreakdownItem {
   category: Category;
@@ -101,7 +100,7 @@ interface FinanceContextType {
   clearNotifications: () => void;
 
   updateSettings: (updates: Partial<AppSettings>) => void;
-  resetAllData: () => Promise<{ ok: boolean; error?: any }>;
+  resetAllData: () => Promise<{ ok: boolean; error?: unknown }>;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -173,11 +172,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   // Sync active user in storage layer when userId changes
   useEffect(() => {
     CentraDB.setActiveUser(userId || null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Re-hydrate context state from local DB whenever active user switches
     reloadFromCache();
   }, [userId, reloadFromCache]);
 
   // Hydration, sync status, and data change subscriptions
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial re-hydration and subscription setup on provider mount
     reloadFromCache();
     setIsHydrated(true);
 
@@ -198,6 +199,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   // First-sync gating runner: executes when user has no cache on this device
   useEffect(() => {
     if (isGuest) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Immediately transition guest mode to ready state without remote sync
       setFirstSyncState('ready');
       setIsHydrated(true);
       return;
@@ -841,7 +843,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     await CentraDB.saveSettings(next);
   };
 
-  const resetAllData = async (): Promise<{ ok: boolean; error?: any }> => {
+  const resetAllData = async (): Promise<{ ok: boolean; error?: unknown }> => {
     const activeUid = CentraDB.getUser()?.id;
     if (isGuestUser(activeUid)) {
       await CentraDB.resetToSeedData();

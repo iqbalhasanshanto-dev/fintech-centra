@@ -56,6 +56,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   // Sync currency with base currency whenever modal opens
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset modal form inputs synchronously when dialog is opened
       setName('');
       setType('checking');
       setBalance('');
@@ -110,8 +111,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       }
 
       onClose();
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Failed to add account.');
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to add account.');
     }
   };
 

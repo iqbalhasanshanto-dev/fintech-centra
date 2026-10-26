@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import {
@@ -8,7 +8,6 @@ import {
   setAutoLockTimeout,
   AUTOLOCK_STORAGE_KEY,
   DEFAULT_AUTOLOCK_TIMEOUT_MS,
-  AUTOLOCK_OPTIONS,
 } from '../utils/lockResume';
 import { MainApp } from '../App';
 

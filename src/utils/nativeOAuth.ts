@@ -1,6 +1,7 @@
 import { Browser } from '@capacitor/browser';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { supabase } from '../lib/supabaseClient';
+import type { Session } from '@supabase/supabase-js';
 import { getAuthRedirectUrl } from './authRedirect';
 import { isNative } from './platform';
 import { AuthMode } from '../context/AuthContext';
@@ -13,7 +14,7 @@ export const OAUTH_SAFETY_TIMEOUT_MS = 120000; // 2 minutes safety timeout
 const processedCodes = new Set<string>();
 
 interface OAuthCallbacks {
-  onSuccess?: (session: any) => Promise<void> | void;
+  onSuccess?: (session: Session) => Promise<void> | void;
   onError?: (errorMsg: string) => void;
   onCancel?: () => void;
   onResetLoading?: () => void;

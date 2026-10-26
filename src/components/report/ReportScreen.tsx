@@ -21,7 +21,6 @@ import {
 } from 'recharts';
 import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
-import { Button } from '../ui/Button';
 import { TransactionDetailModal } from '../home/TransactionDetailModal';
 import { AnalyticsCalendar } from './AnalyticsCalendar';
 import { formatCurrency } from '../../utils/formatters';
@@ -31,6 +30,50 @@ import { getThemePalette } from '../../utils/themeColors';
 interface ReportScreenProps {
   onSelectTransaction?: (tx: Transaction) => void;
 }
+
+interface GroupedBarPayloadEntry {
+  name?: string;
+  value?: number;
+  color?: string;
+}
+
+interface GroupedBarTooltipProps {
+  active?: boolean;
+  payload?: GroupedBarPayloadEntry[];
+  label?: string;
+  baseCurrency?: string | null;
+  privacyMode: boolean;
+}
+
+const GroupedBarTooltip: React.FC<GroupedBarTooltipProps> = ({
+  active,
+  payload,
+  label,
+  baseCurrency,
+  privacyMode,
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] p-3 rounded-xl shadow-xl text-left pointer-events-none z-50 animate-fade-in text-xs space-y-1 min-w-[160px]">
+        <p className="font-bold text-[#171717] dark:text-[#FAFAFA] border-b border-[#E5E5E5] dark:border-[#404040] pb-1">
+          {label}
+        </p>
+        {payload.map((entry, index) => (
+          <div key={index} className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-1.5 font-medium text-[#737373] dark:text-[#A3A3A3]">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+              {entry.name}:
+            </span>
+            <span className="font-bold tabular-nums text-[#171717] dark:text-[#FAFAFA]">
+              {formatCurrency(Number(entry.value || 0), baseCurrency, privacyMode)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export const ReportScreen: React.FC<ReportScreenProps> = ({
   onSelectTransaction,
@@ -128,30 +171,6 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
     setSelectedTx(tx);
   };
 
-  // Tooltip for Grouped Bar Chart
-  const GroupedBarTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] p-3 rounded-xl shadow-xl text-left pointer-events-none z-50 animate-fade-in text-xs space-y-1 min-w-[160px]">
-          <p className="font-bold text-[#171717] dark:text-[#FAFAFA] border-b border-[#E5E5E5] dark:border-[#404040] pb-1">
-            {label}
-          </p>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1.5 font-medium text-[#737373] dark:text-[#A3A3A3]">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                {entry.name}:
-              </span>
-              <span className="font-bold tabular-nums text-[#171717] dark:text-[#FAFAFA]">
-                {formatCurrency(entry.value, settings.baseCurrency, settings.privacyMode)}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
@@ -269,7 +288,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                           return `${val}`;
                         }}
                       />
-                      <RechartsTooltip content={<GroupedBarTooltip />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }} />
+                      <RechartsTooltip content={<GroupedBarTooltip baseCurrency={settings.baseCurrency} privacyMode={settings.privacyMode} />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }} />
                       <Legend
                         verticalAlign="top"
                         align="right"
@@ -355,8 +374,8 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                         onMouseLeave={() => {
                           setHoveredSlice(null);
                         }}
-                        onClick={(entry: any) =>
-                          setExpandedCategoryId(expandedCategoryId === entry?.categoryId ? null : entry?.categoryId)
+                        onClick={(entry: { categoryId?: string }) =>
+                          setExpandedCategoryId(expandedCategoryId === entry?.categoryId ? null : (entry?.categoryId || null))
                         }
                         cursor="pointer"
                       >
@@ -463,7 +482,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
         </div>
 
         <div className="space-y-2">
-          {categoryBreakdown.map((item: any) => {
+          {categoryBreakdown.map(item => {
             const isExpanded = expandedCategoryId === item.category.id;
             const categoryTxs = getTransactionsForCategory(item.category.id);
 
@@ -554,7 +573,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                           No transactions recorded in this category.
                         </p>
                       ) : (
-                        categoryTxs.map((tx: any) => (
+                        categoryTxs.map(tx => (
                           <div
                             key={tx.id}
                             onClick={() => handleTxSelect(tx)}

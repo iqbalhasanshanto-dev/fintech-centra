@@ -7,31 +7,30 @@ interface InsightBannerProps {
   onActionClick?: () => void;
 }
 
+const renderInsightIcon = (type?: string) => {
+  const iconClass = "w-5 h-5";
+  switch (type) {
+    case 'spending':
+      return <AlertCircle className={iconClass} />;
+    case 'positive':
+      return <CheckCircle2 className={iconClass} />;
+    case 'saving':
+      return <TrendingUp className={iconClass} />;
+    default:
+      return <Sparkles className={iconClass} />;
+  }
+};
+
 export const InsightBanner: React.FC<InsightBannerProps> = ({ onActionClick }) => {
   const { currentInsight } = useFinance();
 
   if (!currentInsight) return null;
 
-  const getIcon = () => {
-    switch (currentInsight.type) {
-      case 'spending':
-        return AlertCircle;
-      case 'positive':
-        return CheckCircle2;
-      case 'saving':
-        return TrendingUp;
-      default:
-        return Sparkles;
-    }
-  };
-
-  const Icon = getIcon();
-
   return (
     <div className="p-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors shadow-xs">
       <div className="flex items-start sm:items-center gap-3.5 min-w-0">
         <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200/70 dark:border-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0">
-          <Icon className="w-5 h-5" />
+          {renderInsightIcon(currentInsight.type)}
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">

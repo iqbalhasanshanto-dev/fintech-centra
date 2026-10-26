@@ -83,7 +83,7 @@ describe('ThemeContext Runtime Hint & Meta Synchronization', () => {
   });
 
   it('writes theme hint to localStorage and updates theme-color meta at runtime', () => {
-    let capturedTheme: any;
+    let capturedTheme!: ReturnType<typeof useTheme>;
 
     const TestComponent = () => {
       capturedTheme = useTheme();

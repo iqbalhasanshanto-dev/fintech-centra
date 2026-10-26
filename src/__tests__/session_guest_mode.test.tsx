@@ -8,13 +8,14 @@ import { FinanceProvider, useFinance } from '../context/FinanceContext';
 import { SettingsScreen } from '../components/settings/SettingsScreen';
 import { CentraDB, GUEST_USER_ID } from '../db/storage';
 import { supabase } from '../lib/supabaseClient';
+import type { Transaction } from '../types';
 
 class MockResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
 }
-global.ResizeObserver = MockResizeObserver as any;
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 vi.mock('../lib/supabaseClient', () => {
   const mockFrom = vi.fn();
@@ -48,7 +49,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     localStorage.setItem('centra_guest_flag', 'true');
     sessionStorage.clear(); // Fresh cold start (process start)
 
-    (supabase.auth.getSession as any).mockResolvedValueOnce({
+    (supabase.auth.getSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       data: { session: null },
       error: null,
     });
@@ -72,7 +73,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
 
   // (b) Explore Demo opens the demo dashboard and a simulated background and resume (same session) keeps it
   it('(b) Explore Demo opens the demo dashboard and a simulated background and resume (same session) keeps it', async () => {
-    (supabase.auth.getSession as any).mockResolvedValue({
+    (supabase.auth.getSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { session: null },
       error: null,
     });
@@ -109,7 +110,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
 
   // (c) a simulated process restart (clear sessionStorage and memory) returns to the landing page
   it('(c) a simulated process restart (clear sessionStorage and memory) returns to the landing page', async () => {
-    (supabase.auth.getSession as any).mockResolvedValue({
+    (supabase.auth.getSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { session: null },
       error: null,
     });
@@ -138,7 +139,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     const validUserId = '44444444-4444-4444-8444-444444444444';
 
     // Mock an active Supabase session
-    (supabase.auth.getSession as any).mockResolvedValue({
+    (supabase.auth.getSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: {
         session: {
           user: { id: validUserId, email: 'real@example.com' },
@@ -149,7 +150,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     });
 
     // Mock Supabase profile returning completed onboarding
-    (supabase.from as any).mockImplementation((table: string) => ({
+    (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((_table: string) => ({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           maybeSingle: vi.fn().mockResolvedValue({
@@ -199,7 +200,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     CentraDB.setActiveUser(GUEST_USER_ID);
     await CentraDB.seedDemoData(GUEST_USER_ID);
 
-    let authContextRef: any = null;
+    let authContextRef!: ReturnType<typeof useAuth>;
     const TestConsumer = () => {
       authContextRef = useAuth();
       return (
@@ -260,7 +261,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     CentraDB.setActiveUser(GUEST_USER_ID);
     await CentraDB.seedDemoData(GUEST_USER_ID);
 
-    let financeRef: any = null;
+    let financeRef!: ReturnType<typeof useFinance>;
     const TestConsumer = () => {
       financeRef = useFinance();
       return <div>Ready</div>;
@@ -288,7 +289,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
         categoryId: 'cat_food',
         date: new Date().toISOString(),
         merchant: 'Demo Cafe',
-      });
+      } as unknown as Omit<Transaction, 'id'>);
     });
 
     // Zero supabase.from calls throughout

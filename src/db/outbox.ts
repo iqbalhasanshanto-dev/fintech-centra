@@ -11,7 +11,7 @@ export interface OutboxItem {
   entity: 'accounts' | 'categories' | 'transactions' | 'goals' | 'budgets' | 'notifications' | 'settings' | 'profiles';
   op: 'upsert' | 'delete';
   recordId: string;
-  payload?: any;
+  payload?: Record<string, unknown>;
   timestamp: number;
   retries: number;
   lastError?: string;

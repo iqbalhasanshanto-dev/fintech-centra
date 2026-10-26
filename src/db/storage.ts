@@ -22,6 +22,16 @@ import {
 } from './seedData';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { OutboxQueue, OutboxItem } from './outbox';
+import {
+  AccountRow,
+  CategoryRow,
+  TransactionRow,
+  GoalRow,
+  BudgetRow,
+  NotificationRow,
+  SettingsRow,
+  ProfileRow,
+} from './dbTypes';
 
 export const GUEST_USER_ID = 'guest';
 
@@ -274,18 +284,18 @@ const mapAccountToDb = (acc: Account, userId: string) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapAccountFromDb = (row: any): Account => ({
+const mapAccountFromDb = (row: AccountRow): Account => ({
   id: row.id,
   name: row.name,
-  type: row.type,
-  balance: parseFloat(row.balance),
+  type: row.type as Account['type'],
+  balance: typeof row.balance === 'number' ? row.balance : parseFloat(row.balance),
   currency: row.currency,
   accountNumberMasked: row.account_number_masked || '',
   bankName: row.bank_name || '',
   color: row.color || '#6366F1',
-  cardBrand: row.card_brand || 'generic',
+  cardBrand: (row.card_brand as Account['cardBrand']) || 'generic',
   isPrimary: !!row.is_primary,
-  creditLimit: row.credit_limit ? parseFloat(row.credit_limit) : undefined,
+  creditLimit: row.credit_limit ? (typeof row.credit_limit === 'number' ? row.credit_limit : parseFloat(row.credit_limit)) : undefined,
 });
 
 const mapCategoryToDb = (cat: Category, userId: string) => ({
@@ -300,7 +310,7 @@ const mapCategoryToDb = (cat: Category, userId: string) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapCategoryFromDb = (row: any): Category => {
+const mapCategoryFromDb = (row: CategoryRow): Category => {
   const isSystem = ['transfer', 'goal_contribution', 'uncategorized'].includes(row.system_key || '');
   return {
     id: row.id,
@@ -308,8 +318,8 @@ const mapCategoryFromDb = (row: any): Category => {
     name: row.name,
     icon: row.icon,
     color: row.color,
-    type: row.type,
-    budgetLimit: row.budget_limit ? parseFloat(row.budget_limit) : undefined,
+    type: row.type as Category['type'],
+    budgetLimit: row.budget_limit ? (typeof row.budget_limit === 'number' ? row.budget_limit : parseFloat(row.budget_limit)) : undefined,
     hidden: isSystem,
   };
 };
@@ -342,10 +352,10 @@ const mapTransactionToDb = (tx: Transaction, userId: string) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapTransactionFromDb = (row: any): Transaction => ({
+const mapTransactionFromDb = (row: TransactionRow): Transaction => ({
   id: row.id,
-  type: row.type,
-  amount: parseFloat(row.amount),
+  type: row.type as Transaction['type'],
+  amount: typeof row.amount === 'number' ? row.amount : parseFloat(row.amount),
   currency: row.currency,
   categoryId: row.category_id,
   categoryName: row.category_name,
@@ -354,8 +364,8 @@ const mapTransactionFromDb = (row: any): Transaction => ({
   accountId: row.account_id,
   accountName: row.account_name,
   toAccountId: row.to_account_id || undefined,
-  convertedAmount: row.converted_amount !== null && row.converted_amount !== undefined ? parseFloat(row.converted_amount) : undefined,
-  exchangeRate: row.exchange_rate !== null && row.exchange_rate !== undefined ? parseFloat(row.exchange_rate) : undefined,
+  convertedAmount: row.converted_amount !== null && row.converted_amount !== undefined ? (typeof row.converted_amount === 'number' ? row.converted_amount : parseFloat(row.converted_amount)) : undefined,
+  exchangeRate: row.exchange_rate !== null && row.exchange_rate !== undefined ? (typeof row.exchange_rate === 'number' ? row.exchange_rate : parseFloat(row.exchange_rate)) : undefined,
   goalId: row.goal_id || undefined,
   recipient: row.recipient || undefined,
   merchant: row.merchant || undefined,
@@ -364,8 +374,8 @@ const mapTransactionFromDb = (row: any): Transaction => ({
   tags: row.tags || [],
   isPinned: !!row.is_pinned,
   isRecurring: !!row.is_recurring,
-  recurringInterval: row.recurring_interval || undefined,
-  resultingBalance: row.resulting_balance !== null ? parseFloat(row.resulting_balance) : undefined,
+  recurringInterval: (row.recurring_interval as Transaction['recurringInterval']) || undefined,
+  resultingBalance: row.resulting_balance !== null && row.resulting_balance !== undefined ? (typeof row.resulting_balance === 'number' ? row.resulting_balance : parseFloat(row.resulting_balance)) : undefined,
 });
 
 const mapGoalToDb = (g: Goal, userId: string) => ({
@@ -383,13 +393,13 @@ const mapGoalToDb = (g: Goal, userId: string) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapGoalFromDb = (row: any): Goal => ({
+const mapGoalFromDb = (row: GoalRow): Goal => ({
   id: row.id,
   name: row.name,
   icon: row.icon,
   color: row.color,
-  targetAmount: parseFloat(row.target_amount),
-  currentAmount: parseFloat(row.current_amount),
+  targetAmount: typeof row.target_amount === 'number' ? row.target_amount : parseFloat(row.target_amount),
+  currentAmount: typeof row.current_amount === 'number' ? row.current_amount : parseFloat(row.current_amount),
   startDate: row.start_date,
   targetDate: row.target_date,
   linkedAccountId: row.linked_account_id || undefined,
@@ -411,16 +421,16 @@ const mapBudgetToDb = (b: Budget, userId: string) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapBudgetFromDb = (row: any): Budget => ({
+const mapBudgetFromDb = (row: BudgetRow): Budget => ({
   id: row.id,
   categoryId: row.category_id,
   categoryName: row.category_name,
   categoryIcon: row.category_icon,
   categoryColor: row.category_color,
-  limitAmount: parseFloat(row.limit_amount),
-  spentAmount: parseFloat(row.spent_amount || '0'),
+  limitAmount: typeof row.limit_amount === 'number' ? row.limit_amount : parseFloat(row.limit_amount),
+  spentAmount: typeof row.spent_amount === 'number' ? row.spent_amount : parseFloat(row.spent_amount || '0'),
   alertThreshold: row.alert_threshold,
-  period: row.period as any,
+  period: row.period as Budget['period'],
   currency: row.currency || undefined,
 });
 
@@ -437,15 +447,15 @@ const mapNotificationToDb = (n: NotificationItem, userId: string) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapNotificationFromDb = (row: any): NotificationItem => ({
+const mapNotificationFromDb = (row: NotificationRow): NotificationItem => ({
   id: row.id,
-  type: row.type,
+  type: row.type as NotificationItem['type'],
   title: row.title,
   message: row.message,
   timestamp: row.timestamp,
   isRead: !!row.is_read,
   actionUrl: row.action_url || undefined,
-  severity: row.severity || 'info',
+  severity: (row.severity as NotificationItem['severity']) || 'info',
 });
 
 const mapSettingsToDb = (s: AppSettings, userId: string) => ({
@@ -459,12 +469,12 @@ const mapSettingsToDb = (s: AppSettings, userId: string) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapSettingsFromDb = (row: any): AppSettings => ({
-  theme: row.theme || 'light',
+const mapSettingsFromDb = (row: SettingsRow): AppSettings => ({
+  theme: (row.theme as AppSettings['theme']) || 'light',
   baseCurrency: row.base_currency || null,
   privacyMode: !!row.privacy_mode,
-  security: row.security || INITIAL_SETTINGS.security,
-  notifications: row.notifications || INITIAL_SETTINGS.notifications,
+  security: (row.security as AppSettings['security']) || INITIAL_SETTINGS.security,
+  notifications: (row.notifications as AppSettings['notifications']) || INITIAL_SETTINGS.notifications,
 });
 
 export const CATEGORY_STYLE_MAP: Record<string, { icon: string; color: string; type: 'expense' | 'income' }> = {
@@ -533,7 +543,7 @@ function mergeEntityWithOutbox<T extends { id: string }>(
   return result;
 }
 
-const activeSyncPromisesByUser = new Map<string, Promise<{ ok: boolean; profile?: any; error?: any; throttled?: boolean }>>();
+const activeSyncPromisesByUser = new Map<string, Promise<{ ok: boolean; profile?: ProfileRow | null; error?: unknown; throttled?: boolean }>>();
 const lastPullTimestampByUser = new Map<string, number>();
 const PULL_THROTTLE_MS = 30_000;
 
@@ -578,7 +588,7 @@ export const CentraDB = {
   // ---------------------------------------------------------------------------
 
   // ACCOUNTS
-  upsertAccount: async (acc: Account): Promise<{ data: Account | null; error: any }> => {
+  upsertAccount: async (acc: Account): Promise<{ data: Account | null; error: unknown }> => {
     // 1. Optimistic local update
     const existingIdx = cache.accounts.findIndex(a => a.id === acc.id);
     if (existingIdx >= 0) {
@@ -606,7 +616,7 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { data: acc, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Network error during upsertAccount, queueing in outbox:', err);
       OutboxQueue.enqueue({ userId, entity: 'accounts', op: 'upsert', recordId: acc.id, payload: dbRow });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
@@ -614,7 +624,7 @@ export const CentraDB = {
     }
   },
 
-  deleteAccount: async (id: string): Promise<{ ok: boolean; error: any }> => {
+  deleteAccount: async (id: string): Promise<{ ok: boolean; error: unknown }> => {
     cache.accounts = cache.accounts.filter(a => a.id !== id);
     safeSet(getUserStorageKey(currentActiveUserId, 'accounts'), cache.accounts);
 
@@ -634,7 +644,7 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { ok: true, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'accounts', op: 'delete', recordId: id });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { ok: false, error: err };
@@ -642,7 +652,7 @@ export const CentraDB = {
   },
 
   // CATEGORIES
-  upsertCategory: async (cat: Category): Promise<{ data: Category | null; error: any }> => {
+  upsertCategory: async (cat: Category): Promise<{ data: Category | null; error: unknown }> => {
     const existingIdx = cache.categories.findIndex(c => c.id === cat.id);
     if (existingIdx >= 0) {
       cache.categories[existingIdx] = cat;
@@ -667,14 +677,14 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { data: cat, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'categories', op: 'upsert', recordId: cat.id, payload: dbRow });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { data: cat, error: err };
     }
   },
 
-  deleteCategory: async (id: string): Promise<{ ok: boolean; error: any }> => {
+  deleteCategory: async (id: string): Promise<{ ok: boolean; error: unknown }> => {
     cache.categories = cache.categories.filter(c => c.id !== id);
     safeSet(getUserStorageKey(currentActiveUserId, 'categories'), cache.categories);
 
@@ -693,7 +703,7 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { ok: true, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'categories', op: 'delete', recordId: id });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { ok: false, error: err };
@@ -787,7 +797,7 @@ export const CentraDB = {
           }
           setSyncStatus('synced');
         }
-      } catch (err: any) {
+      } catch {
         setSyncStatus(navigator.onLine ? 'error' : 'offline');
       }
     }
@@ -796,7 +806,7 @@ export const CentraDB = {
   },
 
   // TRANSACTIONS
-  upsertTransaction: async (tx: Transaction): Promise<{ data: Transaction | null; error: any }> => {
+  upsertTransaction: async (tx: Transaction): Promise<{ data: Transaction | null; error: unknown }> => {
     const existingIdx = cache.transactions.findIndex(t => t.id === tx.id);
     if (existingIdx >= 0) {
       cache.transactions[existingIdx] = tx;
@@ -821,14 +831,14 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { data: tx, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'transactions', op: 'upsert', recordId: tx.id, payload: dbRow });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { data: tx, error: err };
     }
   },
 
-  deleteTransaction: async (id: string): Promise<{ ok: boolean; error: any }> => {
+  deleteTransaction: async (id: string): Promise<{ ok: boolean; error: unknown }> => {
     cache.transactions = cache.transactions.filter(t => t.id !== id);
     safeSet(getUserStorageKey(currentActiveUserId, 'transactions'), cache.transactions);
 
@@ -847,7 +857,7 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { ok: true, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'transactions', op: 'delete', recordId: id });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { ok: false, error: err };
@@ -855,7 +865,7 @@ export const CentraDB = {
   },
 
   // GOALS
-  upsertGoal: async (goal: Goal): Promise<{ data: Goal | null; error: any }> => {
+  upsertGoal: async (goal: Goal): Promise<{ data: Goal | null; error: unknown }> => {
     const existingIdx = cache.goals.findIndex(g => g.id === goal.id);
     if (existingIdx >= 0) {
       cache.goals[existingIdx] = goal;
@@ -880,14 +890,14 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { data: goal, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'goals', op: 'upsert', recordId: goal.id, payload: dbRow });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { data: goal, error: err };
     }
   },
 
-  deleteGoal: async (id: string): Promise<{ ok: boolean; error: any }> => {
+  deleteGoal: async (id: string): Promise<{ ok: boolean; error: unknown }> => {
     cache.goals = cache.goals.filter(g => g.id !== id);
     safeSet(getUserStorageKey(currentActiveUserId, 'goals'), cache.goals);
 
@@ -906,7 +916,7 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { ok: true, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'goals', op: 'delete', recordId: id });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { ok: false, error: err };
@@ -914,7 +924,7 @@ export const CentraDB = {
   },
 
   // BUDGETS
-  upsertBudget: async (budget: Budget): Promise<{ data: Budget | null; error: any }> => {
+  upsertBudget: async (budget: Budget): Promise<{ data: Budget | null; error: unknown }> => {
     const existingIdx = cache.budgets.findIndex(b => b.id === budget.id);
     if (existingIdx >= 0) {
       cache.budgets[existingIdx] = budget;
@@ -939,14 +949,14 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { data: budget, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'budgets', op: 'upsert', recordId: budget.id, payload: dbRow });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { data: budget, error: err };
     }
   },
 
-  deleteBudget: async (id: string): Promise<{ ok: boolean; error: any }> => {
+  deleteBudget: async (id: string): Promise<{ ok: boolean; error: unknown }> => {
     cache.budgets = cache.budgets.filter(b => b.id !== id);
     safeSet(getUserStorageKey(currentActiveUserId, 'budgets'), cache.budgets);
 
@@ -965,7 +975,7 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { ok: true, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'budgets', op: 'delete', recordId: id });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { ok: false, error: err };
@@ -973,7 +983,7 @@ export const CentraDB = {
   },
 
   // NOTIFICATIONS
-  upsertNotification: async (notif: NotificationItem): Promise<{ data: NotificationItem | null; error: any }> => {
+  upsertNotification: async (notif: NotificationItem): Promise<{ data: NotificationItem | null; error: unknown }> => {
     const existingIdx = cache.notifications.findIndex(n => n.id === notif.id);
     if (existingIdx >= 0) {
       cache.notifications[existingIdx] = notif;
@@ -998,14 +1008,14 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { data: notif, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'notifications', op: 'upsert', recordId: notif.id, payload: dbRow });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { data: notif, error: err };
     }
   },
 
-  deleteNotification: async (id: string): Promise<{ ok: boolean; error: any }> => {
+  deleteNotification: async (id: string): Promise<{ ok: boolean; error: unknown }> => {
     cache.notifications = cache.notifications.filter(n => n.id !== id);
     safeSet(getUserStorageKey(currentActiveUserId, 'notifications'), cache.notifications);
 
@@ -1024,14 +1034,14 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { ok: true, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'notifications', op: 'delete', recordId: id });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { ok: false, error: err };
     }
   },
 
-  clearAllNotifications: async (): Promise<{ ok: boolean; error: any }> => {
+  clearAllNotifications: async (): Promise<{ ok: boolean; error: unknown }> => {
     cache.notifications = [];
     safeSet(getUserStorageKey(currentActiveUserId, 'notifications'), cache.notifications);
 
@@ -1049,14 +1059,14 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { ok: true, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { ok: false, error: err };
     }
   },
 
   // SETTINGS
-  saveSettings: async (settings: AppSettings): Promise<{ data: AppSettings | null; error: any }> => {
+  saveSettings: async (settings: AppSettings): Promise<{ data: AppSettings | null; error: unknown }> => {
     cache.settings = settings;
     safeSet(getUserStorageKey(currentActiveUserId, 'settings'), settings);
 
@@ -1077,7 +1087,7 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { data: settings, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       OutboxQueue.enqueue({ userId, entity: 'settings', op: 'upsert', recordId: userId, payload: dbRow });
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { data: settings, error: err };
@@ -1085,7 +1095,7 @@ export const CentraDB = {
   },
 
   // USER PROFILE
-  saveUser: async (user: UserProfile): Promise<{ data: UserProfile | null; error: any }> => {
+  saveUser: async (user: UserProfile): Promise<{ data: UserProfile | null; error: unknown }> => {
     cache.user = user;
     safeSet(getUserStorageKey(currentActiveUserId, 'user'), user);
 
@@ -1095,7 +1105,7 @@ export const CentraDB = {
     }
 
     try {
-      const updates: Record<string, any> = {
+      const updates: Partial<ProfileRow> = {
         updated_at: new Date().toISOString(),
       };
       if (user.name !== undefined) updates.name = user.name;
@@ -1115,7 +1125,7 @@ export const CentraDB = {
       }
       setSyncStatus('synced');
       return { data: user, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSyncStatus(navigator.onLine ? 'error' : 'offline');
       return { data: user, error: err };
     }
@@ -1168,10 +1178,10 @@ export const CentraDB = {
 
     for (const item of pending) {
       try {
-        let err: any = null;
+        let err: { code?: string; message?: string } | null = null;
         if (item.op === 'upsert') {
           const onConflict = item.entity === 'settings' ? 'user_id' : 'user_id,id';
-          const { error } = await supabase.from(item.entity).upsert(item.payload, { onConflict });
+          const { error } = await supabase.from(item.entity).upsert(item.payload || {}, { onConflict });
           err = error;
         } else if (item.op === 'delete') {
           const { error } = await supabase.from(item.entity).delete().eq('id', item.recordId);
@@ -1189,7 +1199,7 @@ export const CentraDB = {
                 .from('categories')
                 .select('*')
                 .eq('user_id', userId)
-                .eq('system_key', item.payload.system_key)
+                .eq('system_key', item.payload.system_key as string)
                 .maybeSingle();
 
               if (!fetchErr && remoteRow) {
@@ -1214,9 +1224,10 @@ export const CentraDB = {
           processed++;
           OutboxQueue.remove(userId, item.id);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         errors++;
-        OutboxQueue.update(userId, { ...item, retries: item.retries + 1, lastError: e?.message });
+        const message = e instanceof Error ? e.message : String(e);
+        OutboxQueue.update(userId, { ...item, retries: item.retries + 1, lastError: message });
       }
     }
 
@@ -1241,7 +1252,7 @@ export const CentraDB = {
     userEmail?: string,
     userName?: string,
     options?: { force?: boolean }
-  ): Promise<{ ok: boolean; profile?: any; error?: any; throttled?: boolean }> => {
+  ): Promise<{ ok: boolean; profile?: ProfileRow | null; error?: unknown; throttled?: boolean }> => {
     if (!isSupabaseConfigured() || isGuestUser(userId)) {
       return { ok: true };
     }
@@ -1255,7 +1266,7 @@ export const CentraDB = {
       return inFlight;
     }
 
-    const runSync = async () => {
+    const runSync = async (): Promise<{ ok: boolean; profile?: ProfileRow | null; error?: unknown; throttled?: boolean }> => {
       // Throttle only the PULL (30-second cooldown per user, unless forced)
       const now = Date.now();
       const lastPull = lastPullTimestampByUser.get(userId) || 0;
@@ -1282,14 +1293,15 @@ export const CentraDB = {
         }
 
         if (profileData) {
+          const prof = profileData as ProfileRow;
           cache.user = {
-            id: profileData.id,
-            name: profileData.name || userName || '',
-            email: profileData.email || userEmail || '',
-            avatarUrl: profileData.avatar_url || undefined,
-            baseCurrency: (profileData.base_currency as any) || null,
-            onboardingCompleted: profileData.onboarding_completed ?? false,
-            createdAt: profileData.created_at || new Date().toISOString(),
+            id: prof.id,
+            name: prof.name || userName || '',
+            email: prof.email || userEmail || '',
+            avatarUrl: prof.avatar_url || undefined,
+            baseCurrency: prof.base_currency || null,
+            onboardingCompleted: prof.onboarding_completed ?? false,
+            createdAt: prof.created_at || new Date().toISOString(),
           };
           safeSet(getUserStorageKey(userId, 'user'), cache.user);
         }
@@ -1446,7 +1458,7 @@ export const CentraDB = {
   // ---------------------------------------------------------------------------
 
   // Real user: Scoped real DELETE queries on Supabase + clear local storage ONLY on success
-  deleteAllUserData: async (userId: string): Promise<{ ok: boolean; error: any }> => {
+  deleteAllUserData: async (userId: string): Promise<{ ok: boolean; error: unknown }> => {
     if (isGuestUser(userId)) {
       CentraDB.resetToSeedData();
       notifyDataChanged();
@@ -1486,7 +1498,7 @@ export const CentraDB = {
       setSyncStatus('synced');
       notifyDataChanged();
       return { ok: true, error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete user data:', err);
       setSyncStatus('error');
       return { ok: false, error: err };
@@ -1572,7 +1584,7 @@ export const CentraDB = {
       // Ignore
     }
     if (isGuestUser(currentActiveUserId)) {
-      cache.user = null as any;
+      cache.user = null as unknown as UserProfile;
       cache.accounts = [];
       cache.categories = [];
       cache.transactions = [];
@@ -1813,7 +1825,7 @@ export const CentraDB = {
     budgetsToDelete?: string[];
     notificationsToUpsert?: NotificationItem[];
     notificationsToDelete?: string[];
-  }): Promise<{ ok: boolean; error?: any }> => {
+  }): Promise<{ ok: boolean; error?: unknown }> => {
     // 1. Update in-memory cache and localStorage synchronously
     if (mutated.accountsToUpsert) {
       mutated.accountsToUpsert.forEach(acc => {
@@ -1895,7 +1907,7 @@ export const CentraDB = {
       entity: 'accounts' | 'categories' | 'transactions' | 'goals' | 'budgets' | 'notifications' | 'settings' | 'profiles';
       op: 'upsert' | 'delete';
       recordId: string;
-      payload?: any;
+      payload?: Record<string, unknown>;
     }> = [];
 
     if (mutated.accountsToUpsert) {
@@ -1966,7 +1978,7 @@ export const CentraDB = {
   },
 
   exportTransactionsCSV: (): string => {
-    const escapeCsvField = (val: any): string => {
+    const escapeCsvField = (val: unknown): string => {
       if (val === null || val === undefined) return '""';
       let str = String(val);
       // Neutralize CSV formula injection: characters =, +, -, @, \t, \r

@@ -4,7 +4,6 @@ import {
   subMoney,
   roundMoney,
   parseAmountInput,
-  convertCurrencyWithRate,
   validateAccountFunds,
 } from '../utils/money';
 import {
@@ -20,7 +19,7 @@ import {
 } from '../utils/financeOperations';
 import { CentraDB } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
-import { Account, Budget, Category, Goal, NotificationItem, Transaction } from '../types';
+import { Account, Budget, Category, Goal, Transaction } from '../types';
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import { FinanceProvider, useFinance } from '../context/FinanceContext';
@@ -752,13 +751,13 @@ describe('Phase 5: Financial Logic & Correctness', () => {
       await CentraDB.saveGoals([goal1]);
       await CentraDB.saveCategories([]); // ZERO categories in database!
 
-      let financeContextRef: any = null;
+      let financeContextRef!: ReturnType<typeof useFinance>;
       const TestConsumer = () => {
         financeContextRef = useFinance();
         return React.createElement('div', null, 'Ready');
       };
 
-      render(React.createElement(FinanceProvider as any, { userId: realUserId }, React.createElement(TestConsumer)));
+      render(React.createElement(FinanceProvider, { userId: realUserId, children: React.createElement(TestConsumer) }));
 
       await waitFor(() => {
         expect(financeContextRef).not.toBeNull();

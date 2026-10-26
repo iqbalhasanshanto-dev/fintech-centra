@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, ChevronDown, Check, Plus } from 'lucide-react';
+import { Bell, ChevronDown, Check } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { PeriodFilter } from '../../types';
@@ -16,7 +16,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onNavigateToSettings,
-  onOpenAddAction,
+  onOpenAddAction: _onOpenAddAction,
 }) => {
   const { periodFilter, setPeriodFilter, unreadNotificationsCount, syncStatus } = useFinance();
   const { user, isGuest, createAccountFromGuest } = useAuth();

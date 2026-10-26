@@ -38,6 +38,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     if (value) {
       const d = new Date(value + 'T00:00:00');
       if (!isNaN(d.getTime())) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize calendar viewport year and month when selected date value changes
         setViewYear(d.getFullYear());
         setViewMonth(d.getMonth());
       }

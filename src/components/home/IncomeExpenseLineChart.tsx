@@ -8,10 +8,50 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
 } from 'recharts';
-import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
 import { getThemePalette } from '../../utils/themeColors';
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number; color?: string }>;
+  label?: string;
+  baseCurrency?: string | null;
+  privacyMode: boolean;
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({
+  active,
+  payload,
+  label,
+  baseCurrency,
+  privacyMode,
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] p-3 rounded-xl shadow-xl text-left pointer-events-none z-50 animate-fade-in text-xs space-y-1.5 min-w-[150px]">
+        <p className="font-bold text-[#171717] dark:text-[#FAFAFA] border-b border-[#E5E5E5] dark:border-[#404040] pb-1">
+          {label}
+        </p>
+        {payload.map((item, idx: number) => (
+          <div key={idx} className="flex items-center justify-between gap-4">
+            <span className="flex items-center gap-1.5 font-medium text-[#737373] dark:text-[#A3A3A3]">
+              <span
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              {item.name}:
+            </span>
+            <span className="font-bold tabular-nums text-[#171717] dark:text-[#FAFAFA]">
+              {formatCurrency(Number(item.value || 0), baseCurrency, privacyMode)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export const IncomeExpenseLineChart: React.FC = () => {
   const { transactions, settings, periodIncome, periodExpenses } = useFinance();
@@ -62,32 +102,8 @@ export const IncomeExpenseLineChart: React.FC = () => {
     });
   }, [transactions]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] p-3 rounded-xl shadow-xl text-left pointer-events-none z-50 animate-fade-in text-xs space-y-1.5 min-w-[150px]">
-          <p className="font-bold text-[#171717] dark:text-[#FAFAFA] border-b border-[#E5E5E5] dark:border-[#404040] pb-1">
-            {label}
-          </p>
-          {payload.map((item: any, idx: number) => (
-            <div key={idx} className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1.5 font-medium text-[#737373] dark:text-[#A3A3A3]">
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                {item.name}:
-              </span>
-              <span className="font-bold tabular-nums text-[#171717] dark:text-[#FAFAFA]">
-                {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode)}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+
+
 
   return (
     <section id="cashflow-line-chart" className="bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] rounded-2xl p-6 transition-colors shadow-xs">
@@ -159,7 +175,7 @@ export const IncomeExpenseLineChart: React.FC = () => {
                   return `${val}`;
                 }}
               />
-              <RechartsTooltip content={<CustomTooltip />} />
+              <RechartsTooltip content={<CustomTooltip baseCurrency={settings.baseCurrency} privacyMode={settings.privacyMode} />} />
               <Line
                 type="monotone"
                 dataKey="income"

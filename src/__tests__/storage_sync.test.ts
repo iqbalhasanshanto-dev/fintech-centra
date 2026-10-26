@@ -38,7 +38,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       const pending = OutboxQueue.getPending('11111111-1111-4111-8111-111111111111');
       expect(pending).toHaveLength(1);
       expect(pending[0].recordId).toBe('tx_1');
-      expect(pending[0].payload.amount).toBe(50);
+      expect(pending[0].payload?.amount).toBe(50);
     });
 
     it('coalesces duplicate updates for the same entity and recordId', () => {
@@ -60,7 +60,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
 
       const pending = OutboxQueue.getPending('11111111-1111-4111-8111-111111111111');
       expect(pending).toHaveLength(1);
-      expect(pending[0].payload.amount).toBe(75);
+      expect(pending[0].payload?.amount).toBe(75);
     });
 
     it('removes item from outbox by item ID', () => {
@@ -177,7 +177,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       });
 
       // Mock Supabase: profiles and settings succeed, but transactions query errors out
-      (supabase.from as any).mockImplementation((table: string) => {
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
         if (table === 'profiles') {
           return {
             select: vi.fn().mockReturnValue({
@@ -232,7 +232,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
       const mockDelete = vi.fn().mockReturnValue({ eq: mockEq });
 
-      (supabase.from as any).mockReturnValue({
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
         delete: mockDelete,
       });
 
@@ -247,7 +247,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
       const mockDelete = vi.fn().mockReturnValue({ eq: mockEq });
 
-      (supabase.from as any).mockReturnValue({
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
         delete: mockDelete,
       });
 
@@ -272,7 +272,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       CentraDB.setActiveUser('55555555-5555-4555-8555-555555555555');
 
       // Simulate remote delete error
-      (supabase.from as any).mockReturnValue({
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
         delete: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({ data: null, error: { message: 'Database connection failed' } }),
         }),
@@ -308,7 +308,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       CentraDB.setActiveUser(uid);
 
       // Mock remote Supabase returns older remote version
-      (supabase.from as any).mockImplementation((table: string) => {
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
         if (table === 'profiles') {
           return {
             select: vi.fn().mockReturnValue({
@@ -359,7 +359,7 @@ describe('Phase 3: Storage & Sync Engine', () => {
       expect(CentraDB.getAccounts()).toHaveLength(1);
 
       // Remote Supabase has 0 accounts (another device deleted it)
-      (supabase.from as any).mockImplementation((table: string) => {
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
         if (table === 'profiles') {
           return {
             select: vi.fn().mockReturnValue({

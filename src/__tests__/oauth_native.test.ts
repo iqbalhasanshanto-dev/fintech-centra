@@ -5,12 +5,11 @@ import {
   _resetProcessedCodes,
   _resetOAuthState,
   isValidAuthCallbackUrl,
-  INTENT_STORAGE_KEY,
   OAUTH_GRACE_PERIOD_MS,
   OAUTH_SAFETY_TIMEOUT_MS,
 } from '../utils/nativeOAuth';
 import { supabase } from '../lib/supabaseClient';
-import type { AuthError } from '@supabase/supabase-js';
+import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { Browser } from '@capacitor/browser';
 import * as platform from '../utils/platform';
 
@@ -90,7 +89,7 @@ describe('Native OAuth and Deep Link (src/utils/nativeOAuth.ts)', () => {
             user: { id: 'user_123', email: 'test@example.com' },
             access_token: 'fake_access_token',
           },
-        } as any,
+        } as unknown as { session: Session; user: User },
         error: null,
       });
 
@@ -111,7 +110,7 @@ describe('Native OAuth and Deep Link (src/utils/nativeOAuth.ts)', () => {
 
     it('ignores duplicate appUrlOpen events with the same code', async () => {
       vi.mocked(supabase.auth.exchangeCodeForSession).mockResolvedValueOnce({
-        data: { session: { user: { id: 'user_123' } } } as any,
+        data: { session: { user: { id: 'user_123' } } } as unknown as { session: Session; user: User },
         error: null,
       });
 
@@ -129,7 +128,7 @@ describe('Native OAuth and Deep Link (src/utils/nativeOAuth.ts)', () => {
 
     it('handles code exchange failure gracefully with error message and reset', async () => {
       vi.mocked(supabase.auth.exchangeCodeForSession).mockResolvedValueOnce({
-        data: { session: null } as any,
+        data: { session: null, user: null },
         error: { message: 'Invalid or expired code', name: 'AuthApiError', status: 400 } as unknown as AuthError,
       });
 
@@ -202,7 +201,7 @@ describe('Native OAuth and Deep Link (src/utils/nativeOAuth.ts)', () => {
       });
 
       vi.mocked(supabase.auth.exchangeCodeForSession).mockResolvedValueOnce({
-        data: { session: { user: { id: 'u1' } } } as any,
+        data: { session: { user: { id: 'u1' } } } as unknown as { session: Session; user: User },
         error: null,
       });
 

@@ -21,9 +21,12 @@ vi.mock('../lib/supabaseClient', () => {
   };
 });
 
-function createMockQuery(data: any = [], error: any = null) {
+function createMockQuery(data: unknown = [], error: unknown = null) {
   const result = { data, error };
-  const promise = Promise.resolve(result) as any;
+  const promise = Promise.resolve(result) as unknown as Promise<{ data: unknown; error: unknown }> & {
+    order: ReturnType<typeof vi.fn>;
+    maybeSingle: ReturnType<typeof vi.fn>;
+  };
   promise.order = vi.fn().mockResolvedValue(result);
   promise.maybeSingle = vi.fn().mockResolvedValue({
     data: Array.isArray(data) ? (data.length > 0 ? data[0] : null) : data,
@@ -32,8 +35,8 @@ function createMockQuery(data: any = [], error: any = null) {
   return promise;
 }
 
-function createSupabaseMock(handlers: Record<string, any> = {}) {
-  (supabase.from as any).mockImplementation((table: string) => {
+function createSupabaseMock(handlers: Record<string, () => unknown> = {}) {
+  (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
     if (handlers[table]) {
       return handlers[table]();
     }
@@ -85,7 +88,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
     CentraDB.setActiveUser(uid);
     expect(CentraDB.hasCachedData(uid)).toBe(false);
 
-    let resolveSync: (val: any) => void;
+    let resolveSync!: (val: unknown) => void;
     const syncPromise = new Promise(resolve => {
       resolveSync = resolve;
     });

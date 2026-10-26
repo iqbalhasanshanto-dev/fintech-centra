@@ -2,8 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { CentraDB, SYSTEM_CATEGORIES_DEFINITIONS, DEFAULT_INCOME_CATEGORIES_DEFINITIONS } from '../db/storage';
-import { OutboxQueue } from '../db/outbox';
+import { CentraDB } from '../db/storage';
 import { supabase } from '../lib/supabaseClient';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { FinanceProvider, useFinance } from '../context/FinanceContext';
@@ -19,7 +18,7 @@ import { Category, Account, Goal } from '../types';
 
 function createDefaultChainable() {
   const queryResult = { data: [], error: null };
-  const chainable: any = {
+  const chainable = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
@@ -34,8 +33,8 @@ function createDefaultChainable() {
     delete: vi.fn().mockReturnValue({
       eq: vi.fn().mockResolvedValue({ data: null, error: null }),
     }),
+    then: (resolve?: (val: unknown) => unknown) => Promise.resolve(queryResult).then(resolve),
   };
-  chainable.then = (resolve: any) => Promise.resolve(queryResult).then(resolve);
   return chainable;
 }
 
@@ -60,7 +59,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     vi.clearAllMocks();
     localStorage.clear();
     CentraDB.clearAllData();
-    (supabase.from as any).mockImplementation(() => createDefaultChainable());
+    (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => createDefaultChainable());
   });
 
   it('1. Income tab lists Salary, Freelance, and Investment income categories and excludes hidden system categories', async () => {
@@ -132,7 +131,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     };
     await CentraDB.saveAccounts([existingAccount]);
 
-    let authContextRef: any = null;
+    let authContextRef: ReturnType<typeof useAuth> | null = null;
     const TestConsumer: React.FC = () => {
       authContextRef = useAuth();
       return <div>Ready</div>;
@@ -146,7 +145,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
 
     // Run completeOnboarding
     await act(async () => {
-      await authContextRef.completeOnboarding();
+      await authContextRef?.completeOnboarding();
     });
 
     const accountsAfter = CentraDB.getAccounts();
@@ -157,7 +156,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
 
   it('3. Onboarding idempotency: categories double-submit and category deduplication', async () => {
     CentraDB.setActiveUser('22222222-2222-4222-8222-222222222222');
-    let authContextRef: any = null;
+    let authContextRef!: ReturnType<typeof useAuth>;
     const TestConsumer: React.FC = () => {
       authContextRef = useAuth();
       return <div>Ready</div>;
@@ -228,7 +227,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       updated_at: new Date().toISOString(),
     };
 
-    (supabase.from as any).mockImplementation((table: string) => {
+    (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
       if (table === 'categories') {
         return {
           upsert: vi.fn().mockResolvedValue({
@@ -277,7 +276,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       id: noBaseUid,
       name: 'No Base User',
       email: 'test@example.com',
-      baseCurrency: '' as any,
+      baseCurrency: '',
       onboardingCompleted: false,
       createdAt: new Date().toISOString(),
     });
@@ -420,7 +419,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     sessionStorage.setItem('centra_is_guest_session', 'true');
     CentraDB.setActiveUser('guest');
 
-    let authContextRef: any = null;
+    let authContextRef!: ReturnType<typeof useAuth>;
     const TestConsumer: React.FC = () => {
       authContextRef = useAuth();
       return (
@@ -485,7 +484,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       createdAt: new Date().toISOString(),
     });
 
-    let authContextRef: any = null;
+    let authContextRef!: ReturnType<typeof useAuth>;
     const TestConsumer: React.FC = () => {
       authContextRef = useAuth();
       return <div>Ready</div>;
@@ -570,7 +569,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
   });
 
   it('10. Contributing to a goal when goal_contribution category does not exist yet creates it and uses its UUID', async () => {
-    (supabase.from as any).mockImplementation((table: string) => {
+    (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
       const chainable = createDefaultChainable();
       if (table === 'settings') {
         chainable.maybeSingle = vi.fn().mockResolvedValue({
@@ -592,7 +591,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
           is_primary: true,
         }];
         chainable.order = vi.fn().mockResolvedValue({ data: accData, error: null });
-        chainable.then = (resolve: any) => Promise.resolve({ data: accData, error: null }).then(resolve);
+        chainable.then = (resolve?: (val: unknown) => unknown) => Promise.resolve({ data: accData, error: null }).then(resolve);
       }
       if (table === 'goals') {
         const goalData = [{
@@ -607,7 +606,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
           start_date: '2026-01-01',
         }];
         chainable.order = vi.fn().mockResolvedValue({ data: goalData, error: null });
-        chainable.then = (resolve: any) => Promise.resolve({ data: goalData, error: null }).then(resolve);
+        chainable.then = (resolve?: (val: unknown) => unknown) => Promise.resolve({ data: goalData, error: null }).then(resolve);
       }
       return chainable;
     });
@@ -650,7 +649,7 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     // Save empty categories (no goal_contribution category exists!)
     await CentraDB.saveCategories([]);
 
-    let financeContextRef: any = null;
+    let financeContextRef!: ReturnType<typeof useFinance>;
     const TestConsumer: React.FC = () => {
       financeContextRef = useFinance();
       return <div>Ready</div>;

@@ -29,7 +29,7 @@ import { CentraDB, GUEST_USER_ID } from '../../db/storage';
 import { SUPPORTED_CURRENCIES } from '../../utils/currencies';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
-import { hasDevicePin, setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLock';
+import { setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLock';
 import { AUTOLOCK_OPTIONS, getAutoLockTimeout, setAutoLockTimeout } from '../../utils/lockResume';
 
 export const SettingsScreen: React.FC = () => {
@@ -148,8 +148,8 @@ export const SettingsScreen: React.FC = () => {
       setDeleteConfirmText('');
       setStatusToast('All your financial records have been wiped from both cloud and local storage.');
       setTimeout(() => setStatusToast(null), 3500);
-    } catch (err: any) {
-      setDeleteError(err?.message || 'Error occurred during deletion.');
+    } catch (err: unknown) {
+      setDeleteError(err instanceof Error ? err.message : 'Error occurred during deletion.');
     } finally {
       setIsDeleting(false);
     }
@@ -171,8 +171,8 @@ export const SettingsScreen: React.FC = () => {
       setShowSetPinModal(false);
       setNewPin('');
       setConfirmPin('');
-    } catch (err: any) {
-      setPinModalError(err?.message || 'Failed to save PIN.');
+    } catch (err: unknown) {
+      setPinModalError(err instanceof Error ? err.message : 'Failed to save PIN.');
     }
   };
 

@@ -4,7 +4,6 @@ import {
   verifyDevicePin,
   hasDevicePin,
   clearDevicePin,
-  getLockoutRemainingSeconds,
 } from '../utils/pinLock';
 
 describe('Phase 2 PIN Lock & WebCrypto PBKDF2', () => {

@@ -9,6 +9,7 @@ import { GuestBanner } from '../components/layout/GuestBanner';
 import { CentraDB, GUEST_USER_ID, isGuestUser } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
 import { supabase } from '../lib/supabaseClient';
+import type { AppSettings, Transaction } from '../types';
 
 vi.mock('../lib/supabaseClient', () => {
   const mockFrom = vi.fn();
@@ -31,7 +32,7 @@ class MockResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-global.ResizeObserver = MockResizeObserver as any;
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 describe('Guest Mode Fix & Invariant Verification', () => {
   beforeEach(() => {
@@ -46,8 +47,8 @@ describe('Guest Mode Fix & Invariant Verification', () => {
     expect(isGuestUser('guest_123')).toBe(true);
     expect(isGuestUser('guest_1792924629553')).toBe(true);
     expect(isGuestUser('')).toBe(true);
-    expect(isGuestUser(null as any)).toBe(true);
-    expect(isGuestUser(undefined as any)).toBe(true);
+    expect(isGuestUser(null)).toBe(true);
+    expect(isGuestUser(undefined)).toBe(true);
     expect(isGuestUser('abc')).toBe(true);
     expect(isGuestUser('user_123')).toBe(true);
 
@@ -94,7 +95,7 @@ describe('Guest Mode Fix & Invariant Verification', () => {
     CentraDB.setActiveUser(GUEST_USER_ID);
     localStorage.setItem('centra_is_guest_v2', 'true');
 
-    let financeContextRef: any = null;
+    let financeContextRef!: ReturnType<typeof useFinance>;
     const TestConsumer: React.FC = () => {
       financeContextRef = useFinance();
       return (
@@ -105,7 +106,7 @@ describe('Guest Mode Fix & Invariant Verification', () => {
       );
     };
 
-    const { unmount, rerender } = render(
+    const { unmount } = render(
       <FinanceProvider userId={GUEST_USER_ID}>
         <TestConsumer />
       </FinanceProvider>
@@ -121,7 +122,7 @@ describe('Guest Mode Fix & Invariant Verification', () => {
         baseCurrency: 'USD',
         hapticsEnabled: true,
         smartAlertsEnabled: false,
-      });
+      } as unknown as Partial<AppSettings>);
     });
 
     // 2. Add an expense
@@ -136,7 +137,7 @@ describe('Guest Mode Fix & Invariant Verification', () => {
         date: new Date().toISOString(),
         merchant: 'Coffee Shop',
         notes: 'Guest purchase',
-      });
+      } as unknown as Omit<Transaction, 'id'>);
     });
 
     // 3. Reload provider
@@ -167,7 +168,7 @@ describe('Guest Mode Fix & Invariant Verification', () => {
     CentraDB.setActiveUser(GUEST_USER_ID);
     await CentraDB.seedDemoData(GUEST_USER_ID);
 
-    let authContextRef: any = null;
+    let authContextRef!: ReturnType<typeof useAuth>;
     const TestConsumer: React.FC = () => {
       authContextRef = useAuth();
       return (
@@ -219,7 +220,7 @@ describe('Guest Mode Fix & Invariant Verification', () => {
     const realUserUuid = '55555555-5555-4555-8555-555555555555';
 
     // Mock supabase.from to simulate network / sync failure
-    (supabase.from as any).mockImplementation(() => ({
+    (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           order: vi.fn().mockResolvedValue({ data: null, error: { message: 'Failed to connect to Supabase' } }),

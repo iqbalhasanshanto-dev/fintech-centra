@@ -45,8 +45,8 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
       if (!res.ok) {
         setErrorMessage(res.error || 'Failed to send verification code. Please try again.');
       }
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Something went wrong. Please try again.');
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +58,8 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
     clearOauthError();
     try {
       await signInWithOAuth(provider, activeTab);
-    } catch (err: any) {
-      setErrorMessage(err?.message || `${provider} sign-in failed. Please try again.`);
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : `${provider} sign-in failed. Please try again.`);
     }
   };
 
