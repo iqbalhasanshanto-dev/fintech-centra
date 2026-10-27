@@ -82,6 +82,8 @@
 - INPUT VALIDATION - STEP 4: DONE. Created src/utils/imageValidation.ts with magic-byte checking (JPEG, PNG, WebP only; rejects SVG, GIF, PDF, .exe; max 5 MB; HEIC optional off-by-default) and canvas downscaling (max 512px / 100 KB for avatars, 1600px for receipts) stripping EXIF/GPS metadata; integrated into ProfileInfoScreen, SettingsScreen, and AddActionModal; added unit tests in src/__tests__/imageValidation.test.ts (13 passing tests).
 - INPUT VALIDATION - STEP 5: DONE. Created additive, idempotent SQL migration supabase/migrations/20261027000000_input_constraints.sql with NOT VALID length CHECK constraints for profiles.name, accounts.name, categories.name, goals.name, budgets.category_name, transactions.merchant, and transactions.note with operator instructions for VALIDATE CONSTRAINT; 0 DB commands executed.
 - INPUT VALIDATION - STEP 6: DONE. Comprehensive tests verified (validators, render escaping, image validation magic bytes, sanitize required cases); finalized docs/INPUT_RULES.md with complete matrix, avatar base64 storage mitigation, and database constraints.
+- DESIGN REDESIGN - STEP 1: DONE. Organized and renamed all Figma PNG frames in design/frames/dark (39 files) and design/frames/light (33 files) matching target schema; organized design/assets (background.svg, logo-on-dark.svg, logo-on-light.svg); documented full inventory, anomaly reports, and missing app frames in design/FRAMES.md; derived complete color, typography, radii, spacing, and splash tokens in design/tokens.md.
+
 
 
 
