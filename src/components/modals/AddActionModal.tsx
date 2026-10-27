@@ -18,6 +18,8 @@ import { todayLocalDateKey } from '../../utils/dates';
 import { CentraDB } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
 import { sanitizeText } from '../../utils/sanitize';
+import { validateLabel, validateNote, validateAmount } from '../../utils/validators';
+import { validateImageFile } from '../../utils/imageValidation';
 
 interface AddActionModalProps {
   isOpen: boolean;
@@ -62,22 +64,29 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   // Form State: Common
   const [amount, setAmount] = useState('');
+  const [amountError, setAmountError] = useState<string | null>(null);
   const [txDate, setTxDate] = useState<string>(() => todayLocalDateKey());
   const [merchant, setMerchant] = useState('');
+  const [merchantError, setMerchantError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState('');
   const [accountId, setAccountId] = useState('');
   const [note, setNote] = useState('');
+  const [noteError, setNoteError] = useState<string | null>(null);
   const [receiptName, setReceiptName] = useState<string | null>(null);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State: Transfer
   const [fromAccountId, setFromAccountId] = useState('');
   const [toAccountId, setToAccountId] = useState('');
   const [transferNote, setTransferNote] = useState('');
+  const [transferNoteError, setTransferNoteError] = useState<string | null>(null);
 
   // Form State: Goal
   const [goalName, setGoalName] = useState('');
+  const [goalNameError, setGoalNameError] = useState<string | null>(null);
   const [goalInitialDeposit, setGoalInitialDeposit] = useState('');
+  const [goalInitialDepositError, setGoalInitialDepositError] = useState<string | null>(null);
   const [goalTargetDate, setGoalTargetDate] = useState('2027-06-30');
 
   // Form State: Budget
@@ -176,32 +185,66 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const selectedAcc = accounts.find(a => a.id === relevantAccountId) || accounts[0];
   const activeCurrencyInfo = getCurrencyInfo(selectedAcc?.currency || settings.baseCurrency);
 
-  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReceiptChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setReceiptName(file.name);
+    if (!file) return;
+
+    setReceiptError(null);
+    const validation = await validateImageFile(file);
+    if (!validation.ok) {
+      setReceiptError(validation.error || 'Please upload a valid JPEG, PNG, or WebP receipt image.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
+
+    setReceiptName(file.name);
   };
 
   const removeReceipt = () => {
     setReceiptName(null);
+    setReceiptError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const resetTransactionFields = () => {
     setAmount('');
+    setAmountError(null);
     setMerchant('');
+    setMerchantError(null);
     setNote('');
+    setNoteError(null);
     removeReceipt();
   };
 
   // Perform Save for Transaction / Spend / Income
   const executeSaveTransaction = async (keepOpen: boolean = false) => {
     setErrorMessage(null);
-    const parsedAmount = parseFloat(amount.replace(',', '.'));
-    if (!parsedAmount || parsedAmount <= 0) {
-      setErrorMessage('Please enter a valid amount.');
+    const selectedAcc = accounts.find(a => a.id === accountId);
+    const txCurrency = selectedAcc?.currency || settings.baseCurrency || 'USD';
+    const amountRes = validateAmount(amount, txCurrency);
+    if (!amountRes.ok) {
+      setAmountError(amountRes.error || 'Please enter a valid amount.');
+      setErrorMessage(amountRes.error || 'Please enter a valid amount.');
       return false;
+    }
+    const parsedAmount = amountRes.value;
+
+    if (merchant.trim()) {
+      const merchantRes = validateLabel(merchant, 'Merchant', false);
+      if (!merchantRes.ok) {
+        setMerchantError(merchantRes.error || 'Please enter a valid merchant name.');
+        setErrorMessage(merchantRes.error || 'Please enter a valid merchant name.');
+        return false;
+      }
+    }
+
+    if (note.trim()) {
+      const noteRes = validateNote(note);
+      if (!noteRes.ok) {
+        setNoteError(noteRes.error || 'Please enter a valid note.');
+        setErrorMessage(noteRes.error || 'Please enter a valid note.');
+        return false;
+      }
     }
 
     if (accounts.length === 0 || !accountId) {
@@ -224,7 +267,6 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       finalCategoryId = uncategorizedCat.id;
       selectedCat = uncategorizedCat;
     }
-    const selectedAcc = accounts.find(a => a.id === accountId);
     const type = activeTab === 'income' ? 'income' : 'expense';
 
     await addTransaction({
@@ -257,10 +299,23 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   // Perform Save for Transfer
   const executeSaveTransfer = async (keepOpen: boolean = false) => {
     setErrorMessage(null);
-    const parsedAmount = parseFloat(amount.replace(',', '.'));
-    if (!parsedAmount || parsedAmount <= 0) {
-      setErrorMessage('Please enter a valid transfer amount.');
+    const fromAcc = accounts.find(a => a.id === fromAccountId);
+    const transferCurrency = fromAcc?.currency || settings.baseCurrency || 'USD';
+    const amountRes = validateAmount(amount, transferCurrency);
+    if (!amountRes.ok) {
+      setAmountError(amountRes.error || 'Please enter a valid transfer amount.');
+      setErrorMessage(amountRes.error || 'Please enter a valid transfer amount.');
       return false;
+    }
+    const parsedAmount = amountRes.value;
+
+    if ((transferNote || note).trim()) {
+      const noteRes = validateNote(transferNote || note);
+      if (!noteRes.ok) {
+        setTransferNoteError(noteRes.error || 'Please enter a valid transfer note.');
+        setErrorMessage(noteRes.error || 'Please enter a valid transfer note.');
+        return false;
+      }
     }
 
     if (accounts.length < 2) {
@@ -273,18 +328,24 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       return false;
     }
 
-    await transferFunds(fromAccountId, toAccountId, parsedAmount, sanitizeText(transferNote || note, 200));
+    await transferFunds(fromAccountId, toAccountId, parsedAmount, sanitizeText(transferNote || note, 500));
 
     if (keepOpen) {
       setAmount('');
+      setAmountError(null);
       setTransferNote('');
+      setTransferNoteError(null);
       setNote('');
+      setNoteError(null);
       setFeedbackMsg('✓ Transfer executed! Ready for next.');
       setTimeout(() => setFeedbackMsg(null), 3000);
     } else {
       setAmount('');
+      setAmountError(null);
       setTransferNote('');
+      setTransferNoteError(null);
       setNote('');
+      setNoteError(null);
       onClose();
     }
     return true;
@@ -293,13 +354,33 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   // Perform Save for Goal
   const executeSaveGoal = async (keepOpen: boolean = false) => {
     setErrorMessage(null);
-    const target = parseFloat(amount.replace(',', '.'));
-    const deposit = parseFloat(goalInitialDeposit.replace(',', '.')) || 0;
-    const cleanGoalName = sanitizeText(goalName, 100);
-    if (!cleanGoalName || !target || target <= 0) {
-      setErrorMessage('Please enter a goal name and valid target amount.');
+    const goalNameRes = validateLabel(goalName, 'Goal name');
+    if (!goalNameRes.ok) {
+      setGoalNameError(goalNameRes.error || 'Please enter a valid goal name.');
+      setErrorMessage(goalNameRes.error || 'Please enter a valid goal name.');
       return false;
     }
+
+    const targetRes = validateAmount(amount, settings.baseCurrency || 'USD');
+    if (!targetRes.ok) {
+      setAmountError(targetRes.error || 'Please enter a valid target amount.');
+      setErrorMessage(targetRes.error || 'Please enter a valid target amount.');
+      return false;
+    }
+    const target = targetRes.value;
+
+    let deposit = 0;
+    if (goalInitialDeposit.trim()) {
+      const depositRes = validateAmount(goalInitialDeposit, settings.baseCurrency || 'USD', { allowZero: true });
+      if (!depositRes.ok) {
+        setGoalInitialDepositError(depositRes.error || 'Please enter a valid initial deposit.');
+        setErrorMessage(depositRes.error || 'Please enter a valid initial deposit.');
+        return false;
+      }
+      deposit = depositRes.value;
+    }
+
+    const cleanGoalName = goalNameRes.value;
 
     addGoal({
       name: cleanGoalName,
@@ -359,11 +440,13 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   // Perform Save for Budget
   const executeSaveBudget = (keepOpen: boolean = false) => {
     setErrorMessage(null);
-    const limit = parseFloat(amount.replace(',', '.'));
-    if (!limit || limit <= 0) {
-      setErrorMessage('Please enter a valid monthly limit amount.');
+    const limitRes = validateAmount(amount, settings.baseCurrency || 'USD');
+    if (!limitRes.ok) {
+      setAmountError(limitRes.error || 'Please enter a valid monthly limit amount.');
+      setErrorMessage(limitRes.error || 'Please enter a valid monthly limit amount.');
       return false;
     }
+    const limit = limitRes.value;
 
     if (!budgetCategoryId) {
       setErrorMessage('Please select a category for this budget.');
@@ -520,6 +603,12 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   const val = e.target.value.replace(',', '.');
                   if (val === '' || /^\d*\.?\d*$/.test(val)) {
                     setAmount(val);
+                    if (val) {
+                      const res = validateAmount(val, activeCurrencyInfo.code);
+                      setAmountError(res.ok ? null : res.error || null);
+                    } else {
+                      setAmountError(null);
+                    }
                   }
                 }}
                 className="w-full bg-transparent text-3xl font-bold text-gray-900 dark:text-white focus:outline-hidden placeholder-gray-400 tabular-nums"
@@ -528,6 +617,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                 {activeCurrencyInfo.code}
               </span>
             </div>
+            {amountError && (
+              <p className="mt-1 text-xs text-rose-500 font-medium">{amountError}</p>
+            )}
           </div>
 
           {/* Form Fields */}
@@ -543,9 +635,23 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     type="text"
                     placeholder={activeTab === 'spend' ? 'e.g. Uber Ride, Whole Foods Market' : 'e.g. Salary Deposit, Client Wire'}
                     value={merchant}
-                    onChange={e => setMerchant(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500"
+                    onChange={e => {
+                      const val = e.target.value;
+                      setMerchant(val);
+                      if (val.trim()) {
+                        const res = validateLabel(val, 'Merchant', false);
+                        setMerchantError(res.ok ? null : res.error || null);
+                      } else {
+                        setMerchantError(null);
+                      }
+                    }}
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                      merchantError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
+                  {merchantError && (
+                    <p className="mt-1 text-[11px] text-rose-500 font-medium">{merchantError}</p>
+                  )}
                 </div>
 
                 <div>
@@ -614,9 +720,23 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     type="text"
                     placeholder="Optional memo or transaction note"
                     value={note}
-                    onChange={e => setNote(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500"
+                    onChange={e => {
+                      const val = e.target.value;
+                      setNote(val);
+                      if (val.trim()) {
+                        const res = validateNote(val);
+                        setNoteError(res.ok ? null : res.error || null);
+                      } else {
+                        setNoteError(null);
+                      }
+                    }}
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                      noteError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
+                  {noteError && (
+                    <p className="mt-1 text-[11px] text-rose-500 font-medium">{noteError}</p>
+                  )}
                 </div>
 
                 <div>
@@ -651,10 +771,16 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*,.pdf"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={handleReceiptChange}
                     className="hidden"
                   />
+                  {receiptError && (
+                    <p className="text-xs text-rose-500 mt-1.5 flex items-center gap-1 font-medium">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{receiptError}</span>
+                    </p>
+                  )}
                 </div>
               </>
             )}
@@ -729,9 +855,23 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         type="text"
                         placeholder="e.g. Savings allocation, Card payoff"
                         value={transferNote}
-                        onChange={e => setTransferNote(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500"
+                        onChange={e => {
+                          const val = e.target.value;
+                          setTransferNote(val);
+                          if (val.trim()) {
+                            const res = validateNote(val);
+                            setTransferNoteError(res.ok ? null : res.error || null);
+                          } else {
+                            setTransferNoteError(null);
+                          }
+                        }}
+                        className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                          transferNoteError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                        } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                       />
+                      {transferNoteError && (
+                        <p className="mt-1 text-[11px] text-rose-500 font-medium">{transferNoteError}</p>
+                      )}
                     </div>
                   </>
                 )}
@@ -749,9 +889,23 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     type="text"
                     placeholder="e.g. New Car, Emergency Fund, Summer Trip"
                     value={goalName}
-                    onChange={e => setGoalName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500"
+                    onChange={e => {
+                      const val = e.target.value;
+                      setGoalName(val);
+                      if (val.trim()) {
+                        const res = validateLabel(val, 'Goal name');
+                        setGoalNameError(res.ok ? null : res.error || null);
+                      } else {
+                        setGoalNameError(null);
+                      }
+                    }}
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                      goalNameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
+                  {goalNameError && (
+                    <p className="mt-1 text-[11px] text-rose-500 font-medium">{goalNameError}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -767,10 +921,21 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         const val = e.target.value.replace(',', '.');
                         if (val === '' || /^\d*\.?\d*$/.test(val)) {
                           setGoalInitialDeposit(val);
+                          if (val) {
+                            const res = validateAmount(val, settings.baseCurrency, { allowZero: true });
+                            setGoalInitialDepositError(res.ok ? null : res.error || null);
+                          } else {
+                            setGoalInitialDepositError(null);
+                          }
                         }
                       }}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 tabular-nums"
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                        goalInitialDepositError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                      } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 tabular-nums`}
                     />
+                    {goalInitialDepositError && (
+                      <p className="mt-1 text-[11px] text-rose-500 font-medium">{goalInitialDepositError}</p>
+                    )}
                   </div>
 
                   <div>
@@ -857,8 +1022,12 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               onClick={() => handleSave(true)}
               className="w-full"
               disabled={
-                ((activeTab === 'spend' || activeTab === 'income') && accounts.length === 0) ||
-                (activeTab === 'transfer' && accounts.length < 2)
+                !amount ||
+                !!amountError ||
+                ((activeTab === 'spend' || activeTab === 'income') && (accounts.length === 0 || !!merchantError || !!noteError)) ||
+                (activeTab === 'transfer' && (accounts.length < 2 || !fromAccountId || !toAccountId || fromAccountId === toAccountId || !!transferNoteError)) ||
+                (activeTab === 'goal' && (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)) ||
+                (activeTab === 'budget' && !budgetCategoryId)
               }
             >
               Save &amp; Add Another
@@ -872,8 +1041,12 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               icon={<Check className="w-4 h-4 stroke-[2.5]" />}
               className="w-full"
               disabled={
-                ((activeTab === 'spend' || activeTab === 'income') && accounts.length === 0) ||
-                (activeTab === 'transfer' && accounts.length < 2)
+                !amount ||
+                !!amountError ||
+                ((activeTab === 'spend' || activeTab === 'income') && (accounts.length === 0 || !!merchantError || !!noteError)) ||
+                (activeTab === 'transfer' && (accounts.length < 2 || !fromAccountId || !toAccountId || fromAccountId === toAccountId || !!transferNoteError)) ||
+                (activeTab === 'goal' && (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)) ||
+                (activeTab === 'budget' && !budgetCategoryId)
               }
             >
               Confirm

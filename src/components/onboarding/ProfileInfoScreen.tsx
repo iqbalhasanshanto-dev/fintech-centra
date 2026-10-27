@@ -19,6 +19,13 @@ import {
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { sanitizeText } from '../../utils/sanitize';
+import { validateName, validateAddress } from '../../utils/validators';
+import {
+  validateImageFile,
+  processImage,
+  MAX_AVATAR_DIMENSION,
+  MAX_AVATAR_BYTES,
+} from '../../utils/imageValidation';
 
 interface ProfileInfoScreenProps {
   initialName?: string;
@@ -48,6 +55,28 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user.avatarUrl);
   const [currency, setCurrency] = useState<string>(''); // Unset until chosen or auto-suggested on country select
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [fullNameError, setFullNameError] = useState<string | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
+
+  const handleFullNameChange = (val: string) => {
+    setFullName(val);
+    if (val.trim()) {
+      const res = validateName(val);
+      setFullNameError(res.ok ? null : res.error || null);
+    } else {
+      setFullNameError(null);
+    }
+  };
+
+  const handleAddressChange = (val: string) => {
+    setAddress(val);
+    if (val.trim()) {
+      const res = validateAddress(val, false);
+      setAddressError(res.ok ? null : res.error || null);
+    } else {
+      setAddressError(null);
+    }
+  };
 
   // Sync Google / Apple OAuth prefilled name & avatar
   useEffect(() => {
@@ -70,27 +99,34 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle avatar file upload
+  // Handle avatar file upload with magic byte validation and canvas downscaling
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size limit (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage('Avatar image must be smaller than 5MB.');
-      return;
-    }
-
     setAvatarUploading(true);
     setErrorMessage('');
 
+    const validation = await validateImageFile(file);
+    if (!validation.ok) {
+      setErrorMessage(validation.error || 'Please upload a valid JPEG, PNG, or WebP image.');
+      setAvatarUploading(false);
+      return;
+    }
+
     try {
+      // Decode, downscale to max 512px, strip EXIF metadata, cap at ~100 KB
+      const processed = await processImage(file, {
+        maxDimension: MAX_AVATAR_DIMENSION,
+        maxSizeBytes: MAX_AVATAR_BYTES,
+        format: 'image/jpeg',
+      });
+
       if (isSupabaseConfigured() && user.id) {
-        const fileExt = file.name.split('.').pop();
-        const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${user.id}-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('avatars')
-          .upload(filePath, file, { upsert: true });
+          .upload(filePath, processed.blob, { upsert: true, contentType: 'image/jpeg' });
 
         if (!uploadError) {
           const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
@@ -100,15 +136,11 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
         }
       }
 
-      // Fallback: Read as local data URL
-      const reader = new FileReader();
-      reader.onload = event => {
-        setAvatarUrl(event.target?.result as string);
-        setAvatarUploading(false);
-      };
-      reader.readAsDataURL(file);
+      // Fallback: Store lightweight, downscaled, clean base64 data URL
+      setAvatarUrl(processed.dataUrl);
+      setAvatarUploading(false);
     } catch {
-      setErrorMessage('Failed to upload image. Please try again.');
+      setErrorMessage('Failed to process image. Please try again.');
       setAvatarUploading(false);
     }
   };
@@ -142,8 +174,10 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     e.preventDefault();
     setErrorMessage('');
 
-    if (!fullName.trim()) {
-      setErrorMessage('Please enter your full name.');
+    const nameResult = validateName(fullName);
+    if (!nameResult.ok) {
+      setFullNameError(nameResult.error || 'Please enter a valid full name.');
+      setErrorMessage(nameResult.error || 'Please enter a valid full name.');
       return;
     }
 
@@ -157,10 +191,19 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
       return;
     }
 
+    if (address.trim()) {
+      const addressResult = validateAddress(address, false);
+      if (!addressResult.ok) {
+        setAddressError(addressResult.error || 'Please enter a valid address.');
+        setErrorMessage(addressResult.error || 'Please enter a valid address.');
+        return;
+      }
+    }
+
     const finalCurrency = currency;
-    const cleanName = sanitizeText(fullName, 100);
+    const cleanName = nameResult.value;
     const cleanDob = sanitizeText(dob, 20);
-    const cleanAddress = sanitizeText(address, 200);
+    const cleanAddress = address.trim() ? sanitizeText(address, 200) : '';
 
     // Save profile data into AuthContext / CentraDB
     await saveOnboardingProfile({
@@ -271,11 +314,16 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
             <input
               type="text"
               value={fullName}
-              onChange={e => setFullName(e.target.value)}
+              onChange={e => handleFullNameChange(e.target.value)}
               placeholder="Full Name"
               required
-              className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-base"
+              className={`w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border ${
+                fullNameError ? 'border-rose-500 focus:ring-rose-500' : 'border-gray-200 dark:border-[#232c44] focus:ring-black dark:focus:ring-white'
+              } text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all text-base`}
             />
+            {fullNameError && (
+              <p className="mt-1.5 px-1 text-xs text-rose-500 font-medium">{fullNameError}</p>
+            )}
           </div>
 
           {/* Date of Birth field */}
@@ -416,17 +464,27 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
             <input
               type="text"
               value={address}
-              onChange={e => setAddress(e.target.value)}
+              onChange={e => handleAddressChange(e.target.value)}
               placeholder="Address"
-              className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-base"
+              className={`w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border ${
+                addressError ? 'border-rose-500 focus:ring-rose-500' : 'border-gray-200 dark:border-[#232c44] focus:ring-black dark:focus:ring-white'
+              } text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all text-base`}
             />
+            {addressError && (
+              <p className="mt-1.5 px-1 text-xs text-rose-500 font-medium">{addressError}</p>
+            )}
           </div>
 
           {/* Continue Button */}
           <div className="pt-4">
             <button
               type="submit"
-              className="w-full py-4 px-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-base hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
+              disabled={!fullName.trim() || !country || !currency || !!fullNameError || !!addressError}
+              className={`w-full py-4 px-6 rounded-full font-bold text-base transition-all shadow-lg flex items-center justify-center gap-2 ${
+                !fullName.trim() || !country || !currency || !!fullNameError || !!addressError
+                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed opacity-60'
+                  : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-[0.99] cursor-pointer'
+              }`}
             >
               <span>Continue</span>
             </button>

@@ -9,6 +9,7 @@ import { parseAmountInput } from '../../utils/money';
 import { sanitizeText } from '../../utils/sanitize';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
+import { validateLabel, validateAmount } from '../../utils/validators';
 
 interface AddAccountModalProps {
   isOpen: boolean;
@@ -45,26 +46,74 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
   useBackHandler(isOpen, onClose, 2);
 
   const [name, setName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
   const [type, setType] = useState<AccountType>('checking');
   const [balance, setBalance] = useState('');
+  const [balanceError, setBalanceError] = useState<string | null>(null);
   const [currency, setCurrency] = useState(settings.baseCurrency || 'USD');
   const [bankName, setBankName] = useState('');
+  const [bankNameError, setBankNameError] = useState<string | null>(null);
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [creditLimit, setCreditLimit] = useState('');
+  const [creditLimitError, setCreditLimitError] = useState<string | null>(null);
   const [isPrimary, setIsPrimary] = useState(accounts.length === 0);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const handleNameChange = (val: string) => {
+    setName(val);
+    if (val.trim()) {
+      const res = validateLabel(val, 'Account name');
+      setNameError(res.ok ? null : res.error || null);
+    } else {
+      setNameError(null);
+    }
+  };
+
+  const handleBankNameChange = (val: string) => {
+    setBankName(val);
+    if (val.trim()) {
+      const res = validateLabel(val, 'Bank name', false);
+      setBankNameError(res.ok ? null : res.error || null);
+    } else {
+      setBankNameError(null);
+    }
+  };
+
+  const handleBalanceChange = (val: string) => {
+    setBalance(val);
+    if (val.trim()) {
+      const res = validateAmount(val, currency, { allowZero: true });
+      setBalanceError(res.ok ? null : res.error || null);
+    } else {
+      setBalanceError(null);
+    }
+  };
+
+  const handleCreditLimitChange = (val: string) => {
+    setCreditLimit(val);
+    if (val.trim()) {
+      const res = validateAmount(val, currency, { allowZero: true });
+      setCreditLimitError(res.ok ? null : res.error || null);
+    } else {
+      setCreditLimitError(null);
+    }
+  };
 
   // Sync currency with base currency whenever modal opens
   useEffect(() => {
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset modal form inputs synchronously when dialog is opened
       setName('');
+      setNameError(null);
       setType('checking');
       setBalance('');
+      setBalanceError(null);
       setCurrency(settings.baseCurrency || 'USD');
       setBankName('');
+      setBankNameError(null);
       setColor(PRESET_COLORS[0]);
       setCreditLimit('');
+      setCreditLimitError(null);
       setIsPrimary(accounts.length === 0);
       setErrorMessage('');
     }
@@ -76,8 +125,10 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
     e.preventDefault();
     setErrorMessage('');
 
-    if (!name.trim()) {
-      setErrorMessage('Please enter an account name.');
+    const nameResult = validateLabel(name, 'Account name');
+    if (!nameResult.ok) {
+      setNameError(nameResult.error || 'Please enter an account name.');
+      setErrorMessage(nameResult.error || 'Please enter an account name.');
       return;
     }
 
@@ -86,12 +137,39 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
       return;
     }
 
-    const sanitizedBalance = parseAmountInput(balance, currency);
-    const sanitizedCreditLimit = type === 'credit' ? parseAmountInput(creditLimit, currency) : undefined;
+    if (balance.trim()) {
+      const balanceResult = validateAmount(balance, currency, { allowZero: true });
+      if (!balanceResult.ok) {
+        setBalanceError(balanceResult.error || 'Please enter a valid balance.');
+        setErrorMessage(balanceResult.error || 'Please enter a valid balance.');
+        return;
+      }
+    }
+
+    if (type === 'credit' && creditLimit.trim()) {
+      const creditResult = validateAmount(creditLimit, currency, { allowZero: true });
+      if (!creditResult.ok) {
+        setCreditLimitError(creditResult.error || 'Please enter a valid credit limit.');
+        setErrorMessage(creditResult.error || 'Please enter a valid credit limit.');
+        return;
+      }
+    }
+
+    if (bankName.trim()) {
+      const bankResult = validateLabel(bankName, 'Bank name', false);
+      if (!bankResult.ok) {
+        setBankNameError(bankResult.error || 'Please enter a valid bank name.');
+        setErrorMessage(bankResult.error || 'Please enter a valid bank name.');
+        return;
+      }
+    }
+
+    const sanitizedBalance = balance.trim() ? parseAmountInput(balance, currency) : 0;
+    const sanitizedCreditLimit = type === 'credit' && creditLimit.trim() ? parseAmountInput(creditLimit, currency) : undefined;
 
     try {
-      const cleanName = sanitizeText(name, 100);
-      const cleanBankName = sanitizeText(bankName, 100);
+      const cleanName = nameResult.value;
+      const cleanBankName = bankName.trim() ? sanitizeText(bankName, 60) : '';
 
       const newAccData: Omit<Account, 'id'> = {
         name: cleanName,
@@ -145,11 +223,16 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
           <input
             type="text"
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={e => handleNameChange(e.target.value)}
             placeholder="e.g. Primary Checking, Cash Vault"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 transition-all"
+            className={`w-full px-4 py-2.5 rounded-xl border ${
+              nameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+            } bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 transition-all`}
             autoFocus
           />
+          {nameError && (
+            <p className="mt-1 text-xs text-rose-500 font-medium">{nameError}</p>
+          )}
         </div>
 
         {/* Account Type Selector */}
@@ -215,11 +298,16 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                 type="text"
                 inputMode="decimal"
                 value={balance}
-                onChange={e => setBalance(e.target.value)}
+                onChange={e => handleBalanceChange(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#0A0E1A] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                className={`w-full pl-9 pr-4 py-2.5 rounded-xl border ${
+                  balanceError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                } bg-white dark:bg-[#0A0E1A] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500`}
               />
             </div>
+            {balanceError && (
+              <p className="mt-1 text-xs text-rose-500 font-medium">{balanceError}</p>
+            )}
           </div>
         </div>
 
@@ -237,11 +325,16 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                 type="text"
                 inputMode="decimal"
                 value={creditLimit}
-                onChange={e => setCreditLimit(e.target.value)}
+                onChange={e => handleCreditLimitChange(e.target.value)}
                 placeholder="e.g. 5,000.00"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#0A0E1A] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                className={`w-full pl-9 pr-4 py-2.5 rounded-xl border ${
+                  creditLimitError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                } bg-white dark:bg-[#0A0E1A] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500`}
               />
             </div>
+            {creditLimitError && (
+              <p className="mt-1 text-xs text-rose-500 font-medium">{creditLimitError}</p>
+            )}
           </div>
         )}
 
@@ -253,10 +346,15 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
           <input
             type="text"
             value={bankName}
-            onChange={e => setBankName(e.target.value)}
+            onChange={e => handleBankNameChange(e.target.value)}
             placeholder="e.g. Chase, Revolut, Physical Cash"
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+            className={`w-full px-4 py-2.5 rounded-xl border ${
+              bankNameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+            } bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500`}
           />
+          {bankNameError && (
+            <p className="mt-1 text-xs text-rose-500 font-medium">{bankNameError}</p>
+          )}
         </div>
 
         {/* Theme Color Picker */}
@@ -307,6 +405,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
             type="submit"
             variant="primary"
             size="md"
+            disabled={!name.trim() || !!nameError || !!balanceError || !!bankNameError || !!creditLimitError}
             className="bg-black dark:bg-white text-white dark:text-black font-bold"
           >
             Save Account

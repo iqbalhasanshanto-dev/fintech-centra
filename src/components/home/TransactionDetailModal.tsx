@@ -8,6 +8,7 @@ import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatFullDate, formatTime } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
 import { sanitizeText } from '../../utils/sanitize';
+import { validateLabel, validateNote } from '../../utils/validators';
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -26,16 +27,40 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
   const [isEditing, setIsEditing] = useState(false);
   const [merchant, setMerchant] = useState('');
+  const [merchantError, setMerchantError] = useState<string | null>(null);
   const [note, setNote] = useState('');
+  const [noteError, setNoteError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleMerchantChange = (val: string) => {
+    setMerchant(val);
+    if (val.trim()) {
+      const res = validateLabel(val, 'Merchant', false);
+      setMerchantError(res.ok ? null : res.error || null);
+    } else {
+      setMerchantError(null);
+    }
+  };
+
+  const handleNoteChange = (val: string) => {
+    setNote(val);
+    if (val.trim()) {
+      const res = validateNote(val);
+      setNoteError(res.ok ? null : res.error || null);
+    } else {
+      setNoteError(null);
+    }
+  };
 
   // Reset form when transaction opens
   React.useEffect(() => {
     if (transaction) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- Form state must synchronize when active transaction prop changes
       setMerchant(transaction.merchant || transaction.categoryName);
+      setMerchantError(null);
       setNote(transaction.note || '');
+      setNoteError(null);
       setCategoryId(transaction.categoryId);
       setIsEditing(false);
     }
@@ -44,10 +69,25 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   if (!transaction) return null;
 
   const handleSaveEdit = () => {
+    if (merchant.trim()) {
+      const merchantRes = validateLabel(merchant, 'Merchant', false);
+      if (!merchantRes.ok) {
+        setMerchantError(merchantRes.error || 'Invalid merchant name');
+        return;
+      }
+    }
+    if (note.trim()) {
+      const noteRes = validateNote(note);
+      if (!noteRes.ok) {
+        setNoteError(noteRes.error || 'Invalid note');
+        return;
+      }
+    }
+
     const chosenCategory = categories.find(c => c.id === categoryId);
     updateTransaction(transaction.id, {
-      merchant: sanitizeText(merchant, 100) || transaction.categoryName,
-      note: sanitizeText(note, 300),
+      merchant: merchant.trim() ? sanitizeText(merchant, 60) : transaction.categoryName,
+      note: note.trim() ? sanitizeText(note, 500) : '',
       categoryId,
       categoryName: chosenCategory ? chosenCategory.name : transaction.categoryName,
       categoryIcon: chosenCategory ? chosenCategory.icon : transaction.categoryIcon,
@@ -214,9 +254,14 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               <input
                 type="text"
                 value={merchant}
-                onChange={e => setMerchant(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500"
+                onChange={e => handleMerchantChange(e.target.value)}
+                className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                  merchantError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                } text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500`}
               />
+              {merchantError && (
+                <p className="mt-1 text-[11px] text-rose-500 font-medium">{merchantError}</p>
+              )}
             </div>
 
             <div>
@@ -242,10 +287,15 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               </label>
               <textarea
                 value={note}
-                onChange={e => setNote(e.target.value)}
+                onChange={e => handleNoteChange(e.target.value)}
                 rows={2}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500"
+                className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                  noteError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                } text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500`}
               />
+              {noteError && (
+                <p className="mt-1 text-[11px] text-rose-500 font-medium">{noteError}</p>
+              )}
             </div>
 
             <div className="pt-2 flex items-center space-x-2">
@@ -257,7 +307,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center justify-center space-x-1 shadow-float cursor-pointer"
+                disabled={!!merchantError || !!noteError}
+                className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center justify-center space-x-1 shadow-float cursor-pointer"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>Save Changes</span>

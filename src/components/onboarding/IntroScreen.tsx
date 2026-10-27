@@ -8,7 +8,7 @@ import {
   getFriendlyAuthErrorMessage,
   NO_INTERNET_ERROR_MESSAGE,
 } from '../../utils/networkErrors';
-import { sanitizeEmail } from '../../utils/sanitize';
+import { validateEmail } from '../../utils/validators';
 
 interface IntroScreenProps {
   initialMode?: AuthMode;
@@ -19,9 +19,20 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
   const { authMode, setAuthMode, sendOtp, signInWithOAuth, enterGuestMode, oauthLoading, oauthError, clearOauthError } = useAuth();
   const [activeTab, setActiveTab] = useState<AuthMode>(initialMode || authMode || 'signin');
   const [email, setEmail] = useState(initialEmail || '');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const lastSubmitTimeRef = useRef<number>(0);
+
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    if (val.trim()) {
+      const res = validateEmail(val);
+      setEmailError(res.ok ? null : res.error || null);
+    } else {
+      setEmailError(null);
+    }
+  };
 
   const showAppleButton =
     import.meta.env.VITE_ENABLE_APPLE_SIGNIN === 'true' &&
@@ -40,17 +51,21 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
     setErrorMessage('');
     clearOauthError();
 
+    // Client-side button throttle for OTP requests (convenience to prevent accidental double-clicks, not security)
     const now = Date.now();
     if (now - lastSubmitTimeRef.current < 2500) {
       setErrorMessage('Please wait a moment before trying again.');
       return;
     }
 
-    const cleanEmail = sanitizeEmail(email);
-    if (!cleanEmail || !cleanEmail.includes('@') || cleanEmail.length < 5) {
-      setErrorMessage('Please enter a valid email address.');
+    const emailResult = validateEmail(email);
+    if (!emailResult.ok) {
+      setEmailError(emailResult.error || 'Please enter a valid email address.');
+      setErrorMessage(emailResult.error || 'Please enter a valid email address.');
       return;
     }
+
+    const cleanEmail = emailResult.value;
 
     if (!(await isNetworkConnected())) {
       setErrorMessage(NO_INTERNET_ERROR_MESSAGE);
@@ -245,15 +260,22 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => handleEmailChange(e.target.value)}
                 placeholder="Enter your email"
                 autoCapitalize="none"
                 autoComplete="email"
                 required
                 disabled={isLoading || !!oauthLoading}
-                className="w-full px-5 py-3 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-sm disabled:opacity-50"
+                className={`w-full px-5 py-3 rounded-2xl bg-gray-50 dark:bg-[#131722] border ${
+                  emailError ? 'border-rose-500 focus:ring-rose-500' : 'border-gray-200 dark:border-[#232c44] focus:ring-black dark:focus:ring-white'
+                } text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all text-sm disabled:opacity-50`}
               />
-              {activeTab === 'signup' && (
+              {emailError && (
+                <p className="text-[11px] text-rose-500 font-medium mt-1.5 ml-1">
+                  {emailError}
+                </p>
+              )}
+              {!emailError && activeTab === 'signup' && (
                 <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 ml-1">
                   We'll email you a 6-digit code.
                 </p>
@@ -262,7 +284,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
 
             <button
               type="submit"
-              disabled={isLoading || !!oauthLoading}
+              disabled={isLoading || !!oauthLoading || !email.trim() || !!emailError}
               className="w-full py-3.5 px-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isLoading ? (

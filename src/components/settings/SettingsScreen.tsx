@@ -16,7 +16,8 @@ import {
   Camera,
   Trash2,
   Lock,
-  KeyRound
+  KeyRound,
+  AlertCircle
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -31,6 +32,13 @@ import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
 import { setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLock';
 import { AUTOLOCK_OPTIONS, getAutoLockTimeout, setAutoLockTimeout } from '../../utils/lockResume';
+import { validateName, validateEmail } from '../../utils/validators';
+import {
+  validateImageFile,
+  processImage,
+  MAX_AVATAR_DIMENSION,
+  MAX_AVATAR_BYTES,
+} from '../../utils/imageValidation';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -86,27 +94,72 @@ export const SettingsScreen: React.FC = () => {
   const [profileName, setProfileName] = useState(user.name);
   const [profileEmail, setProfileEmail] = useState(user.email);
   const [profileAvatar, setProfileAvatar] = useState(user.avatarUrl);
+  const [profileNameError, setProfileNameError] = useState<string | null>(null);
+  const [profileEmailError, setProfileEmailError] = useState<string | null>(null);
+  const [profileAvatarError, setProfileAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileNameChange = (val: string) => {
+    setProfileName(val);
+    if (val.trim()) {
+      const res = validateName(val);
+      setProfileNameError(res.ok ? null : res.error || null);
+    } else {
+      setProfileNameError(null);
+    }
+  };
+
+  const handleProfileEmailChange = (val: string) => {
+    setProfileEmail(val);
+    if (val.trim()) {
+      const res = validateEmail(val);
+      setProfileEmailError(res.ok ? null : res.error || null);
+    } else {
+      setProfileEmailError(null);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        const result = uploadEvent.target?.result as string;
-        if (result) {
-          setProfileAvatar(result);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setProfileAvatarError(null);
+    const validation = await validateImageFile(file);
+    if (!validation.ok) {
+      setProfileAvatarError(validation.error || 'Please upload a valid JPEG, PNG, or WebP image.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    try {
+      // Decode, downscale to max 512px, strip EXIF metadata, cap at ~100 KB
+      const processed = await processImage(file, {
+        maxDimension: MAX_AVATAR_DIMENSION,
+        maxSizeBytes: MAX_AVATAR_BYTES,
+        format: 'image/jpeg',
+      });
+      setProfileAvatar(processed.dataUrl);
+    } catch {
+      setProfileAvatarError('Failed to process image. Please try again.');
     }
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    const nameResult = validateName(profileName);
+    if (!nameResult.ok) {
+      setProfileNameError(nameResult.error || 'Please enter a valid display name.');
+      return;
+    }
+    const emailResult = validateEmail(profileEmail);
+    if (!emailResult.ok) {
+      setProfileEmailError(emailResult.error || 'Please enter a valid email address.');
+      return;
+    }
+
     updateUser({
-      name: profileName.trim(),
-      email: profileEmail.trim(),
+      name: nameResult.value,
+      email: emailResult.value,
       avatarUrl: profileAvatar,
     });
     setShowEditProfile(false);
@@ -638,11 +691,17 @@ export const SettingsScreen: React.FC = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleFileUpload}
                 className="hidden"
               />
             </div>
+            {profileAvatarError && (
+              <p className="text-xs text-rose-500 mt-1.5 flex items-center gap-1 font-medium">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{profileAvatarError}</span>
+              </p>
+            )}
           </div>
 
           <div>
@@ -651,9 +710,14 @@ export const SettingsScreen: React.FC = () => {
               type="text"
               required
               value={profileName}
-              onChange={e => setProfileName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-brand-500"
+              onChange={e => handleProfileNameChange(e.target.value)}
+              className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                profileNameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+              } text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-brand-500`}
             />
+            {profileNameError && (
+              <p className="mt-1 text-[11px] text-rose-500 font-medium">{profileNameError}</p>
+            )}
           </div>
 
           <div>
@@ -662,9 +726,14 @@ export const SettingsScreen: React.FC = () => {
               type="email"
               required
               value={profileEmail}
-              onChange={e => setProfileEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-brand-500"
+              onChange={e => handleProfileEmailChange(e.target.value)}
+              className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
+                profileEmailError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+              } text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-brand-500`}
             />
+            {profileEmailError && (
+              <p className="mt-1 text-[11px] text-rose-500 font-medium">{profileEmailError}</p>
+            )}
           </div>
 
           <Button
@@ -672,6 +741,7 @@ export const SettingsScreen: React.FC = () => {
             variant="primary"
             size="lg"
             fullWidth
+            disabled={!profileName.trim() || !profileEmail.trim() || !!profileNameError || !!profileEmailError}
           >
             Save Profile Changes
           </Button>

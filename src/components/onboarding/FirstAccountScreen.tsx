@@ -7,6 +7,7 @@ import { Account, AccountType } from '../../types';
 import { SUPPORTED_CURRENCIES, getCurrencyInfo } from '../../utils/currencies';
 import { parseAmountInput } from '../../utils/money';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
+import { validateLabel, validateAmount } from '../../utils/validators';
 
 interface FirstAccountScreenProps {
   onBack: () => void;
@@ -31,10 +32,32 @@ export const FirstAccountScreen: React.FC<FirstAccountScreenProps> = ({
 
   const baseCurrency = user?.baseCurrency || '';
   const [accountName, setAccountName] = useState('Primary Checking');
+  const [accountNameError, setAccountNameError] = useState<string | null>(null);
   const [accountType, setAccountType] = useState<AccountType>('checking');
   const [balance, setBalance] = useState('');
+  const [balanceError, setBalanceError] = useState<string | null>(null);
   const [currency, setCurrency] = useState(baseCurrency || 'USD');
   const [errorMessage, setErrorMessage] = useState('');
+
+  const handleAccountNameChange = (val: string) => {
+    setAccountName(val);
+    if (val.trim()) {
+      const res = validateLabel(val, 'Account name');
+      setAccountNameError(res.ok ? null : res.error || null);
+    } else {
+      setAccountNameError(null);
+    }
+  };
+
+  const handleBalanceChange = (val: string) => {
+    setBalance(val);
+    if (val.trim()) {
+      const res = validateAmount(val, currency || baseCurrency, { allowZero: true });
+      setBalanceError(res.ok ? null : res.error || null);
+    } else {
+      setBalanceError(null);
+    }
+  };
 
   // Gate on chosen base currency
   if (!baseCurrency) {
@@ -73,12 +96,23 @@ export const FirstAccountScreen: React.FC<FirstAccountScreenProps> = ({
     e.preventDefault();
     setErrorMessage('');
 
-    if (!accountName.trim()) {
-      setErrorMessage('Please enter an account name.');
+    const nameResult = validateLabel(accountName, 'Account name');
+    if (!nameResult.ok) {
+      setAccountNameError(nameResult.error || 'Please enter an account name.');
+      setErrorMessage(nameResult.error || 'Please enter an account name.');
       return;
     }
 
-    const sanitizedBalance = parseAmountInput(balance, currency);
+    if (balance.trim()) {
+      const balanceResult = validateAmount(balance, currency || baseCurrency, { allowZero: true });
+      if (!balanceResult.ok) {
+        setBalanceError(balanceResult.error || 'Please enter a valid balance.');
+        setErrorMessage(balanceResult.error || 'Please enter a valid balance.');
+        return;
+      }
+    }
+
+    const sanitizedBalance = balance.trim() ? parseAmountInput(balance, currency) : 0;
 
     // Idempotency: load existing accounts before creating
     const existingAccounts = CentraDB.getAccounts();
@@ -185,10 +219,15 @@ export const FirstAccountScreen: React.FC<FirstAccountScreenProps> = ({
             <input
               type="text"
               value={accountName}
-              onChange={e => setAccountName(e.target.value)}
+              onChange={e => handleAccountNameChange(e.target.value)}
               placeholder="e.g. Primary Checking, Cash Wallet"
-              className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 transition-all font-semibold"
+              className={`w-full px-4 py-3 rounded-2xl border ${
+                accountNameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+              } bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 transition-all font-semibold`}
             />
+            {accountNameError && (
+              <p className="mt-1 text-xs text-rose-500 font-medium">{accountNameError}</p>
+            )}
           </div>
 
           {/* Account Type Selector */}
@@ -254,11 +293,16 @@ export const FirstAccountScreen: React.FC<FirstAccountScreenProps> = ({
                   type="text"
                   inputMode="decimal"
                   value={balance}
-                  onChange={e => setBalance(e.target.value)}
+                  onChange={e => handleBalanceChange(e.target.value)}
                   placeholder="0.00"
-                  className="w-full pl-9 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#0A0E1A] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                  className={`w-full pl-9 pr-4 py-3 rounded-2xl border ${
+                    balanceError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                  } bg-white dark:bg-[#0A0E1A] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500`}
                 />
               </div>
+              {balanceError && (
+                <p className="mt-1 text-xs text-rose-500 font-medium">{balanceError}</p>
+              )}
             </div>
           </div>
         </form>
@@ -276,7 +320,12 @@ export const FirstAccountScreen: React.FC<FirstAccountScreenProps> = ({
         <button
           type="submit"
           form="first-account-form"
-          className="w-full sm:w-2/3 py-4 px-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-base hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
+          disabled={!accountName.trim() || !!accountNameError || !!balanceError}
+          className={`w-full sm:w-2/3 py-4 px-6 rounded-full font-bold text-base transition-all shadow-lg flex items-center justify-center gap-2 ${
+            !accountName.trim() || !!accountNameError || !!balanceError
+              ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed opacity-60'
+              : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-[0.99] cursor-pointer'
+          }`}
         >
           <span>Continue</span>
           <ArrowRight className="w-4 h-4" />

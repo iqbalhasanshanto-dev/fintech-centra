@@ -1,29 +1,36 @@
 /**
  * Input sanitization utilities for user-provided strings and values.
- * Protects against XSS, control characters, null bytes, and buffer/DoS payloads.
+ * Removes non-printable control characters, bidirectional overrides, and lone surrogates.
+ * Normalizes to NFC and enforces length caps without silently destroying valid user characters
+ * (<, >, &, ', ", /, *, "metadata:", etc.).
+ *
+ * XSS safety is ensured via React output escaping at render time.
  */
 
-// Matches control characters except common safe whitespace (newline, carriage return, tab)
-// eslint-disable-next-line no-control-regex -- Explicitly matching and removing ASCII control characters for input sanitization
+// Matches non-printable control characters (U+0000 to U+0008, U+000B, U+000C, U+000E to U+001F, U+007F)
+// Keeping \t (U+0009), \n (U+000A), \r (U+000D)
+// eslint-disable-next-line no-control-regex -- Explicitly matching ASCII control characters for input normalization
 const CONTROL_CHARS_REGEX = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
 
-// Strip full script and style tag blocks including inner content
-const SCRIPT_TAG_REGEX = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-const STYLE_TAG_REGEX = /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi;
+// Invisible bidirectional override / isolate characters
+// U+202A to U+202E (LRE, RLE, PDF, LRO, RLO) and U+2066 to U+2069 (LRI, RLI, FSI, PDI)
+const BIDI_OVERRIDES_REGEX = /[\u202A-\u202E\u2066-\u2069]/g;
 
-// Strip remaining HTML tags and dangerous javascript: or data: pseudo-protocols
-const HTML_TAGS_REGEX = /<[^>]*>/g;
-const JS_PROTOCOL_REGEX = /(?:javascript|vbscript|data):/gi;
+// Lone UTF-16 surrogates: high surrogate not followed by low surrogate, or low surrogate not preceded by high surrogate.
+// Note: valid surrogate pairs (e.g. standard emoji or supplemental plane characters) are preserved.
+const LONE_SURROGATES_REGEX = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 /**
- * Sanitizes a single-line or multi-line text input:
+ * Sanitizes single-line or multi-line text input:
  * 1. Coerces to string
  * 2. Normalizes Unicode (NFC)
- * 3. Strips null bytes and malicious ASCII control characters
- * 4. Strips HTML markup (<...>)
- * 5. Disarms javascript: / vbscript: pseudo-protocols
- * 6. Trims outer whitespace
- * 7. Enforces maximum character length
+ * 3. Strips null bytes, ASCII control characters (preserving newline/tab/carriage return)
+ * 4. Strips invisible bidirectional override characters (U+202A-U+202E, U+2066-U+2069)
+ * 5. Strips lone UTF-16 surrogates
+ * 6. Preserves Zero-Width Joiner (U+200D) & Zero-Width Non-Joiner (U+200C) for complex scripts (e.g. Bangla)
+ * 7. Preserves all ordinary printable characters (< > & ' " / * etc.) exactly as typed
+ * 8. Trims outer whitespace
+ * 9. Enforces maximum character length
  */
 export function sanitizeText(input: unknown, maxLength = 255): string {
   if (input === null || input === undefined) return '';
@@ -31,23 +38,22 @@ export function sanitizeText(input: unknown, maxLength = 255): string {
   const raw = String(input);
   if (!raw) return '';
 
-  const sanitized = raw
+  const cleaned = raw
     .normalize('NFC')
-    .replace(SCRIPT_TAG_REGEX, '')
-    .replace(STYLE_TAG_REGEX, '')
     .replace(CONTROL_CHARS_REGEX, '')
-    .replace(HTML_TAGS_REGEX, '')
-    .replace(JS_PROTOCOL_REGEX, '')
+    .replace(BIDI_OVERRIDES_REGEX, '')
+    .replace(LONE_SURROGATES_REGEX, '')
     .trim();
 
-  return maxLength > 0 ? sanitized.slice(0, maxLength) : sanitized;
+  return maxLength > 0 ? cleaned.slice(0, maxLength) : cleaned;
 }
 
 /**
  * Sanitizes an email address:
+ * - Normalizes Unicode (NFC)
+ * - Strips control characters, bidi overrides, lone surrogates
  * - Trims whitespace
  * - Converts to lower case
- * - Strips control characters
  * - Restricts to RFC 5321 max length of 254 characters
  */
 export function sanitizeEmail(email: unknown): string {
@@ -55,6 +61,8 @@ export function sanitizeEmail(email: unknown): string {
   return email
     .normalize('NFC')
     .replace(CONTROL_CHARS_REGEX, '')
+    .replace(BIDI_OVERRIDES_REGEX, '')
+    .replace(LONE_SURROGATES_REGEX, '')
     .trim()
     .toLowerCase()
     .slice(0, 254);
