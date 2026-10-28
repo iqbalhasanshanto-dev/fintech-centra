@@ -572,12 +572,12 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           )}
 
           {/* Amount Input Card */}
-          <div className="p-5 rounded-2xl bg-gray-50 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45]">
+          <div className="p-5 rounded-2xl bg-[#F1F2F4] dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                 {activeTab === 'spend' ? 'Enter Expense Amount' : activeTab === 'income' ? 'Enter Income Amount' : activeTab === 'transfer' ? 'Enter Transfer Amount' : activeTab === 'goal' ? 'Enter Goal Target' : 'Enter Budget Limit'}
               </span>
-              <div className="flex items-center space-x-1.5 bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] px-2.5 py-1 rounded-lg text-xs text-gray-700 dark:text-gray-300">
+              <div className="flex items-center space-x-1.5 bg-white dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] px-2.5 py-1 rounded-lg text-xs text-gray-700 dark:text-gray-300">
                 <Calendar className="w-3.5 h-3.5 text-gray-400" />
                 <input
                   type="date"
@@ -645,8 +645,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         setMerchantError(null);
                       }
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                      merchantError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                      merchantError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                     } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
                   {merchantError && (
@@ -662,10 +662,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     id="category-select"
                     value={categoryId}
                     onChange={e => setCategoryId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
                   >
                     {availableCategories.map(c => (
-                      <option key={c.id} value={c.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                      <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                         {c.name}
                       </option>
                     ))}
@@ -674,7 +674,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
                 {/* Empty State for Accounts */}
                 {accounts.length === 0 ? (
-                  <div className="p-4 rounded-xl border border-dashed border-gray-300 dark:border-[#232C45] bg-gray-50/50 dark:bg-[#0A0E1A]/50 text-center">
+                  <div className="p-4 rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#1D1D1D]/50 text-center">
                     <Wallet className="w-6 h-6 mx-auto text-gray-400 dark:text-gray-500 mb-1.5" />
                     <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-0.5">
                       No accounts connected yet
@@ -701,10 +701,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                       id="account-select"
                       value={accountId}
                       onChange={e => setAccountId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
                     >
                       {accounts.map(a => (
-                        <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                        <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                           {a.name} — Balance: {formatCurrency(a.balance, a.currency)}
                         </option>
                       ))}
@@ -730,8 +730,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         setNoteError(null);
                       }
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                      noteError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                      noteError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                     } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
                   {noteError && (
@@ -744,7 +744,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     Attach Receipt / Bill
                   </label>
                   {receiptName ? (
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-xs">
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-xs">
                       <div className="flex items-center space-x-2 truncate">
                         <Receipt className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
                         <span className="font-semibold text-gray-800 dark:text-gray-200 truncate">{receiptName}</span>
@@ -762,7 +762,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2.5 px-3.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#1A233A] text-xs font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#262626] text-xs font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
                     >
                       <Paperclip className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                       <span>Upload receipt or invoice</span>
@@ -789,7 +789,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             {activeTab === 'transfer' && (
               <>
                 {accounts.length < 2 ? (
-                  <div className="p-4 rounded-xl border border-dashed border-gray-300 dark:border-[#232C45] bg-gray-50/50 dark:bg-[#0A0E1A]/50 text-center">
+                  <div className="p-4 rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#1D1D1D]/50 text-center">
                     <Wallet className="w-6 h-6 mx-auto text-gray-400 dark:text-gray-500 mb-1.5" />
                     <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-0.5">
                       Transfer requires at least 2 accounts
@@ -817,10 +817,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         id="from-account-select"
                         value={fromAccountId}
                         onChange={handleFromAccountChange}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
                       >
                         {accounts.map(a => (
-                          <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                          <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                             {a.name} (Available: {formatCurrency(a.balance, a.currency)})
                           </option>
                         ))}
@@ -835,12 +835,12 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         id="to-account-select"
                         value={toAccountId}
                         onChange={e => setToAccountId(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
                       >
                         {accounts
                           .filter(a => a.id !== fromAccountId)
                           .map(a => (
-                            <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                            <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                               {a.name} (Balance: {formatCurrency(a.balance, a.currency)})
                             </option>
                           ))}
@@ -865,8 +865,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                             setTransferNoteError(null);
                           }
                         }}
-                        className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                          transferNoteError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                        className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                          transferNoteError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                         } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                       />
                       {transferNoteError && (
@@ -899,8 +899,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         setGoalNameError(null);
                       }
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                      goalNameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                      goalNameError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                     } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
                   {goalNameError && (
@@ -929,8 +929,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                           }
                         }
                       }}
-                      className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                        goalInitialDepositError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                        goalInitialDepositError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                       } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 tabular-nums`}
                     />
                     {goalInitialDepositError && (
@@ -946,7 +946,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                       type="date"
                       value={goalTargetDate}
                       onChange={e => setGoalTargetDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
                     />
                   </div>
                 </div>
@@ -959,10 +959,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     <select
                       value={accountId}
                       onChange={e => setAccountId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
                     >
                       {accounts.map(a => (
-                        <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                        <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                           {a.name} ({formatCurrency(a.balance, a.currency)})
                         </option>
                       ))}
@@ -982,10 +982,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   <select
                     value={budgetCategoryId}
                     onChange={e => setBudgetCategoryId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
                   >
                     {availableBudgetCategories.map(c => (
-                      <option key={c.id} value={c.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                      <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                         {c.name}
                       </option>
                     ))}

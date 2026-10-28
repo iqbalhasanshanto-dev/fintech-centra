@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="relative hidden md:flex items-center gap-2">
             <button
               onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
-              className="flex items-center bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-full px-4 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="flex items-center bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] rounded-full px-4 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
               aria-expanded={showPeriodDropdown}
               aria-haspopup="listbox"
               aria-label={`Filter by period: ${currentPeriodLabel}`}
@@ -124,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="fixed inset-0 z-40"
                   onClick={() => setShowPeriodDropdown(false)}
                 />
-                <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-[#121A2C] rounded-xl shadow-2xl border border-gray-200 dark:border-[#232C45] py-1.5 z-50 animate-fade-in">
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-[#1D1D1D] rounded-xl shadow-2xl border border-black/[0.06] dark:border-white/[0.08] py-1.5 z-50 animate-fade-in">
                   <div className="px-3 py-1 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                     Select Period
                   </div>
@@ -136,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({
                         setShowPeriodDropdown(false);
                       }}
                       aria-current={periodFilter === p.id ? 'true' : undefined}
-                      className="w-full px-3.5 py-2 text-left text-xs font-semibold flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E293B] hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                      className="w-full px-3.5 py-2 text-left text-xs font-semibold flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-[#F1F2F4] dark:hover:bg-[#262626] hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
                     >
                       <span>{p.label}</span>
                       {periodFilter === p.id && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />}

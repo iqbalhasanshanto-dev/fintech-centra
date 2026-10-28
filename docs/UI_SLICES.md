@@ -123,3 +123,48 @@ Documented in `design/FRAMES.md`:
   - `npm test`: PASS (274/274 tests across 32 test files).
   - `npm run build`: PASS (clean production bundle generated).
 
+---
+
+## Slice 2: Home Dashboard, Notifications & Transactions Redesign
+
+### 1. Visual Tokens & Surface Architecture
+- **Canvas Container**: `#000000` in dark mode, `#F7F8FA` in light mode (`HomeScreen.tsx` mobile container updated from `#FAFAFA` / `#0A0E1A`).
+- **Primary Cards**: `rounded-[24px]`, `#1D1D1D` surface in dark mode (`#FFFFFF` in light mode), `1px` subtle border (`rgba(255, 255, 255, 0.08)` in dark mode, `rgba(0, 0, 0, 0.06)` in light mode), internal padding `p-5` (`20px`).
+- **Secondary & Nested Surfaces**: `#262626` in dark mode, `#F1F2F4` in light mode.
+- **Typography & Font Weights**: Strictly Outfit weights `400` (Regular), `500` (Medium), `600` (SemiBold), `700` (Bold).
+- **Accessible Contrast Rules**: Positive/Income values `#22C55E` in dark mode, `#16A34A` in light mode; Negative/Expense values `#F43F5E` in dark mode, `#E11D48` in light mode; Transfer values `#38BDF8` in dark mode, `#0284C7` in light mode; Accent `#C6FF3D` in dark mode, `#4D6E18` in light mode.
+
+---
+
+### 2. Redesigned Screens & Components
+
+| Component | File Path | Reference Frame | Redesign & Behavioral Details |
+| :--- | :--- | :--- | :--- |
+| **YourMoneySection** | `src/components/home/YourMoneySection.tsx` | `08-home.png`, `08-home--full.png` | Redesigned into the **"Account Information"** hero card (`rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] p-5 sm:p-6`). Top row features `"Account Information"` label and `"Details"` analytics navigation button. Hero Balance Row displays large net balance (`text-3xl sm:text-4xl font-bold tabular-nums text-[#18212F] dark:text-white`) with privacy toggle button (`w-10 h-10 rounded-xl bg-[#F1F2F4] dark:bg-[#262626]`, `<Eye />` / `<EyeOff />`). Below the hero balance are two stacked summary rows: (1) Total income with emerald accent bar (`w-1 h-6 rounded-full bg-[#16A34A] dark:bg-[#22C55E]`), formatted amount, and `data-testid="income-change-badge"`; (2) Total expenses with rose accent bar (`w-1 h-6 rounded-full bg-[#E11D48] dark:bg-[#F43F5E]`), formatted amount, and `data-testid="expenses-change-badge"`. 100% test compatibility preserved for all 17 tests in `src/__tests__/periodComparison.test.tsx`. |
+| **IncomeExpenseLineChart** | `src/components/home/IncomeExpenseLineChart.tsx` | `08-home.png` | Upgraded to `rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] p-5`. Header features `"Cash Flow Trend"` title and inline dot legend (`● Income` in `#22C55E` / `#16A34A`, `● Expenses` in `#F43F5E` / `#E11D48`). Implemented smooth Recharts `<AreaChart>` with subtle translucent gradient fills under Income and Expenses curves, clean horizontal grid lines, and custom tooltip styled with `#262626` / `#FFFFFF`. Palette tokens in `src/utils/themeColors.ts` updated to match. |
+| **TransactionsList** | `src/components/home/TransactionsList.tsx` | `08-home.png`, `08-home--full.png` | Wrapped the entire Recent Activity section into a unified card (`rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] p-5`). Header features `"Recent Activity"` and `"View All"` button (`aria-label="View all transactions"`). Transaction rows styled with tinted icon badges (`w-11 h-11 rounded-2xl`), category title, formatted date/time subtitle, and signed amounts (`+` green, `-` rose, transfer sky-blue). |
+| **TransactionDrawer** | `src/components/home/TransactionDrawer.tsx` | `10-transactions-view-all.png` | Redesigned to match `"Recent Activities"` view: top header bar with circular back button (`w-11 h-11 rounded-full border border-black/[0.08] dark:border-white/[0.12]`), centered `"Recent Activities"` heading with `"All Transactions"` accessible context, full-width rounded search bar (`rounded-2xl bg-white dark:bg-[#1D1D1D]`), CSV export button, horizontal filter pills, and unified card holding transaction rows with tinted badges. Retains hardware/swipe back handler via `useBackHandler`. |
+| **NotificationsModal** | `src/components/modals/NotificationsModal.tsx` | `09-notifications.png`, `09-notifications--full.png` | Redesigned with top bar circular back button and centered `"Notifications"` heading. Sub-bar features `"Your updates"` label with pill badge (`"2 unread"` in `#4D6E18` light / `#C6FF3D` dark) and `"Mark all as read"` button. Notifications grouped into `"Today"` and `"Earlier"` cards (`rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] p-5`) with tinted icon badges, category overline, unread orange indicator dot (`w-2 h-2 rounded-full bg-[#F97316]`), timestamp, and chevron action links (`"View budget >"`, `"Review session >"`, `"View transaction >"`). |
+| **TransactionDetailModal** | `src/components/home/TransactionDetailModal.tsx` | *Self-Designed* | Upgraded to design tokens with `rounded-[28px]`, `#1D1D1D` / `#FFFFFF` surface, tinted icon badge, `#F1F2F4` / `#262626` metadata cells, and `#18212F` / `white` edit and close buttons. |
+| **BalanceCard** | `src/components/home/BalanceCard.tsx` | *Self-Designed* | Modernized to `rounded-[24px]` card with `#F1F2F4` / `#262626` quick actions; preserved `onOpenTransfer` and transfer button. |
+| **ConnectedAccountsSection** | `src/components/home/ConnectedAccountsSection.tsx` | *Self-Designed* | Desktop connected accounts section updated to `#1D1D1D` cards, `#262626` pills, and design token borders; Transfer and Add Account buttons fully operational. |
+| **ConnectedAccountsRow** | `src/components/home/ConnectedAccountsRow.tsx` | *Self-Designed* | Modernized cards to `#1D1D1D` surfaces, `#262626` badges, and preserved account filtering & transfer triggers. |
+| **InsightBanner** | `src/components/home/InsightBanner.tsx` | *Self-Designed* | Card updated to `rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08]` with `#C6FF3D` / `#4D6E18` highlight badges. |
+| **SpendBreakdownCard** | `src/components/home/SpendBreakdownCard.tsx` | *Self-Designed* | Desktop spend breakdown card upgraded to `rounded-[24px] bg-white dark:bg-[#1D1D1D]`, `#262626` pills, and design token borders. |
+| **TotalSpendSummary** | `src/components/home/TotalSpendSummary.tsx` | *Self-Designed* | Modernized to `rounded-[24px] bg-white dark:bg-[#1D1D1D]` card, `#262626` toggle pills, and design token borders. |
+| **Sidebar & DesktopDock** | `src/components/layout/Sidebar.tsx`, `DesktopDock.tsx` | *Self-Designed* | Replaced legacy navy/slate fills with `#1D1D1D` surface, `#262626` hover states, `#C6FF3D` active indicators, and token borders. |
+| **AppShell, Header & BottomNav** | `src/components/layout/` | *Self-Designed* | Updated AppShell canvas to `#000000` / `#F7F8FA`, Header period dropdown to `#1D1D1D` / `#262626`, and BottomNav dark text on `#C6FF3D` to `#171717`. |
+| **AddAccountModal & AddActionModal** | `src/components/modals/` | *Self-Designed* | Modernized input fields, select boxes, and dashed states to `#1D1D1D` / `#262626` / `#F1F2F4` and token borders. |
+
+---
+
+### 3. Verification & Compliance
+- **Zero Legacy Theme Clutter**: Verified 0 occurrences of `#0A0E1A`, `#0D1220`, `#121A2C`, `#131722`, `#232C45`, `teal-*`, or `font-extrabold` in `src/components/home/`, `src/components/layout/`, and `src/components/modals/`.
+- **Protected Features**: Verified `git diff --exit-code src/utils/financeOperations.ts src/db/ supabase/migrations/` is completely empty (0 diff). Transfer feature and all transfer branches 100% intact.
+- **Quality Gates**:
+  - `npm run typecheck`: PASS (0 errors).
+  - `npm run lint`: PASS (0 errors, 0 warnings).
+  - `npm test`: PASS (274/274 tests across 32 test files, including `navigationRoutes.test.tsx`, `periodComparison.test.tsx`, `overlayBackButton.test.tsx`, `confirmModals.test.tsx`).
+  - `npm run build`: PASS (clean production bundle generated).
+
+

@@ -40,11 +40,11 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               Connected Accounts
             </h3>
-            <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-xs font-bold text-gray-600 dark:text-gray-400 font-mono">
+            <span className="px-2 py-0.5 rounded-full bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-xs font-bold text-gray-600 dark:text-gray-300 font-mono">
               {accounts.length}
             </span>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-0.5">
             Total Combined Balance:{' '}
             <span className="font-semibold text-gray-900 dark:text-white tabular-nums">
               {formatCurrency(totalBalance, settings.baseCurrency, settings.privacyMode)}
@@ -55,7 +55,7 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsAddAccountOpen(true)}
-            className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500/40 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500/40 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Account</span>
@@ -64,7 +64,7 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
           {onOpenTransfer && (
             <button
               onClick={onOpenTransfer}
-              className="text-xs font-semibold px-3.5 py-1.5 rounded-xl bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500/40 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="text-xs font-semibold px-3.5 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500/40 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <span>Transfer</span>
               <ArrowRightLeft className="w-3.5 h-3.5" />
@@ -76,10 +76,10 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
       {/* Account Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {accounts.length === 0 ? (
-          <div className="col-span-full p-8 rounded-2xl bg-white dark:bg-[#121A2C] border border-dashed border-gray-200 dark:border-[#232C45] text-center">
+          <div className="col-span-full p-8 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.12] text-center">
             <Wallet className="w-8 h-8 mx-auto text-gray-400 dark:text-gray-500 mb-2" />
             <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No accounts connected yet</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
+            <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-1 mb-4">
               Connect a checking account, savings vault, or card to monitor your real-time balances.
             </p>
             <button
@@ -99,7 +99,7 @@ export const ConnectedAccountsSection: React.FC<ConnectedAccountsSectionProps> =
               <div
                 key={acc.id}
                 onClick={() => onSelectAccount && onSelectAccount(acc)}
-                className="p-4 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/50 dark:hover:border-brand-500/50 transition-all cursor-pointer group shadow-xs hover:shadow-md"
+                className="p-4 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-brand-500/50 dark:hover:border-brand-500/50 transition-all cursor-pointer group shadow-xs hover:shadow-md"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200/60 dark:border-brand-900/40">

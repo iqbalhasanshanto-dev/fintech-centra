@@ -27,7 +27,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           1. MOBILE COMPOSITION (below `lg` breakpoint)
           - Solid opaque background on container level to prevent card bleed
           ========================================================================= */}
-      <div className="lg:hidden space-y-6 w-full bg-[#FAFAFA] dark:bg-[#0A0E1A]">
+      <div className="lg:hidden space-y-6 w-full bg-[#F7F8FA] dark:bg-black">
         {/* Inflow / Outflow Cash Flow Cards */}
         <YourMoneySection
           onNavigateToReport={onNavigateToReport}

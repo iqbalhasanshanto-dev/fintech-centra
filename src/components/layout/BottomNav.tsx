@@ -104,7 +104,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 onClick={() => onSelectTab(tab.id)}
                 className={`flex-1 min-h-[44px] px-2 py-1.5 rounded-full flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#0A0E1A] font-bold shadow-xs'
+                    ? 'bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#171717] font-bold shadow-xs'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
                 aria-label={tab.label}
@@ -119,7 +119,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         {/* Separate Floating Circular '+' Action Button */}
         <button
           onClick={onOpenAddAction}
-          className="shrink-0 w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#0A0E1A] font-bold shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all focus:outline-none cursor-pointer"
+          className="shrink-0 w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#171717] font-bold shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all focus:outline-none cursor-pointer"
           aria-label="New Transaction, Transfer or Budget"
         >
           <Plus className="w-6 h-6 stroke-[2.5]" />

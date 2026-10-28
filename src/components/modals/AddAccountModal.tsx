@@ -226,8 +226,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
             onChange={e => handleNameChange(e.target.value)}
             placeholder="e.g. Primary Checking, Cash Vault"
             className={`w-full px-4 py-2.5 rounded-xl border ${
-              nameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
-            } bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 transition-all`}
+              nameError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
+            } bg-[#F1F2F4] dark:bg-[#262626] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#C6FF3D] transition-all`}
             autoFocus
           />
           {nameError && (
@@ -251,8 +251,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                   onClick={() => setType(item.type)}
                   className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-brand-500 bg-brand-500/10 text-brand-600 dark:text-brand-400 ring-1 ring-brand-500/40'
-                      : 'border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
+                      ? 'border-[#C6FF3D] bg-[#C6FF3D]/10 text-black dark:text-[#C6FF3D] ring-1 ring-[#C6FF3D]/40'
+                      : 'border-black/[0.06] dark:border-white/[0.08] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
                   }`}
                 >
                   <Icon className="w-4 h-4 mb-1" />
@@ -273,7 +273,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
               id="add-account-currency"
               value={currency}
               onChange={e => setCurrency(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+              className="w-full px-3 py-2.5 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-[#F1F2F4] dark:bg-[#262626] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500"
             >
               {SUPPORTED_CURRENCIES.map(c => (
                 <option key={c.code} value={c.code}>
@@ -301,8 +301,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                 onChange={e => handleBalanceChange(e.target.value)}
                 placeholder="0.00"
                 className={`w-full pl-9 pr-4 py-2.5 rounded-xl border ${
-                  balanceError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
-                } bg-white dark:bg-[#0A0E1A] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500`}
+                  balanceError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
+                } bg-[#F1F2F4] dark:bg-[#262626] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#C6FF3D]`}
               />
             </div>
             {balanceError && (
@@ -328,8 +328,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                 onChange={e => handleCreditLimitChange(e.target.value)}
                 placeholder="e.g. 5,000.00"
                 className={`w-full pl-9 pr-4 py-2.5 rounded-xl border ${
-                  creditLimitError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
-                } bg-white dark:bg-[#0A0E1A] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500`}
+                  creditLimitError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
+                } bg-[#F1F2F4] dark:bg-[#262626] text-sm font-semibold text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#C6FF3D]`}
               />
             </div>
             {creditLimitError && (
@@ -349,8 +349,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
             onChange={e => handleBankNameChange(e.target.value)}
             placeholder="e.g. Chase, Revolut, Physical Cash"
             className={`w-full px-4 py-2.5 rounded-xl border ${
-              bankNameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
-            } bg-white dark:bg-[#0A0E1A] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500`}
+              bankNameError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
+            } bg-[#F1F2F4] dark:bg-[#262626] text-sm text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#C6FF3D]`}
           />
           {bankNameError && (
             <p className="mt-1 text-xs text-rose-500 font-medium">{bankNameError}</p>
@@ -370,7 +370,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
                 onClick={() => setColor(c)}
                 style={{ backgroundColor: c }}
                 className={`w-7 h-7 rounded-full transition-transform cursor-pointer ${
-                  color === c ? 'scale-125 ring-2 ring-offset-2 ring-gray-900 dark:ring-white dark:ring-offset-[#121A2C]' : 'hover:scale-110'
+                  color === c ? 'scale-125 ring-2 ring-offset-2 ring-gray-900 dark:ring-white dark:ring-offset-[#1D1D1D]' : 'hover:scale-110'
                 }`}
                 aria-label={`Select color ${c}`}
               />
@@ -392,7 +392,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
         </label>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-200 dark:border-[#232C45]">
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-black/[0.06] dark:border-white/[0.08]">
           <Button
             type="button"
             variant="ghost"

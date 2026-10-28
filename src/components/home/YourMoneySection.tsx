@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
-import { ChevronRight, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ChevronRight, ArrowUpRight, ArrowDownRight, Eye, EyeOff } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
-import { Button } from '../ui/Button';
 import {
   computePreviousPeriodTotals,
   calculatePercentageChange,
@@ -22,17 +21,19 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
     settings,
     transactions,
     periodFilter,
+    totalBalance,
+    updateSettings,
   } = useFinance();
 
   const { incomeBadge, expensesBadge } = useMemo(() => {
-    const baseCurrency = settings.baseCurrency || 'USD';
+    const baseCurrency = settings?.baseCurrency || 'USD';
     const {
       previousIncome,
       previousExpenses,
       previousIncomeCount,
       previousExpenseCount,
       hasPreviousPeriod,
-    } = computePreviousPeriodTotals(transactions, periodFilter, baseCurrency);
+    } = computePreviousPeriodTotals(transactions || [], periodFilter, baseCurrency);
 
     if (!hasPreviousPeriod) {
       return { incomeBadge: null, expensesBadge: null };
@@ -49,84 +50,116 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
         : null;
 
     return { incomeBadge, expensesBadge };
-  }, [transactions, periodFilter, periodIncome, periodExpenses, settings.baseCurrency]);
+  }, [transactions, periodFilter, periodIncome, periodExpenses, settings?.baseCurrency]);
+
+  const displayBalance = totalBalance ?? (periodIncome - periodExpenses);
 
   return (
-    <section id="cashflow-summary" className="transition-colors">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Cash flow &amp; financial overview</p>
+    <section id="cashflow-summary" className="transition-colors w-full">
+      {/* Account Information Hero Card (08-home.png) */}
+      <div className="rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] p-5 sm:p-6 shadow-sm transition-all">
+        {/* Card Header: Label + Details Action */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF]">
+            Account Information
+          </span>
+          <button
+            type="button"
+            onClick={onNavigateToReport}
+            className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1 cursor-pointer transition-colors p-1"
+            aria-label="View full analytics details"
+          >
+            <span>Details</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onNavigateToReport}
-          icon={<ChevronRight className="w-4 h-4" />}
-          iconPosition="right"
-          aria-label="View full analytics details"
-        >
-          Details
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-        {/* Total Income Card */}
-        <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl p-6 hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all shadow-xs">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Total income</span>
-            {incomeBadge && (
-              <span
-                data-testid="income-change-badge"
-                className={`inline-flex items-center gap-0.5 px-2 py-1 text-xs font-bold rounded-md tracking-wide ${
-                  incomeBadge.isGood
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                }`}
-              >
-                {incomeBadge.trend === 'down' ? (
-                  <ArrowDownRight className="w-3.5 h-3.5" />
-                ) : (
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                )}
-                {incomeBadge.formatted}
-              </span>
-            )}
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
-              {formatCurrency(periodIncome, settings.baseCurrency, settings.privacyMode)}
+        {/* Hero Balance Row with Privacy Mode Toggle */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="min-w-0">
+            <span className="text-3xl sm:text-4xl font-bold tracking-tight text-[#18212F] dark:text-white tabular-nums currency-amount truncate block">
+              {formatCurrency(displayBalance, settings?.baseCurrency, settings?.privacyMode)}
             </span>
           </div>
+
+          <button
+            type="button"
+            onClick={() => updateSettings?.({ privacyMode: !settings?.privacyMode })}
+            className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-xl bg-[#F1F2F4] dark:bg-[#262626] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+            aria-label={settings?.privacyMode ? 'Show balances' : 'Hide balances'}
+          >
+            {settings?.privacyMode ? (
+              <EyeOff className="w-5 h-5" />
+            ) : (
+              <Eye className="w-5 h-5" />
+            )}
+          </button>
         </div>
 
-        {/* Total Expenses Card */}
-        <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl p-6 hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all shadow-xs">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Total expenses</span>
-            {expensesBadge && (
-              <span
-                data-testid="expenses-change-badge"
-                className={`inline-flex items-center gap-0.5 px-2 py-1 text-xs font-bold rounded-md tracking-wide ${
-                  expensesBadge.isGood
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                }`}
-              >
-                {expensesBadge.trend === 'down' ? (
-                  <ArrowDownRight className="w-3.5 h-3.5" />
-                ) : (
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                )}
-                {expensesBadge.formatted}
+        {/* Stacked Summary Rows */}
+        <div className="space-y-3 pt-3 border-t border-black/[0.04] dark:border-white/[0.05]">
+          {/* Total Income Row */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-1 h-5 rounded-full bg-[#16A34A] dark:bg-[#22C55E] shrink-0" />
+              <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF]">
+                Total income
               </span>
-            )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white">
+                {formatCurrency(periodIncome, settings?.baseCurrency, settings?.privacyMode)}
+              </span>
+              {incomeBadge && (
+                <span
+                  data-testid="income-change-badge"
+                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold rounded-full tracking-wide ${
+                    incomeBadge.isGood
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                  }`}
+                >
+                  {incomeBadge.trend === 'down' ? (
+                    <ArrowDownRight className="w-3.5 h-3.5" />
+                  ) : (
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  )}
+                  {incomeBadge.formatted}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
-              {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
-            </span>
+
+          {/* Total Expenses Row */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-1 h-5 rounded-full bg-[#E11D48] dark:bg-[#F43F5E] shrink-0" />
+              <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF]">
+                Total expenses
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white">
+                {formatCurrency(periodExpenses, settings?.baseCurrency, settings?.privacyMode)}
+              </span>
+              {expensesBadge && (
+                <span
+                  data-testid="expenses-change-badge"
+                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold rounded-full tracking-wide ${
+                    expensesBadge.isGood
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                  }`}
+                >
+                  {expensesBadge.trend === 'down' ? (
+                    <ArrowDownRight className="w-3.5 h-3.5" />
+                  ) : (
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  )}
+                  {expensesBadge.formatted}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
