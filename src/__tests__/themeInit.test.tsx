@@ -70,13 +70,13 @@ describe('ThemeContext Runtime Hint & Meta Synchronization', () => {
     const metaLight = document.createElement('meta');
     metaLight.name = 'theme-color';
     metaLight.setAttribute('media', '(prefers-color-scheme: light)');
-    metaLight.content = '#FAFAFA';
+    metaLight.content = '#F7F8FA';
     document.head.appendChild(metaLight);
 
     const metaDark = document.createElement('meta');
     metaDark.name = 'theme-color';
     metaDark.setAttribute('media', '(prefers-color-scheme: dark)');
-    metaDark.content = '#0A0E1A';
+    metaDark.content = '#000000';
     document.head.appendChild(metaDark);
 
     metaTags = [metaLight, metaDark];
@@ -99,7 +99,7 @@ describe('ThemeContext Runtime Hint & Meta Synchronization', () => {
     // Initial theme is light
     expect(localStorage.getItem('centra_theme_hint')).toBe('light');
     metaTags.forEach(meta => {
-      expect(meta.getAttribute('content')).toBe('#FAFAFA');
+      expect(meta.getAttribute('content')).toBe('#F7F8FA');
     });
 
     // Switch to dark
@@ -110,7 +110,7 @@ describe('ThemeContext Runtime Hint & Meta Synchronization', () => {
     expect(localStorage.getItem('centra_theme_hint')).toBe('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
     metaTags.forEach(meta => {
-      expect(meta.getAttribute('content')).toBe('#0A0E1A');
+      expect(meta.getAttribute('content')).toBe('#000000');
     });
 
     // Switch back to light
@@ -121,7 +121,7 @@ describe('ThemeContext Runtime Hint & Meta Synchronization', () => {
     expect(localStorage.getItem('centra_theme_hint')).toBe('light');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
     metaTags.forEach(meta => {
-      expect(meta.getAttribute('content')).toBe('#FAFAFA');
+      expect(meta.getAttribute('content')).toBe('#F7F8FA');
     });
   });
 });

@@ -15,11 +15,11 @@ export const GuestBanner: React.FC = () => {
     <>
       <div
         role="alert"
-        className="w-full border border-amber-300/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 rounded-xl px-4 py-3 flex items-start gap-3"
+        className="w-full border border-amber-300/50 dark:border-amber-500/20 bg-amber-500/10 dark:bg-amber-950/20 rounded-2xl px-4 py-3 flex items-start gap-3 backdrop-blur-xs"
       >
         {/* Icon */}
         <div className="shrink-0 mt-0.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
             <CloudOff className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           </div>
         </div>

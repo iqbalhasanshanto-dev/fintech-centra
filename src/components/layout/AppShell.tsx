@@ -66,7 +66,7 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-gray-100 flex antialiased transition-colors duration-200">
+    <div className="min-h-[100dvh] w-full bg-[#F7F8FA] dark:bg-[#000000] text-gray-900 dark:text-gray-100 flex antialiased transition-colors duration-200">
 
       {/* 1. Desktop Left Sidebar Navigation (Visible on lg: ≥1024px) */}
       <Sidebar

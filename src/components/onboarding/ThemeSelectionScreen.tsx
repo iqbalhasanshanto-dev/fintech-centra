@@ -60,7 +60,7 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
 
         {/* Headings */}
         <div className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
             Choose your theme
           </h1>
           <p className="text-base text-gray-500 dark:text-gray-400">
@@ -114,7 +114,7 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
               >
                 Total Net Worth
               </span>
-              <div className="text-2xl font-extrabold tracking-tight mt-0.5 flex items-baseline gap-1">
+              <div className="text-2xl font-bold tracking-tight mt-0.5 flex items-baseline gap-1">
                 <span>$24,850</span>
                 <span className="text-xs text-emerald-500 font-semibold">+12.4%</span>
               </div>

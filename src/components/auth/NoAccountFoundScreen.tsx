@@ -27,7 +27,7 @@ export const NoAccountFoundScreen: React.FC = () => {
           <UserX className="w-7 h-7" />
         </div>
 
-        <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
           No Centra account found
         </h1>
         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed max-w-sm mx-auto">

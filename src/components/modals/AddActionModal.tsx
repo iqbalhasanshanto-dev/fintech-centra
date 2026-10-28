@@ -498,13 +498,13 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       >
         <div className="space-y-4">
           {/* Top Segmented Control */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] rounded-xl text-xs font-semibold overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1 p-1 bg-[#F1F2F4] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-full text-xs font-semibold overflow-x-auto no-scrollbar">
             <button
               type="button"
               onClick={() => setActiveTab('spend')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'spend'
-                  ? 'bg-white dark:bg-[#121A2C] text-rose-600 dark:text-rose-400 shadow-xs font-bold'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-rose-600 dark:text-rose-400 shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -513,9 +513,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('income')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'income'
-                  ? 'bg-white dark:bg-[#121A2C] text-emerald-600 dark:text-emerald-400 shadow-xs font-bold'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-emerald-600 dark:text-emerald-400 shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -524,9 +524,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('transfer')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'transfer'
-                  ? 'bg-white dark:bg-[#121A2C] text-brand-600 dark:text-brand-400 shadow-xs font-bold'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-sky-600 dark:text-sky-400 shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -535,9 +535,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('goal')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'goal'
-                  ? 'bg-white dark:bg-[#121A2C] text-brand-600 dark:text-brand-400 shadow-xs font-bold'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-[#C6FF3D] shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -546,9 +546,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('budget')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'budget'
-                  ? 'bg-white dark:bg-[#121A2C] text-brand-600 dark:text-brand-400 shadow-xs font-bold'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-[#C6FF3D] shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >

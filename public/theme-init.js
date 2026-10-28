@@ -1,7 +1,8 @@
 (function () {
   try {
     var hint = localStorage.getItem('centra_theme_hint');
-    if (hint === 'dark') {
+    var isDark = hint === 'dark' || (!hint && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) {
       document.documentElement.classList.add('dark');
       document.documentElement.style.colorScheme = 'dark';
     } else {

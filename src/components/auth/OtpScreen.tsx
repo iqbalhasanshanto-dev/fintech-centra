@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Loader2, Mail, RefreshCw, AlertCircle } from 'lucide-react';
 import logoImg from '../../assets/brand/logo.png';
+import { CornerGlow } from '../ui/CornerGlow';
 import { useAuth } from '../../context/AuthContext';
 import {
   isNetworkConnected,
@@ -198,6 +199,7 @@ export const OtpScreen: React.FC = () => {
       </div>
 
       <div className="w-full h-full min-h-screen md:min-h-[580px] md:h-auto md:max-w-md bg-white dark:bg-[#0D1220] md:rounded-[36px] md:border md:border-gray-200/80 md:dark:border-[#1e263c] md:shadow-2xl md:shadow-black/20 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden transition-all">
+        <CornerGlow />
         {/* Top Header */}
         <div>
           <div className="flex items-center justify-between mb-6">
@@ -227,7 +229,7 @@ export const OtpScreen: React.FC = () => {
             <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto mb-3">
               <Mail className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
               Enter verification code
             </h1>
 

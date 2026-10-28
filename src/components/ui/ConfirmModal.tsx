@@ -89,18 +89,18 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       />
 
       {/* Dialog card */}
-      <div className="relative w-full max-w-sm rounded-3xl bg-white/90 dark:bg-[#0D1220]/95 backdrop-blur-xl border border-gray-200 dark:border-[#1e263c] p-6 shadow-2xl animate-scale-up text-gray-900 dark:text-white transition-all">
+      <div className="relative w-full max-w-sm rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 p-6 shadow-2xl animate-scale-up text-gray-900 dark:text-white transition-all">
         {/* Close icon */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="flex flex-col items-center text-center">
-          <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4 border border-gray-200 dark:border-white/10">
+          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4 border border-black/5 dark:border-white/10">
             {getIcon()}
           </div>
 
@@ -114,7 +114,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 px-4 rounded-xl border border-gray-200 dark:border-[#232c44] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                className="flex-1 py-3 px-4 min-h-[44px] rounded-full border border-black/5 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-[#F1F2F4] dark:bg-[#262626] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] transition-all cursor-pointer"
               >
                 {cancelText}
               </button>
@@ -127,7 +127,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 }
                 onClose();
               }}
-              className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold shadow-lg transition-all active:scale-[0.98] cursor-pointer ${getButtonClass()}`}
+              className={`flex-1 py-3 px-4 min-h-[44px] rounded-full text-xs font-bold transition-all active:scale-[0.98] cursor-pointer ${getButtonClass()}`}
             >
               {isAlertOnly ? 'OK' : confirmText}
             </button>

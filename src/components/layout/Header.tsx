@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, ChevronDown, Check } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { PeriodFilter } from '../../types';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { ConfirmModal } from '../ui/ConfirmModal';
-import brandLogo from '../../assets/brand/logo.png';
+import { getGreeting } from '../../utils/greeting';
 
 interface HeaderProps {
   onOpenNotifications: () => void;
@@ -22,6 +22,27 @@ export const Header: React.FC<HeaderProps> = ({
   const { user, isGuest, createAccountFromGuest } = useAuth();
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   const [showGuestConfirm, setShowGuestConfirm] = useState(false);
+  const [greeting, setGreeting] = useState(() => getGreeting());
+
+  useEffect(() => {
+    const update = () => setGreeting(getGreeting());
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        update();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', update);
+    const timer = setInterval(update, 30000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', update);
+      clearInterval(timer);
+    };
+  }, []);
 
   const syncLabel = isGuest
     ? 'Local Demo'
@@ -56,33 +77,26 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id="header"
-      className="border-b border-gray-200 dark:border-[#232C45] bg-white/80 dark:bg-[#0A0E1A]/80 backdrop-blur-md sticky top-0 z-40 transition-colors w-full"
+      className="border-b border-black/5 dark:border-white/10 bg-[#F7F8FA]/90 dark:bg-[#000000]/90 backdrop-blur-md sticky top-0 z-40 transition-colors w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top, var(--safe-area-inset-top, 0px))',
         paddingLeft: 'env(safe-area-inset-left, var(--safe-area-inset-left, 0px))',
         paddingRight: 'env(safe-area-inset-right, var(--safe-area-inset-right, 0px))',
       }}
     >
-      <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-18 py-2 flex items-center justify-between">
 
-        {/* Brand Logo & Wordmark (Visible on mobile/tablet below lg where sidebar is hidden) */}
-        <div className="flex items-center gap-2.5 lg:hidden">
-          <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#151c2e] p-1 flex items-center justify-center shadow-xs border border-gray-200 dark:border-white/10">
-            <img
-              src={brandLogo}
-              alt="Centra"
-              className="w-full h-full object-contain select-none"
-              draggable={false}
-            />
-          </div>
-          <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">CENTRA</span>
-          <div className="flex items-center gap-1.5 ml-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-[10px] font-medium text-gray-600 dark:text-gray-300">
-            <span className={`w-1.5 h-1.5 rounded-full ${syncColor}`} />
-            <span>{syncLabel}</span>
-          </div>
+        {/* Left: Greeting + User Name (matching frames 11-home) */}
+        <div className="flex flex-col justify-center">
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium tracking-tight">
+            {greeting}
+          </span>
+          <span className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+            {isGuest ? 'Demo User' : user.name || 'Adam James'}
+          </span>
         </div>
 
-        {/* Desktop left header sync status indicator */}
+        {/* Desktop center sync status indicator */}
         <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400" title={`Sync Status: ${syncLabel}`}>
           <span className={`w-2 h-2 rounded-full ${syncColor}`} />
           <span>{syncLabel}</span>
@@ -134,37 +148,37 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Action Toolbar */}
-          <div className="flex items-center gap-3 sm:gap-4 border-l border-gray-200 dark:border-[#232C45] pl-3 sm:pl-4">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             {/* Theme Toggle Switch */}
             <ThemeToggle showLabel={false} />
 
             {/* Notification Bell with Unread Indicator */}
             <button
               onClick={onOpenNotifications}
-              className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative cursor-pointer p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#121A2C]"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors relative cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 shadow-xs"
               aria-label="Open notifications"
             >
               <Bell className="w-4 h-4" />
               {unreadNotificationsCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full" />
               )}
             </button>
 
-            {/* User Profile Avatar (or Guest badge) */}
+            {/* User Profile Avatar (or Guest badge) - only way to Settings */}
             <button
               onClick={isGuest ? () => setShowGuestConfirm(true) : onNavigateToSettings}
-              className="relative cursor-pointer flex items-center gap-2"
-              aria-label={isGuest ? "Guest demo mode - create account" : "Open user settings"}
+              className="relative cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full focus:outline-none"
+              aria-label="Open settings"
             >
               {isGuest ? (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-300/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                <span className="flex items-center px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
                   Guest
                 </span>
               ) : (
                 <img
                   src={user.avatarUrl || "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg"}
                   alt={user.name}
-                  className="w-8 h-8 rounded-full border border-gray-300 dark:border-[#232C45] object-cover hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                  className="w-9 h-9 rounded-full border border-black/5 dark:border-white/10 object-cover hover:ring-2 hover:ring-[#C6FF3D] transition-all"
                 />
               )}
             </button>

@@ -73,81 +73,57 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     { id: 'settings', label: 'Settings', icon: SlidersHorizontal },
   ];
 
+  const mainTabs = tabs.slice(0, 3); // Home, Analytics, Budgets
+
   return (
     <div 
-      className={`fixed left-0 right-0 z-40 w-full bg-white/95 dark:bg-[#121A2C]/95 backdrop-blur-md border-t border-gray-200 dark:border-[#232C45] px-3 pt-1.5 md:hidden shadow-lg select-none ${isInputFocused ? 'hidden' : ''}`}
+      className={`fixed left-0 right-0 z-40 w-full px-4 select-none md:hidden pointer-events-none ${isInputFocused ? 'hidden' : ''}`}
       style={{
         bottom: `${isInputFocused ? 0 : viewportBottom}px`,
-        paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
-        paddingLeft: 'env(safe-area-inset-left, var(--safe-area-inset-left, 0px))',
-        paddingRight: 'env(safe-area-inset-right, var(--safe-area-inset-right, 0px))',
+        paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
         transform: 'translate3d(0, 0, 0)',
         WebkitTransform: 'translate3d(0, 0, 0)',
         willChange: 'transform',
       }}
     >
-      {/* Mobile Bottom Fixed Nav Bar */}
+      {/* Floating Bottom Nav Container */}
       <nav 
-        className="max-w-md mx-auto flex items-center justify-between"
+        className="max-w-md mx-auto flex items-center justify-between gap-3 pointer-events-auto"
         aria-label="Main Navigation Bar"
       >
-        {/* Left Nav Pair: Home & Analytics */}
-        <div className="flex items-center justify-around flex-1">
-          {tabs.slice(0, 2).map(tab => {
+        {/* Floating Capsule Dock: Home, Analytics, Budgets */}
+        <div className="flex-1 flex items-center justify-between bg-white/95 dark:bg-[#1D1D1D]/95 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10 p-1.5 shadow-xl">
+          {mainTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`min-h-[44px] min-w-[48px] px-3 py-1.5 rounded-xl flex flex-col items-center justify-center transition-colors duration-200 cursor-pointer ${
+                className={`flex-1 min-h-[44px] px-2 py-1.5 rounded-full flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'text-brand-600 dark:!text-[#171717] font-bold bg-brand-50 dark:!bg-[#C6FF3D]'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1A233A]'
+                    ? 'bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#0A0E1A] font-bold shadow-xs'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
                 aria-label={tab.label}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[11px] mt-0.5 tracking-tight font-semibold">{tab.label}</span>
+                <Icon className="w-4 h-4" />
+                <span className="text-[10px] mt-0.5 tracking-tight font-semibold">{tab.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Center Primary '+' Action Button */}
-        <div className="px-2">
-          <button
-            onClick={onOpenAddAction}
-            className="flex items-center justify-center w-11 h-11 rounded-full bg-brand-600 dark:!bg-[#C6FF3D] text-white dark:!text-[#171717] font-bold shadow-md hover:scale-105 active:scale-95 transition-all focus:outline-none cursor-pointer"
-            aria-label="New Transaction or Transfer"
-          >
-            <Plus className="w-6 h-6 stroke-[2.5]" />
-          </button>
-        </div>
-
-        {/* Right Nav Pair: Budgets & Settings */}
-        <div className="flex items-center justify-around flex-1">
-          {tabs.slice(2, 4).map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onSelectTab(tab.id)}
-                className={`min-h-[44px] min-w-[48px] px-3 py-1.5 rounded-xl flex flex-col items-center justify-center transition-colors duration-200 cursor-pointer ${
-                  isActive
-                    ? 'text-brand-600 dark:!text-[#171717] font-bold bg-brand-50 dark:!bg-[#C6FF3D]'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1A233A]'
-                }`}
-                aria-label={tab.label}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-[11px] mt-0.5 tracking-tight font-semibold">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
+        {/* Separate Floating Circular '+' Action Button */}
+        <button
+          onClick={onOpenAddAction}
+          className="shrink-0 w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#0A0E1A] font-bold shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all focus:outline-none cursor-pointer"
+          aria-label="New Transaction, Transfer or Budget"
+        >
+          <Plus className="w-6 h-6 stroke-[2.5]" />
+        </button>
       </nav>
     </div>
   );

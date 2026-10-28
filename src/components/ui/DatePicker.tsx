@@ -155,18 +155,18 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         >
           <div
             ref={modalRef}
-            className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#0D1220] border border-gray-200 dark:border-[#1e263c] shadow-2xl p-5 text-gray-900 dark:text-white animate-scale-up"
+            className="w-full max-w-sm rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 shadow-2xl p-5 text-gray-900 dark:text-white animate-scale-up"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/5 mb-4">
+            <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10 mb-4">
               <div className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-brand-500" />
+                <CalendarIcon className="w-5 h-5 text-emerald-500 dark:text-[#C6FF3D]" />
                 <span className="text-sm font-bold tracking-tight">Select Date</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -177,7 +177,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 transition-colors cursor-pointer"
+                className="p-2 rounded-full bg-gray-100 dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
                 aria-label="Previous Month"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -188,10 +188,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 <select
                   value={viewMonth}
                   onChange={e => setViewMonth(Number(e.target.value))}
-                  className="px-2 py-1.5 rounded-xl bg-gray-100 dark:bg-white/5 text-xs font-bold text-gray-900 dark:text-white border-0 cursor-pointer focus:outline-none"
+                  className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#262626] text-xs font-bold text-gray-900 dark:text-white border-0 cursor-pointer focus:outline-none"
                 >
                   {MONTHS.map((m, idx) => (
-                    <option key={m} value={idx} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                    <option key={m} value={idx} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                       {m}
                     </option>
                   ))}
@@ -201,10 +201,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 <select
                   value={viewYear}
                   onChange={e => setViewYear(Number(e.target.value))}
-                  className="px-2 py-1.5 rounded-xl bg-gray-100 dark:bg-white/5 text-xs font-bold text-gray-900 dark:text-white border-0 cursor-pointer focus:outline-none"
+                  className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#262626] text-xs font-bold text-gray-900 dark:text-white border-0 cursor-pointer focus:outline-none"
                 >
                   {yearOptions.map(yr => (
-                    <option key={yr} value={yr} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                    <option key={yr} value={yr} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                       {yr}
                     </option>
                   ))}
@@ -214,7 +214,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="p-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 transition-colors cursor-pointer"
+                className="p-2 rounded-full bg-gray-100 dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
                 aria-label="Next Month"
               >
                 <ChevronRight className="w-4 h-4" />

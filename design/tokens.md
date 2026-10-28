@@ -7,11 +7,13 @@ This document defines the derived visual design tokens extracted from the Figma 
 ## 1. Color System
 
 ### 1.1 Brand & Accent Colors
-- **Centra Neon Lime (Brand Primary)**: `#CBFF21`
-  - High-visibility neon lime used on the Centra logo mark, active selection borders, primary focus highlights, and key progress indicators.
-  - Dark hover state: `#B2E610`
+- **Centra Neon Lime (Brand Primary)**: `#C6FF3D` (RGB 198, 255, 61)
+  - High-visibility neon lime used on active selection borders, primary CTA fills, and key progress indicators.
+  - Hover variant: `#B2E830` (slightly darker shade of #C6FF3D)
+  - Pressed variant: `#9ECC27` (active pressed shade of #C6FF3D)
   - Contrast text over neon lime: `#0A0E1A` / `#000000` (bold weight).
-- **Brand Secondary Lime Glow**: `rgba(203, 255, 33, 0.15)` (ambient glow, background badge fills).
+- **Brand Secondary Lime Glow**: `rgba(198, 255, 61, 0.15)` (ambient glow, background badge fills).
+- **Brand Focus Ring**: `rgba(198, 255, 61, 0.40)`
 
 ### 1.2 Dark Theme (`dark`)
 - **App Canvas Background**: `#000000` (true deep black for OLED battery efficiency and maximum contrast with neon lime).
@@ -20,7 +22,7 @@ This document defines the derived visual design tokens extracted from the Figma 
 - **Card / Surface Secondary**: `#262626` (elevated items, nested rows, settings switches).
 - **Modal / Bottom Sheet Surface**: `#161616` / `#1D1D1D` with top border `rgba(255, 255, 255, 0.08)`.
 - **Input Field Background**: `#2A2A2A` (with border `rgba(255, 255, 255, 0.12)`).
-- **Input Field Focus Border**: `#CBFF21`.
+- **Input Field Focus Border**: `#C6FF3D`.
 - **Borders & Dividers**: `rgba(255, 255, 255, 0.08)`.
 - **Text Tokens**:
   - Primary: `#FFFFFF` (headings, primary numbers, active tab text).
@@ -59,22 +61,38 @@ This document defines the derived visual design tokens extracted from the Figma 
   - Dark: `#38BDF8` (Sky-400)
   - Light: `#0284C7` (Sky-600)
 
+### 1.5 Contrast & Accessibility Rule (Light Theme)
+- **WCAG AA Compliance**:
+  - Centra Neon Lime `#C6FF3D` has a relative luminance of `0.838`.
+  - Dark text `#0A0E1A` has a relative luminance of `0.0043`.
+  - Contrast ratio of `#0A0E1A` on `#C6FF3D`: `(0.838 + 0.05) / (0.0043 + 0.05) = 16.35 : 1` (vastly exceeds WCAG AAA 7:1 threshold).
+  - Contrast ratio of pure black `#000000` on `#C6FF3D`: `(0.838 + 0.05) / (0.000 + 0.05) = 17.76 : 1` (exceeds WCAG AAA).
+  - Contrast ratio of `#C6FF3D` as text/stroke on light canvas `#F7F8FA` (luminance `0.948`): `(0.948 + 0.05) / (0.838 + 0.05) = 1.12 : 1` (fails WCAG AA 4.5:1).
+  - **MANDATORY**: `#C6FF3D` must **NEVER** be used as raw text color or standalone icon stroke on light backgrounds.
+  - `#C6FF3D` is permitted only as a **fill** (e.g., CTA buttons, selected badges, toggle tracks) with dark text (`#0A0E1A` / `#000000`).
+  - For colored accent text on light screens, use dark moss green (`#4D6E18` / `#365314`) or deep slate text (`#18212F`).
+
 ---
 
 ## 2. Typography
 
-The design pairs a modern geometric sans-serif for display headings and numbers with an ultra-legible humanist sans-serif for data, labels, and forms.
+The design uses **Outfit** as the single font family for everything (display headings, hero currency amounts, body, controls, and labels).
 
-- **Display & Headings**: `'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif`
-  - Weights: `600` (Semi-bold), `700` (Bold), `800` (Extra-bold).
-  - Usage: Screen titles ("Goals & Budget", "Settings"), balance figures (`৳20,000.00`), CTA buttons.
-- **Body & Controls**: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`
-  - Weights: `400` (Regular), `500` (Medium), `600` (Semi-bold).
-  - Usage: Transaction descriptions, helper text, form inputs, toggle labels.
+- **Font Family**: `'Outfit Variable', 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif, 'Noto Sans Bengali'`
+- **Glyph Fallback Exception**:
+  - The app contains no Bangla UI or language.
+  - Outfit natively contains Latin and Latin-ext glyphs, but lacks the Bengali Taka sign `৳` (`U+09F3`, used for BDT currency).
+  - To display `৳` correctly without loading Bengali webfont packages, `'Noto Sans Bengali'` is preserved strictly as the last entry in the font stack as a system-installed glyph fallback.
+- **Derived Font Weights (Strictly 400, 500, 600, 700 ONLY)**:
+  - `400` (`font-normal`): Secondary hints, form placeholder text, terms & policy body.
+  - `500` (`font-medium`): Transaction timestamps, category subtitles, navigation item labels.
+  - `600` (`font-semibold`): Buttons, card titles, section headers, input values.
+  - `700` (`font-bold`): Hero balance amounts (`৳20,000.00`), screen titles (`Good Morning`, `Goals & Budget`), CTA text.
+  - *Note*: Weights below 400 or above 700 (thin, extralight, light, extrabold, black) are prohibited and mapped to the nearest of the four weights.
 
 ### Fluid Type Scale (Accessibility & Android Large Font Ready)
 To ensure components never clip when Android's system font size is set to Large/Largest, text sizes use relative `rem` units with flexible container heights:
-- **Display Hero Amount**: `2.0rem - 2.25rem` (32px - 36px), line-height `1.15`, weight `700`.
+- **Hero Display Amount**: `2.0rem - 2.25rem` (32px - 36px), line-height `1.15`, weight `700`.
 - **Screen Title (h1)**: `1.5rem` (24px), line-height `1.25`, weight `700`.
 - **Section Heading (h2)**: `1.125rem` (18px), line-height `1.35`, weight `600`.
 - **Card Subtitle / Form Title**: `1.0rem` (16px), line-height `1.4`, weight `600`.
@@ -114,8 +132,8 @@ To ensure components never clip when Android's system font size is set to Large/
 The redesign is anchored on mobile-first flexibility:
 
 1. **Fixed Header & Bottom Navigation**:
-   - Fixed Header height: `60px` (with Android status bar safe-area top padding `env(safe-area-inset-top)`).
-   - Fixed Bottom Nav height: `76px` (with home indicator safe-area bottom padding `env(safe-area-inset-bottom)`).
+   - **Header**: Top-left greeting ("Good Morning") above username ("Adam James"); top-right notification bell with unread dot, adjacent to avatar with camera/edit badge. Sub-screens show back chevron + screen title.
+   - **Bottom Navigation**: Floating pill dock on left/center with 3 icons (Home, Analytics, Budgets) + a distinct circular floating `+` FAB on the right (`#18212F` with white `+` in light mode; light grey `#E5E7EB` with dark `+` in dark mode).
    - Only the middle region scrolls (`overflow-y-auto overscroll-contain`).
 2. **Width Responsiveness (360 px to Desktop)**:
    - Phone designs are drawn at 412 px width, but **all layouts must be fluid**:
@@ -147,9 +165,31 @@ The redesign is anchored on mobile-first flexibility:
   - Height: `44px` minimum tap target.
   - Padding: `12px 18px`.
   - Unselected (Dark): `#262626` background, `#FFFFFF` text.
-  - Selected (Dark): `#262626` background with `2px solid #CBFF21` border and neon lime checkmark.
+  - Selected (Dark): `#262626` background with `2px solid #C6FF3D` border and neon lime checkmark.
   - Unselected (Light): `#F1F2F4` background, `#18212F` text.
-  - Selected (Light): `#FFFFFF` background with `2px solid #18212F` (or `#CBFF21`) border and subtle shadow.
+  - Selected (Light): `#FFFFFF` background with `2px solid #18212F` border and subtle shadow.
+
+### 5.3 PIN Lock Screen (`10-pin-lock`)
+- Numeric keypad with digits 0-9 and backspace.
+- **NO biometric button** (biometrics were deliberately removed from the app).
+- 4-dot or 6-dot indicator with active filled states.
+
+### 5.4 Guest Mode & Limits
+- **NO guest limit popup**: Guests are not blocked from any feature.
+- Only the existing sticky `GuestBanner` ("Guest Mode — data stored locally") and the existing "Create account" prompt are restyled to match the new visual tokens.
+
+### 5.5 Sync Error State
+- Keep the existing full-screen `SyncRetryScreen` ("Unable to sync data") with **Retry** and **Sign out** buttons.
+
+### 5.6 Logo Files Specification
+- `design/assets/logo-on-dark.svg` and `logo-on-light.svg` are SVG wrappers around embedded PNG bitmaps (`750x750` and `500x500` respectively).
+- To preserve maximum sharpness, these assets are rendered at targeted sizes (&le; 180px) and accompanied by native Android 12+ drawables for the system splash.
+
+### 5.7 Unverified Tokens
+The following sampled values are noted:
+1. `color.wordmark.light`: Sampled `#4D6E18` to `#56791E` (dark olive-lime for light splash wordmark) — **UNVERIFIED**.
+2. `glow-corner.svg` and `glow-corner-on-light.svg`: True vector corner light assets provided in `design/assets/` using `#C6FF3D` and Gaussian blur filter. Verified and integrated as `<CornerGlow />` component.
+3. `stroke.light-grid`: Subtle grid line stroke on light onboarding canvas (`rgba(0, 0, 0, 0.03)`) — **UNVERIFIED**.
 
 ---
 

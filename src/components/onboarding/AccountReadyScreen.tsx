@@ -52,7 +52,7 @@ export const AccountReadyScreen: React.FC = () => {
       </div>
 
       {/* Headings matching reference image 7 */}
-      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
+      <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
         Your account is ready
       </h1>
       <p className="text-base text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2">

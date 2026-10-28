@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { TrendingUp, PieChart, Sparkles, Shield, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import logoImg from '../../assets/brand/logo.png';
+import { CornerGlow } from '../ui/CornerGlow';
 import { useAuth, AuthMode } from '../../context/AuthContext';
 import { isTauri, getNativePlatform } from '../../utils/platform';
 import {
@@ -121,6 +122,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
 
       {/* Main Container */}
       <div className="w-full h-full min-h-screen md:min-h-[720px] md:h-auto md:max-w-lg lg:max-w-xl md:my-8 bg-white dark:bg-[#0D1220] md:rounded-[36px] md:border md:border-gray-200/80 md:dark:border-[#1e263c] md:shadow-2xl md:shadow-black/20 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden transition-all">
+        <CornerGlow />
         {/* Top Header with Brand Logo */}
         <div>
           <div className="flex items-center gap-3 mb-4">
@@ -135,7 +137,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white leading-[1.15] mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white leading-[1.15] mb-2">
             Money that <br className="hidden sm:inline" />
             works for you
           </h1>
@@ -171,7 +173,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
             {/* Balance Tracker Display */}
             <div className="mb-3">
               <span className="text-xs text-gray-400 font-medium block">Net Savings Rate</span>
-              <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-0.5 flex items-baseline gap-1">
+              <div className="text-3xl sm:text-4xl font-bold tracking-tight mt-0.5 flex items-baseline gap-1">
                 <span>92.4</span>
                 <span className="text-emerald-400 text-2xl font-bold">%</span>
                 <span className="text-xs text-gray-400 font-normal ml-2">Score: Excellent</span>

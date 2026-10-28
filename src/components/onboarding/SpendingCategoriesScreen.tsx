@@ -67,7 +67,7 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
 
         {/* Headings matching reference image 8 */}
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
             Choose spending categories
           </h1>
           <p className="text-base text-gray-500 dark:text-gray-400">
