@@ -69,3 +69,57 @@ Documented in `design/FRAMES.md`:
   4. Currency Selector sheet (`CurrencyPickerModal.tsx`)
   5. Password Reset / Recovery modal
   6. Account Delete & Data Export confirmation dialogs
+
+---
+
+## Slice 1: Auth & Onboarding Redesign
+
+### 1. Overview & Visual Architecture
+- **Canvas & Shell**:
+  - Dark Canvas: `#000000`, Light Canvas: `#F7F8FA`.
+  - Subtle background grid overlay: `.bg-grid-pattern` (`64px 52px` tile matching `background.svg`, `rgba(255, 255, 255, 0.05)` in dark mode, `rgba(0, 0, 0, 0.03)` in light mode).
+  - Ambient lighting: Top-right `<CornerGlow />` on all auth and onboarding screens.
+- **Brand Mark Positioning**:
+  - Top-left Centra mark on `02` (Intro), `06` (Appearance), and `07` (Categories).
+  - Top-right Centra mark on `03` (Auth), `04` (OTP verify), and `05` (Profile).
+- **Elevated Bottom Sheet Container**:
+  - `rounded-t-[32px]` on mobile, `rounded-[32px]` on desktop centered card.
+  - Surface fills: `#1D1D1D` in dark mode, `#FFFFFF` in light mode.
+  - Top drag handle pill (`w-12 h-1 rounded-full bg-gray-300 dark:bg-white/20`).
+  - Subtle top border (`border-black/5 dark:border-white/10`).
+- **Typography & Accessible Contrast Rules**:
+  - Strictly Outfit weights: `400` (Regular), `500` (Medium), `600` (SemiBold), `700` (Bold).
+  - Accented hero words ("Expenses.", "Last", "Your", "about"): `#C6FF3D` in dark mode, `#4D6E18` in light mode (guaranteeing WCAG AA compliance; neon lime is never used as raw text on light canvases).
+
+---
+
+### 2. Redesigned Screens & Components
+
+| Component | File Path | Reference Frame | Redesign & Behavioral Upgrades |
+| :--- | :--- | :--- | :--- |
+| **IntroScreen** | `src/components/onboarding/IntroScreen.tsx` | `02-onboarding-intro.png`, `03-auth.png` | Two-state seamless flow: (1) Intro hero display (`"Track Your Daily"` + `"Expenses."`), subtitle, and full-pill `#C6FF3D` `"Get Started"` CTA; (2) Auth bottom sheet (`"One Last Step"`), Sign in / Create account mode toggle, email input (`rounded-2xl`, `#2A2A2A` / `#E8ECEF`), pill submit button (`white` on dark, `#18212F` on light), `"Or"` divider, pill `"Continue with Google"`, conditional Apple button, and pill `"Explore Demo (Local)"` button. Preserves email validator, 2.5s OTP throttle, offline detector, and accessible test tags. |
+| **OtpScreen** | `src/components/auth/OtpScreen.tsx` | `04-verify-code.png` | Top canvas hero `"Verify Your Email"` + top-right logo + `<CornerGlow />`. Bottom sheet with 6 circular digit slots (`rounded-2xl`, min 44x44px, `#C6FF3D` focus rings, rose error state), resend cooldown timer, `"Use a different email"` action, full-pill `"Continue →"` button, and terms footer. Supports `one-time-code` autofill and clipboard paste. |
+| **ProfileInfoScreen** | `src/components/onboarding/ProfileInfoScreen.tsx` | `05-onboarding-profile.png` | Top canvas hero `"Tell us about Yourself"` + top-right logo + `<CornerGlow />`. Bottom sheet with circular avatar picker, neon-lime camera badge (`#C6FF3D`), and rounded card inputs (`#2A2A2A` / `#E8ECEF`) for Full Name, Date of Birth (DatePicker trigger), Country/Address, and Base Currency dropdown (`SUPPORTED_CURRENCIES`), followed by pill `"Continue →"` button. |
+| **ThemeSelectionScreen** | `src/components/onboarding/ThemeSelectionScreen.tsx` | `06-onboarding-appearance*.png` | Top-left Centra mark + `<CornerGlow />`. Bottom sheet with `"Appearance"` heading, `"Mode"` subtitle, and 3-column selector cards (System, Light, Dark) matching active/inactive fills in Figma reference frames, followed by pill `"Continue →"` button. |
+| **SpendingCategoriesScreen** | `src/components/onboarding/SpendingCategoriesScreen.tsx` | `07-onboarding-categories*.png` | Top-left Centra mark + `<CornerGlow />`. Bottom sheet with `"Choose spending categories"`, flex-wrap pill chips (min 44px height; unselected `#262626` / `#F1F2F4`, selected white pill with dark text or `#C6FF3D` ring), and full-pill `"Finish Setup ↗"` button. |
+| **OnboardingFlow** | `src/components/onboarding/OnboardingFlow.tsx` | *Self-Designed* | Shared layout wrapper with `#000000` / `#F7F8FA` grid background, safe area padding, and unified step navigation. |
+| **FirstAccountScreen** | `src/components/onboarding/FirstAccountScreen.tsx` | *Self-Designed* | Bottom-sheet account creation card with currency picker, type tabs, and amount field. |
+| **AccountReadyScreen** | `src/components/onboarding/AccountReadyScreen.tsx` | *Self-Designed* | Success completion card with Centra brand mark and full-pill `"Go to Dashboard"` CTA. |
+| **AccountIncompleteScreen** | `src/components/onboarding/AccountIncompleteScreen.tsx` | *Self-Designed* | Fallback prompt for incomplete onboarding profile setup. |
+| **NoAccountFoundScreen** | `src/components/onboarding/NoAccountFoundScreen.tsx` | *Self-Designed* | Recovery prompt for empty account state with create CTA. |
+| **ProfileErrorScreen** | `src/components/onboarding/ProfileErrorScreen.tsx` | *Self-Designed* | Error boundary screen for profile fetch failures with retry and sign-out buttons. |
+| **SupabaseConfigErrorScreen** | `src/components/auth/SupabaseConfigErrorScreen.tsx` | *Self-Designed* | Developer configuration guide for missing Supabase environment variables. |
+| **AuthCallbackScreen** | `src/components/auth/AuthCallbackScreen.tsx` | *Self-Designed* | Deep-link OAuth redirect handler with loading spinner and error fallback. |
+| **CentraLogo** | `src/components/auth/CentraLogo.tsx` | *Brand Mark* | Vector Centra brand mark with `#C6FF3D` accent dot (legacy `teal-400` removed). |
+
+---
+
+### 3. Verification & Compliance
+- **Zero Legacy Theme Clutter**: Verified 0 occurrences of `#0A0E1A`, `#0D1220`, `#121A2C`, `#131722`, `teal-*`, or `font-extrabold` in `src/components/onboarding/` and `src/components/auth/`.
+- **Protected Features**: Verified `git diff --exit-code src/utils/financeOperations.ts src/db/ supabase/migrations/` is completely empty (0 diff). Transfer feature 100% intact.
+- **Quality Gates**:
+  - `npm run typecheck`: PASS (0 errors).
+  - `npm run lint`: PASS (0 errors, 0 warnings).
+  - `npm test`: PASS (274/274 tests across 32 test files).
+  - `npm run build`: PASS (clean production bundle generated).
+

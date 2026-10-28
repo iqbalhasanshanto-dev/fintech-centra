@@ -24,7 +24,7 @@ export const CentraLogo: React.FC<CentraLogoProps> = ({
     <div className={`relative inline-flex items-center justify-center shrink-0 ${className}`}>
       {showGlow && (
         <div
-          className="absolute inset-0 rounded-full blur-xl opacity-60 bg-gradient-to-tr from-emerald-500/40 via-teal-400/30 to-amber-300/40 -z-10 animate-pulse"
+          className="absolute inset-0 rounded-full blur-xl opacity-60 bg-gradient-to-tr from-emerald-500/40 via-[#C6FF3D]/30 to-amber-300/40 -z-10 animate-pulse"
         />
       )}
       <img

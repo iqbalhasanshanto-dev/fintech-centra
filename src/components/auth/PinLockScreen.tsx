@@ -37,7 +37,7 @@ export const PinLockScreen: React.FC = () => {
 
         {/* Brand header */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-full bg-[#C6FF3D] text-[#0A0E1A] mx-auto flex items-center justify-center mb-3 shadow-md">
+          <div className="w-12 h-12 rounded-full bg-[#C6FF3D] text-black mx-auto flex items-center justify-center mb-3 shadow-md">
             <Shield className="w-6 h-6 stroke-[2.5]" />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -74,7 +74,7 @@ export const PinLockScreen: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full py-3 min-h-[44px] rounded-full bg-[#C6FF3D] hover:bg-[#B2E830] active:bg-[#9ECC27] text-[#0A0E1A] font-bold text-xs shadow-md transition-all cursor-pointer"
+            className="w-full py-3 min-h-[44px] rounded-full bg-[#C6FF3D] hover:bg-[#B2E830] active:bg-[#9ECC27] text-black font-bold text-xs shadow-md transition-all cursor-pointer"
           >
             Unlock
           </button>

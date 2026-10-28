@@ -55,6 +55,17 @@
   h1, h2, h3, h4, h5, h6, .font-display, .currency-amount, button, input, select, textarea, label {
     font-family: 'Outfit Variable', 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Bengali', sans-serif;
   }
+
+  .bg-grid-pattern {
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 64px 52px;
+  }
+  .dark .bg-grid-pattern {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 64px 52px;
+  }
 }
 
 /* =========================================================================

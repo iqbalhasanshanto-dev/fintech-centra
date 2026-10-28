@@ -63,7 +63,7 @@ export const SyncRetryScreen: React.FC<SyncRetryScreenProps> = ({ onRetry, onSig
             type="button"
             onClick={handleRetry}
             disabled={isRetrying}
-            className="w-full py-3.5 px-6 min-h-[44px] rounded-full bg-[#C6FF3D] hover:bg-[#B2E830] active:bg-[#9ECC27] text-[#0A0E1A] font-bold text-sm active:scale-[0.99] transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 px-6 min-h-[44px] rounded-full bg-[#C6FF3D] hover:bg-[#B2E830] active:bg-[#9ECC27] text-black font-bold text-sm active:scale-[0.99] transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
             <span>{isRetrying ? 'Retrying Sync...' : 'Retry Sync'}</span>

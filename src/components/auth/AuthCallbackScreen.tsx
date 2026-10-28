@@ -4,6 +4,7 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { logger } from '../../utils/logger';
 import logoImg from '../../assets/brand/logo.png';
+import { CornerGlow } from '../ui/CornerGlow';
 
 export const AuthCallbackScreen: React.FC = () => {
   const { setAuthView } = useAuth();
@@ -23,10 +24,8 @@ export const AuthCallbackScreen: React.FC = () => {
         if (!isMounted) return;
 
         if (session?.user) {
-          // Clear query params / hash without refreshing
           window.history.replaceState({}, document.title, window.location.pathname);
 
-          // Check profile onboarding status
           const { data: profile } = await supabase
             .from('profiles')
             .select('id, onboarding_completed')
@@ -49,10 +48,8 @@ export const AuthCallbackScreen: React.FC = () => {
       }
     };
 
-    // Check immediately
     checkSession();
 
-    // Listen for auth state change from supabase auto-exchange
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
@@ -74,7 +71,6 @@ export const AuthCallbackScreen: React.FC = () => {
       }
     });
 
-    // 10s fallback timeout
     const timeoutTimer = setTimeout(async () => {
       const resolved = await checkSession();
       if (!resolved && isMounted) {
@@ -90,8 +86,10 @@ export const AuthCallbackScreen: React.FC = () => {
   }, [setAuthView]);
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center p-6 transition-colors">
-      <div className="w-full max-w-sm bg-white dark:bg-[#0D1220] rounded-3xl p-8 border border-gray-200 dark:border-[#1e263c] shadow-2xl text-center animate-fade-in">
+    <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex items-center justify-center p-6 transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black">
+      <CornerGlow />
+
+      <div className="w-full max-w-sm bg-white dark:bg-[#1D1D1D] rounded-[32px] p-8 sm:p-10 border border-black/5 dark:border-white/10 shadow-2xl text-center animate-fade-in z-10">
         <div className="flex items-center justify-center gap-2 mb-6">
           <img
             src={logoImg}
@@ -99,7 +97,7 @@ export const AuthCallbackScreen: React.FC = () => {
             className="w-8 h-8 object-contain drop-shadow-sm select-none"
             draggable={false}
           />
-          <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white font-display">
+          <span className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white font-display">
             Centra
           </span>
         </div>
@@ -109,32 +107,26 @@ export const AuthCallbackScreen: React.FC = () => {
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto">
               <AlertCircle className="w-6 h-6" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">Sign In Failed</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
-                {errorMessage}
-              </p>
-            </div>
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+              {errorMessage}
+            </p>
             <button
               type="button"
-              onClick={() => {
-                window.history.replaceState({}, document.title, window.location.pathname);
-                setAuthView('signedOut');
-              }}
-              className="w-full py-3 px-4 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              onClick={() => setAuthView('signedOut')}
+              className="py-3 px-5 rounded-full bg-[#18212F] dark:bg-white text-white dark:text-black font-semibold text-xs transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-md"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-3.5 h-3.5" />
               <span>Return to sign in</span>
             </button>
           </div>
         ) : (
-          <div className="space-y-3 py-4">
-            <Loader2 className="w-8 h-8 animate-spin text-teal-500 mx-auto" />
-            <h2 className="text-base font-bold text-gray-900 dark:text-white">
-              Completing sign in...
+          <div className="space-y-4 py-4">
+            <Loader2 className="w-8 h-8 animate-spin text-[#18212F] dark:text-[#C6FF3D] mx-auto" />
+            <h2 className="text-lg font-bold text-[#18212F] dark:text-white">
+              Authenticating...
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Please wait while we verify your credentials.
+              Verifying your session, please wait.
             </p>
           </div>
         )}
