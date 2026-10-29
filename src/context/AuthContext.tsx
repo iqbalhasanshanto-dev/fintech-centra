@@ -100,10 +100,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useLayoutEffect(() => {
     isLockedByPinRef.current = isLockedByPin;
   }, [isLockedByPin]);
+
   const [isAppCovered, setIsAppCovered] = useState<boolean>(false);
   const [pendingEmail, setPendingEmail] = useState<string>('');
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [authView, setAuthView] = useState<AuthState>('loading');
+  const authViewRef = useRef<AuthState>(authView);
+  useLayoutEffect(() => {
+    authViewRef.current = authView;
+  }, [authView]);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
   const [oauthError, setOauthError] = useState<string | null>(null);
 
@@ -329,18 +334,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setTimeout(() => {
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-          if (lastUserIdRef.current === session.user.id && (authView === 'app' || authView === 'guest')) {
+          if (lastUserIdRef.current === session.user.id && (authViewRef.current === 'app' || authViewRef.current === 'guest')) {
             return;
           }
           handleSession(session);
         } else if (event === 'SIGNED_OUT') {
+          // Only perform sign out cleanup if user was actually in app session or locked.
+          // Never overwrite intermediate unauthenticated views like 'otp' or 'onboarding'.
+          if (authViewRef.current === 'otp' || authViewRef.current === 'onboarding') {
+            return;
+          }
+          const wasAuthenticated = !!lastUserIdRef.current;
           lastUserIdRef.current = null;
           setIsAuthenticated(false);
           setIsGuest(false);
           setPendingEmail('');
           setAuthView('signedOut');
-          CentraDB.clearAllData();
-          setUser(CentraDB.getUser());
+          if (wasAuthenticated) {
+            CentraDB.clearAllData();
+            setUser(CentraDB.getUser());
+          }
         }
       }, 0);
     });
@@ -348,7 +361,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, [authView, handleSession]);
+  }, [handleSession]);
 
   // Keep local user persistence in sync
   useEffect(() => {

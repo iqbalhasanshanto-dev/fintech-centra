@@ -21,7 +21,7 @@ export const DesktopDock: React.FC<DesktopDockProps> = ({
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 hidden md:flex items-center select-none pointer-events-none">
       <nav
-        className="px-3 py-2 rounded-full bg-white/95 dark:bg-[#121A2C]/95 backdrop-blur-md border border-gray-200 dark:border-[#232C45] shadow-2xl flex items-center space-x-1.5 pointer-events-auto transition-colors"
+        className="px-3 py-2 rounded-full bg-white/95 dark:bg-[#1D1D1D]/95 backdrop-blur-md border border-black/[0.06] dark:border-white/[0.08] shadow-2xl flex items-center space-x-1.5 pointer-events-auto transition-colors"
         aria-label="Desktop Navigation Dock"
       >
         {tabs.map(tab => {
@@ -35,7 +35,7 @@ export const DesktopDock: React.FC<DesktopDockProps> = ({
               className={`px-4 py-2 min-h-[38px] rounded-full flex items-center space-x-2 text-xs transition-all cursor-pointer ${
                 isActive
                   ? 'bg-brand-600 text-white dark:!bg-[#C6FF3D] dark:!text-[#171717] font-bold shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1A233A] font-medium'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#262626] font-medium'
               }`}
               aria-label={tab.label}
             >

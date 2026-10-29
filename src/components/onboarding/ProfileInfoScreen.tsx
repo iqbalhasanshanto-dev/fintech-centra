@@ -8,7 +8,11 @@ import {
   Coins,
   Check,
   Search,
+  Calendar,
+  AlertCircle,
 } from 'lucide-react';
+import logoImg from '../../assets/brand/logo.png';
+import { CornerGlow } from '../ui/CornerGlow';
 import { useAuth } from '../../context/AuthContext';
 import {
   SUPPORTED_CURRENCIES,
@@ -47,13 +51,12 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
 }) => {
   const { user, saveOnboardingProfile } = useAuth();
 
-  // All fields start EMPTY with grey hint-text only — no prefilled sample values!
   const [fullName, setFullName] = useState(initialName || user.name || '');
   const [dob, setDob] = useState('');
   const [country, setCountry] = useState('');
   const [address, setAddress] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user.avatarUrl);
-  const [currency, setCurrency] = useState<string>(''); // Unset until chosen or auto-suggested on country select
+  const [currency, setCurrency] = useState<string>('');
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [fullNameError, setFullNameError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
@@ -115,7 +118,6 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     }
 
     try {
-      // Decode, downscale to max 512px, strip EXIF metadata, cap at ~100 KB
       const processed = await processImage(file, {
         maxDimension: MAX_AVATAR_DIMENSION,
         maxSizeBytes: MAX_AVATAR_BYTES,
@@ -136,7 +138,6 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
         }
       }
 
-      // Fallback: Store lightweight, downscaled, clean base64 data URL
       setAvatarUrl(processed.dataUrl);
       setAvatarUploading(false);
     } catch {
@@ -145,7 +146,6 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     }
   };
 
-  // When Country is selected, auto-suggest currency
   const handleSelectCountry = (countryName: string) => {
     setCountry(countryName);
     setIsCountryOpen(false);
@@ -205,7 +205,6 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     const cleanDob = sanitizeText(dob, 20);
     const cleanAddress = address.trim() ? sanitizeText(address, 200) : '';
 
-    // Save profile data into AuthContext / CentraDB
     await saveOnboardingProfile({
       name: cleanName,
       dob: cleanDob,
@@ -228,78 +227,77 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
   const selectedCurrencyInfo = getCurrencyInfo(currency);
 
   return (
-    <div className="w-full flex flex-col justify-between min-h-full py-4 px-4 sm:px-8">
-      {/* Top Header & Progress */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-wider">
-            Step 3/5
-          </span>
-          <div className="w-7" />
-        </div>
+    <div
+      className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex flex-col justify-between relative overflow-hidden transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black"
+      style={{
+        paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
+        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+      }}
+    >
+      <CornerGlow />
 
-        {/* Progress Line: 60% */}
-        <div className="w-full h-1 bg-gray-200 dark:bg-[#1e2638] rounded-full mb-6 overflow-hidden">
-          <div className="h-full bg-black dark:bg-white rounded-full transition-all duration-500 w-[60%]" />
-        </div>
-
-        {/* Headings matching reference image 5 */}
-        <div className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
-            Tell us about you
-          </h1>
-          <p className="text-base text-gray-500 dark:text-gray-400">
-            We use this info to create your account and keep it secure.
-          </p>
-        </div>
-
-        {errorMessage && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium">
-            {errorMessage}
+      <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10 animate-fade-in">
+        {/* Top Canvas Header: Hero Text + Centra Brand Mark (Top-Right) */}
+        <div className="px-6 pt-4 pb-4 flex items-start justify-between">
+          <div>
+            <button
+              type="button"
+              onClick={onBack}
+              className="mb-3 p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] text-[#18212F] dark:text-white">
+              Tell us<br />
+              <span className="text-[#4D6E18] dark:text-[#C6FF3D]">about</span><br />
+              Yourself
+            </h1>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Avatar upload section */}
-          <div className="flex items-center gap-4 py-2">
+          <div className="pt-1">
+            <img
+              src={logoImg}
+              alt="Centra"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none"
+              draggable={false}
+            />
+          </div>
+        </div>
+
+        {/* Elevated Bottom Sheet Card (05-onboarding-profile.png) */}
+        <div className="w-full bg-white dark:bg-[#1D1D1D] rounded-t-[32px] md:rounded-[32px] border-t md:border border-black/5 dark:border-white/10 shadow-2xl p-6 sm:p-8 flex flex-col transition-all">
+          {/* Drag Handle */}
+          <div className="w-12 h-1 rounded-full bg-gray-300 dark:bg-white/20 mx-auto mb-4" />
+
+          {/* Centered Avatar Picker with Neon Lime Camera Badge */}
+          <div className="flex flex-col items-center justify-center mb-5">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="relative w-16 h-16 rounded-full bg-gray-100 dark:bg-[#131722] border-2 border-dashed border-gray-300 dark:border-[#232c44] hover:border-black dark:hover:border-white transition-all cursor-pointer flex items-center justify-center overflow-hidden group shrink-0"
+              className="relative w-20 h-20 rounded-full bg-gray-200 dark:bg-[#2A2A2A] border-2 border-black/10 dark:border-white/10 hover:border-[#C6FF3D] transition-all cursor-pointer flex items-center justify-center overflow-visible group shrink-0"
               title="Tap to upload profile picture"
             >
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt="Profile Avatar"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-full"
                 />
               ) : (
-                <User className="w-7 h-7 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition-colors" />
+                <User className="w-9 h-9 text-gray-400 dark:text-gray-500" />
               )}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                <Camera className="w-5 h-5" />
+              {/* Neon Lime Camera Badge */}
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#C6FF3D] text-black flex items-center justify-center shadow-md border-2 border-white dark:border-[#1D1D1D]">
+                <Camera className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-sm font-semibold text-gray-900 dark:text-white hover:underline block text-left cursor-pointer"
-              >
-                {avatarUploading ? 'Uploading...' : avatarUrl ? 'Change photo' : 'Add photo'}
-              </button>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                JPG, PNG or WEBP (Optional)
-              </span>
-            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mt-2 cursor-pointer"
+            >
+              {avatarUploading ? 'Uploading...' : avatarUrl ? 'Change Photo (Optional)' : 'Add Photo (Optional)'}
+            </button>
             <input
               ref={fileInputRef}
               type="file"
@@ -309,187 +307,199 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
             />
           </div>
 
-          {/* Full Name field */}
-          <div>
-            <input
-              type="text"
-              value={fullName}
-              onChange={e => handleFullNameChange(e.target.value)}
-              placeholder="Full Name"
-              required
-              className={`w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border ${
-                fullNameError ? 'border-rose-500 focus:ring-rose-500' : 'border-gray-200 dark:border-[#232c44] focus:ring-black dark:focus:ring-white'
-              } text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all text-base`}
-            />
-            {fullNameError && (
-              <p className="mt-1.5 px-1 text-xs text-rose-500 font-medium">{fullNameError}</p>
-            )}
-          </div>
+          {errorMessage && (
+            <div className="mb-4 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
-          {/* Date of Birth field */}
-          <div className="relative">
-            <input
-              type="date"
-              value={dob}
-              onChange={e => setDob(e.target.value)}
-              placeholder="Date of Birth"
-              className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all text-base"
-            />
-          </div>
+          {/* Form Fields: Full Name, Date of Birth, Country, Currency, Address */}
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Full Name */}
+            <div>
+              <input
+                type="text"
+                value={fullName}
+                onChange={e => handleFullNameChange(e.target.value)}
+                placeholder="Full Name"
+                required
+                className={`w-full px-5 py-3.5 rounded-2xl bg-[#E8ECEF] dark:bg-[#2A2A2A] border ${
+                  fullNameError
+                    ? 'border-rose-500 focus:ring-rose-500'
+                    : 'border-transparent focus:border-[#C6FF3D] focus:ring-[#C6FF3D]'
+                } text-[#18212F] dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all text-sm font-medium`}
+              />
+              {fullNameError && (
+                <p className="mt-1 px-1 text-xs text-rose-500 font-medium">{fullNameError}</p>
+              )}
+            </div>
 
-          {/* Country/Region searchable dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setIsCountryOpen(!isCountryOpen);
-                setIsCurrencyOpen(false);
-              }}
-              className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-left flex items-center justify-between transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
-            >
-              <span className={country ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
-                {country ? (
-                  <span className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    {country}
-                  </span>
-                ) : (
-                  'Country/Region'
-                )}
-              </span>
-              <ChevronDown className="w-5 h-5 text-gray-400" />
-            </button>
+            {/* Date of Birth with Calendar Icon */}
+            <div className="relative">
+              <input
+                type="date"
+                value={dob}
+                onChange={e => setDob(e.target.value)}
+                placeholder="Date of Birth"
+                className="w-full px-5 py-3.5 pr-12 rounded-2xl bg-[#E8ECEF] dark:bg-[#2A2A2A] border border-transparent text-[#18212F] dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:border-[#C6FF3D] focus:ring-2 focus:ring-[#C6FF3D] transition-all text-sm font-medium"
+              />
+              <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
 
-            {isCountryOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 p-2 bg-white dark:bg-[#171e2e] border border-gray-200 dark:border-[#28344e] rounded-2xl shadow-2xl z-30 max-h-60 overflow-hidden flex flex-col">
-                <div className="p-2 border-b border-gray-100 dark:border-white/5">
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={countrySearch}
-                      onChange={e => setCountrySearch(e.target.value)}
-                      placeholder="Search country..."
-                      className="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-[#121724] rounded-xl text-xs text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="overflow-y-auto divide-y divide-gray-50 dark:divide-white/5">
-                  {filteredCountries.map(c => (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => handleSelectCountry(c.name)}
-                      className="w-full px-3 py-2.5 text-left text-xs font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors flex items-center justify-between"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>{c.flag}</span>
-                        <span>{c.name}</span>
-                      </span>
-                      {country === c.name && <Check className="w-4 h-4 text-emerald-500" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Primary Currency selection (auto-suggested by country, fully editable/searchable) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setIsCurrencyOpen(!isCurrencyOpen);
-                setIsCountryOpen(false);
-              }}
-              className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-left flex items-center justify-between transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
-            >
-              <div className="flex items-center gap-2">
-                <Coins className="w-4 h-4 text-gray-400" />
-                <span className={currency ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
-                  {currency ? (
-                    <span>
-                      {selectedCurrencyInfo.flag} {selectedCurrencyInfo.code} ({selectedCurrencyInfo.symbol}) -{' '}
-                      {selectedCurrencyInfo.name}
+            {/* Country Selector */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCountryOpen(!isCountryOpen);
+                  setIsCurrencyOpen(false);
+                }}
+                className="w-full px-5 py-3.5 rounded-2xl bg-[#E8ECEF] dark:bg-[#2A2A2A] border border-transparent text-left flex items-center justify-between transition-all cursor-pointer focus:outline-none focus:border-[#C6FF3D] focus:ring-2 focus:ring-[#C6FF3D] text-sm font-medium"
+              >
+                <span className={country ? 'text-[#18212F] dark:text-white' : 'text-gray-500 dark:text-gray-400'}>
+                  {country ? (
+                    <span className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      {country}
                     </span>
                   ) : (
-                    'Base Currency (Auto-suggested with Country)'
+                    'Country'
                   )}
                 </span>
-              </div>
-              <ChevronDown className="w-5 h-5 text-gray-400" />
-            </button>
+                <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              </button>
 
-            {isCurrencyOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 p-2 bg-white dark:bg-[#171e2e] border border-gray-200 dark:border-[#28344e] rounded-2xl shadow-2xl z-30 max-h-60 overflow-hidden flex flex-col">
-                <div className="p-2 border-b border-gray-100 dark:border-white/5">
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={currencySearch}
-                      onChange={e => setCurrencySearch(e.target.value)}
-                      placeholder="Search currency code or name..."
-                      className="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-[#121724] rounded-xl text-xs text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
-                    />
+              {isCountryOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 p-2 bg-white dark:bg-[#262626] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl z-30 max-h-60 overflow-hidden flex flex-col">
+                  <div className="p-2 border-b border-gray-100 dark:border-white/5">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={countrySearch}
+                        onChange={e => setCountrySearch(e.target.value)}
+                        placeholder="Search country..."
+                        className="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-[#1D1D1D] rounded-xl text-xs text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="overflow-y-auto divide-y divide-gray-50 dark:divide-white/5">
+                    {filteredCountries.map(c => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => handleSelectCountry(c.name)}
+                        className="w-full px-3 py-2.5 text-left text-xs font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors flex items-center justify-between cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>{c.flag}</span>
+                          <span>{c.name}</span>
+                        </span>
+                        {country === c.name && <Check className="w-4 h-4 text-emerald-500" />}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div className="overflow-y-auto divide-y divide-gray-50 dark:divide-white/5">
-                  {filteredCurrencies.map(c => (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => handleSelectCurrency(c.code)}
-                      className="w-full px-3 py-2.5 text-left text-xs font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors flex items-center justify-between"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>{c.flag}</span>
-                        <span className="font-bold">{c.code}</span>
-                        <span className="text-gray-400">({c.symbol})</span>
-                        <span>{c.name}</span>
+              )}
+            </div>
+
+            {/* Base Currency Selector */}
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Base Currency"
+                onClick={() => {
+                  setIsCurrencyOpen(!isCurrencyOpen);
+                  setIsCountryOpen(false);
+                }}
+                className="w-full px-5 py-3.5 rounded-2xl bg-[#E8ECEF] dark:bg-[#2A2A2A] border border-transparent text-left flex items-center justify-between transition-all cursor-pointer focus:outline-none focus:border-[#C6FF3D] focus:ring-2 focus:ring-[#C6FF3D] text-sm font-medium"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Coins className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span className={`truncate ${currency ? 'text-[#18212F] dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                    {currency ? (
+                      <span>
+                        {selectedCurrencyInfo.flag} {selectedCurrencyInfo.code} ({selectedCurrencyInfo.symbol}) -{' '}
+                        {selectedCurrencyInfo.name}
                       </span>
-                      {currency === c.code && <Check className="w-4 h-4 text-emerald-500" />}
-                    </button>
-                  ))}
+                    ) : (
+                      'Currency'
+                    )}
+                  </span>
                 </div>
-                <div className="p-2 border-t border-gray-100 dark:border-white/5 text-[10px] text-gray-400 text-center">
-                  Exchange rates updated: {RATES_LAST_UPDATED}
+                <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+              </button>
+
+              {isCurrencyOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 p-2 bg-white dark:bg-[#262626] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl z-30 max-h-60 overflow-hidden flex flex-col">
+                  <div className="p-2 border-b border-gray-100 dark:border-white/5">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={currencySearch}
+                        onChange={e => setCurrencySearch(e.target.value)}
+                        placeholder="Search currency code or name..."
+                        className="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-[#1D1D1D] rounded-xl text-xs text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="overflow-y-auto divide-y divide-gray-50 dark:divide-white/5">
+                    {filteredCurrencies.map(c => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => handleSelectCurrency(c.code)}
+                        className="w-full px-3 py-2.5 text-left text-xs font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors flex items-center justify-between cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>{c.flag}</span>
+                          <span className="font-bold">{c.code}</span>
+                          <span className="text-gray-400">({c.symbol})</span>
+                          <span>{c.name}</span>
+                        </span>
+                        {currency === c.code && <Check className="w-4 h-4 text-emerald-500" />}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="p-2 border-t border-gray-100 dark:border-white/5 text-[10px] text-gray-400 text-center">
+                    Exchange rates updated: {RATES_LAST_UPDATED}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Address field */}
-          <div>
-            <input
-              type="text"
-              value={address}
-              onChange={e => handleAddressChange(e.target.value)}
-              placeholder="Address"
-              className={`w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-[#131722] border ${
-                addressError ? 'border-rose-500 focus:ring-rose-500' : 'border-gray-200 dark:border-[#232c44] focus:ring-black dark:focus:ring-white'
-              } text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all text-base`}
-            />
-            {addressError && (
-              <p className="mt-1.5 px-1 text-xs text-rose-500 font-medium">{addressError}</p>
-            )}
-          </div>
+            {/* Optional Address input */}
+            <div>
+              <input
+                type="text"
+                value={address}
+                onChange={e => handleAddressChange(e.target.value)}
+                placeholder="Address (Optional)"
+                className={`w-full px-5 py-3.5 rounded-2xl bg-[#E8ECEF] dark:bg-[#2A2A2A] border ${
+                  addressError
+                    ? 'border-rose-500 focus:ring-rose-500'
+                    : 'border-transparent focus:border-[#C6FF3D] focus:ring-[#C6FF3D]'
+                } text-[#18212F] dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all text-sm font-medium`}
+              />
+              {addressError && (
+                <p className="mt-1 px-1 text-xs text-rose-500 font-medium">{addressError}</p>
+              )}
+            </div>
 
-          {/* Continue Button */}
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={!fullName.trim() || !country || !currency || !!fullNameError || !!addressError}
-              className={`w-full py-4 px-6 rounded-full font-bold text-base transition-all shadow-lg flex items-center justify-center gap-2 ${
-                !fullName.trim() || !country || !currency || !!fullNameError || !!addressError
-                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed opacity-60'
-                  : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-[0.99] cursor-pointer'
-              }`}
-            >
-              <span>Continue</span>
-            </button>
-          </div>
-        </form>
+            {/* Submit Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={!fullName.trim() || !country || !currency || !!fullNameError || !!addressError}
+                className="w-full py-4 px-6 rounded-full bg-[#18212F] dark:bg-white text-white dark:text-black font-bold text-base hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>Continue →</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

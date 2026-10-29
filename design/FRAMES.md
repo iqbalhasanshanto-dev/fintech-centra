@@ -24,7 +24,8 @@ This document registers every visual screen frame exported from Figma for the Ce
 | `04-verify-code.png` | Dark: `04. Verification-page.png`<br>Light: `Verification — Light.png` | 824 × 1834<br>(D: 515.7 KB, L: 229.8 KB) | Both | Phone Frame (412 @1x / 824 @2x) |
 | `05-onboarding-profile.png` | Dark: `05. Personal-Details.png`<br>Light: `Choosing options — Light.png` *(misnamed in Figma)* | 824 × 1834<br>(D: 563.6 KB, L: 382.8 KB) | Both | Phone Frame (412 @1x / 824 @2x) |
 | `06-onboarding-appearance.png` | Dark: `06. Appearance-page.png`<br>Light: `Appearance — Light-1.png` | 824 × 1834<br>(D: 561.4 KB, L: 269.1 KB) | Both | Phone Frame *(System Mode selected)* |
-| `06-onboarding-appearance--dark-selected.png` | Dark: `07. Appearance-Dark.png`<br>Light: `Appearance — Light.png` | 824 × 1834<br>(D: 561.5 KB, L: 269.2 KB) | Both | Phone Frame *(D: Dark active / L: Light active)* |
+| `06-onboarding-appearance--dark-selected.png` | Dark: `07. Appearance-Dark.png`<br>Light: *(None)* | 824 × 1834<br>(Dark: 561.5 KB) | Dark only | Phone Frame *(Dark option active)* |
+| `06-onboarding-appearance--light-selected.png` | Dark: *(None)*<br>Light: `Appearance — Light.png` | 824 × 1834<br>(Light: 269.2 KB) | Light only | Phone Frame *(Light option active)* |
 | `07-onboarding-categories.png` | Dark: `08. Choosing-options.png`<br>Light: `Choosing options — Light-1.png` | 824 × 1834<br>(D: 577.3 KB, L: 291.9 KB) | Both | Phone Frame *(Category pills unselected)* |
 | `07-onboarding-categories--selected.png` | Dark: `08.5 Choosing-options-after-select.png`<br>Light: *(None)* | 824 × 1834<br>(Dark: 576.1 KB) | Dark only | Phone Frame *(Category pills selected)* |
 | `08-home.png` | Dark: `09. Dashboard.png`<br>Light: `Home — Light.png` | 824 × 1834<br>(D: 376.7 KB, L: 197.7 KB) | Both | Phone Frame (Home Dashboard) |
@@ -64,7 +65,8 @@ This document registers every visual screen frame exported from Figma for the Ce
 ## 3. Discrepancy & Dimension Reports
 
 ### Frames Present in Only One Theme
-1. **Present in `dark/` only (7 frames)**:
+1. **Present in `dark/` only (8 frames)**:
+   - `06-onboarding-appearance--dark-selected.png` (824 × 1834): Dark mode option active.
    - `07-onboarding-categories--selected.png` (824 × 1834): Demonstrates category pills selected state with lime borders.
    - `08-home--full.png` (824 × 1858): Home scrolling content without viewport cutoff.
    - `09-notifications--full.png` (824 × 1906): Notifications scrolling content without viewport cutoff.
@@ -72,7 +74,8 @@ This document registers every visual screen frame exported from Figma for the Ce
    - `13-budgets--full.png` (800 × 2162): Goals & Budgets full scrolling content.
    - `14-settings--full.png` (800 × 2180): Settings full scrolling content.
    - `14-settings-logout-row.png` (824 × 1834): Bottom scroll position of Settings revealing the Logout row.
-2. **Present in `light/` only (1 frame)**:
+2. **Present in `light/` only (2 frames)**:
+   - `06-onboarding-appearance--light-selected.png` (824 × 1834): Light mode option active (renamed from `06-onboarding-appearance--dark-selected.png` as it visually displays the light pill active).
    - `FULL SCREEN — Light.png` (4376 × 2272): Composite Figma artboard containing all 5 Light full-page screens (`Home`, `Notifications`, `Analytics`, `Goals & Budget`, `Settings`) arranged side-by-side.
 
 ### Frames Whose Width is Not 412 px (at @1x) / 824 px (at @2x)

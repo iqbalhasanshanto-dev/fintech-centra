@@ -6,12 +6,15 @@ import {
   X,
   Receipt,
   AlertCircle,
-  Wallet
+  Wallet,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { AddAccountModal } from './AddAccountModal';
+import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency } from '../../utils/formatters';
 import { getCurrencyInfo } from '../../utils/currencies';
 import { todayLocalDateKey } from '../../utils/dates';
@@ -26,6 +29,165 @@ interface AddActionModalProps {
   onClose: () => void;
   defaultTab?: 'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income';
 }
+
+interface PickerOption {
+  id: string;
+  name: string;
+  icon?: string;
+  badge?: string;
+}
+
+interface FigmaPickerFieldProps {
+  id: string;
+  label: string;
+  contextOverline: string;
+  title: string;
+  options: PickerOption[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+  placeholder?: string;
+}
+
+const FigmaPickerField: React.FC<FigmaPickerFieldProps> = ({
+  id,
+  label,
+  contextOverline,
+  title,
+  options,
+  selectedId,
+  onSelect,
+  isOpen,
+  onToggle,
+  placeholder,
+}) => {
+  const selectedOption = options.find(o => o.id === selectedId);
+
+  return (
+    <div>
+      <label htmlFor={id} className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
+        {label}
+      </label>
+
+      {/* Expanded Picker Card (15-picker-*.png) */}
+      {isOpen ? (
+        <div className="rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.08] dark:border-white/[0.12] p-4 sm:p-5 shadow-2xl space-y-3 animate-scale-in">
+          {/* Header row with overline, title, and chevron-up */}
+          <div
+            onClick={onToggle}
+            className="flex items-center justify-between cursor-pointer select-none"
+          >
+            <div>
+              <span className="text-[11px] font-medium text-gray-500 dark:text-white/60 tracking-wider uppercase block">
+                {contextOverline}
+              </span>
+              <h4 className="text-base sm:text-lg font-bold text-[#18212F] dark:text-white mt-0.5">
+                {title}
+              </h4>
+            </div>
+            <div className="w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <ChevronUp className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="h-px w-full bg-black/[0.08] dark:bg-white/[0.10]" />
+
+          {/* Option rows */}
+          <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
+            {options.map(opt => {
+              const isSelected = opt.id === selectedId;
+              return (
+                <div
+                  key={opt.id}
+                  onClick={() => {
+                    onSelect(opt.id);
+                    onToggle();
+                  }}
+                  className={`w-full p-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-colors select-none ${
+                    isSelected
+                      ? 'bg-[#4D6E18]/10 text-[#4D6E18] dark:bg-[#C6FF3D]/15 dark:text-[#C6FF3D] font-semibold'
+                      : 'text-[#18212F] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0 pr-2">
+                    {opt.icon ? (
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        isSelected ? 'bg-[#4D6E18]/15 dark:bg-[#C6FF3D]/20 text-[#4D6E18] dark:text-[#C6FF3D]' : 'bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                      }`}>
+                        <CategoryIcon name={opt.icon} className="w-4 h-4" />
+                      </div>
+                    ) : (
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        isSelected ? 'bg-[#4D6E18]/15 dark:bg-[#C6FF3D]/20 text-[#4D6E18] dark:text-[#C6FF3D]' : 'bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                      }`}>
+                        <Wallet className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm truncate">{opt.name}</p>
+                      {opt.badge && (
+                        <p className="text-[11px] opacity-70 truncate">{opt.badge}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 ml-2">
+                    {isSelected ? (
+                      <div className="w-5 h-5 rounded-full bg-[#C6FF3D] text-[#0A0E1A] flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border border-black/20 dark:border-white/20" />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* Collapsed Input Box */
+        <button
+          type="button"
+          onClick={onToggle}
+          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs flex items-center justify-between cursor-pointer hover:border-[#C6FF3D] transition-colors text-left"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            {selectedOption?.icon ? (
+              <CategoryIcon name={selectedOption.icon} className="w-4 h-4 text-gray-500 shrink-0" />
+            ) : (
+              <Wallet className="w-4 h-4 text-gray-500 shrink-0" />
+            )}
+            <span className="truncate font-semibold">
+              {selectedOption ? selectedOption.name : placeholder || 'Select...'}
+            </span>
+            {selectedOption?.badge && (
+              <span className="text-[11px] text-gray-400 truncate">({selectedOption.badge})</span>
+            )}
+          </div>
+          <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
+        </button>
+      )}
+
+      {/* Hidden Synchronized Select for Vitest / Testing Library compatibility */}
+      <select
+        id={id}
+        value={selectedId}
+        onChange={e => onSelect(e.target.value)}
+        className="sr-only"
+        aria-label={label}
+        tabIndex={-1}
+      >
+        {options.map(opt => (
+          <option key={opt.id} value={opt.id}>
+            {opt.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
 
 export const AddActionModal: React.FC<AddActionModalProps> = ({
   isOpen,
@@ -44,6 +206,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   // Mode: 'spend' | 'income' | 'transfer' | 'goal' | 'budget'
   const [activeTab, setActiveTab] = useState<'spend' | 'income' | 'transfer' | 'goal' | 'budget'>('spend');
+  const [openPicker, setOpenPicker] = useState<'category' | 'account' | 'budgetCategory' | 'fromAccount' | 'toAccount' | null>(null);
 
   // Sub-modal for adding an account on the fly from empty states
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
@@ -53,7 +216,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize active tab with defaultTab prop when modal opens
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize active tab and picker with defaultTab prop when modal opens
+      setOpenPicker(null);
       if (defaultTab === 'transfer') setActiveTab('transfer');
       else if (defaultTab === 'goal') setActiveTab('goal');
       else if (defaultTab === 'budget') setActiveTab('budget');
@@ -116,6 +280,40 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     });
   }, [categories]);
 
+  const categoryOptions = useMemo(() => {
+    return availableCategories.map(c => ({
+      id: c.id,
+      name: c.name,
+      icon: c.icon,
+    }));
+  }, [availableCategories]);
+
+  const budgetCategoryOptions = useMemo(() => {
+    return availableBudgetCategories.map(c => ({
+      id: c.id,
+      name: c.name,
+      icon: c.icon,
+    }));
+  }, [availableBudgetCategories]);
+
+  const accountOptions = useMemo(() => {
+    return accounts.map(a => ({
+      id: a.id,
+      name: a.name,
+      badge: `Balance: ${formatCurrency(a.balance, a.currency)}`,
+    }));
+  }, [accounts]);
+
+  const toAccountOptions = useMemo(() => {
+    return accounts
+      .filter(a => a.id !== fromAccountId)
+      .map(a => ({
+        id: a.id,
+        name: a.name,
+        badge: `Balance: ${formatCurrency(a.balance, a.currency)}`,
+      }));
+  }, [accounts, fromAccountId]);
+
   // Dynamic state synchronization effect (runs whenever modal opens, data changes, or tab changes)
   useEffect(() => {
     if (isOpen) {
@@ -169,8 +367,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     }
   }, [isOpen, activeTab, availableCategories, availableBudgetCategories, accounts, categoryId, accountId, fromAccountId, toAccountId, budgetCategoryId]);
 
-  const handleFromAccountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newFromId = e.target.value;
+  const handleFromAccountSelect = (newFromId: string) => {
     setFromAccountId(newFromId);
     if (toAccountId === newFromId) {
       const nextOther = accounts.find(a => a.id !== newFromId);
@@ -498,24 +695,13 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       >
         <div className="space-y-4">
           {/* Top Segmented Control */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] rounded-xl text-xs font-semibold overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1 p-1 bg-[#F1F2F4] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-full text-xs font-semibold overflow-x-auto no-scrollbar">
             <button
               type="button"
-              onClick={() => setActiveTab('spend')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
-                activeTab === 'spend'
-                  ? 'bg-white dark:bg-[#121A2C] text-rose-600 dark:text-rose-400 shadow-xs font-bold'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Spend
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('income')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
+              onClick={() => { setActiveTab('income'); setOpenPicker(null); }}
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'income'
-                  ? 'bg-white dark:bg-[#121A2C] text-emerald-600 dark:text-emerald-400 shadow-xs font-bold'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-[#16A34A] dark:text-[#22C55E] shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -523,36 +709,47 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('transfer')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
-                activeTab === 'transfer'
-                  ? 'bg-white dark:bg-[#121A2C] text-brand-600 dark:text-brand-400 shadow-xs font-bold'
+              onClick={() => { setActiveTab('spend'); setOpenPicker(null); }}
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
+                activeTab === 'spend'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-[#E11D48] dark:text-[#F43F5E] shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              Transfer
+              Spend
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('goal')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
+              onClick={() => { setActiveTab('goal'); setOpenPicker(null); }}
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'goal'
-                  ? 'bg-white dark:bg-[#121A2C] text-brand-600 dark:text-brand-400 shadow-xs font-bold'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-[#EA580C] dark:text-[#FB923C] shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              Goal
+              Goals
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('budget')}
-              className={`flex-1 min-w-[60px] py-2 px-2.5 rounded-lg text-center transition-colors cursor-pointer ${
+              onClick={() => { setActiveTab('budget'); setOpenPicker(null); }}
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'budget'
-                  ? 'bg-white dark:bg-[#121A2C] text-brand-600 dark:text-brand-400 shadow-xs font-bold'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-[#0891B2] dark:text-[#22D3EE] shadow-xs font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Budget
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab('transfer'); setOpenPicker(null); }}
+              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
+                activeTab === 'transfer'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-[#0284C7] dark:text-[#38BDF8] shadow-xs font-bold'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Transfer
             </button>
           </div>
 
@@ -572,12 +769,12 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           )}
 
           {/* Amount Input Card */}
-          <div className="p-5 rounded-2xl bg-gray-50 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45]">
+          <div className="p-5 rounded-2xl bg-[#F1F2F4] dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                 {activeTab === 'spend' ? 'Enter Expense Amount' : activeTab === 'income' ? 'Enter Income Amount' : activeTab === 'transfer' ? 'Enter Transfer Amount' : activeTab === 'goal' ? 'Enter Goal Target' : 'Enter Budget Limit'}
               </span>
-              <div className="flex items-center space-x-1.5 bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] px-2.5 py-1 rounded-lg text-xs text-gray-700 dark:text-gray-300">
+              <div className="flex items-center space-x-1.5 bg-white dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] px-2.5 py-1 rounded-lg text-xs text-gray-700 dark:text-gray-300">
                 <Calendar className="w-3.5 h-3.5 text-gray-400" />
                 <input
                   type="date"
@@ -589,7 +786,17 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             </div>
 
             <div className="relative flex items-center mt-2">
-              <span className="text-3xl font-bold text-gray-900 dark:text-white mr-2">
+              <span className={`text-3xl font-bold mr-2 ${
+                activeTab === 'spend'
+                  ? 'text-[#E11D48] dark:text-[#F43F5E]'
+                  : activeTab === 'income'
+                  ? 'text-[#16A34A] dark:text-[#22C55E]'
+                  : activeTab === 'goal'
+                  ? 'text-[#EA580C] dark:text-[#FB923C]'
+                  : activeTab === 'budget'
+                  ? 'text-[#0891B2] dark:text-[#22D3EE]'
+                  : 'text-[#0284C7] dark:text-[#38BDF8]'
+              }`}>
                 {activeCurrencyInfo.symbol}
               </span>
               <input
@@ -645,8 +852,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         setMerchantError(null);
                       }
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                      merchantError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                      merchantError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                     } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
                   {merchantError && (
@@ -654,27 +861,22 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   )}
                 </div>
 
-                <div>
-                  <label htmlFor="category-select" className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                    Category
-                  </label>
-                  <select
-                    id="category-select"
-                    value={categoryId}
-                    onChange={e => setCategoryId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
-                  >
-                    {availableCategories.map(c => (
-                      <option key={c.id} value={c.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <FigmaPickerField
+                  id="category-select"
+                  label="Category"
+                  contextOverline={activeTab === 'income' ? 'Income' : 'Spend & Budget'}
+                  title="Category"
+                  options={categoryOptions}
+                  selectedId={categoryId}
+                  onSelect={id => setCategoryId(id)}
+                  isOpen={openPicker === 'category'}
+                  onToggle={() => setOpenPicker(openPicker === 'category' ? null : 'category')}
+                  placeholder="Select category"
+                />
 
                 {/* Empty State for Accounts */}
                 {accounts.length === 0 ? (
-                  <div className="p-4 rounded-xl border border-dashed border-gray-300 dark:border-[#232C45] bg-gray-50/50 dark:bg-[#0A0E1A]/50 text-center">
+                  <div className="p-4 rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#1D1D1D]/50 text-center">
                     <Wallet className="w-6 h-6 mx-auto text-gray-400 dark:text-gray-500 mb-1.5" />
                     <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-0.5">
                       No accounts connected yet
@@ -693,23 +895,18 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     </Button>
                   </div>
                 ) : (
-                  <div>
-                    <label htmlFor="account-select" className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                      Payment Method / Account
-                    </label>
-                    <select
-                      id="account-select"
-                      value={accountId}
-                      onChange={e => setAccountId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
-                    >
-                      {accounts.map(a => (
-                        <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                          {a.name} — Balance: {formatCurrency(a.balance, a.currency)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <FigmaPickerField
+                    id="account-select"
+                    label="Payment Method / Account"
+                    contextOverline="Income & Spend"
+                    title="Payment method"
+                    options={accountOptions}
+                    selectedId={accountId}
+                    onSelect={id => setAccountId(id)}
+                    isOpen={openPicker === 'account'}
+                    onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
+                    placeholder="Select payment method"
+                  />
                 )}
 
                 <div>
@@ -730,8 +927,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         setNoteError(null);
                       }
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                      noteError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                      noteError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                     } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
                   {noteError && (
@@ -744,7 +941,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     Attach Receipt / Bill
                   </label>
                   {receiptName ? (
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-xs">
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-xs">
                       <div className="flex items-center space-x-2 truncate">
                         <Receipt className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
                         <span className="font-semibold text-gray-800 dark:text-gray-200 truncate">{receiptName}</span>
@@ -762,7 +959,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2.5 px-3.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#1A233A] text-xs font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+                      className="w-full py-2.5 px-3.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#262626] text-xs font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
                     >
                       <Paperclip className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                       <span>Upload receipt or invoice</span>
@@ -789,7 +986,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             {activeTab === 'transfer' && (
               <>
                 {accounts.length < 2 ? (
-                  <div className="p-4 rounded-xl border border-dashed border-gray-300 dark:border-[#232C45] bg-gray-50/50 dark:bg-[#0A0E1A]/50 text-center">
+                  <div className="p-4 rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#1D1D1D]/50 text-center">
                     <Wallet className="w-6 h-6 mx-auto text-gray-400 dark:text-gray-500 mb-1.5" />
                     <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-0.5">
                       Transfer requires at least 2 accounts
@@ -809,43 +1006,31 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   </div>
                 ) : (
                   <>
-                    <div>
-                      <label htmlFor="from-account-select" className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                        From Source Account
-                      </label>
-                      <select
-                        id="from-account-select"
-                        value={fromAccountId}
-                        onChange={handleFromAccountChange}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
-                      >
-                        {accounts.map(a => (
-                          <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                            {a.name} (Available: {formatCurrency(a.balance, a.currency)})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <FigmaPickerField
+                      id="from-account-select"
+                      label="From Source Account"
+                      contextOverline="Transfer"
+                      title="Source Account"
+                      options={accountOptions}
+                      selectedId={fromAccountId}
+                      onSelect={handleFromAccountSelect}
+                      isOpen={openPicker === 'fromAccount'}
+                      onToggle={() => setOpenPicker(openPicker === 'fromAccount' ? null : 'fromAccount')}
+                      placeholder="Select source account"
+                    />
 
-                    <div>
-                      <label htmlFor="to-account-select" className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                        To Destination Account
-                      </label>
-                      <select
-                        id="to-account-select"
-                        value={toAccountId}
-                        onChange={e => setToAccountId(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
-                      >
-                        {accounts
-                          .filter(a => a.id !== fromAccountId)
-                          .map(a => (
-                            <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                              {a.name} (Balance: {formatCurrency(a.balance, a.currency)})
-                            </option>
-                          ))}
-                      </select>
-                    </div>
+                    <FigmaPickerField
+                      id="to-account-select"
+                      label="To Destination Account"
+                      contextOverline="Transfer"
+                      title="Destination Account"
+                      options={toAccountOptions}
+                      selectedId={toAccountId}
+                      onSelect={id => setToAccountId(id)}
+                      isOpen={openPicker === 'toAccount'}
+                      onToggle={() => setOpenPicker(openPicker === 'toAccount' ? null : 'toAccount')}
+                      placeholder="Select destination account"
+                    />
 
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
@@ -865,8 +1050,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                             setTransferNoteError(null);
                           }
                         }}
-                        className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                          transferNoteError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                        className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                          transferNoteError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                         } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                       />
                       {transferNoteError && (
@@ -899,8 +1084,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         setGoalNameError(null);
                       }
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                      goalNameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                      goalNameError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                     } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
                   />
                   {goalNameError && (
@@ -929,8 +1114,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                           }
                         }
                       }}
-                      className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                        goalInitialDepositError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                        goalInitialDepositError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
                       } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 tabular-nums`}
                     />
                     {goalInitialDepositError && (
@@ -946,28 +1131,24 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                       type="date"
                       value={goalTargetDate}
                       onChange={e => setGoalTargetDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
                     />
                   </div>
                 </div>
 
                 {accounts.length > 0 && (
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                      Fund From Account (Optional)
-                    </label>
-                    <select
-                      value={accountId}
-                      onChange={e => setAccountId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
-                    >
-                      {accounts.map(a => (
-                        <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                          {a.name} ({formatCurrency(a.balance, a.currency)})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <FigmaPickerField
+                    id="goal-account-select"
+                    label="Fund From Account (Optional)"
+                    contextOverline="Goals"
+                    title="Payment method"
+                    options={accountOptions}
+                    selectedId={accountId}
+                    onSelect={id => setAccountId(id)}
+                    isOpen={openPicker === 'account'}
+                    onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
+                    placeholder="Select account"
+                  />
                 )}
               </>
             )}
@@ -975,29 +1156,25 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             {/* BUDGET FLOW */}
             {activeTab === 'budget' && (
               <>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                    Budget Category
-                  </label>
-                  <select
-                    value={budgetCategoryId}
-                    onChange={e => setBudgetCategoryId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
-                  >
-                    {availableBudgetCategories.map(c => (
-                      <option key={c.id} value={c.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <FigmaPickerField
+                  id="budget-category-select"
+                  label="Budget Category"
+                  contextOverline="Spend & Budget"
+                  title="Category"
+                  options={budgetCategoryOptions}
+                  selectedId={budgetCategoryId}
+                  onSelect={id => setBudgetCategoryId(id)}
+                  isOpen={openPicker === 'budgetCategory'}
+                  onToggle={() => setOpenPicker(openPicker === 'budgetCategory' ? null : 'budgetCategory')}
+                  placeholder="Select budget category"
+                />
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                       Overrun Alert Threshold
                     </label>
-                    <span className="text-xs font-bold text-brand-600 dark:text-brand-400">{budgetAlertThreshold}%</span>
+                    <span className="text-xs font-bold text-[#4D6E18] dark:text-[#C6FF3D]">{budgetAlertThreshold}%</span>
                   </div>
                   <input
                     type="range"
@@ -1006,7 +1183,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     step="5"
                     value={budgetAlertThreshold}
                     onChange={e => setBudgetAlertThreshold(parseInt(e.target.value))}
-                    className="w-full accent-brand-600 cursor-pointer"
+                    className="w-full accent-[#C6FF3D] cursor-pointer"
                   />
                 </div>
               </>
@@ -1015,12 +1192,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
           {/* Action Buttons */}
           <div className="pt-3 grid grid-cols-2 gap-2.5">
-            <Button
+            <button
               type="button"
-              variant="secondary"
-              size="md"
               onClick={() => handleSave(true)}
-              className="w-full"
               disabled={
                 !amount ||
                 !!amountError ||
@@ -1029,17 +1203,14 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                 (activeTab === 'goal' && (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)) ||
                 (activeTab === 'budget' && !budgetCategoryId)
               }
+              className="w-full py-3 px-4 rounded-2xl border border-black/15 dark:border-white/15 bg-transparent text-[#18212F] dark:text-white font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm text-center"
             >
               Save &amp; Add Another
-            </Button>
+            </button>
 
-            <Button
+            <button
               type="button"
-              variant="primary"
-              size="md"
               onClick={() => handleSave(false)}
-              icon={<Check className="w-4 h-4 stroke-[2.5]" />}
-              className="w-full"
               disabled={
                 !amount ||
                 !!amountError ||
@@ -1048,9 +1219,11 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                 (activeTab === 'goal' && (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)) ||
                 (activeTab === 'budget' && !budgetCategoryId)
               }
+              className="w-full py-3 px-4 rounded-2xl bg-[#C6FF3D] text-[#0A0E1A] font-bold hover:bg-[#b5f524] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm"
             >
-              Confirm
-            </Button>
+              <Check className="w-4 h-4 stroke-[2.5]" />
+              <span>Confirm</span>
+            </button>
           </div>
 
         </div>

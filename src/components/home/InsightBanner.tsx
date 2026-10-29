@@ -27,7 +27,7 @@ export const InsightBanner: React.FC<InsightBannerProps> = ({ onActionClick }) =
   if (!currentInsight) return null;
 
   return (
-    <div className="p-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors shadow-xs">
+    <div className="p-5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors shadow-xs">
       <div className="flex items-start sm:items-center gap-3.5 min-w-0">
         <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200/70 dark:border-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0">
           {renderInsightIcon(currentInsight.type)}

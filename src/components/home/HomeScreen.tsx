@@ -21,13 +21,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showSeeAllDrawer, setShowSeeAllDrawer] = useState(false);
 
   return (
-    <div className="animate-fade-in pb-4 w-full">
+    <div className="animate-fade-in pb-36 sm:pb-40 lg:pb-8 w-full">
       
       {/* =========================================================================
           1. MOBILE COMPOSITION (below `lg` breakpoint)
           - Solid opaque background on container level to prevent card bleed
           ========================================================================= */}
-      <div className="lg:hidden space-y-6 w-full bg-[#FAFAFA] dark:bg-[#0A0E1A]">
+      <div className="lg:hidden space-y-6 w-full bg-[#F7F8FA] dark:bg-black">
         {/* Inflow / Outflow Cash Flow Cards */}
         <YourMoneySection
           onNavigateToReport={onNavigateToReport}

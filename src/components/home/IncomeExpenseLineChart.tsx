@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -29,20 +29,20 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] p-3 rounded-xl shadow-xl text-left pointer-events-none z-50 animate-fade-in text-xs space-y-1.5 min-w-[150px]">
-        <p className="font-bold text-[#171717] dark:text-[#FAFAFA] border-b border-[#E5E5E5] dark:border-[#404040] pb-1">
+      <div className="bg-white dark:bg-[#262626] border border-black/[0.08] dark:border-white/[0.12] p-3 rounded-2xl shadow-xl text-left pointer-events-none z-50 animate-fade-in text-xs space-y-1.5 min-w-[140px]">
+        <p className="font-semibold text-[#18212F] dark:text-white border-b border-black/[0.06] dark:border-white/[0.08] pb-1">
           {label}
         </p>
         {payload.map((item, idx: number) => (
           <div key={idx} className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-1.5 font-medium text-[#737373] dark:text-[#A3A3A3]">
+            <span className="flex items-center gap-1.5 font-medium text-[#667085] dark:text-[#9CA3AF]">
               <span
-                className="w-2.5 h-2.5 rounded-full"
+                className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: item.color }}
               />
               {item.name}:
             </span>
-            <span className="font-bold tabular-nums text-[#171717] dark:text-[#FAFAFA]">
+            <span className="font-bold tabular-nums text-[#18212F] dark:text-white">
               {formatCurrency(Number(item.value || 0), baseCurrency, privacyMode)}
             </span>
           </div>
@@ -54,7 +54,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 };
 
 export const IncomeExpenseLineChart: React.FC = () => {
-  const { transactions, settings, periodIncome, periodExpenses } = useFinance();
+  const { transactions, settings } = useFinance();
 
   const isDark =
     settings.theme === 'dark' ||
@@ -102,60 +102,52 @@ export const IncomeExpenseLineChart: React.FC = () => {
     });
   }, [transactions]);
 
-
-
-
   return (
-    <section id="cashflow-line-chart" className="bg-white dark:bg-[#171717] border border-[#E5E5E5] dark:border-[#404040] rounded-2xl p-6 transition-colors shadow-xs">
-      {/* Header with Title and Legend Indicators */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
-            Income vs. expense over time
-          </span>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-            Cash Flow Trend
-          </h3>
-        </div>
-
-        {/* Legend Badges */}
-        <div className="flex items-center gap-4 text-xs font-semibold">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-[#E5E5E5] dark:border-[#404040]">
+    <section id="cashflow-line-chart" className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all w-full">
+      {/* Header with Title and Dot Legend (08-home.png) */}
+      <div className="mb-5">
+        <h3 className="text-base font-semibold text-[#18212F] dark:text-white">
+          Cash Flow Trend
+        </h3>
+        <div className="flex items-center gap-4 mt-2 text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
+          <div className="flex items-center gap-1.5">
             <span
-              className="w-2.5 h-2.5 rounded-full"
+              className="w-2 h-2 rounded-full"
               style={{ backgroundColor: palette.positive }}
             />
-            <span className="text-[#737373] dark:text-[#A3A3A3]">Income:</span>
-            <span className="tabular-nums" style={{ color: palette.positive }}>
-              {formatCurrency(periodIncome, settings.baseCurrency, settings.privacyMode, false)}
-            </span>
+            <span>Income</span>
           </div>
-
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-[#E5E5E5] dark:border-[#404040]">
+          <div className="flex items-center gap-1.5">
             <span
-              className="w-2.5 h-2.5 rounded-full"
+              className="w-2 h-2 rounded-full"
               style={{ backgroundColor: palette.negative }}
             />
-            <span className="text-[#737373] dark:text-[#A3A3A3]">Expense:</span>
-            <span className="tabular-nums" style={{ color: palette.negative }}>
-              {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode, false)}
-            </span>
+            <span>Expenses</span>
           </div>
         </div>
       </div>
 
-      {/* Line Chart Container */}
-      <div className="h-64 w-full">
+      {/* Area Chart Container */}
+      <div className="h-60 sm:h-64 w-full">
         {chartData.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-[#737373] dark:text-[#A3A3A3]">
+          <div className="h-full flex items-center justify-center text-xs text-[#667085] dark:text-[#9CA3AF]">
             No transaction data available for this timeframe.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+              <defs>
+                <linearGradient id="incomeAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={palette.positive} stopOpacity={0.25} />
+                  <stop offset="100%" stopColor={palette.positive} stopOpacity={0.0} />
+                </linearGradient>
+                <linearGradient id="expenseAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={palette.negative} stopOpacity={0.22} />
+                  <stop offset="100%" stopColor={palette.negative} stopOpacity={0.0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={palette.border}
+                stroke={isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)'}
                 vertical={false}
               />
               <XAxis
@@ -176,25 +168,27 @@ export const IncomeExpenseLineChart: React.FC = () => {
                 }}
               />
               <RechartsTooltip content={<CustomTooltip baseCurrency={settings.baseCurrency} privacyMode={settings.privacyMode} />} />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="income"
                 name="Income"
                 stroke={palette.positive}
-                strokeWidth={2.5}
-                dot={{ r: 3.5, fill: palette.positive, strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: palette.positive }}
+                strokeWidth={2}
+                fill="url(#incomeAreaGradient)"
+                dot={false}
+                activeDot={{ r: 5, fill: palette.positive, stroke: isDark ? '#1D1D1D' : '#FFFFFF', strokeWidth: 2 }}
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="expense"
-                name="Expense"
+                name="Expenses"
                 stroke={palette.negative}
-                strokeWidth={2.5}
-                dot={{ r: 3.5, fill: palette.negative, strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: palette.negative }}
+                strokeWidth={2}
+                fill="url(#expenseAreaGradient)"
+                dot={false}
+                activeDot={{ r: 5, fill: palette.negative, stroke: isDark ? '#1D1D1D' : '#FFFFFF', strokeWidth: 2 }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>

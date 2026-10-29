@@ -16,7 +16,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   strokeWidth = 5,
   color,
   showText = false,
-  textColor = 'text-ink dark:text-white',
+  textColor = 'text-[#18212F] dark:text-white',
   children,
 }) => {
   const radius = (size - strokeWidth) / 2;
@@ -32,7 +32,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
     } else if (percentage >= 75) {
       strokeColor = '#F5A524'; // Caution / Amber
     } else {
-      strokeColor = '#1FAE71'; // Growth / Green
+      strokeColor = '#C6FF3D'; // Vibrant Neon Lime
     }
   }
 
@@ -46,7 +46,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           r={radius}
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-gray-100 dark:text-gray-800"
+          className="text-[#E5E7EB] dark:text-[#262626]"
           fill="transparent"
         />
         {/* Progress Arc */}

@@ -1,14 +1,17 @@
 import React from 'react';
 import { ArrowRight, LogOut, Clock } from 'lucide-react';
 import logoImg from '../../assets/brand/logo.png';
+import { CornerGlow } from '../ui/CornerGlow';
 import { useAuth } from '../../context/AuthContext';
 
 export const AccountIncompleteScreen: React.FC = () => {
   const { setAuthView, logout } = useAuth();
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center p-4 sm:p-6 transition-colors">
-      <div className="w-full max-w-md bg-white dark:bg-[#0D1220] rounded-3xl p-6 sm:p-8 border border-gray-200 dark:border-[#1e263c] shadow-2xl animate-fade-in text-center">
+    <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex items-center justify-center p-6 transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black">
+      <CornerGlow />
+
+      <div className="w-full max-w-md bg-white dark:bg-[#1D1D1D] rounded-[32px] p-8 sm:p-10 border border-black/5 dark:border-white/10 shadow-2xl animate-fade-in text-center z-10">
         {/* Brand header */}
         <div className="flex items-center justify-center gap-2 mb-6">
           <img
@@ -17,17 +20,17 @@ export const AccountIncompleteScreen: React.FC = () => {
             className="w-8 h-8 object-contain drop-shadow-sm select-none"
             draggable={false}
           />
-          <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white font-display">
+          <span className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white font-display">
             Centra
           </span>
         </div>
 
         {/* Clock/Incomplete Icon Badge */}
-        <div className="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto mb-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-4">
           <Clock className="w-7 h-7" />
         </div>
 
-        <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
+        <h1 className="text-2xl font-bold tracking-tight text-[#18212F] dark:text-white mb-2">
           Your account setup isn't finished
         </h1>
         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed max-w-sm mx-auto">
@@ -39,7 +42,7 @@ export const AccountIncompleteScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => setAuthView('onboarding')}
-            className="w-full py-3.5 px-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-4 px-6 rounded-full bg-[#18212F] dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
           >
             <span>Continue setup</span>
             <ArrowRight className="w-4 h-4" />
@@ -48,7 +51,7 @@ export const AccountIncompleteScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => logout()}
-            className="w-full py-3 px-4 rounded-full bg-gray-100 dark:bg-[#131722] hover:bg-gray-200 dark:hover:bg-[#1e2638] text-gray-700 dark:text-gray-300 font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-full bg-[#E8ECEF] dark:bg-[#262626] hover:opacity-85 text-[#18212F] dark:text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign out</span>

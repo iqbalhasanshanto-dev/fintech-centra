@@ -31,14 +31,14 @@ export const ConnectedAccountsRow: React.FC<ConnectedAccountsRowProps> = ({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Connected Accounts</h3>
-          <span className="px-2 py-0.5 bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 text-[10px] font-bold rounded-full font-mono">
+          <span className="px-2 py-0.5 bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-600 dark:text-gray-400 text-[10px] font-bold rounded-full font-mono">
             {accounts.length + 1}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsAddAccountOpen(true)}
-            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1 cursor-pointer"
+            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1 cursor-pointer"
           >
             <Plus className="w-3 h-3" />
             <span>Add</span>
@@ -87,7 +87,7 @@ export const ConnectedAccountsRow: React.FC<ConnectedAccountsRowProps> = ({
             <div
               key={acc.id}
               onClick={() => handleAccountClick(acc.id)}
-              className={`bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-xl p-5 hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-colors cursor-pointer group shadow-xs ${
+              className={`bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-5 hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-colors cursor-pointer group shadow-xs ${
                 isSelected ? 'border-brand-500/60 ring-1 ring-brand-500/40' : ''
               }`}
             >

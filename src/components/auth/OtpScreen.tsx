@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Loader2, Mail, RefreshCw, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import logoImg from '../../assets/brand/logo.png';
+import { CornerGlow } from '../ui/CornerGlow';
 import { useAuth } from '../../context/AuthContext';
 import {
   isNetworkConnected,
@@ -183,83 +184,80 @@ export const OtpScreen: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center p-4 sm:p-6 transition-colors selection:bg-teal-500 selection:text-white"
+      className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex flex-col justify-between relative overflow-hidden transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black"
       style={{
         paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
         paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
-        paddingLeft: 'calc(1rem + env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
-        paddingRight: 'calc(1rem + env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
       }}
     >
-      {/* Desktop Ambient Background Accents */}
-      <div className="fixed inset-0 pointer-events-none hidden md:block overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
-      </div>
+      <CornerGlow />
 
-      <div className="w-full h-full min-h-screen md:min-h-[580px] md:h-auto md:max-w-md bg-white dark:bg-[#0D1220] md:rounded-[36px] md:border md:border-gray-200/80 md:dark:border-[#1e263c] md:shadow-2xl md:shadow-black/20 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden transition-all">
-        {/* Top Header */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
+      <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10 animate-fade-in">
+        {/* Top Canvas Header: Hero Text + Centra Brand Mark (Top-Right) */}
+        <div className="px-6 pt-4 pb-6 flex items-start justify-between">
+          <div>
             <button
               type="button"
               onClick={handleDifferentEmail}
-              className="p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+              className="mb-4 p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
               aria-label="Back to sign in"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2">
-              <img
-                src={logoImg}
-                alt="Centra"
-                className="w-6 h-6 object-contain drop-shadow-sm select-none"
-                draggable={false}
-              />
-              <span className="text-sm font-bold tracking-tight text-gray-900 dark:text-white font-display">
-                Centra
-              </span>
-            </div>
-            <div className="w-9" />
-          </div>
-
-          <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto mb-3">
-              <Mail className="w-6 h-6" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
-              Enter verification code
+            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] text-[#18212F] dark:text-white">
+              Verify<br />
+              <span className="text-[#4D6E18] dark:text-[#C6FF3D]">Your</span><br />
+              Email
             </h1>
-
-            {/* Contextual description per specifications */}
-            {authMode === 'signin' ? (
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
-                If an account exists for{' '}
-                <span className="font-semibold text-gray-900 dark:text-gray-200 break-all">
-                  {pendingEmail || 'this email'}
-                </span>
-                , we've sent a 6-digit code.
-              </p>
-            ) : (
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
-                We sent a 6-digit verification code to{' '}
-                <span className="font-semibold text-gray-900 dark:text-gray-200 break-all">
-                  {pendingEmail || 'your email'}
-                </span>
-              </p>
-            )}
           </div>
+
+          <div className="pt-1">
+            <img
+              src={logoImg}
+              alt="Centra"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none"
+              draggable={false}
+            />
+          </div>
+        </div>
+
+        {/* Elevated Bottom Sheet Card (04-verify-code.png) */}
+        <div className="w-full bg-white dark:bg-[#1D1D1D] rounded-t-[32px] md:rounded-[32px] border-t md:border border-black/5 dark:border-white/10 shadow-2xl p-6 sm:p-8 flex flex-col transition-all">
+          {/* Drag Handle */}
+          <div className="w-12 h-1 rounded-full bg-gray-300 dark:bg-white/20 mx-auto mb-5" />
+
+          <h2 className="text-2xl font-bold tracking-tight text-[#18212F] dark:text-white mb-2">
+            Verify
+          </h2>
+
+          {/* Contextual description per specifications */}
+          {authMode === 'signin' ? (
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
+              If an account exists for{' '}
+              <span className="font-semibold text-gray-900 dark:text-gray-200 break-all">
+                {pendingEmail || 'this email'}
+              </span>
+              , we've sent a 6-digit code.
+            </p>
+          ) : (
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
+              We sent a 6-digit verification code to{' '}
+              <span className="font-semibold text-gray-900 dark:text-gray-200 break-all">
+                {pendingEmail || 'your email'}
+              </span>
+            </p>
+          )}
 
           {errorMessage && (
-            <div className="mb-5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-center gap-2.5 animate-shake">
+            <div className="mb-5 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
 
-          {/* OTP Code Form */}
+          {/* OTP Code Input Slots (Circular / Rounded-2xl matching 04-verify-code.png) */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex justify-center items-center gap-2 sm:gap-3" onPaste={handlePaste}>
+            <div className="flex justify-between items-center gap-2 sm:gap-3" onPaste={handlePaste}>
               {digits.map((digit, idx) => (
                 <input
                   key={idx}
@@ -276,19 +274,42 @@ export const OtpScreen: React.FC = () => {
                   onChange={e => handleChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
                   aria-label={`Digit ${idx + 1} of verification code`}
-                  className={`w-11 sm:w-12 h-14 sm:h-14 text-center text-xl sm:text-2xl font-bold rounded-2xl border transition-all focus:outline-none ${
-                    digit
-                      ? 'border-teal-500 bg-teal-500/5 text-gray-900 dark:text-white ring-2 ring-teal-500/20'
-                      : 'border-gray-200 dark:border-[#232c44] bg-gray-50 dark:bg-[#131722] text-gray-900 dark:text-white focus:border-black dark:focus:border-white focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10'
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full sm:rounded-2xl text-center text-xl sm:text-2xl font-bold border transition-all focus:outline-none min-w-[44px] min-h-[44px] ${
+                    errorMessage
+                      ? 'border-rose-500 bg-rose-500/5 text-rose-600 dark:text-rose-400'
+                      : digit
+                      ? 'border-[#C6FF3D] bg-[#E8ECEF] dark:bg-[#2A2A2A] text-[#18212F] dark:text-white ring-2 ring-[#C6FF3D]/40'
+                      : 'border-transparent bg-[#E8ECEF] dark:bg-[#2A2A2A] text-[#18212F] dark:text-white focus:border-[#C6FF3D] focus:ring-2 focus:ring-[#C6FF3D]'
                   } disabled:opacity-50`}
                 />
               ))}
             </div>
 
+            {/* Resend Helper Section */}
+            <div className="text-center text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              <span>Didn't get a code? </span>
+              {resendCooldown > 0 ? (
+                <span className="font-semibold text-gray-700 dark:text-gray-300">
+                  Resend code in {resendCooldown}s
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendStatus === 'sending' || isLoading}
+                  className="font-bold underline text-[#18212F] dark:text-white hover:text-[#4D6E18] dark:hover:text-[#C6FF3D] cursor-pointer inline-flex items-center gap-1"
+                >
+                  {resendStatus === 'sending' && <RefreshCw className="w-3 h-3 animate-spin" />}
+                  <span>Tap to Resend</span>
+                </button>
+              )}
+            </div>
+
+            {/* Submit Continue Button */}
             <button
               type="submit"
               disabled={isLoading || !isComplete}
-              className="w-full py-4 px-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-sm sm:text-base hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-6 rounded-full bg-[#18212F] dark:bg-white text-white dark:text-black font-bold text-base hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -296,56 +317,43 @@ export const OtpScreen: React.FC = () => {
                   <span>Verifying code...</span>
                 </>
               ) : (
-                <span>Continue</span>
+                <span>Continue →</span>
               )}
             </button>
           </form>
 
-          {/* No code helper section */}
-          <div className="mt-4 text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-              No code? Check spam,{' '}
-              <button
-                type="button"
-                onClick={handleDifferentEmail}
-                className="font-semibold text-gray-700 dark:text-gray-300 hover:underline cursor-pointer"
-              >
-                use a different email
-              </button>
-              {authMode === 'signin' && (
-                <>
-                  , or{' '}
-                  <button
-                    type="button"
-                    onClick={handleSwitchToCreateAccount}
-                    className="font-bold text-teal-600 dark:text-teal-400 hover:underline cursor-pointer"
-                  >
-                    create an account
-                  </button>
-                </>
-              )}
-              .
-            </p>
-          </div>
-        </div>
-
-        {/* Resend & Change Email Footer */}
-        <div className="pt-6 border-t border-gray-100 dark:border-[#1e263c] space-y-3 text-center">
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            {resendCooldown > 0 ? (
-              <span>Resend code in {resendCooldown}s</span>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={resendStatus === 'sending' || isLoading}
-                className="font-semibold text-teal-600 dark:text-teal-400 hover:underline cursor-pointer inline-flex items-center gap-1.5"
-              >
-                {resendStatus === 'sending' && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                <span>Resend code</span>
-              </button>
+          {/* Change email or switch account mode */}
+          <div className="mt-5 text-center text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            <span>Wrong email? </span>
+            <button
+              type="button"
+              onClick={handleDifferentEmail}
+              className="font-semibold underline text-[#18212F] dark:text-white hover:text-[#4D6E18] dark:hover:text-[#C6FF3D] cursor-pointer"
+            >
+              use a different email
+            </button>
+            {authMode === 'signin' && (
+              <>
+                <span>, or </span>
+                <button
+                  type="button"
+                  onClick={handleSwitchToCreateAccount}
+                  className="font-bold underline text-[#18212F] dark:text-white hover:text-[#4D6E18] dark:hover:text-[#C6FF3D] cursor-pointer"
+                >
+                  create an account
+                </button>
+              </>
             )}
+            <span>.</span>
           </div>
+
+          {/* Footer Terms */}
+          <p className="text-[10px] text-center text-gray-400 dark:text-gray-500 leading-relaxed mt-6">
+            By continuing you are agreeing to our{' '}
+            <span className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+              Privacy Policy and Terms & Conditions
+            </span>
+          </p>
         </div>
       </div>
     </div>

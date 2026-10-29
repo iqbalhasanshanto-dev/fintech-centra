@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import logoImg from '../../assets/brand/logo.png';
+import { CornerGlow } from '../ui/CornerGlow';
 
 interface SpendingCategoriesScreenProps {
   onBack: () => void;
@@ -9,14 +11,14 @@ interface SpendingCategoriesScreenProps {
 
 const AVAILABLE_CATEGORIES = [
   'Groceries',
-  'Food & Drinks',
-  'Bills & Utilities',
   'Shopping',
-  'Travel',
+  'Transport',
+  'Bills & Utilities',
+  'Health & Wellness',
   'Entertainment',
   'Work & Freelance',
-  'Transport',
-  'Subscriptions',
+  'Savings & Investments',
+  'Personal Care',
 ];
 
 export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> = ({
@@ -24,7 +26,7 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
   onFinish,
 }) => {
   const { saveOnboardingProfile } = useAuth();
-  const [selected, setSelected] = useState<string[]>(['Shopping', 'Entertainment']);
+  const [selected, setSelected] = useState<string[]>([]);
 
   const toggleCategory = (cat: string) => {
     setSelected(prev =>
@@ -33,7 +35,7 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
   };
 
   const handleFinish = async () => {
-    // Skipping or choosing does not block progress
+    if (selected.length === 0) return;
     await saveOnboardingProfile({
       name: '',
       categories: selected,
@@ -42,75 +44,80 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
   };
 
   return (
-    <div className="w-full flex flex-col justify-between min-h-full py-4 px-4 sm:px-8">
-      {/* Top Header & Progress */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
+    <div
+      className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex flex-col justify-between relative overflow-hidden transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black"
+      style={{
+        paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
+        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+      }}
+    >
+      <CornerGlow />
+
+      <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10 animate-fade-in">
+        {/* Top Canvas Header: Centra Brand Mark (Top-Left per 07-onboarding-categories.png) */}
+        <div className="px-6 pt-4 pb-6 flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              className="p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <img
+              src={logoImg}
+              alt="Centra"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none"
+              draggable={false}
+            />
+          </div>
+        </div>
+
+        {/* Elevated Bottom Sheet Card (07-onboarding-categories.png) */}
+        <div className="w-full bg-white dark:bg-[#1D1D1D] rounded-t-[32px] md:rounded-[32px] border-t md:border border-black/5 dark:border-white/10 shadow-2xl p-6 sm:p-8 flex flex-col transition-all">
+          {/* Drag Handle */}
+          <div className="w-12 h-1 rounded-full bg-gray-300 dark:bg-white/20 mx-auto mb-5" />
+
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#18212F] dark:text-white mb-6">
+            Choose spending<br />categories
+          </h2>
+
+          {/* Staggered category pill tags matching reference frames */}
+          <div className="flex flex-wrap gap-2.5 sm:gap-3 mb-8 items-center justify-start">
+            {AVAILABLE_CATEGORIES.map(category => {
+              const isSelected = selected.includes(category);
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => toggleCategory(category)}
+                  className={`min-h-[44px] py-2.5 px-5 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer select-none flex items-center justify-center ${
+                    isSelected
+                      ? 'bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#0A0E1A] shadow-[0_0_16px_rgba(198,255,61,0.45)] border border-[#C6FF3D] scale-[1.03]'
+                      : 'bg-[#F1F2F4] text-[#18212F] dark:bg-[#262626] dark:text-white hover:opacity-85 border border-transparent'
+                  }`}
+                >
+                  <span>{category}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Bottom Finish Setup Button */}
           <button
             type="button"
-            onClick={onBack}
-            className="p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
-            aria-label="Go back"
+            disabled={selected.length === 0}
+            onClick={handleFinish}
+            className={`w-full py-4 px-6 rounded-full font-bold text-base transition-all shadow-lg flex items-center justify-center gap-2 ${
+              selected.length > 0
+                ? 'bg-[#18212F] dark:bg-[#C6FF3D] text-white dark:text-[#0A0E1A] hover:opacity-90 active:scale-[0.99] cursor-pointer'
+                : 'bg-gray-200 dark:bg-[#262626] text-gray-400 dark:text-gray-500 opacity-40 cursor-not-allowed shadow-none'
+            }`}
           >
-            <ArrowLeft className="w-5 h-5" />
+            <span>Finish Setup ↗</span>
           </button>
-          <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-wider">
-            Step 5/5
-          </span>
-          <div className="w-7" />
         </div>
-
-        {/* Progress Line: 100% */}
-        <div className="w-full h-1 bg-gray-200 dark:bg-[#1e2638] rounded-full mb-6 overflow-hidden">
-          <div className="h-full bg-black dark:bg-white rounded-full transition-all duration-500 w-[100%]" />
-        </div>
-
-        {/* Headings matching reference image 8 */}
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
-            Choose spending categories
-          </h1>
-          <p className="text-base text-gray-500 dark:text-gray-400">
-            We'll tailor insights based on what matters to you.
-          </p>
-        </div>
-
-        {/* Staggered category pill tags matching reference image 8 */}
-        <div className="flex flex-wrap gap-3 sm:gap-3.5 my-8 items-center justify-start sm:justify-center max-w-md mx-auto">
-          {AVAILABLE_CATEGORIES.map(category => {
-            const isSelected = selected.includes(category);
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => toggleCategory(category)}
-                className={`py-3 px-5 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer select-none flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg shadow-black/25 dark:shadow-white/10 scale-105 ring-2 ring-black dark:ring-white'
-                    : 'bg-white text-gray-600 dark:bg-[#131722] dark:text-gray-400 border border-gray-200 dark:border-[#232c44] hover:border-gray-400 dark:hover:border-gray-600 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
-                <span>{category}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <p className="text-xs text-center text-gray-400 dark:text-gray-500 mt-2">
-          You can change these anytime in Settings.
-        </p>
-      </div>
-
-      {/* Bottom Finish Setup Button matching reference */}
-      <div className="pt-8">
-        <button
-          type="button"
-          onClick={handleFinish}
-          className="w-full py-4 px-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-base hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
-        >
-          <span>Finish setup</span>
-        </button>
       </div>
     </div>
   );

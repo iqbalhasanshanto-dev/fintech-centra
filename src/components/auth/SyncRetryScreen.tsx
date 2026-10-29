@@ -30,8 +30,8 @@ export const SyncRetryScreen: React.FC<SyncRetryScreenProps> = ({ onRetry, onSig
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center p-4 sm:p-6 transition-colors">
-      <div className="w-full max-w-md bg-white dark:bg-[#0D1220] rounded-3xl p-6 sm:p-8 border border-gray-200 dark:border-[#1e263c] shadow-2xl animate-fade-in text-center">
+    <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-gray-900 dark:text-white flex items-center justify-center p-4 sm:p-6 transition-colors">
+      <div className="w-full max-w-md bg-white dark:bg-[#1D1D1D] rounded-[28px] p-6 sm:p-8 border border-black/5 dark:border-white/10 shadow-2xl animate-fade-in text-center">
         {/* Brand header */}
         <div className="flex items-center justify-center gap-2 mb-6">
           <img
@@ -46,11 +46,11 @@ export const SyncRetryScreen: React.FC<SyncRetryScreenProps> = ({ onRetry, onSig
         </div>
 
         {/* Alert Icon Badge */}
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-4">
+        <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-4">
           <CloudOff className="w-7 h-7" />
         </div>
 
-        <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
           Unable to Sync Data
         </h1>
         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed max-w-sm mx-auto">
@@ -63,7 +63,7 @@ export const SyncRetryScreen: React.FC<SyncRetryScreenProps> = ({ onRetry, onSig
             type="button"
             onClick={handleRetry}
             disabled={isRetrying}
-            className="w-full py-3.5 px-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 px-6 min-h-[44px] rounded-full bg-[#C6FF3D] hover:bg-[#B2E830] active:bg-[#9ECC27] text-black font-bold text-sm active:scale-[0.99] transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
             <span>{isRetrying ? 'Retrying Sync...' : 'Retry Sync'}</span>
@@ -72,7 +72,7 @@ export const SyncRetryScreen: React.FC<SyncRetryScreenProps> = ({ onRetry, onSig
           <button
             type="button"
             onClick={handleSignOut}
-            className="w-full py-3 px-6 rounded-full border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 font-semibold text-xs hover:bg-gray-50 dark:hover:bg-[#151D2E] transition-all cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-3 px-6 min-h-[44px] rounded-full border border-black/5 dark:border-white/10 bg-[#F1F2F4] dark:bg-[#262626] text-gray-700 dark:text-gray-300 font-semibold text-xs hover:bg-[#E5E7EB] dark:hover:bg-[#333333] transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign out instead</span>

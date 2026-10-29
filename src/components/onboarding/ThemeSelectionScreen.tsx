@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logoImg from '../../assets/brand/logo.png';
+import { CornerGlow } from '../ui/CornerGlow';
+
+type ThemeMode = 'system' | 'light' | 'dark';
 
 interface ThemeSelectionScreenProps {
   onBack: () => void;
@@ -13,11 +16,18 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
   onContinue,
 }) => {
   const { saveOnboardingProfile } = useAuth();
-  const [selectedTheme, setSelectedTheme] = useState<'dark' | 'light'>('dark');
+  const [selectedMode, setSelectedMode] = useState<ThemeMode>('dark');
 
-  const handleSelectTheme = (theme: 'dark' | 'light') => {
-    setSelectedTheme(theme);
-    if (theme === 'dark') {
+  const handleSelectMode = (mode: ThemeMode) => {
+    setSelectedMode(mode);
+    if (mode === 'system') {
+      const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isSystemDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } else if (mode === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
@@ -25,201 +35,121 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
   };
 
   const handleProceed = async () => {
+    let resolvedTheme: 'dark' | 'light';
+    if (selectedMode === 'system') {
+      const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      resolvedTheme = isSystemDark ? 'dark' : 'light';
+    } else {
+      resolvedTheme = selectedMode;
+    }
+
     await saveOnboardingProfile({
       name: '',
-      theme: selectedTheme,
+      theme: resolvedTheme,
     });
-    onContinue(selectedTheme);
+    onContinue(resolvedTheme);
   };
 
-  const isDark = selectedTheme === 'dark';
-
   return (
-    <div className="w-full flex flex-col justify-between min-h-full py-4 px-4 sm:px-8">
-      {/* Top Header & Progress */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-wider">
-            Step 4/5
-          </span>
-          <div className="w-7" />
-        </div>
+    <div
+      className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex flex-col justify-between relative overflow-hidden transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black"
+      style={{
+        paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
+        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+      }}
+    >
+      <CornerGlow />
 
-        {/* Progress Line: 80% */}
-        <div className="w-full h-1 bg-gray-200 dark:bg-[#1e2638] rounded-full mb-6 overflow-hidden">
-          <div className="h-full bg-black dark:bg-white rounded-full transition-all duration-500 w-[80%]" />
-        </div>
-
-        {/* Headings */}
-        <div className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
-            Choose your theme
-          </h1>
-          <p className="text-base text-gray-500 dark:text-gray-400">
-            Pick the interface look that matches your style. You can change this anytime.
-          </p>
-        </div>
-
-        {/* Live Miniature Dashboard Preview in Selected Theme */}
-        <div className="my-6 w-full flex items-center justify-center">
-          <div
-            className={`w-full max-w-sm rounded-3xl p-5 border shadow-2xl transition-all duration-300 ${
-              isDark
-                ? 'bg-[#111624] border-[#222c44] text-white shadow-black/50'
-                : 'bg-white border-gray-200 text-gray-900 shadow-gray-200/80'
-            }`}
-          >
-            {/* Miniature Dashboard Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/5 mb-3">
-              <div className="flex items-center gap-2">
-                <img
-                  src={logoImg}
-                  alt="Centra"
-                  className="w-5 h-5 object-contain select-none"
-                  draggable={false}
-                />
-                <span
-                  className={`text-xs font-bold tracking-tight ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
-                  CENTRA
-                </span>
-              </div>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-                  isDark
-                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                    : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                }`}
-              >
-                ● Theme Preview
-              </span>
-            </div>
-
-            {/* Miniature Balance Display */}
-            <div className="mb-4">
-              <span
-                className={`text-[10px] font-medium block uppercase tracking-wider ${
-                  isDark ? 'text-gray-400' : 'text-gray-500'
-                }`}
-              >
-                Total Net Worth
-              </span>
-              <div className="text-2xl font-extrabold tracking-tight mt-0.5 flex items-baseline gap-1">
-                <span>$24,850</span>
-                <span className="text-xs text-emerald-500 font-semibold">+12.4%</span>
-              </div>
-            </div>
-
-            {/* Miniature Analytics Sparklines */}
-            <div
-              className={`h-12 w-full flex items-end gap-1.5 p-1 rounded-xl mb-3 ${
-                isDark ? 'bg-[#0b0e17]' : 'bg-gray-50'
-              }`}
+      <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10 animate-fade-in">
+        {/* Top Canvas Header: Centra Brand Mark (Top-Left per 06-onboarding-appearance.png) */}
+        <div className="px-6 pt-4 pb-6 flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              className="p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+              aria-label="Go back"
             >
-              {[40, 65, 50, 78, 62, 90, 85, 100].map((h, i) => (
-                <div
-                  key={i}
-                  style={{ height: `${h}%` }}
-                  className={`flex-1 rounded-t-sm transition-all duration-300 ${
-                    i === 7
-                      ? 'bg-teal-500'
-                      : isDark
-                      ? 'bg-[#1f283d]'
-                      : 'bg-gray-200'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Miniature Category Spend Pills */}
-            <div className="grid grid-cols-2 gap-2">
-              <div
-                className={`p-2 rounded-xl text-left border ${
-                  isDark
-                    ? 'bg-[#171e2e] border-white/5'
-                    : 'bg-gray-50 border-gray-100'
-                }`}
-              >
-                <span className="text-[10px] text-gray-400 block">Monthly Budget</span>
-                <span className="text-xs font-bold text-teal-400">74% Spent</span>
-              </div>
-              <div
-                className={`p-2 rounded-xl text-left border ${
-                  isDark
-                    ? 'bg-[#171e2e] border-white/5'
-                    : 'bg-gray-50 border-gray-100'
-                }`}
-              >
-                <span className="text-[10px] text-gray-400 block">Savings Goal</span>
-                <span className="text-xs font-bold text-emerald-400">$1,450/mo</span>
-              </div>
-            </div>
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <img
+              src={logoImg}
+              alt="Centra"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none"
+              draggable={false}
+            />
           </div>
         </div>
 
-        {/* Theme Description */}
-        <div className="text-center mb-6">
-          <h3 className="text-base font-bold text-gray-900 dark:text-white">
-            {isDark ? 'Centra Dark' : 'Centra Light'}
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto mt-1">
-            {isDark
-              ? 'A sleek, high-contrast matte dark theme built for focus and low-light comfort.'
-              : 'A crisp, clean minimalist light theme with high legibility for daylight clarity.'}
+        {/* Elevated Bottom Sheet Card (06-onboarding-appearance.png) */}
+        <div className="w-full bg-white dark:bg-[#1D1D1D] rounded-t-[32px] md:rounded-[32px] border-t md:border border-black/5 dark:border-white/10 shadow-2xl p-6 sm:p-8 flex flex-col transition-all">
+          {/* Drag Handle */}
+          <div className="w-12 h-1 rounded-full bg-gray-300 dark:bg-white/20 mx-auto mb-5" />
+
+          <h2 className="text-3xl font-bold tracking-tight text-[#18212F] dark:text-white mb-1.5">
+            Appearance
+          </h2>
+          <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-6">
+            Mode
           </p>
-        </div>
 
-        {/* Theme Selectors matching reference design circular swatches */}
-        <div className="flex items-center justify-center gap-5 mb-4">
-          {/* Dark Swatch */}
+          {/* 3-Column Mode Selector Cards (System, Light, Dark) */}
+          <div className="grid grid-cols-3 gap-3.5 mb-8">
+            {/* System Card */}
+            <button
+              type="button"
+              onClick={() => handleSelectMode('system')}
+              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+                selectedMode === 'system'
+                  ? 'bg-[#18212F] text-white dark:bg-[#000000] dark:text-white ring-2 ring-black dark:ring-white shadow-md'
+                  : 'bg-[#E8ECEF] text-gray-600 dark:bg-[#2A2A2A] dark:text-gray-400 hover:opacity-80'
+              }`}
+              aria-label="System mode"
+            >
+              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 3v18A9 9 0 0 0 12 3z" fill="currentColor" />
+              </svg>
+            </button>
+
+            {/* Light Card */}
+            <button
+              type="button"
+              onClick={() => handleSelectMode('light')}
+              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+                selectedMode === 'light'
+                  ? 'bg-[#18212F] text-white dark:bg-[#000000] dark:text-white ring-2 ring-black dark:ring-white shadow-md'
+                  : 'bg-[#E8ECEF] text-gray-600 dark:bg-[#2A2A2A] dark:text-gray-400 hover:opacity-80'
+              }`}
+              aria-label="Light mode"
+            >
+              <Sun className="w-7 h-7" />
+            </button>
+
+            {/* Dark Card */}
+            <button
+              type="button"
+              onClick={() => handleSelectMode('dark')}
+              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+                selectedMode === 'dark'
+                  ? 'bg-[#18212F] text-white dark:bg-[#000000] dark:text-white ring-2 ring-black dark:ring-white shadow-md'
+                  : 'bg-[#E8ECEF] text-gray-600 dark:bg-[#2A2A2A] dark:text-gray-400 hover:opacity-80'
+              }`}
+              aria-label="Dark mode"
+            >
+              <Moon className="w-7 h-7 fill-current" />
+            </button>
+          </div>
+
+          {/* Continue Button */}
           <button
             type="button"
-            onClick={() => handleSelectTheme('dark')}
-            className={`flex flex-col items-center gap-1.5 p-1.5 rounded-2xl transition-all cursor-pointer ${
-              isDark ? 'ring-2 ring-black dark:ring-white scale-105' : 'opacity-60 hover:opacity-100'
-            }`}
+            onClick={handleProceed}
+            className="w-full py-4 px-6 rounded-full bg-[#18212F] dark:bg-white text-white dark:text-black font-bold text-base hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
           >
-            <div className="w-10 h-10 rounded-full bg-black border-2 border-gray-600 flex items-center justify-center shadow-md">
-              <Moon className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-[11px] font-semibold text-gray-900 dark:text-white">Dark</span>
-          </button>
-
-          {/* Light Swatch */}
-          <button
-            type="button"
-            onClick={() => handleSelectTheme('light')}
-            className={`flex flex-col items-center gap-1.5 p-1.5 rounded-2xl transition-all cursor-pointer ${
-              !isDark ? 'ring-2 ring-black dark:ring-white scale-105' : 'opacity-60 hover:opacity-100'
-            }`}
-          >
-            <div className="w-10 h-10 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center shadow-md">
-              <Sun className="w-4 h-4 text-amber-500" />
-            </div>
-            <span className="text-[11px] font-semibold text-gray-900 dark:text-white">Light</span>
+            <span>Continue →</span>
           </button>
         </div>
-      </div>
-
-      {/* Bottom Continue Button */}
-      <div className="pt-6">
-        <button
-          type="button"
-          onClick={handleProceed}
-          className="w-full py-4 px-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-bold text-base hover:opacity-90 active:scale-[0.99] transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
-        >
-          <span>Continue</span>
-        </button>
       </div>
     </div>
   );

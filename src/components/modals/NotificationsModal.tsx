@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { 
   Bell, 
-  Check, 
-  Trash2, 
+  ChevronLeft, 
   Shield, 
   AlertTriangle, 
   Target, 
   CreditCard, 
-  Info
+  Info, 
+  Trash2, 
+  ChevronRight 
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
-import { Modal } from '../ui/Modal';
-import { NotificationType } from '../../types';
-import { formatRelativeTime } from '../../utils/formatters';
+import { NotificationType, NotificationItem } from '../../types';
 import { useBackHandler } from '../../utils/backButton';
 
 interface NotificationsModalProps {
@@ -33,137 +32,272 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   useBackHandler(isOpen, onClose);
 
-  const [activeFilter, setActiveFilter] = useState<'all' | NotificationType>('all');
+  const unreadCount = useMemo(() => {
+    return notifications.filter(n => !n.isRead).length;
+  }, [notifications]);
 
-  const filtered = notifications.filter(n => {
-    if (activeFilter === 'all') return true;
-    return n.type === activeFilter;
-  });
+  // Group notifications into Today and Earlier
+  const { todayList, earlierList } = useMemo(() => {
+    const today: NotificationItem[] = [];
+    const earlier: NotificationItem[] = [];
+    const now = new Date();
+    const todayStr = now.toDateString();
 
-  const getIcon = (type: NotificationType, severity?: string) => {
-    if (type === 'budget' || severity === 'alert') {
-      return <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400" />;
+    notifications.forEach(n => {
+      const d = new Date(n.timestamp);
+      if (d.toDateString() === todayStr) {
+        today.push(n);
+      } else {
+        earlier.push(n);
+      }
+    });
+
+    return { todayList: today, earlierList: earlier };
+  }, [notifications]);
+
+  const getIcon = (type: NotificationType) => {
+    const iconClass = "w-4 h-4";
+    switch (type) {
+      case 'budget':
+        return <AlertTriangle className={iconClass} />;
+      case 'security':
+        return <Shield className={iconClass} />;
+      case 'goal':
+        return <Target className={iconClass} />;
+      case 'transaction':
+        return <CreditCard className={iconClass} />;
+      default:
+        return <Info className={iconClass} />;
     }
-    if (type === 'security') {
-      return <Shield className="w-4 h-4 text-amber-500 dark:text-amber-400" />;
-    }
-    if (type === 'goal') {
-      return <Target className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />;
-    }
-    if (type === 'transaction') {
-      return <CreditCard className="w-4 h-4 text-brand-600 dark:text-brand-400" />;
-    }
-    return <Info className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
   };
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Notifications"
-      subtitle={`${notifications.filter(n => !n.isRead).length} unread alerts`}
-    >
-      <div className="space-y-4">
-        
-        {/* Top Actions: Filters & Clear */}
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center space-x-1 overflow-x-auto pb-1 no-scrollbar">
-            <button
-              onClick={() => setActiveFilter('all')}
-              className={`px-3 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
-                activeFilter === 'all'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              All ({notifications.length})
-            </button>
-            <button
-              onClick={() => setActiveFilter('budget')}
-              className={`px-3 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
-                activeFilter === 'budget'
-                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold'
-                  : 'bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Budgets
-            </button>
-            <button
-              onClick={() => setActiveFilter('security')}
-              className={`px-3 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
-                activeFilter === 'security'
-                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-bold'
-                  : 'bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Security
-            </button>
-          </div>
+  const getCategoryLabel = (type: NotificationType) => {
+    switch (type) {
+      case 'budget':
+        return 'Budget outflow';
+      case 'security':
+        return 'Security & login';
+      case 'goal':
+        return 'Savings milestone';
+      case 'transaction':
+        return 'Spending alert';
+      default:
+        return 'System update';
+    }
+  };
 
-          <div className="flex items-center space-x-1 shrink-0">
-            <button
-              onClick={markAllNotificationsAsRead}
-              className="p-1.5 text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors cursor-pointer"
-              title="Mark all as read"
-            >
-              <Check className="w-4 h-4" />
-            </button>
-            <button
-              onClick={clearNotifications}
-              className="p-1.5 text-gray-400 hover:text-rose-500 transition-colors cursor-pointer"
-              title="Clear all"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+  const getActionLabel = (type: NotificationType) => {
+    switch (type) {
+      case 'budget':
+        return 'View budget';
+      case 'security':
+        return 'Review session';
+      case 'transaction':
+        return 'View transaction';
+      default:
+        return 'View details';
+    }
+  };
 
-        {/* Notifications List */}
-        <div className="divide-y divide-gray-100 dark:divide-[#232C45] max-h-[55vh] overflow-y-auto pr-1">
-          {filtered.length === 0 ? (
-            <div className="text-center py-10 text-xs text-gray-400 dark:text-gray-500">
-              <Bell className="w-8 h-8 mx-auto text-gray-400 dark:text-gray-600 mb-2" />
-              <p className="font-bold text-gray-700 dark:text-gray-300">No notifications right now</p>
-              <p className="mt-0.5">Budget warnings, transaction alerts and milestones will appear here.</p>
+  const formatItemTime = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    } catch {
+      return '';
+    }
+  };
+
+  const todayDateString = useMemo(() => {
+    return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }, []);
+
+  const earlierDateString = useMemo(() => {
+    if (earlierList.length > 0) {
+      const d = new Date(earlierList[0].timestamp);
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    return '';
+  }, [earlierList]);
+
+  if (!isOpen) return null;
+
+  const renderNotificationCard = (item: NotificationItem) => {
+    const isUnread = !item.isRead;
+    const categoryLabel = getCategoryLabel(item.type);
+    const actionLabel = getActionLabel(item.type);
+
+    return (
+      <div
+        key={item.id}
+        onClick={() => markNotificationAsRead(item.id)}
+        className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 shadow-sm transition-all cursor-pointer hover:border-black/[0.12] dark:hover:border-white/[0.25] space-y-3.5"
+      >
+        {/* Card Header Row: Icon + Overline + Title + Unread Dot */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                isUnread
+                  ? 'bg-[#C6FF3D]/15 text-[#4D6E18] dark:text-[#C6FF3D]'
+                  : 'bg-[#F1F2F4] text-[#667085] dark:bg-[#262626] dark:text-[#9CA3AF]'
+              }`}
+            >
+              {getIcon(item.type)}
             </div>
-          ) : (
-            filtered.map(item => (
-              <div
-                key={item.id}
-                onClick={() => markNotificationAsRead(item.id)}
-                className={`py-3 px-2 flex items-start space-x-3 rounded-xl cursor-pointer transition-colors ${
-                  !item.isRead
-                    ? 'bg-brand-50/50 dark:bg-[#121A2C]/80 hover:bg-brand-50 dark:hover:bg-[#1A233A]'
-                    : 'hover:bg-gray-50 dark:hover:bg-[#121A2C]/40'
-                }`}
-              >
-                <div className="p-2 rounded-lg bg-white dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] shrink-0 mt-0.5 shadow-xs">
-                  {getIcon(item.type, item.severity)}
-                </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h4 className={`text-xs font-bold truncate ${!item.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
-                      {item.title}
-                    </h4>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-2 shrink-0">
-                      {formatRelativeTime(item.timestamp)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
-                    {item.message}
-                  </p>
-                </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-medium text-[#667085] dark:text-white/60 block">
+                {categoryLabel}
+                {!isUnread && ' • Read'}
+              </span>
+              <h4 className="text-base font-medium text-[#18212F] dark:text-white truncate mt-0.5">
+                {item.title}
+              </h4>
+            </div>
+          </div>
 
-                {!item.isRead && (
-                  <div className="w-2 h-2 rounded-full bg-brand-600 dark:bg-brand-400 shrink-0 mt-2" />
-                )}
-              </div>
-            ))
+          {isUnread && (
+            <span
+              className="w-2 h-2 rounded-full bg-[#C6FF3D] shrink-0 mt-2 shadow-[0_0_8px_rgba(198,255,61,0.6)]"
+              aria-label="Unread"
+            />
           )}
         </div>
 
+        {/* Message Body */}
+        <p className="text-sm text-[#667085] dark:text-white/70 leading-relaxed">
+          {item.message}
+        </p>
+
+        {/* Footer Row: Timestamp + Action Link */}
+        <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.07]">
+          <span className="text-[11px] text-[#667085] dark:text-white/40">
+            {formatItemTime(item.timestamp)}
+          </span>
+
+          <span className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer">
+            <span>{actionLabel}</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </span>
+        </div>
       </div>
-    </Modal>
+    );
+  };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Notifications"
+      className="fixed inset-0 z-50 bg-[#F7F8FA] dark:bg-[#0A0A0A] overflow-y-auto flex flex-col text-[#18212F] dark:text-white transition-colors antialiased animate-fade-in"
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))',
+        paddingBottom: 'calc(3rem + env(safe-area-inset-bottom, 0px))',
+      }}
+    >
+      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-5 px-4 sm:px-6 py-2">
+        {/* Top Header Bar matching Figma Frame 10. Notifications (40px Back + 24px Title + Clear) */}
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs"
+            aria-label="Back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          <h2 className="text-2xl font-medium tracking-tight text-[#18212F] dark:text-white text-center">
+            Notifications
+          </h2>
+
+          {notifications.length > 0 ? (
+            <button
+              type="button"
+              onClick={clearNotifications}
+              className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shadow-xs"
+              title="Clear all"
+              aria-label="Clear all notifications"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          ) : (
+            <div className="w-10 h-10" aria-hidden="true" />
+          )}
+        </div>
+
+        {/* Inbox Controls Bar: "Your updates" + unread badge + "Mark all as read" */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-[#18212F] dark:text-white/80">
+              Your updates
+            </span>
+            {unreadCount > 0 && (
+              <span className="bg-[#C6FF3D]/10 text-[#4D6E18] dark:text-[#C6FF3D] border border-[#C6FF3D]/20 rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
+                {unreadCount} unread
+              </span>
+            )}
+          </div>
+
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllNotificationsAsRead}
+              className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline transition-colors cursor-pointer"
+            >
+              Mark all as read
+            </button>
+          )}
+        </div>
+
+        {/* Notifications Scroll List Container */}
+        <div className="space-y-6 flex-1 pb-16">
+          {notifications.length === 0 ? (
+            <div className="text-center py-20 text-xs text-[#667085] dark:text-[#9CA3AF] space-y-3">
+              <div className="w-16 h-16 mx-auto rounded-full bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.1] flex items-center justify-center shadow-xs">
+                <Bell className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              </div>
+              <p className="font-bold text-[#18212F] dark:text-white text-base">No notifications right now</p>
+              <p className="max-w-xs mx-auto text-gray-500 dark:text-gray-400 text-xs leading-relaxed">
+                Budget warnings, transaction alerts and milestones will appear here.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Today Group */}
+              {todayList.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs text-[#667085] dark:text-white/60 px-1 font-medium">
+                    <span className="font-semibold text-sm text-[#18212F] dark:text-white">Today</span>
+                    <span className="text-[11px] text-gray-400 dark:text-white/40">{todayDateString}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {todayList.map(renderNotificationCard)}
+                  </div>
+                </div>
+              )}
+
+              {/* Earlier Group */}
+              {earlierList.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between text-xs text-[#667085] dark:text-white/60 px-1 font-medium">
+                    <span className="font-semibold text-sm text-[#18212F] dark:text-white">Earlier</span>
+                    {earlierDateString && (
+                      <span className="text-[11px] text-gray-400 dark:text-white/40">{earlierDateString}</span>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    {earlierList.map(renderNotificationCard)}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };

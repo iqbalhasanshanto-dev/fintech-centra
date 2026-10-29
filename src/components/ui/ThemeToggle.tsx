@@ -51,17 +51,17 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       <div
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out border ${
           isDark
-            ? 'bg-indigo-600/30 border-indigo-500/50'
-            : 'bg-gray-200 border-gray-300 dark:bg-gray-700 dark:border-gray-600'
+            ? 'bg-[#C6FF3D] border-[#C6FF3D]'
+            : 'bg-[#E5E7EB] border-[#D1D5DB] dark:bg-[#262626] dark:border-white/[0.12]'
         }`}
       >
         <span
-          className={`inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out ${
-            isDark ? 'translate-x-5 bg-indigo-500 text-white' : 'translate-x-0 text-amber-500'
+          className={`inline-flex h-5 w-5 transform items-center justify-center rounded-full shadow-xs transition-transform duration-200 ease-in-out ${
+            isDark ? 'translate-x-5 bg-[#18212F] text-[#C6FF3D]' : 'translate-x-0 bg-white text-amber-500'
           }`}
         >
           {isDark ? (
-            <Moon className="w-3 h-3 text-white" />
+            <Moon className="w-3 h-3 text-[#C6FF3D]" />
           ) : (
             <Sun className="w-3 h-3 text-amber-500" />
           )}

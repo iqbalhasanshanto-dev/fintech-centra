@@ -28,15 +28,17 @@ export const Switch: React.FC<SwitchProps> = ({
           onChange(!checked);
         }
       }}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 border transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500/40 disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 border transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#C6FF3D]/40 disabled:opacity-50 disabled:cursor-not-allowed ${
         checked
-          ? 'bg-brand-600 border-brand-600 dark:bg-brand-500 dark:border-brand-500'
-          : 'bg-gray-200 border-gray-300 dark:bg-[#1E293B] dark:border-[#334155]'
+          ? 'bg-[#C6FF3D] border-[#C6FF3D]'
+          : 'bg-[#E5E7EB] border-[#D1D5DB] dark:bg-[#262626] dark:border-white/[0.12]'
       } ${className}`}
     >
       <span
-        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out ${
-          checked ? 'translate-x-5' : 'translate-x-0'
+        className={`pointer-events-none inline-block h-5 w-5 rounded-full shadow-xs transition-transform duration-200 ease-in-out ${
+          checked
+            ? 'translate-x-5 bg-[#18212F] dark:bg-[#0A0E1A]'
+            : 'translate-x-0 bg-white'
         }`}
       />
     </button>

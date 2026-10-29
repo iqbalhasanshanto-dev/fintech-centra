@@ -1,32 +1,26 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileInfoScreen } from './ProfileInfoScreen';
-import { FirstAccountScreen } from './FirstAccountScreen';
 import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { SpendingCategoriesScreen } from './SpendingCategoriesScreen';
-import { AccountReadyScreen } from './AccountReadyScreen';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { useBackHandler } from '../../utils/backButton';
 
 export type OnboardingStep =
   | 'profile'
-  | 'first-account'
   | 'theme'
-  | 'categories'
-  | 'ready';
+  | 'categories';
 
 const STEP_ORDER: OnboardingStep[] = [
   'profile',
-  'first-account',
   'theme',
   'categories',
-  'ready',
 ];
 
 const ONBOARDING_STEP_STORAGE_KEY = 'centra_onboarding_step';
 
 export const OnboardingFlow: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout, completeOnboarding } = useAuth();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(() => {
@@ -57,63 +51,41 @@ export const OnboardingFlow: React.FC = () => {
     setShowExitConfirm(true);
   });
 
+  const handleFinishOnboarding = async () => {
+    localStorage.removeItem(ONBOARDING_STEP_STORAGE_KEY);
+    await completeOnboarding();
+  };
+
   return (
-    <div
-      className="min-h-screen w-full bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white flex items-center justify-center transition-colors overflow-x-hidden selection:bg-teal-500 selection:text-white"
-      style={{
-        paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
-        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
-        paddingLeft: 'calc(1rem + env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
-        paddingRight: 'calc(1rem + env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
-      }}
-    >
-      {/* Desktop Ambient Background Accents */}
-      <div className="fixed inset-0 pointer-events-none hidden md:block overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white transition-colors overflow-x-hidden selection:bg-[#C6FF3D] selection:text-black">
+      <div
+        key={currentStep}
+        className={`w-full min-h-screen flex flex-col ${
+          transitionDirection === 'forward'
+            ? 'animate-slide-left-fade'
+            : 'animate-slide-right-fade'
+        }`}
+      >
+        {currentStep === 'profile' && (
+          <ProfileInfoScreen
+            onBack={() => setShowExitConfirm(true)}
+            onContinue={() => goToStep('theme', 'forward')}
+          />
+        )}
 
-      {/* Main Container */}
-      <div className="w-full h-full min-h-screen md:min-h-[720px] md:h-auto md:max-w-lg lg:max-w-xl md:my-8 bg-white dark:bg-[#0D1220] md:rounded-[36px] md:border md:border-gray-200/80 md:dark:border-[#1e263c] md:shadow-2xl md:shadow-black/20 flex flex-col justify-between relative overflow-hidden transition-all">
-        <div
-          key={currentStep}
-          className={`w-full flex-1 flex flex-col justify-between ${
-            transitionDirection === 'forward'
-              ? 'animate-slide-left-fade'
-              : 'animate-slide-right-fade'
-          }`}
-        >
-          {currentStep === 'profile' && (
-            <ProfileInfoScreen
-              onBack={() => setShowExitConfirm(true)}
-              onContinue={() => goToStep('first-account', 'forward')}
-            />
-          )}
+        {currentStep === 'theme' && (
+          <ThemeSelectionScreen
+            onBack={() => goToStep('profile', 'backward')}
+            onContinue={() => goToStep('categories', 'forward')}
+          />
+        )}
 
-          {currentStep === 'first-account' && (
-            <FirstAccountScreen
-              onBack={() => goToStep('profile', 'backward')}
-              onContinue={() => goToStep('theme', 'forward')}
-              onSkip={() => goToStep('theme', 'forward')}
-            />
-          )}
-
-          {currentStep === 'theme' && (
-            <ThemeSelectionScreen
-              onBack={() => goToStep('first-account', 'backward')}
-              onContinue={() => goToStep('categories', 'forward')}
-            />
-          )}
-
-          {currentStep === 'categories' && (
-            <SpendingCategoriesScreen
-              onBack={() => goToStep('theme', 'backward')}
-              onFinish={() => goToStep('ready', 'forward')}
-            />
-          )}
-
-          {currentStep === 'ready' && <AccountReadyScreen />}
-        </div>
+        {currentStep === 'categories' && (
+          <SpendingCategoriesScreen
+            onBack={() => goToStep('theme', 'backward')}
+            onFinish={handleFinishOnboarding}
+          />
+        )}
       </div>
 
       <ConfirmModal

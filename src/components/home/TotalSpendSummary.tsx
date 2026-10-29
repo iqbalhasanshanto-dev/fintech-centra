@@ -38,9 +38,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
     const data = payload[0].payload;
     if (!data) return null;
     return (
-      <div className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
+      <div className="bg-white dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] px-3.5 py-2 rounded-xl shadow-2xl text-left pointer-events-none z-50 animate-fade-in">
         <p className="text-xs font-bold text-gray-900 dark:text-white">{data.name}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium tabular-nums mt-0.5">
+        <p className="text-xs text-[#667085] dark:text-[#9CA3AF] font-medium tabular-nums mt-0.5">
           {formatCurrency(Number(data.value || 0), baseCurrency, privacyMode)} ({data.percentage?.toFixed(0)}%)
         </p>
       </div>
@@ -67,23 +67,23 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
 
 
   return (
-    <section id="spending-analytics" className="mb-10 bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl p-6 sm:p-8 transition-colors shadow-xs">
+    <section id="spending-analytics" className="mb-10 bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] rounded-[24px] p-6 sm:p-8 transition-colors shadow-xs">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+          <span className="text-xs font-semibold text-[#667085] dark:text-[#9CA3AF] block mb-1">
             Spend breakdown
           </span>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
             {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
           </h2>
         </div>
-        <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] p-1 rounded-xl">
+        <div className="flex items-center gap-2 bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] p-1 rounded-xl">
           <button
             onClick={() => setViewMode('monthly')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               viewMode === 'monthly'
-                ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs font-semibold'
+                ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white shadow-xs font-semibold'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
@@ -93,7 +93,7 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
             onClick={() => setViewMode('weekly')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               viewMode === 'weekly'
-                ? 'bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white shadow-xs font-semibold'
+                ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white shadow-xs font-semibold'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
@@ -146,7 +146,7 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
             <div
               key={item.name}
               onClick={onNavigateToReport}
-              className="flex items-center gap-4 p-4 rounded-xl bg-gray-50/70 dark:bg-[#0A0E1A]/60 border border-gray-200/80 dark:border-[#232C45]/80 hover:bg-gray-100 dark:hover:bg-[#1A233A] transition-colors cursor-pointer"
+              className="flex items-center gap-4 p-4 rounded-xl bg-[#F1F2F4]/70 dark:bg-[#262626]/60 border border-black/[0.06] dark:border-white/[0.08] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] transition-colors cursor-pointer"
             >
               <div
                 className="w-3 h-3 rounded-full shrink-0"
@@ -154,7 +154,7 @@ export const TotalSpendSummary: React.FC<TotalSpendSummaryProps> = ({
               />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+                <p className="text-xs text-[#667085] dark:text-[#9CA3AF] tabular-nums">
                   {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode, false)} ({item.percentage.toFixed(0)}%)
                 </p>
               </div>

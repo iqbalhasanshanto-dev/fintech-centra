@@ -25,7 +25,7 @@ export const PinLockScreen: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-gray-100 transition-colors"
+      className="min-h-screen w-full flex items-center justify-center p-4 bg-[#F7F8FA] dark:bg-[#000000] text-gray-900 dark:text-gray-100 transition-colors"
       style={{
         paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
         paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
@@ -33,12 +33,12 @@ export const PinLockScreen: React.FC = () => {
         paddingRight: 'calc(1rem + env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
       }}
     >
-      <div className="w-full max-w-xs bg-white dark:bg-[#121A2C] rounded-2xl p-6 sm:p-8 border border-gray-200 dark:border-[#232C45] shadow-2xl animate-fade-in">
+      <div className="w-full max-w-xs bg-white dark:bg-[#1D1D1D] rounded-[28px] p-6 sm:p-8 border border-black/5 dark:border-white/10 shadow-2xl animate-fade-in">
 
         {/* Brand header */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-brand-600 text-white mx-auto flex items-center justify-center mb-3 shadow-md shadow-brand-500/20">
-            <Shield className="w-6 h-6 fill-white/20" />
+          <div className="w-12 h-12 rounded-full bg-[#C6FF3D] text-black mx-auto flex items-center justify-center mb-3 shadow-md">
+            <Shield className="w-6 h-6 stroke-[2.5]" />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
             App Locked
@@ -63,7 +63,7 @@ export const PinLockScreen: React.FC = () => {
                 autoFocus
                 value={pin}
                 onChange={e => setPin(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-sm tracking-widest focus:border-brand-500 focus:outline-none"
+                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#2A2A2A] border border-black/5 dark:border-white/10 text-gray-900 dark:text-white text-sm tracking-widest focus:border-[#18212F] dark:focus:border-[#C6FF3D] focus:outline-none"
               />
             </div>
           </div>
@@ -74,7 +74,7 @@ export const PinLockScreen: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-float transition-all cursor-pointer"
+            className="w-full py-3 min-h-[44px] rounded-full bg-[#C6FF3D] hover:bg-[#B2E830] active:bg-[#9ECC27] text-black font-bold text-xs shadow-md transition-all cursor-pointer"
           >
             Unlock
           </button>

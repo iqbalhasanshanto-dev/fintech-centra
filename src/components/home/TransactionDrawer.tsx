@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Download, X } from 'lucide-react';
+import { Search, Download, ChevronLeft, X } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
-import { Modal } from '../ui/Modal';
 import { CategoryIcon } from '../ui/CategoryIcon';
-import { formatCurrency, formatFullDate } from '../../utils/formatters';
+import { formatCurrency, formatTime } from '../../utils/formatters';
 import { CentraDB } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
 
@@ -62,165 +61,200 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
     document.body.removeChild(link);
   };
 
+  const formatSubtitle = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+
+    const timePart = formatTime(dateStr);
+    if (isToday) return `Today • ${timePart}`;
+    if (isYesterday) return `Yesterday • ${timePart}`;
+    return `${d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} • ${timePart}`;
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="All Transactions" subtitle={`${filteredTransactions.length} recorded items`}>
-      <div className="space-y-4">
-        
-        {/* Search input & CSV Export button */}
-        <div className="flex items-center space-x-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search merchant, tag, note..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Recent Activities - All Transactions"
+      className="fixed inset-0 z-50 bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto animate-fade-in"
+    >
+      <div className="w-full max-w-lg mx-auto p-4 sm:p-6 space-y-4 pb-28">
+        {/* Top Header Bar (10-transactions-view-all.png) */}
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shrink-0"
+            aria-label="Back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          <h2 className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white text-center">
+            Recent Activities
+            <span className="sr-only"> - All Transactions</span>
+          </h2>
 
           <button
+            type="button"
             onClick={handleExportCSV}
-            className="p-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:text-brand-600 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#1A233A] text-xs font-bold flex items-center space-x-1.5 shrink-0 transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shrink-0"
             title="Export CSV"
+            aria-label="Export CSV"
           >
-            <Download className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            <span className="hidden sm:inline">CSV</span>
+            <Download className="w-4 h-4 text-[#4D6E18] dark:text-[#C6FF3D]" />
           </button>
         </div>
 
-        {/* Filter Badges */}
-        <div className="space-y-2">
-          {/* Type filters */}
-          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+        {/* Full-width Rounded Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-9 py-3.5 rounded-[20px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] text-sm text-[#18212F] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-[#C6FF3D] transition-colors font-medium shadow-xs"
+          />
+          {searchQuery && (
             <button
-              onClick={() => setSelectedType('all')}
-              className={`px-3 py-1 rounded-lg font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                selectedType === 'all'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer"
+              aria-label="Clear search"
             >
-              All Types
+              <X className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => setSelectedType('expense')}
-              className={`px-3 py-1 rounded-lg font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                selectedType === 'expense'
-                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                  : 'bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Expenses
-            </button>
-            <button
-              onClick={() => setSelectedType('income')}
-              className={`px-3 py-1 rounded-lg font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                selectedType === 'income'
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                  : 'bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Income
-            </button>
-            <button
-              onClick={() => setSelectedType('transfer')}
-              className={`px-3 py-1 rounded-lg font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                selectedType === 'transfer'
-                  ? 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/30'
-                  : 'bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Transfers
-            </button>
-          </div>
-
-          {/* Category Dropdown & Account Dropdown */}
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <select
-              value={selectedCategory}
-              onChange={e => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white focus:outline-none focus:border-brand-500 cursor-pointer"
-            >
-              <option value="all" className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">All Categories</option>
-              {categories.map(c => (
-                <option key={c.id} value={c.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                  {c.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedAccount}
-              onChange={e => setSelectedAccount(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white focus:outline-none focus:border-brand-500 cursor-pointer"
-            >
-              <option value="all" className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">All Accounts</option>
-              {accounts.map(a => (
-                <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Results List */}
-        <div className="divide-y divide-gray-100 dark:divide-[#232C45] max-h-[50vh] overflow-y-auto pr-1">
-          {filteredTransactions.length === 0 ? (
-            <div className="text-center py-8 text-xs text-gray-400 dark:text-gray-500">
-              No matching transactions found.
-            </div>
-          ) : (
-            filteredTransactions.map(tx => {
-              const isIncome = tx.type === 'income';
-              const isExpense = tx.type === 'expense';
-
-              return (
-                <div
-                  key={tx.id}
-                  onClick={() => onSelectTransaction(tx)}
-                  className="py-3 px-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#1A233A] cursor-pointer rounded-xl transition-colors"
-                >
-                  <div className="flex items-center space-x-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200/80 dark:border-[#232C45] text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
-                      <CategoryIcon name={tx.categoryIcon} className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                        {tx.merchant || tx.categoryName}
-                      </p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                        {tx.accountName} • {formatFullDate(tx.date)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <span
-                      className={`text-xs font-bold tabular-nums ${
-                        isIncome ? 'text-emerald-600 dark:text-emerald-400' : isExpense ? 'text-gray-900 dark:text-white' : 'text-brand-600 dark:text-brand-400'
-                      }`}
-                    >
-                      {isIncome ? '+' : isExpense ? '-' : ''}
-                      {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
           )}
         </div>
 
+        {/* Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+          {(['all', 'expense', 'income', 'transfer'] as const).map(type => {
+            const isSelected = selectedType === type;
+            const label =
+              type === 'all'
+                ? 'All Types'
+                : type === 'expense'
+                ? 'Expenses'
+                : type === 'income'
+                ? 'Income'
+                : 'Transfers';
+
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setSelectedType(type)}
+                className={`px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-black dark:bg-[#C6FF3D] text-white dark:text-[#0A0E1A] shadow-xs'
+                    : 'bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Category & Account Selectors */}
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <select
+            value={selectedCategory}
+            onChange={e => setSelectedCategory(e.target.value)}
+            className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(c => (
+              <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
+                {c.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={selectedAccount}
+            onChange={e => setSelectedAccount(e.target.value)}
+            className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer"
+          >
+            <option value="all">All Accounts</option>
+            {accounts.map(a => (
+              <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Transactions Card (10-transactions-view-all.png) */}
+        <div className="rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.15] p-5 min-h-[70vh] shadow-xs">
+          {filteredTransactions.length === 0 ? (
+            <div className="text-center py-24 text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
+              No matching transactions found.
+            </div>
+          ) : (
+            <div className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
+              {filteredTransactions.map(tx => {
+                const isIncome = tx.type === 'income';
+                const isExpense = tx.type === 'expense';
+                const isTransfer = tx.type === 'transfer';
+
+                return (
+                  <div
+                    key={tx.id}
+                    onClick={() => onSelectTransaction(tx)}
+                    className="py-3.5 px-1 flex items-center justify-between hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer rounded-2xl transition-colors select-none"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0 pr-3">
+                      <div
+                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+                          isIncome
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : isTransfer
+                            ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
+                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                        }`}
+                      >
+                        <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#18212F] dark:text-white truncate">
+                          {tx.merchant || tx.categoryName}
+                        </p>
+                        <p className="text-xs text-[#667085] dark:text-[#9CA3AF] truncate mt-0.5">
+                          {formatSubtitle(tx.date)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span
+                        className={`text-sm font-bold tabular-nums ${
+                          isIncome
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : isExpense
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-sky-600 dark:text-sky-400'
+                        }`}
+                      >
+                        {isIncome ? '+' : isExpense ? '-' : ''}
+                        {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 };

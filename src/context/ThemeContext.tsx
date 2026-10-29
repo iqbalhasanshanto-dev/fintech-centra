@@ -52,7 +52,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Update theme-color meta tags
     const themeColorMetas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
-    const color = dark ? '#0A0E1A' : '#FAFAFA';
+    const color = dark ? '#000000' : '#F7F8FA';
     themeColorMetas.forEach(meta => {
       meta.setAttribute('content', color);
     });

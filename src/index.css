@@ -1,22 +1,25 @@
+@import '@fontsource-variable/outfit/index.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --color-surface-bg: #FAFAFA;
+    --color-surface-bg: #F7F8FA;
     --color-surface-card: #FFFFFF;
-    --color-surface-secondary: #F5F5F5;
-    --color-border: #E5E5E5;
-    --color-text-primary: #171717;
-    --color-text-secondary: #737373;
-    --color-text-body: #171717;
-    --color-text-muted: #737373;
-    --color-accent: #2F6FED;
-    --color-accent-gradient: #2F6FED;
-    --color-accent-text: #FFFFFF;
+    --color-surface-secondary: #F1F2F4;
+    --color-border: rgba(0, 0, 0, 0.06);
+    --color-border-subtle: #E5E7EB;
+    --color-text-primary: #18212F;
+    --color-text-secondary: #667085;
+    --color-text-body: #18212F;
+    --color-text-muted: #94A3B8;
+    --color-accent: #C6FF3D;
+    --color-accent-text: #0A0E1A;
+    --color-text-accent-light: #4D6E18;
     --color-growth: #16A34A;
-    --color-danger: #E11D48;
+    --color-danger: #BE123C;
     --color-caution: #F59E0B;
     --safe-area-inset-top: env(safe-area-inset-top, 0px);
     --safe-area-inset-right: env(safe-area-inset-right, 0px);
@@ -25,32 +28,43 @@
   }
 
   .dark {
-    --color-surface-bg: #0A0A0A;
-    --color-surface-card: #171717;
+    --color-surface-bg: #000000;
+    --color-surface-card: #1D1D1D;
     --color-surface-secondary: #262626;
-    --color-border: #404040;
-    --color-text-primary: #FAFAFA;
-    --color-text-secondary: #A3A3A3;
-    --color-text-body: #FAFAFA;
-    --color-text-muted: #A3A3A3;
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-border-subtle: rgba(255, 255, 255, 0.05);
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #9CA3AF;
+    --color-text-body: #FFFFFF;
+    --color-text-muted: #71717A;
     --color-accent: #C6FF3D;
-    --color-accent-gradient: #C6FF3D;
-    --color-accent-text: #171717;
-    --color-growth: #34D399;
-    --color-danger: #FB7185;
+    --color-accent-text: #0A0E1A;
+    --color-growth: #22C55E;
+    --color-danger: #E11D48;
     --color-caution: #F59E0B;
   }
 
   body {
     background-color: var(--color-surface-bg);
     color: var(--color-text-primary);
-    font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Outfit Variable', 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Bengali', sans-serif;
     -webkit-tap-highlight-color: transparent;
     min-height: 100dvh;
   }
 
   h1, h2, h3, h4, h5, h6, .font-display, .currency-amount, button, input, select, textarea, label {
-    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Outfit Variable', 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Bengali', sans-serif;
+  }
+
+  .bg-grid-pattern {
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 64px 52px;
+  }
+  .dark .bg-grid-pattern {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 64px 52px;
   }
 }
 
@@ -60,15 +74,15 @@
 
 /* Light Mode Overrides */
 html:not(.dark) {
-  background-color: #FAFAFA;
-  color: #171717;
+  background-color: #F7F8FA;
+  color: #18212F;
 }
 
 html:not(.dark) .bg-brand-600,
 html:not(.dark) .bg-brand-500,
 html:not(.dark) .btn-primary {
-  background: #2F6FED !important;
-  color: #FFFFFF !important;
+  background: #C6FF3D !important;
+  color: #0A0E1A !important;
 }
 
 html:not(.dark) .text-emerald-600,
@@ -80,42 +94,48 @@ html:not(.dark) .text-growth {
 html:not(.dark) .text-rose-600,
 html:not(.dark) .text-rose-500,
 html:not(.dark) .text-danger {
-  color: #E11D48 !important;
+  color: #BE123C !important;
 }
 
 /* Dark Mode Overrides */
 .dark {
-  background-color: #0A0A0A;
-  color: #FAFAFA;
+  background-color: #000000;
+  color: #FFFFFF;
 }
 
 .dark body {
-  background-color: #0A0A0A;
-  color: #FAFAFA;
+  background-color: #000000;
+  color: #FFFFFF;
 }
 
 /* Dark Canvas / Backgrounds */
 .dark .dark\:bg-\[\#0A0E1A\],
 .dark .bg-\[\#0A0E1A\],
 .dark .dark\:bg-\[\#0A0A0A\],
-.dark .bg-\[\#0A0A0A\] {
-  background-color: #0A0A0A !important;
+.dark .bg-\[\#0A0A0A\],
+.dark .dark\:bg-\[\#000000\],
+.dark .bg-\[\#000000\] {
+  background-color: #000000 !important;
 }
 
-.dark .dark\:bg-\[\#0A0E1A\]\/80 {
-  background-color: rgba(10, 10, 10, 0.8) !important;
+.dark .dark\:bg-\[\#0A0E1A\]\/80,
+.dark .dark\:bg-\[\#000000\]\/80 {
+  background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
 /* Dark Surfaces / Cards */
 .dark .dark\:bg-\[\#121A2C\],
 .dark .bg-\[\#121A2C\],
 .dark .dark\:bg-\[\#171717\],
-.dark .bg-\[\#171717\] {
-  background-color: #171717 !important;
+.dark .bg-\[\#171717\],
+.dark .dark\:bg-\[\#1D1D1D\],
+.dark .bg-\[\#1D1D1D\] {
+  background-color: #1D1D1D !important;
 }
 
-.dark .dark\:bg-\[\#121A2C\]\/90 {
-  background-color: rgba(23, 23, 23, 0.9) !important;
+.dark .dark\:bg-\[\#121A2C\]\/90,
+.dark .dark\:bg-\[\#1D1D1D\]\/90 {
+  background-color: rgba(29, 29, 29, 0.9) !important;
 }
 
 /* Dark Secondary Surface / Hover States */
@@ -168,19 +188,19 @@ html:not(.dark) .text-danger {
   color: #FB7185 !important;
 }
 
-/* Dark Accent Elements: #C6FF3D (lime) with #171717 text */
+/* Dark Accent Elements: #C6FF3D (lime) with #0A0E1A text */
 .dark .bg-brand-600,
 .dark .bg-brand-500,
 .dark .btn-primary {
   background: #C6FF3D !important;
-  color: #171717 !important;
+  color: #0A0E1A !important;
 }
 
 .dark .bg-brand-600 *,
 .dark .bg-brand-500 *,
 .dark .btn-primary * {
-  color: #171717 !important;
-  stroke: #171717 !important;
+  color: #0A0E1A !important;
+  stroke: #0A0E1A !important;
 }
 
 .dark .text-brand-400,
@@ -197,13 +217,13 @@ html:not(.dark) .text-danger {
 .dark .bg-brand-950\/60,
 .dark .bg-brand-50 {
   background-color: #C6FF3D !important;
-  color: #171717 !important;
+  color: #0A0E1A !important;
 }
 
 .dark .bg-brand-950\/60 *,
 .dark .bg-brand-50 * {
-  color: #171717 !important;
-  stroke: #171717 !important;
+  color: #0A0E1A !important;
+  stroke: #0A0E1A !important;
 }
 
 .dark .border-brand-200\/70,

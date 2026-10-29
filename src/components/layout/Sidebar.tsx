@@ -35,13 +35,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="hidden lg:flex flex-col shrink-0 w-64 h-[100dvh] sticky top-0 bg-white dark:bg-[#121A2C] border-r border-gray-200 dark:border-[#232C45] p-5 justify-between select-none z-30 transition-colors">
+    <aside className="hidden lg:flex flex-col shrink-0 w-64 h-[100dvh] sticky top-0 bg-white dark:bg-[#1D1D1D] border-r border-black/[0.06] dark:border-white/[0.08] p-5 justify-between select-none z-30 transition-colors">
 
       {/* Top Header & Navigation */}
       <div className="space-y-6">
         {/* Brand Logo & Wordmark */}
         <div className="flex items-center space-x-3 px-2 pt-1">
-          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#151c2e] p-1.5 flex items-center justify-center shadow-xs border border-gray-200 dark:border-white/10">
+          <div className="w-10 h-10 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] p-1.5 flex items-center justify-center shadow-xs border border-black/[0.06] dark:border-white/[0.08]">
             <img
               src={brandLogo}
               alt="Centra"
@@ -87,14 +87,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 key={item.id}
                 onClick={() => onSelectTab(item.id)}
                 className={`w-full py-3 px-3.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer relative overflow-hidden ${isActive
-                  ? 'bg-gray-100 dark:bg-[#1A233A] text-gray-900 dark:text-white font-semibold before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-600 dark:before:bg-brand-400'
-                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#161D2F] font-medium'
+                  ? 'bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white font-semibold before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-600 dark:before:bg-[#C6FF3D]'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-[#262626]/50 font-medium'
                   }`}
                 aria-label={item.label}
               >
                 <div className="flex items-center space-x-3">
                   <Icon
-                    className={`w-4 h-4 transition-colors ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'
+                    className={`w-4 h-4 transition-colors ${isActive ? 'text-brand-600 dark:text-[#C6FF3D]' : 'text-gray-400 dark:text-gray-500'
                       }`}
                   />
                   <span>{item.label}</span>
@@ -106,21 +106,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom User Profile Card */}
-      <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-[#232C45]">
-        <div className="p-3 rounded-xl bg-gray-50 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] flex items-center justify-between">
+      <div className="space-y-3 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+        <div className="p-3 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center space-x-2.5 min-w-0">
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
                 alt={user.name}
-                className="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-[#232C45] shrink-0"
+                className="w-9 h-9 rounded-full object-cover border border-black/[0.06] dark:border-white/[0.08] shrink-0"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg";
                 }}
               />
             ) : (
-              <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 font-bold text-xs flex items-center justify-center border border-gray-200 dark:border-[#232C45] shrink-0">
+              <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 font-bold text-xs flex items-center justify-center border border-black/[0.06] dark:border-white/[0.08] shrink-0">
                 {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
             )}
