@@ -66,7 +66,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
   return (
     <div className="space-y-6 animate-fade-in pb-8">
       
-      {/* Header with "+ New Target" action */}
+      {/* Header with title */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -76,24 +76,15 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
             Savings milestones and category monthly limits
           </p>
         </div>
-
-        <Button
-          variant="primary"
-          size="md"
-          onClick={onOpenAddGoal}
-          icon={<Plus className="w-4 h-4" />}
-        >
-          New Target
-        </Button>
       </div>
 
-      {/* Plan Summary Card */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] transition-colors shadow-xs">
-        <div className="flex items-center justify-between mb-2">
+      {/* Plan Summary Hero Card */}
+      <div className="p-5 sm:p-6 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
+        <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
             Total saved across goals
           </span>
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 tabular-nums">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] tabular-nums">
             {overallSavingsRate.toFixed(0)}% Achieved
           </span>
         </div>
@@ -106,28 +97,38 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-[#0A0E1A] overflow-hidden mt-4">
+        <div className="w-full h-2 rounded-full bg-[#E5E7EB] dark:bg-[#262626] overflow-hidden mt-4">
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all duration-700"
+            className="h-full rounded-full bg-[#16A34A] dark:bg-[#22C55E] transition-all duration-700"
             style={{ width: `${Math.min(100, overallSavingsRate)}%` }}
           />
         </div>
       </div>
 
-      {/* Section 1: Featured Goals */}
+      {/* Section 1: Milestone Savings Goals */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center space-x-2">
-            <span>Milestone Savings Goals</span>
-            <span className="px-2 py-0.5 bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 text-xs font-bold rounded-full font-mono">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+              Milestone savings goals
+            </h3>
+            <span className="w-5 h-5 rounded-full bg-[#F1F2F4] dark:bg-[#262626] text-gray-600 dark:text-gray-400 text-xs font-semibold flex items-center justify-center font-mono">
               {goals.length}
             </span>
-          </h3>
+          </div>
+
+          <button
+            onClick={onOpenAddGoal}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] text-xs font-semibold hover:bg-[#16A34A]/25 dark:hover:bg-[#22C55E]/25 transition-colors cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>+ New Target</span>
+          </button>
         </div>
 
         <div className="space-y-3">
           {goals.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-white dark:bg-[#121A2C] border border-dashed border-gray-200 dark:border-[#232C45] text-center">
+            <div className="p-8 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.08] text-center">
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No savings goals created yet</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
                 Set milestones for a dream purchase, vacation, or emergency fund to track your progress.
@@ -150,109 +151,109 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                 goal.targetDate
               );
 
-              const progressBarColor = pace.isBehind ? '#F59E0B' : '#10B981';
+              const progressBarColor = pace.isBehind ? '#F59E0B' : '#22C55E';
 
               return (
                 <div
                   key={goal.id}
-                  className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-colors space-y-4 shadow-xs"
+                  className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors space-y-4 shadow-xs"
                 >
-                {/* Top Row: Icon, Title, Actions */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200/80 dark:border-[#232C45] text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
-                      <CategoryIcon name={goal.icon} className="w-5 h-5" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-base font-bold text-gray-900 dark:text-white leading-snug break-words">
-                        {goal.name}
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 mt-0.5">
-                        <Calendar className="w-3.5 h-3.5 shrink-0" />
-                        <span>Target: {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Add Funds & Menu */}
-                  <div className="flex items-center space-x-2 relative shrink-0">
-                    <button
-                      onClick={() => setSelectedGoalForFunds(goal)}
-                      className="w-[110px] h-[38px] rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] hover:bg-gray-200 dark:hover:bg-[#1A233A] text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-white text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer"
-                    >
-                      + Add Funds
-                    </button>
-
-                    <button
-                      onClick={() => setActiveGoalMenuId(activeGoalMenuId === goal.id ? null : goal.id)}
-                      className="w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-xl hover:bg-gray-100 dark:hover:bg-[#1A233A] transition-colors cursor-pointer"
-                      aria-label="Goal options"
-                    >
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-
-                    {activeGoalMenuId === goal.id && (
-                      <div className="absolute right-0 top-12 w-32 bg-white dark:bg-[#121A2C] rounded-xl shadow-2xl border border-gray-200 dark:border-[#232C45] py-1 z-30 animate-fade-in text-xs">
-                        <button
-                          onClick={() => {
-                            setGoalToDelete(goal);
-                            setActiveGoalMenuId(null);
-                          }}
-                          className="w-full px-3.5 py-2.5 text-left text-rose-600 dark:text-rose-400 hover:bg-gray-100 dark:hover:bg-[#1A233A] flex items-center space-x-2 font-semibold cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span>Delete</span>
-                        </button>
+                  {/* Top Row: Icon, Title, Actions */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className="w-11 h-11 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 flex items-center justify-center shrink-0">
+                        <CategoryIcon name={goal.icon} className="w-5 h-5" />
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Amounts readout */}
-                <div className="flex items-baseline justify-between text-xs">
-                  <div>
-                    <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
-                      {formatCurrency(goal.currentAmount, settings.baseCurrency, settings.privacyMode)}
-                    </span>
-                    <span className="text-gray-500 dark:text-gray-400 ml-1.5 tabular-nums">
-                      saved of {formatCurrency(goal.targetAmount, settings.baseCurrency, settings.privacyMode)}
-                    </span>
-                  </div>
-                  <span className="font-semibold text-brand-600 dark:text-brand-400 tabular-nums">
-                    {formatCurrency(pace.remainingAmount, settings.baseCurrency, settings.privacyMode)} left
-                  </span>
-                </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-base font-bold text-gray-900 dark:text-white leading-snug break-words">
+                          {goal.name}
+                        </h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 mt-0.5">
+                          <Calendar className="w-3.5 h-3.5 shrink-0" />
+                          <span>Target: {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Linear Progress Bar with standardized colors (Emerald = on track, Amber = behind) */}
-                <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-[#0A0E1A] overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${pace.percentComplete}%`,
-                      backgroundColor: progressBarColor,
-                    }}
-                  />
-                </div>
+                    {/* Add Funds & Menu */}
+                    <div className="flex items-center space-x-2 relative shrink-0">
+                      <button
+                        onClick={() => setSelectedGoalForFunds(goal)}
+                        className="px-3 py-1.5 rounded-full border border-black/[0.12] dark:border-white/[0.14] bg-[#F1F2F4] dark:bg-[#262626] text-[#16A34A] dark:text-[#22C55E] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        + Add Funds
+                      </button>
 
-                {/* Status */}
-                {pace.isBehind ? (
-                  <div className="flex items-center space-x-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs">
-                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                    <span className="leading-snug">
-                      <strong className="font-bold">{pace.behindPercent}% behind schedule</strong> — save ~{formatCurrency(pace.recommendedMonthly, settings.baseCurrency, settings.privacyMode, false)}/mo to finish on target.
+                      <button
+                        onClick={() => setActiveGoalMenuId(activeGoalMenuId === goal.id ? null : goal.id)}
+                        className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-full hover:bg-[#F1F2F4] dark:hover:bg-[#262626] transition-colors cursor-pointer"
+                        aria-label="Goal options"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+
+                      {activeGoalMenuId === goal.id && (
+                        <div className="absolute right-0 top-11 w-32 bg-white dark:bg-[#262626] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.1] py-1 z-30 animate-fade-in text-xs">
+                          <button
+                            onClick={() => {
+                              setGoalToDelete(goal);
+                              setActiveGoalMenuId(null);
+                            }}
+                            className="w-full px-3.5 py-2.5 text-left text-rose-600 dark:text-rose-400 hover:bg-[#F1F2F4] dark:hover:bg-white/[0.06] flex items-center space-x-2 font-semibold cursor-pointer rounded-xl"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Amounts readout */}
+                  <div className="flex items-baseline justify-between text-xs">
+                    <div>
+                      <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
+                        {formatCurrency(goal.currentAmount, settings.baseCurrency, settings.privacyMode)}
+                      </span>
+                      <span className="text-gray-500 dark:text-gray-400 ml-1.5 tabular-nums">
+                        of {formatCurrency(goal.targetAmount, settings.baseCurrency, settings.privacyMode)}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-[#16A34A] dark:text-[#22C55E] tabular-nums">
+                      {formatCurrency(pace.remainingAmount, settings.baseCurrency, settings.privacyMode)} left
                     </span>
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>On target pace ({pace.percentComplete.toFixed(0)}% reached)</span>
+
+                  {/* Linear Progress Bar */}
+                  <div className="w-full h-2 rounded-full bg-[#E5E7EB] dark:bg-[#262626] overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${pace.percentComplete}%`,
+                        backgroundColor: progressBarColor,
+                      }}
+                    />
                   </div>
-                )}
-              </div>
-            );
-          })
-        )}
+
+                  {/* Status */}
+                  {pace.isBehind ? (
+                    <div className="flex items-center space-x-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                      <span className="leading-snug">
+                        <strong className="font-bold">{pace.behindPercent}% behind schedule</strong> — save ~{formatCurrency(pace.recommendedMonthly, settings.baseCurrency, settings.privacyMode, false)}/mo to finish on target.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#16A34A] dark:text-[#22C55E]">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>On target pace ({pace.percentComplete.toFixed(0)}% reached)</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -260,10 +261,10 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center space-x-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               Category Budgets
             </h3>
-            <span className="px-2 py-0.5 bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 text-xs font-bold rounded-full font-mono">
+            <span className="w-5 h-5 rounded-full bg-[#F1F2F4] dark:bg-[#262626] text-gray-600 dark:text-gray-400 text-xs font-semibold flex items-center justify-center font-mono">
               {budgets.length}
             </span>
           </div>
@@ -271,7 +272,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
 
         <div className="space-y-3">
           {budgets.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-white dark:bg-[#121A2C] border border-dashed border-gray-200 dark:border-[#232C45] text-center">
+            <div className="p-8 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.08] text-center">
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No category budgets created yet</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Set monthly spending limits for your categories to keep spending on track.
@@ -286,11 +287,11 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               return (
                 <div
                   key={budget.id}
-                  className="p-5 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-colors flex items-center justify-between shadow-xs"
+                  className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors flex items-center justify-between shadow-xs"
                 >
                   {/* Left: Icon & Info */}
                   <div className="flex items-center space-x-3.5 min-w-0 flex-1 pr-3">
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200/80 dark:border-[#232C45] text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
+                    <div className="w-11 h-11 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 flex items-center justify-center shrink-0">
                       <CategoryIcon name={budget.categoryIcon} className="w-5 h-5" />
                     </div>
 
@@ -300,7 +301,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                           {budget.categoryName}
                         </h4>
                         {isOver && (
-                          <span className="px-2 py-0.5 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider">
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-semibold uppercase tracking-wider">
                             Over Limit
                           </span>
                         )}
@@ -315,7 +316,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
 
                   {/* Right: Circular Progress Ring + Column-aligned Remaining Values */}
                   <div className="shrink-0 flex items-center space-x-4">
-                    <div className="text-right min-w-[130px] font-mono tabular-nums text-xs">
+                    <div className="text-right min-w-[110px] font-mono tabular-nums text-xs">
                       <span className={`font-semibold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300'}`}>
                         {isOver
                           ? `${formatCurrency(Math.abs(remaining), settings.baseCurrency, settings.privacyMode)} over`
@@ -346,7 +347,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       >
         <form onSubmit={handleContribute} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
               Deposit Amount ({settings.baseCurrency || 'USD'})
             </label>
             <input
@@ -356,12 +357,12 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               placeholder="500.00"
               value={fundAmount}
               onChange={e => setFundAmount(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xl font-bold tabular-nums focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xl font-bold tabular-nums focus:outline-none focus:border-[#C6FF3D]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
               Deduct from Account
             </label>
             {accounts.length === 0 ? (
@@ -372,10 +373,10 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               <select
                 value={fundSourceAccountId}
                 onChange={e => setFundSourceAccountId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white text-xs focus:outline-none focus:border-brand-500"
+                className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm focus:outline-none focus:border-[#C6FF3D]"
               >
                 {accounts.map(a => (
-                  <option key={a.id} value={a.id} className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white">
+                  <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                     {a.name} — Available: {formatCurrency(a.balance, a.currency)}
                   </option>
                 ))}
@@ -414,3 +415,4 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
     </div>
   );
 };
+

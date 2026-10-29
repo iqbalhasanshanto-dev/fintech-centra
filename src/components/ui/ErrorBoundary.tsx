@@ -41,8 +41,8 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#FAFAFA] dark:bg-[#0A0E1A] text-gray-900 dark:text-white transition-colors">
-          <div className="w-full max-w-md p-8 rounded-3xl bg-white dark:bg-[#0D1220] border border-gray-200 dark:border-[#1e263c] shadow-2xl text-center animate-fade-in">
+        <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#F7F8FA] dark:bg-black text-gray-900 dark:text-white transition-colors">
+          <div className="w-full max-w-md p-8 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] shadow-2xl text-center animate-fade-in">
             <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center border border-rose-500/20 shadow-md">
               <AlertOctagon className="w-8 h-8" />
             </div>
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="flex-1 py-3 px-4 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-xl bg-[#C6FF3D] hover:bg-[#B2E830] active:bg-[#9ECC27] text-[#0A0E1A] text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Reload App</span>
@@ -72,7 +72,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="flex-1 py-3 px-4 rounded-xl border border-gray-200 dark:border-[#232c44] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-xl border border-black/[0.06] dark:border-white/[0.08] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Home className="w-4 h-4" />
                 <span>Go to Home</span>

@@ -134,7 +134,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full px-4 py-3 sm:py-3.5 rounded-2xl bg-gray-50 dark:bg-[#131722] border border-gray-200 dark:border-[#232c44] text-gray-900 dark:text-white flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 transition-all text-sm cursor-pointer select-none group"
+        className="w-full px-4 py-3 sm:py-3.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white flex items-center justify-between hover:border-black/[0.12] dark:hover:border-white/[0.14] transition-all text-sm cursor-pointer select-none group"
       >
         <span className={value ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
           {formatDisplayDate(value)}

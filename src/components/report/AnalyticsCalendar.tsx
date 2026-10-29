@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatTime } from '../../utils/formatters';
-import { getThemePalette } from '../../utils/themeColors';
 import { todayLocalDateKey, toLocalDateKey } from '../../utils/dates';
 
 interface AnalyticsCalendarProps {
@@ -15,13 +14,6 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
   onSelectTransaction,
 }) => {
   const { transactions, settings } = useFinance();
-  const isDark =
-    settings.theme === 'dark' ||
-    (settings.theme === 'system' &&
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-  const palette = getThemePalette(isDark);
 
   // Current viewed month/year in calendar
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -178,209 +170,236 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
     });
   }, [selectedDate]);
 
+  const getTxBadgeStyle = (type: string) => {
+    switch (type) {
+      case 'income':
+        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+      case 'expense':
+        return 'bg-rose-500/10 text-rose-600 dark:text-rose-400';
+      default:
+        return 'bg-sky-500/10 text-sky-600 dark:text-sky-400';
+    }
+  };
+
   return (
-    <section id="interactive-calendar" className="bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] rounded-2xl p-6 transition-colors shadow-xs">
-      {/* Calendar Header with aligned icon & text */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] flex items-center justify-center text-gray-700 dark:text-gray-300 shrink-0">
-            <CalendarIcon className="w-5 h-5" />
+    <section id="interactive-calendar" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Left Card: Calendar Grid (7 cols) */}
+      <div className="lg:col-span-7 bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] rounded-[24px] p-5 sm:p-6 transition-colors shadow-xs">
+        {/* Calendar Header with aligned icon & text */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center text-[#18212F] dark:text-white shrink-0">
+              <CalendarIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[#18212F] dark:text-white">
+                Spending calendar
+              </h3>
+              <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-0.5">
+                Click any date to inspect daily total spend and breakdown
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              Interactive spending calendar
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Click any date to inspect daily total spend and breakdown
-            </p>
+
+          {/* Month Navigator */}
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={handleJumpToToday}
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+            >
+              Today
+            </button>
+            <div className="flex items-center bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-0.5">
+              <button
+                onClick={handlePrevMonth}
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-[#1D1D1D] text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white transition-colors cursor-pointer"
+                aria-label="Previous Month"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="px-3 text-xs font-bold text-[#18212F] dark:text-white min-w-[110px] text-center select-none">
+                {monthNames[month]} {year}
+              </span>
+              <button
+                onClick={handleNextMonth}
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-[#1D1D1D] text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white transition-colors cursor-pointer"
+                aria-label="Next Month"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Month Navigator */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            onClick={handleJumpToToday}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#1A233A] transition-colors cursor-pointer"
-          >
-            Today
-          </button>
-          <div className="flex items-center bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] rounded-lg p-0.5">
-            <button
-              onClick={handlePrevMonth}
-              className="p-1.5 rounded-md hover:bg-white dark:hover:bg-[#121A2C] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-              aria-label="Previous Month"
+        {/* Weekday Header */}
+        <div className="grid grid-cols-7 gap-1 mb-2 text-center">
+          {weekdayNames.map(day => (
+            <div
+              key={day}
+              className="text-xs font-bold text-[#667085] dark:text-[#9CA3AF] uppercase py-1"
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="px-3 text-xs font-bold text-gray-900 dark:text-white min-w-[110px] text-center select-none">
-              {monthNames[month]} {year}
-            </span>
-            <button
-              onClick={handleNextMonth}
-              className="p-1.5 rounded-md hover:bg-white dark:hover:bg-[#121A2C] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-              aria-label="Next Month"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Day Cells Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {calendarDays.map((item, index) => {
+            const isSelected = item.dateKey === selectedDate;
+            return (
+              <button
+                key={`${item.dateKey}-${index}`}
+                onClick={() => setSelectedDate(item.dateKey)}
+                className={`relative flex flex-col items-center justify-center h-11 sm:h-12 rounded-2xl text-xs font-semibold transition-all cursor-pointer select-none ${
+                  isSelected
+                    ? 'bg-[#C6FF3D] text-[#0A0E1A] font-bold shadow-xs ring-2 ring-offset-2 ring-[#C6FF3D] dark:ring-offset-[#1D1D1D]'
+                    : item.isCurrentMonth
+                    ? 'text-[#18212F] dark:text-white hover:bg-[#F1F2F4] dark:hover:bg-[#262626]'
+                    : 'text-gray-400/40 dark:text-gray-600 hover:bg-[#F1F2F4]/50 dark:hover:bg-[#262626]/50'
+                } ${item.isToday && !isSelected ? 'border border-[#C6FF3D]' : ''}`}
+              >
+                <span className="tabular-nums">{item.dayNumber}</span>
+                
+                {/* Transaction indicator dots */}
+                {item.hasTransactions && (
+                  <div className="flex items-center gap-0.5 mt-0.5">
+                    {item.totalSpend > 0 && (
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isSelected ? 'bg-[#0A0E1A]' : 'bg-[#F43F5E]'
+                        }`}
+                      />
+                    )}
+                    {item.totalIncome > 0 && (
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isSelected ? 'bg-[#0A0E1A]' : 'bg-[#22C55E]'
+                        }`}
+                      />
+                    )}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Bottom Legend Row */}
+        <div className="flex items-center justify-center gap-5 pt-4 mt-3 border-t border-black/[0.04] dark:border-white/[0.06] text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
+            Income
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#F43F5E]" />
+            Expenses
+          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: Calendar Grid (7 cols) */}
-        <div className="lg:col-span-7 bg-gray-50/70 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] rounded-2xl p-4 sm:p-5">
-          {/* Weekday Header */}
-          <div className="grid grid-cols-7 gap-1 mb-2 text-center">
-            {weekdayNames.map(day => (
-              <div
-                key={day}
-                className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase py-1"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
+      {/* Right Card: Selected Date Breakdown Panel (5 cols) */}
+      <div className="lg:col-span-5 bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] rounded-[24px] p-5 sm:p-6 flex flex-col h-full min-h-[340px] shadow-xs">
+        {/* Selected Date Header */}
+        <div className="border-b border-black/[0.06] dark:border-white/[0.08] pb-4 mb-4">
+          <span className="text-xs font-medium text-[#667085] dark:text-[#9CA3AF] block mb-0.5">
+            Selected date
+          </span>
+          <h4 className="text-lg font-bold text-[#18212F] dark:text-white truncate">
+            {formattedSelectedDate}
+          </h4>
 
-          {/* Day Cells Grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map((item, index) => {
-              const isSelected = item.dateKey === selectedDate;
-              return (
-                <button
-                  key={`${item.dateKey}-${index}`}
-                  onClick={() => setSelectedDate(item.dateKey)}
-                  className={`relative flex flex-col items-center justify-center h-11 sm:h-12 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none ${
-                    isSelected
-                      ? 'bg-brand-600 text-white dark:!bg-[#C6FF3D] dark:!text-[#171717] font-bold shadow-md ring-2 ring-offset-2 ring-brand-500 dark:ring-[#C6FF3D] dark:ring-offset-[#0A0E1A]'
-                      : item.isCurrentMonth
-                      ? 'text-gray-900 dark:text-white hover:bg-white dark:hover:bg-[#121A2C] hover:shadow-xs'
-                      : 'text-gray-400/60 dark:text-gray-600 hover:bg-white/50 dark:hover:bg-[#121A2C]/50'
-                  } ${item.isToday && !isSelected ? 'border border-brand-500 dark:border-[#C6FF3D]' : ''}`}
-                >
-                  <span className="tabular-nums">{item.dayNumber}</span>
-                  
-                  {/* Transaction indicator dots */}
-                  {item.hasTransactions && (
-                    <div className="flex items-center gap-0.5 mt-0.5">
-                      {item.totalSpend > 0 && (
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            isSelected ? 'bg-white dark:bg-[#171717]' : ''
-                          }`}
-                          style={{
-                            backgroundColor: isSelected ? undefined : palette.negative,
-                          }}
-                        />
-                      )}
-                      {item.totalIncome > 0 && (
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            isSelected ? 'bg-white dark:bg-[#171717]' : ''
-                          }`}
-                          style={{
-                            backgroundColor: isSelected ? undefined : palette.positive,
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right: Selected Date Breakdown Panel (5 cols) */}
-        <div className="lg:col-span-5 bg-gray-50/70 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] rounded-2xl p-5 flex flex-col h-full min-h-[340px]">
-          {/* Selected Date Header with strong visual weight */}
-          <div className="border-b border-gray-200 dark:border-[#232C45] pb-4 mb-4">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-0.5">
-              Selected date
-            </span>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">
-              {formattedSelectedDate}
-            </h4>
-
-            {/* Total Spend & Income for Selected Day */}
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="p-3 rounded-xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45]">
-                <div className="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
-                  <span>Total spend</span>
-                  <ArrowDownRight className="w-3.5 h-3.5" style={{ color: palette.negative }} />
+          {/* Total Spend & Income for Selected Day */}
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center gap-2.5">
+              <div className="w-1 h-7 rounded-full bg-[#E11D48] dark:bg-[#F43F5E] shrink-0" />
+              <div className="min-w-0">
+                <div className="text-[11px] font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
+                  Total expenses
                 </div>
-                <div className="text-base font-bold tabular-nums mt-1 font-display" style={{ color: palette.negative }}>
+                <div className="text-sm sm:text-base font-bold tabular-nums text-[#E11D48] dark:text-[#F43F5E] truncate">
                   {formatCurrency(selectedDaySpend, settings.baseCurrency, settings.privacyMode)}
                 </div>
               </div>
+            </div>
 
-              <div className="p-3 rounded-xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45]">
-                <div className="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
-                  <span>Total income</span>
-                  <ArrowUpRight className="w-3.5 h-3.5" style={{ color: palette.positive }} />
+            <div className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center gap-2.5">
+              <div className="w-1 h-7 rounded-full bg-[#16A34A] dark:bg-[#22C55E] shrink-0" />
+              <div className="min-w-0">
+                <div className="text-[11px] font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
+                  Total income
                 </div>
-                <div className="text-base font-bold tabular-nums mt-1 font-display" style={{ color: palette.positive }}>
+                <div className="text-sm sm:text-base font-bold tabular-nums text-[#16A34A] dark:text-[#22C55E] truncate">
                   {formatCurrency(selectedDayIncome, settings.baseCurrency, settings.privacyMode)}
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Day Transactions List Breakdown */}
-          <div className="flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Transactions ({selectedDayTransactions.length})
-              </span>
-            </div>
+        {/* Day Transactions List Breakdown */}
+        <div className="flex-1 flex flex-col">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-bold text-[#667085] dark:text-[#9CA3AF] uppercase tracking-wider">
+              Transactions ({selectedDayTransactions.length})
+            </span>
+          </div>
 
-            {selectedDayTransactions.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center rounded-xl bg-white dark:bg-[#121A2C] border border-dashed border-gray-200 dark:border-[#232C45]">
-                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#0A0E1A] flex items-center justify-center text-gray-400 dark:text-gray-500 mb-2">
-                  <CalendarIcon className="w-5 h-5" />
-                </div>
-                <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                  No transactions on this day
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Pick a highlighted day to view itemized records
-                </p>
+          {selectedDayTransactions.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center rounded-2xl bg-[#F1F2F4]/50 dark:bg-[#262626]/40 border border-dashed border-black/[0.08] dark:border-white/[0.12]">
+              <div className="w-10 h-10 rounded-full bg-[#F1F2F4] dark:bg-[#262626] flex items-center justify-center text-gray-400 dark:text-gray-500 mb-2">
+                <CalendarIcon className="w-5 h-5" />
               </div>
-            ) : (
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                {selectedDayTransactions.map(tx => (
+              <p className="text-xs font-semibold text-[#18212F] dark:text-white">
+                No transactions on this day
+              </p>
+              <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-0.5">
+                Pick a highlighted day to view itemized records
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              {selectedDayTransactions.map(tx => {
+                const isIncome = tx.type === 'income';
+                const isExpense = tx.type === 'expense';
+
+                return (
                   <div
                     key={tx.id}
                     onClick={() => onSelectTransaction?.(tx)}
-                    className="p-3 rounded-xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] hover:border-brand-500 flex items-center justify-between text-xs cursor-pointer transition-all shadow-2xs group"
+                    className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] hover:border-brand-500 flex items-center justify-between text-xs cursor-pointer transition-all group"
                   >
                     <div className="flex items-center space-x-3 min-w-0 pr-2">
-                      <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                        <CategoryIcon name={tx.categoryIcon} className="w-3.5 h-3.5" />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform ${getTxBadgeStyle(tx.type)}`}>
+                        <CategoryIcon name={tx.categoryIcon} className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-gray-900 dark:text-white truncate">
+                        <p className="font-semibold text-[#18212F] dark:text-white truncate">
                           {tx.merchant || tx.categoryName}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-0.5">
                           {tx.accountName} • {formatTime(tx.date)}
                         </p>
                       </div>
                     </div>
 
                     <span
-                      className="font-bold tabular-nums shrink-0 font-display text-xs"
-                      style={{
-                        color: tx.type === 'income' ? palette.positive : palette.negative,
-                      }}
+                      className={`font-bold tabular-nums shrink-0 text-xs ${
+                        isIncome
+                          ? 'text-[#16A34A] dark:text-[#22C55E]'
+                          : isExpense
+                          ? 'text-[#E11D48] dark:text-[#F43F5E]'
+                          : 'text-[#0284C7] dark:text-[#38BDF8]'
+                      }`}
                     >
-                      {tx.type === 'income' ? '+' : '-'}
+                      {isIncome ? '+' : isExpense ? '-' : ''}
                       {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
                     </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </section>

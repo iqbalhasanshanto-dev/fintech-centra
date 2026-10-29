@@ -17,7 +17,8 @@ import {
   Trash2,
   Lock,
   KeyRound,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -51,6 +52,8 @@ export const SettingsScreen: React.FC = () => {
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [showDeleteDataModal, setShowDeleteDataModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -73,6 +76,8 @@ export const SettingsScreen: React.FC = () => {
   // Hardware back button handlers for all settings sub-modals
   useBackHandler(showEditProfile, () => setShowEditProfile(false));
   useBackHandler(showHelpModal, () => setShowHelpModal(false));
+  useBackHandler(showPrivacyModal, () => setShowPrivacyModal(false));
+  useBackHandler(showTermsModal, () => setShowTermsModal(false));
   useBackHandler(showDeleteDataModal, () => {
     setShowDeleteDataModal(false);
     setDeleteConfirmText('');
@@ -268,7 +273,7 @@ export const SettingsScreen: React.FC = () => {
 
       {/* Guest Mode Upgrade Banner */}
       {isGuest && (
-        <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-5 rounded-[24px] bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold">
               Guest Session Active
@@ -284,70 +289,69 @@ export const SettingsScreen: React.FC = () => {
             variant="primary"
             size="sm"
             onClick={() => setShowUpgradeConfirm(true)}
-            className="shrink-0 bg-black dark:bg-white text-white dark:text-black hover:opacity-90 font-bold"
+            className="shrink-0 font-bold"
           >
             Create Full Account
           </Button>
         </div>
       )}
 
-      {/* 1. Profile Card with Edit button grouped close to profile info */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] flex items-center justify-between transition-colors shadow-xs">
+      {/* 1. Profile Card with Camera Badge Overlay & Edit button */}
+      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between transition-colors shadow-xs">
         <div className="flex items-center space-x-4 min-w-0">
-          {user.avatarUrl ? (
-            <img
-              src={user.avatarUrl}
-              alt={user.name}
-              className="w-14 h-14 rounded-full object-cover border border-gray-200 dark:border-[#232C45] shrink-0"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg";
-              }}
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 font-bold text-lg flex items-center justify-center border border-gray-200 dark:border-[#232C45] shrink-0">
-              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-            </div>
-          )}
-          <div className="min-w-0 space-y-1">
-            <div className="flex items-center flex-wrap gap-2">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white break-words">
-                {user.name}
-              </h2>
-              <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 text-xs font-semibold">
-                Personal
-              </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setProfileName(user.name);
-                  setProfileEmail(user.email);
-                  setProfileAvatar(user.avatarUrl);
-                  setShowEditProfile(true);
+          <div className="relative shrink-0">
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="w-16 h-16 rounded-full object-cover border border-black/[0.06] dark:border-white/[0.08]"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg";
                 }}
-                icon={<Edit2 className="w-3.5 h-3.5" />}
-                aria-label="Edit user profile"
-                className="ml-1"
-              >
-                Edit
-              </Button>
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-[#F1F2F4] dark:bg-[#262626] text-gray-800 dark:text-gray-100 font-bold text-xl flex items-center justify-center border border-black/[0.06] dark:border-white/[0.08]">
+                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
+            <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-[#C6FF3D] text-[#0A0E1A] flex items-center justify-center shadow-xs">
+              <Camera className="w-3.5 h-3.5" />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 break-words">{user.email}</p>
+          </div>
+          <div className="min-w-0 space-y-0.5">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white break-words">
+              {user.name}
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Change photo or profile icon</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.email}</p>
           </div>
         </div>
+
+        <button
+          onClick={() => {
+            setProfileName(user.name);
+            setProfileEmail(user.email);
+            setProfileAvatar(user.avatarUrl);
+            setShowEditProfile(true);
+          }}
+          aria-label="Edit user profile"
+          className="w-10 h-10 rounded-full bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#E5E7EB] dark:hover:bg-[#333333] transition-colors cursor-pointer shrink-0"
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
       </div>
 
       {/* 2. Security & Authentication Center */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
+      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Shield className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+          <Shield className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
             Security &amp; authentication
           </h2>
         </div>
 
-        <div className="space-y-3 divide-y divide-gray-100 dark:divide-[#232C45] text-xs">
+        <div className="space-y-3 divide-y divide-black/[0.06] dark:divide-white/[0.08] text-xs">
 
           {/* App PIN Lock Toggle */}
           <div
@@ -415,11 +419,11 @@ export const SettingsScreen: React.FC = () => {
                   setAutoLockTimeoutState(val);
                   setAutoLockTimeout(val);
                 }}
-                className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500"
+                className="bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-[#C6FF3D]"
                 aria-label="Auto-lock Timeout"
               >
                 {AUTOLOCK_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
+                  <option key={opt.value} value={opt.value} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
                     {opt.label}
                   </option>
                 ))}
@@ -434,13 +438,13 @@ export const SettingsScreen: React.FC = () => {
           >
             <div className="flex items-center space-x-3 min-w-0">
               {settings.privacyMode ? (
-                <EyeOff className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+                <EyeOff className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
               ) : (
                 <Eye className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               )}
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Privacy Mode (Mask Balances)</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Hide numbers when viewing in public places</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Hide balances and amounts when viewing in public.</p>
               </div>
             </div>
             <Switch
@@ -453,23 +457,23 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Notification Rules */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
+      {/* 3. Notifications Card */}
+      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Bell className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-            Notification rules
+          <Bell className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+            Notifications
           </h2>
         </div>
 
-        <div className="space-y-3 divide-y divide-gray-100 dark:divide-[#232C45] text-xs">
+        <div className="space-y-3 divide-y divide-black/[0.06] dark:divide-white/[0.08] text-xs">
 
           <div
             onClick={() => updateSettings({ notifications: { ...settings.notifications, budgetOverruns: !settings.notifications.budgetOverruns } })}
             className="flex items-center justify-between pt-2 cursor-pointer select-none gap-4"
           >
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">Budget Overrun Alerts</p>
+              <p className="font-semibold text-gray-900 dark:text-white">Budget outflow alerts</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Instant notification when spending exceeds 80% limit</p>
             </div>
             <Switch
@@ -484,7 +488,7 @@ export const SettingsScreen: React.FC = () => {
             className="flex items-center justify-between pt-3 cursor-pointer select-none gap-4"
           >
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">High Outflow Alerts</p>
+              <p className="font-semibold text-gray-900 dark:text-white">High-outflow alerts</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Alert for single transactions exceeding ৳5,000</p>
             </div>
             <Switch
@@ -499,7 +503,7 @@ export const SettingsScreen: React.FC = () => {
             className="flex items-center justify-between pt-3 cursor-pointer select-none gap-4"
           >
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">Security &amp; Login Alerts</p>
+              <p className="font-semibold text-gray-900 dark:text-white">Security &amp; login alerts</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Notify upon new device sessions or credential shifts</p>
             </div>
             <Switch
@@ -512,11 +516,11 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Appearance & System Preferences */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
+      {/* 4. Appearance & Locale */}
+      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Palette className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+          <Palette className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
             Appearance &amp; locale
           </h2>
         </div>
@@ -535,14 +539,14 @@ export const SettingsScreen: React.FC = () => {
               <select
                 value={settings.baseCurrency || ''}
                 onChange={e => updateSettings({ baseCurrency: (e.target.value as CurrencyCode) || null })}
-                className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-brand-500 cursor-pointer text-xs max-w-[200px]"
+                className="px-3 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-[#C6FF3D] cursor-pointer text-xs max-w-[200px]"
               >
                 {!settings.baseCurrency && <option value="">Select currency...</option>}
                 {SUPPORTED_CURRENCIES.map(c => (
                   <option
                     key={c.code}
                     value={c.code}
-                    className="bg-white dark:bg-[#121A2C] text-gray-900 dark:text-white"
+                    className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white"
                   >
                     {c.flag} {c.code} ({c.symbol}) - {c.name}
                   </option>
@@ -554,11 +558,14 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Data Management & Backup */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#121A2C] border border-gray-200 dark:border-[#232C45] space-y-4 transition-colors shadow-xs">
-        <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-          Data management
-        </h2>
+      {/* 5. Data Management */}
+      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
+        <div className="flex items-center space-x-2.5">
+          <Download className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+            Data management
+          </h2>
+        </div>
 
         <div className="flex flex-wrap items-center gap-3 text-xs">
           <Button
@@ -580,34 +587,27 @@ export const SettingsScreen: React.FC = () => {
               Reset Demo Data
             </Button>
           ) : (
-            <>
-              {/*
-                TODO: Account deletion requires a server-side Supabase Edge Function using the
-                service_role key to invoke supabase.auth.admin.deleteUser(userId).
-                Client-side RLS prevents authenticated users from deleting directly from auth.users.
-              */}
-              <Button
-                variant="destructive"
-                size="md"
-                onClick={() => setShowDeleteDataModal(true)}
-                icon={<Trash2 className="w-4 h-4" />}
-              >
-                Delete All My Data
-              </Button>
-            </>
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={() => setShowDeleteDataModal(true)}
+              icon={<Trash2 className="w-4 h-4" />}
+            >
+              Delete All My Data
+            </Button>
           )}
         </div>
       </div>
 
-      {/* 6. Support & Logout */}
-      <div className="space-y-4">
+      {/* 6. Support & Legal */}
+      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] divide-y divide-black/[0.06] dark:divide-white/[0.08] shadow-xs">
         <button
           type="button"
           onClick={() => setShowHelpModal(true)}
-          className="w-full py-3.5 px-5 rounded-2xl flex items-center justify-between border border-gray-200 dark:border-[#232C45] bg-white dark:bg-[#121A2C] hover:bg-gray-50 dark:hover:bg-[#1A233A] transition-colors cursor-pointer group select-none shadow-xs"
+          className="w-full py-3 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
         >
           <div className="flex items-center gap-3 min-w-0">
-            <HelpCircle className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+            <HelpCircle className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
             <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white">
               Centra Help &amp; Support FAQ
             </span>
@@ -615,51 +615,59 @@ export const SettingsScreen: React.FC = () => {
           <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
         </button>
 
-        {/* Exit Demo row in Settings */}
-        {isGuest && (
+        <button
+          type="button"
+          onClick={() => setShowPrivacyModal(true)}
+          className="w-full py-3 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <FileText className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+            <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white">
+              Privacy policy
+            </span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowTermsModal(true)}
+          className="w-full py-3 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <FileText className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+            <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white">
+              Terms of service
+            </span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+        </button>
+      </div>
+
+      {/* 7. Bottom Logout Pill Card */}
+      <div className="pt-2 space-y-4">
+        {isGuest ? (
           <button
             type="button"
             onClick={() => setShowExitDemoConfirm(true)}
-            className="w-full py-3.5 px-5 rounded-2xl flex items-center justify-between border border-amber-300/60 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 hover:bg-amber-100/60 dark:hover:bg-amber-950/20 transition-colors cursor-pointer group select-none shadow-xs"
+            className="w-full py-4 px-5 rounded-[24px] flex items-center justify-center space-x-2 border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] transition-colors cursor-pointer shadow-xs font-semibold text-sm"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <LogOut className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              <div className="text-left">
-                <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white block">
-                  Exit Demo
-                </span>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400 block">
-                  Leave demo mode and return to the landing page
-                </span>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0" />
+            <span>Exit Demo</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full py-4 px-5 rounded-[24px] flex items-center justify-center space-x-2 border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] transition-colors cursor-pointer shadow-xs font-semibold text-sm"
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            <span>Log Out of Session</span>
           </button>
         )}
 
-        {/* Standard button width for Logout or Exit Demo with left-aligned icon & text */}
-        <div className="flex justify-start">
-          {isGuest ? (
-            <Button
-              variant="destructive"
-              size="md"
-              onClick={() => setShowExitDemoConfirm(true)}
-              icon={<LogOut className="w-4 h-4" />}
-            >
-              Exit Demo
-            </Button>
-          ) : (
-            <Button
-              variant="destructive"
-              size="md"
-              onClick={() => {
-                setShowLogoutConfirm(true);
-              }}
-              icon={<LogOut className="w-4 h-4" />}
-            >
-              Log Out of Session
-            </Button>
-          )}
+        <div className="text-center pb-2">
+          <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Version 1.0.0</p>
         </div>
       </div>
 
@@ -675,14 +683,14 @@ export const SettingsScreen: React.FC = () => {
                   src={url}
                   alt={`Avatar ${i}`}
                   onClick={() => setProfileAvatar(url)}
-                  className={`w-12 h-12 rounded-full object-cover cursor-pointer border transition-all shrink-0 ${profileAvatar === url ? 'border-brand-500 scale-105 ring-2 ring-brand-500/40' : 'border-gray-200 dark:border-[#232C45] opacity-60 hover:opacity-100'
+                  className={`w-12 h-12 rounded-full object-cover cursor-pointer border transition-all shrink-0 ${profileAvatar === url ? 'border-[#C6FF3D] scale-105 ring-2 ring-[#C6FF3D]/40' : 'border-black/[0.06] dark:border-white/[0.08] opacity-60 hover:opacity-100'
                     }`}
                 />
               ))}
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="w-12 h-12 rounded-full flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[#0A0E1A] hover:bg-gray-200 dark:hover:bg-[#1A233A] text-gray-500 dark:text-gray-400 transition-colors shrink-0"
+                className="w-12 h-12 rounded-full flex flex-col items-center justify-center cursor-pointer border border-dashed border-black/[0.12] dark:border-white/[0.14] bg-[#F1F2F4] dark:bg-[#262626] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] text-gray-500 dark:text-gray-400 transition-colors shrink-0"
                 title="Upload from device"
               >
                 <Camera className="w-4 h-4" />
@@ -705,15 +713,15 @@ export const SettingsScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Display Name</label>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Display Name</label>
             <input
               type="text"
               required
               value={profileName}
               onChange={e => handleProfileNameChange(e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                profileNameError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
-              } text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-brand-500`}
+              className={`w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                profileNameError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
+              } text-gray-900 dark:text-white text-sm font-semibold focus:outline-none focus:border-[#C6FF3D]`}
             />
             {profileNameError && (
               <p className="mt-1 text-[11px] text-rose-500 font-medium">{profileNameError}</p>
@@ -721,15 +729,15 @@ export const SettingsScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Email Address</label>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Email Address</label>
             <input
               type="email"
               required
               value={profileEmail}
               onChange={e => handleProfileEmailChange(e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-[#0A0E1A] border ${
-                profileEmailError ? 'border-rose-500' : 'border-gray-200 dark:border-[#232C45]'
-              } text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-brand-500`}
+              className={`w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                profileEmailError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
+              } text-gray-900 dark:text-white text-sm font-semibold focus:outline-none focus:border-[#C6FF3D]`}
             />
             {profileEmailError && (
               <p className="mt-1 text-[11px] text-rose-500 font-medium">{profileEmailError}</p>
@@ -751,11 +759,11 @@ export const SettingsScreen: React.FC = () => {
       {/* Help Modal */}
       <Modal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} title="Centra Help &amp; FAQ">
         <div className="space-y-3 text-xs text-gray-700 dark:text-gray-300">
-          <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] space-y-1">
+          <div className="p-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] space-y-1">
             <h4 className="font-bold text-gray-900 dark:text-white">How is my balance calculated?</h4>
             <p className="text-gray-500 dark:text-gray-400">Total balance is aggregated in real-time across all connected wallets and bank accounts in your chosen base currency (৳ BDT).</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-[#0A0E1A] border border-gray-200 dark:border-[#232C45] space-y-1">
+          <div className="p-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] space-y-1">
             <h4 className="font-bold text-gray-900 dark:text-white">How do I export my data?</h4>
             <p className="text-gray-500 dark:text-gray-400">Navigate to Data Management in Settings and click "Export JSON" to download your complete data as a JSON file.</p>
           </div>
@@ -766,6 +774,46 @@ export const SettingsScreen: React.FC = () => {
             onClick={() => setShowHelpModal(false)}
           >
             Close FAQ
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Privacy Policy Modal */}
+      <Modal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} title="Privacy Policy">
+        <div className="space-y-3 text-xs text-gray-700 dark:text-gray-300">
+          <div className="p-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] space-y-2">
+            <h4 className="font-bold text-gray-900 dark:text-white">Your Privacy at Centra</h4>
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+              Centra is built local-first. In guest mode, all financial records and settings remain strictly on your local device. When you create an account, data synchronizes to your personal database via secure connections. We do not sell or track your personal financial transactions.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
+            onClick={() => setShowPrivacyModal(false)}
+          >
+            Close
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Terms of Service Modal */}
+      <Modal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} title="Terms of Service">
+        <div className="space-y-3 text-xs text-gray-700 dark:text-gray-300">
+          <div className="p-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] space-y-2">
+            <h4 className="font-bold text-gray-900 dark:text-white">Terms of Usage</h4>
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+              Centra is a personal finance management tool provided as-is. Users are responsible for backing up their data using the Export JSON feature. Centra does not provide financial or tax advice.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
+            onClick={() => setShowTermsModal(false)}
+          >
+            Close
           </Button>
         </div>
       </Modal>
@@ -794,7 +842,7 @@ export const SettingsScreen: React.FC = () => {
             value={deleteConfirmText}
             onChange={e => setDeleteConfirmText(e.target.value)}
             placeholder="Type DELETE to confirm"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-[#232C45] bg-gray-50 dark:bg-[#0A0E1A] text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:border-red-500"
+            className="w-full px-4 py-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:border-red-500"
           />
           {deleteError && (
             <p className="text-xs text-red-500 font-medium">{deleteError}</p>
@@ -850,7 +898,7 @@ export const SettingsScreen: React.FC = () => {
               value={newPin}
               onChange={e => setNewPin(e.target.value)}
               placeholder="Enter 4-8 digits"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-[#232C45] bg-gray-50 dark:bg-[#0A0E1A] text-gray-900 dark:text-white tracking-widest text-sm focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none focus:border-[#C6FF3D]"
             />
           </div>
           <div>
@@ -864,7 +912,7 @@ export const SettingsScreen: React.FC = () => {
               value={confirmPin}
               onChange={e => setConfirmPin(e.target.value)}
               placeholder="Confirm 4-8 digits"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-[#232C45] bg-gray-50 dark:bg-[#0A0E1A] text-gray-900 dark:text-white tracking-widest text-sm focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none focus:border-[#C6FF3D]"
             />
           </div>
           {pinModalError && (
@@ -919,7 +967,7 @@ export const SettingsScreen: React.FC = () => {
               value={currentPin}
               onChange={e => setCurrentPin(e.target.value)}
               placeholder="Enter your current PIN"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-[#232C45] bg-gray-50 dark:bg-[#0A0E1A] text-gray-900 dark:text-white tracking-widest text-sm focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none focus:border-[#C6FF3D]"
             />
           </div>
           {pinModalError && (
@@ -949,7 +997,7 @@ export const SettingsScreen: React.FC = () => {
       </Modal>
 
       {statusToast && (
-        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 bg-emerald-600 text-white rounded-xl shadow-xl flex items-center gap-2 text-sm font-semibold animate-fade-in">
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 bg-[#16A34A] text-white rounded-xl shadow-xl flex items-center gap-2 text-sm font-semibold animate-fade-in">
           <span>✓ {statusToast}</span>
         </div>
       )}

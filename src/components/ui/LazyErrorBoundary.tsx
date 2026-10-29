@@ -39,7 +39,7 @@ export class LazyErrorBoundary extends Component<Props, State> {
       return (
         <div
           data-testid="lazy-error-boundary"
-          className="flex flex-col items-center justify-center p-8 text-center min-h-[320px] w-full bg-white dark:bg-[#121A2C] rounded-2xl border border-gray-200 dark:border-[#232C45] shadow-xs my-4"
+          className="flex flex-col items-center justify-center p-8 text-center min-h-[320px] w-full bg-white dark:bg-[#1D1D1D] rounded-[24px] border border-black/[0.06] dark:border-white/[0.08] shadow-xs my-4"
         >
           <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
             <AlertCircle className="w-6 h-6" />
@@ -53,7 +53,7 @@ export class LazyErrorBoundary extends Component<Props, State> {
           <button
             type="button"
             onClick={this.handleRetry}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#C6FF3D] hover:bg-[#B2E830] active:bg-[#9ECC27] text-[#0A0E1A] text-xs font-bold shadow-xs transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Retry</span>

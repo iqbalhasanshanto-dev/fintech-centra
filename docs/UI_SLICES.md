@@ -167,4 +167,64 @@ Documented in `design/FRAMES.md`:
   - `npm test`: PASS (274/274 tests across 32 test files, including `navigationRoutes.test.tsx`, `periodComparison.test.tsx`, `overlayBackButton.test.tsx`, `confirmModals.test.tsx`).
   - `npm run build`: PASS (clean production bundle generated).
 
+---
+
+## Slice 3: Analysis, Goals & Budget, Settings, and Final Token Cleanup
+
+### 1. Overview & Visual Architecture
+- **Canvas & Containers**:
+  - Dark Canvas: `#000000`, Primary Surface: `#1D1D1D`, Secondary Surface: `#262626`.
+  - Light Canvas: `#F7F8FA`, Primary Surface: `#FFFFFF`, Secondary Surface: `#F1F2F4`.
+  - Border Radii: `rounded-[24px]` for all primary cards, `rounded-2xl` for secondary containers & inputs, `rounded-full` for chips, pills, and action buttons.
+  - Subtle borders: `border-black/[0.06] dark:border-white/[0.08]`.
+- **Typography & Accessible Contrast Rules**:
+  - Strictly Outfit weights: `400` (Regular), `500` (Medium), `600` (SemiBold), `700` (Bold).
+  - Inflow / Positive values: `#16A34A` (light) / `#22C55E` (dark).
+  - Outflow / Negative values: `#E11D48` (light) / `#F43F5E` (dark).
+  - Accent / Primary CTA: Neon Lime `#C6FF3D` (strictly as fill with `#0A0E1A` text or dark track; never raw text on light canvases).
+- **Protected Feature Invariants**:
+  - 0 diff in `src/utils/financeOperations.ts`, `src/db/`, `supabase/migrations/`, or `src/context/AuthContext.tsx`.
+  - All transfer operations, multi-account conversions, and transfer UI flows 100% intact.
+
+---
+
+### 2. Upgraded Shared Primitives & Components
+
+| Component | File Path | Reference Frame | Redesign & Behavioral Details |
+| :--- | :--- | :--- | :--- |
+| **Switch** | `src/components/ui/Switch.tsx` | `14-settings.png` | Checked state uses `#C6FF3D` track (`bg-[#C6FF3D] border-[#C6FF3D]`) with dark circular thumb (`bg-[#18212F] dark:bg-[#0A0E1A]`) in both themes matching Figma. Unchecked state uses `bg-[#E5E7EB] border-[#D1D5DB] dark:bg-[#262626] dark:border-white/[0.12]` with white thumb. |
+| **ThemeToggle** | `src/components/ui/ThemeToggle.tsx` | `design/tokens.md` | Legacy `indigo-*` classes removed; aligned with `#262626` / `#F1F2F4` backgrounds, `#C6FF3D` active indicator, and accessible contrast. |
+| **CircularProgress** | `src/components/ui/CircularProgress.tsx` | `13-budgets.png` | Background track updated to `text-[#E5E7EB] dark:text-[#262626]`; progress text updated to `text-[#18212F] dark:text-white`. |
+| **ReportScreen** | `src/components/report/ReportScreen.tsx` | `12-analytics.png`, `12-analytics--full.png` | Card 1 (Expenses by category): `rounded-[24px] bg-white dark:bg-[#1D1D1D]` container with period label, Donut chart with centered `"Total expenses"` and bold formatted `periodExpenses`, category breakdown rows with percentage and bold tabular amounts, expandable transaction drilldown, and top KPI strip with emerald/rose vertical accent bars. |
+| **AnalyticsCalendar** | `src/components/report/AnalyticsCalendar.tsx` | `12-analytics.png`, `12-analytics--full.png` | Card 2 (Spending calendar): Month navigation with pill controls, 7-column weekday headers, selected date cell in `#C6FF3D` rounded-2xl pill with dark indicator dots, green/red indicator dots, and bottom legend row (`● Income`, `● Expenses`). Card 3 (Selected date breakdown): Header with formatted date, two summary boxes with rose (Total expenses) and emerald (Total income) vertical accent bars, and transactions list with tinted category badges (`w-10 h-10 rounded-xl`) and signed amounts. |
+| **PlanScreen** | `src/components/plan/PlanScreen.tsx` | `13-budgets.png`, `13-budgets--full.png` | Summary Hero Card (`rounded-[24px]`): `"Total saved across goals"`, pill badge `"% Achieved"` (`bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E]`), large bold saved + target amounts, and green progress bar. Section Header: `"Milestone savings goals"` + circular count badge + pill `"+ New Target"` button. Goal Cards: `rounded-[24px]` cards with tinted category badges (`w-11 h-11 rounded-2xl`), target date subtitle, pill `"+ Add Funds"` button, 3-dot options menu (`aria-label="Goal options"`), progress track, and pace status. Category Budgets: `rounded-[24px]` cards with circular progress rings and Add Funds modal. Preserved ConfirmModal delete flows. |
+| **SettingsScreen** | `src/components/settings/SettingsScreen.tsx` | `14-settings.png`, `14-settings--full.png`, `14-settings-logout-row.png` | Profile Card: `rounded-[24px]` card with circular avatar (`w-16 h-16`), neon-lime camera badge (`#C6FF3D`), bold display name, subtitle, and circular pencil edit button (`aria-label="Edit user profile"`). Security Card: App PIN Lock, Lock Now, Auto-lock Timeout selector, Privacy Mode toggle (no biometric wording). Notifications Card: Budget outflow alerts, High-outflow alerts, Security alerts. Appearance Card: Base Currency selector. Data Management: Export JSON, Reset Demo Data / Delete All My Data. Support & Legal: Help FAQ, Privacy Policy, Terms of Service modals. Bottom Logout Pill Card: full-width `rounded-[24px]` button with rose icon and `"Log out"` / `"Log Out of Session"` in `#E11D48` / `#F43F5E` (or `"Exit Demo"` in guest mode), plus `Version 1.0.0` footer. |
+| **DatePicker** | `src/components/ui/DatePicker.tsx` | `design/tokens.md` | Trigger button updated from legacy navy `#131722` to `#F1F2F4` / `#262626` and token borders. |
+| **ErrorBoundary & LazyErrorBoundary** | `src/components/ui/` | `design/tokens.md` | Background updated to `#F7F8FA` / `#000000`, containers updated to `rounded-[24px] bg-white dark:bg-[#1D1D1D]`, and buttons updated to `#C6FF3D`. |
+
+---
+
+### 3. Whole-Codebase Legacy Color & Weight Sweep
+- Grep sweep across all files in `src/components/`:
+  - `#0D1220`: 0 occurrences.
+  - `#121A2C`: 0 occurrences.
+  - `#131722`: 0 occurrences.
+  - `#232C45`: 0 occurrences.
+  - `#1A233A`: 0 occurrences.
+  - `#1E293B`: 0 occurrences.
+  - `teal-*`: 0 occurrences.
+  - `font-extrabold`: 0 occurrences.
+  - `#0A0E1A`: strictly used as dark contrast text/fill on `#C6FF3D` elements (buttons, selected calendar cells, camera badges, checked switch thumbs). Zero card backgrounds or general container surfaces use `#0A0E1A`.
+  - `/encrypt/i`: 0 occurrences in `src/` (fully passing `honestSecurityCopy.test.ts`).
+
+---
+
+### 4. Verification & Quality Gates
+- **Protected Features**: `git diff --exit-code src/utils/financeOperations.ts src/db/ supabase/migrations/` is completely empty (0 diff).
+- **TypeScript**: `npm run typecheck` passed (0 errors).
+- **ESLint**: `npm run lint` passed (0 errors, 0 warnings).
+- **Unit & Integration Tests**: `npm test` passed (274/274 tests across 32 test files, including `confirmModals.test.tsx`, `session_guest_mode.test.tsx`, `honestSecurityCopy.test.ts`).
+- **Production Bundle**: `npm run build` passed cleanly in < 2 seconds.
+
+
 
