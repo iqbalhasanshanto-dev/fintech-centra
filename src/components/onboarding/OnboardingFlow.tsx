@@ -1,32 +1,26 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileInfoScreen } from './ProfileInfoScreen';
-import { FirstAccountScreen } from './FirstAccountScreen';
 import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { SpendingCategoriesScreen } from './SpendingCategoriesScreen';
-import { AccountReadyScreen } from './AccountReadyScreen';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { useBackHandler } from '../../utils/backButton';
 
 export type OnboardingStep =
   | 'profile'
-  | 'first-account'
   | 'theme'
-  | 'categories'
-  | 'ready';
+  | 'categories';
 
 const STEP_ORDER: OnboardingStep[] = [
   'profile',
-  'first-account',
   'theme',
   'categories',
-  'ready',
 ];
 
 const ONBOARDING_STEP_STORAGE_KEY = 'centra_onboarding_step';
 
 export const OnboardingFlow: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout, completeOnboarding } = useAuth();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(() => {
@@ -57,6 +51,11 @@ export const OnboardingFlow: React.FC = () => {
     setShowExitConfirm(true);
   });
 
+  const handleFinishOnboarding = async () => {
+    localStorage.removeItem(ONBOARDING_STEP_STORAGE_KEY);
+    await completeOnboarding();
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white transition-colors overflow-x-hidden selection:bg-[#C6FF3D] selection:text-black">
       <div
@@ -70,21 +69,13 @@ export const OnboardingFlow: React.FC = () => {
         {currentStep === 'profile' && (
           <ProfileInfoScreen
             onBack={() => setShowExitConfirm(true)}
-            onContinue={() => goToStep('first-account', 'forward')}
-          />
-        )}
-
-        {currentStep === 'first-account' && (
-          <FirstAccountScreen
-            onBack={() => goToStep('profile', 'backward')}
             onContinue={() => goToStep('theme', 'forward')}
-            onSkip={() => goToStep('theme', 'forward')}
           />
         )}
 
         {currentStep === 'theme' && (
           <ThemeSelectionScreen
-            onBack={() => goToStep('first-account', 'backward')}
+            onBack={() => goToStep('profile', 'backward')}
             onContinue={() => goToStep('categories', 'forward')}
           />
         )}
@@ -92,11 +83,9 @@ export const OnboardingFlow: React.FC = () => {
         {currentStep === 'categories' && (
           <SpendingCategoriesScreen
             onBack={() => goToStep('theme', 'backward')}
-            onFinish={() => goToStep('ready', 'forward')}
+            onFinish={handleFinishOnboarding}
           />
         )}
-
-        {currentStep === 'ready' && <AccountReadyScreen />}
       </div>
 
       <ConfirmModal

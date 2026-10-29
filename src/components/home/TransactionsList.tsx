@@ -39,41 +39,41 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
   const getIconTint = (type: Transaction['type']) => {
     switch (type) {
       case 'income':
-        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+        return 'bg-emerald-500/10 text-[#16A34A] dark:text-[#22C55E]';
       case 'transfer':
-        return 'bg-sky-500/10 text-sky-600 dark:text-sky-400';
+        return 'bg-sky-500/10 text-[#0284C7] dark:text-[#38BDF8]';
       case 'expense':
       default:
-        return 'bg-rose-500/10 text-rose-600 dark:text-rose-400';
+        return 'bg-rose-500/10 text-[#E11D48] dark:text-[#FB7185]';
     }
   };
 
   return (
     <section id="transactions" className="transition-colors w-full">
-      {/* Unified Recent Activity Card (08-home.png) */}
-      <div className="rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] p-5 sm:p-6 shadow-sm transition-all">
+      {/* Activity Card Matching Figma Frame Home full screen (activity-card) */}
+      <div className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all w-full">
         {/* Card Header: Title + View All Action */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[#18212F] dark:text-white">
+        <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.07] mb-2">
+          <h2 className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white/60">
             Recent Activity
           </h2>
           <button
             type="button"
             onClick={onOpenSeeAll}
-            className="text-xs font-semibold text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white transition-colors cursor-pointer p-1"
+            className="text-xs font-medium text-[#667085] dark:text-white/65 hover:text-[#18212F] dark:hover:text-white transition-colors cursor-pointer px-1 py-0.5"
             aria-label="View all transactions"
           >
             View All
           </button>
         </div>
 
-        {/* Transactions List */}
+        {/* Transactions List with unconstrained clean spacing */}
         {recentTransactions.length === 0 ? (
-          <div className="py-8 text-center text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
+          <div className="py-10 text-center text-xs font-medium text-[#667085] dark:text-white/40">
             No transactions yet. Tap &apos;+&apos; in the bottom bar to add your first transaction.
           </div>
         ) : (
-          <div className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
+          <div className="divide-y divide-black/[0.03] dark:divide-white/[0.04]">
             {recentTransactions.map(tx => {
               const isIncome = tx.type === 'income';
               const isExpense = tx.type === 'expense';
@@ -82,12 +82,12 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                 <div
                   key={tx.id}
                   onClick={() => onSelectTransaction(tx)}
-                  className="flex items-center justify-between py-3.5 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer select-none rounded-xl px-1 -mx-1"
+                  className="flex items-center justify-between py-3.5 px-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors cursor-pointer select-none rounded-2xl -mx-2"
                 >
-                  {/* Left: Category Icon + Title + Subtitle */}
+                  {/* Left: Category Icon + Merchant / Category Title + Timestamp Subtitle */}
                   <div className="flex items-center gap-3.5 min-w-0 pr-3">
                     <div
-                      className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${getIconTint(
+                      className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors shadow-xs ${getIconTint(
                         tx.type
                       )}`}
                     >
@@ -95,11 +95,11 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                     </div>
 
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#18212F] dark:text-white truncate">
+                      <p className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white truncate leading-tight">
                         {tx.merchant || tx.categoryName}
                       </p>
-                      <p className="text-xs text-[#667085] dark:text-[#9CA3AF] truncate mt-0.5">
-                        {formatSubtitle(tx.date)}
+                      <p className="text-xs text-[#667085] dark:text-white/40 truncate mt-1">
+                        {tx.categoryName} • {formatSubtitle(tx.date)}
                       </p>
                     </div>
                   </div>
@@ -107,12 +107,12 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                   {/* Right: Signed Amount */}
                   <div className="text-right shrink-0">
                     <p
-                      className={`text-sm font-bold tabular-nums currency-amount ${
+                      className={`text-sm sm:text-base font-medium tabular-nums currency-amount ${
                         isIncome
-                          ? 'text-emerald-600 dark:text-emerald-400'
+                          ? 'text-[#16A34A] dark:text-[#22C55E]'
                           : isExpense
-                          ? 'text-rose-600 dark:text-rose-400'
-                          : 'text-sky-600 dark:text-sky-400'
+                          ? 'text-[#E11D48] dark:text-[#FB7185]'
+                          : 'text-[#0284C7] dark:text-[#38BDF8]'
                       }`}
                     >
                       {isIncome ? '+' : isExpense ? '-' : ''}

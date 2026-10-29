@@ -6,6 +6,8 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
+  ChevronLeft,
+  Folder,
   Clock,
   Globe,
   Download,
@@ -41,7 +43,11 @@ import {
   MAX_AVATAR_BYTES,
 } from '../../utils/imageValidation';
 
-export const SettingsScreen: React.FC = () => {
+interface SettingsScreenProps {
+  onBack?: () => void;
+}
+
+export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const {
     settings,
     updateSettings,
@@ -259,16 +265,22 @@ export const SettingsScreen: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 pb-8 animate-fade-in">
+    <div className="space-y-6 pb-36 sm:pb-40 lg:pb-8 animate-fade-in">
 
-      {/* Page Heading */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      {/* Top Header Bar matching 14-settings.png */}
+      <div className="flex items-center justify-between pt-1">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Back"
+          className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shadow-xs"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white text-center flex-1 pr-10">
           Settings
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          Preferences, security, and application settings
-        </p>
       </div>
 
       {/* Guest Mode Upgrade Banner */}
@@ -558,25 +570,80 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Data Management */}
-      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
+      {/* 5. Data & Support Card matching 14-settings--full.png */}
+      <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Download className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <Folder className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-            Data management
+            Data &amp; support
           </h2>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs">
-          <Button
-            variant="secondary"
-            size="md"
+        <div className="divide-y divide-black/[0.06] dark:divide-white/[0.08]">
+          {/* Download your data */}
+          <button
+            type="button"
             onClick={handleExportData}
-            icon={<Download className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
+            className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
           >
-            Export JSON
-          </Button>
+            <div className="flex items-center gap-3 min-w-0">
+              <Download className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Download your data</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Export all your account data · CSV</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+          </button>
 
+          {/* Privacy Policy */}
+          <button
+            type="button"
+            onClick={() => setShowPrivacyModal(true)}
+            className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <Lock className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+              <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                Privacy policy
+              </span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+          </button>
+
+          {/* Terms of Service */}
+          <button
+            type="button"
+            onClick={() => setShowTermsModal(true)}
+            className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <FileText className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+              <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                Terms of service
+              </span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+          </button>
+
+          {/* Help & Support */}
+          <button
+            type="button"
+            onClick={() => setShowHelpModal(true)}
+            className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <HelpCircle className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+              <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                Help &amp; support
+              </span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+          </button>
+        </div>
+
+        {/* Demo Data Reset / Delete All Data Actions */}
+        <div className="pt-3 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-wrap items-center gap-3 text-xs">
           {isGuest ? (
             <Button
               variant="destructive"
@@ -599,58 +666,13 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 6. Support & Legal */}
-      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] divide-y divide-black/[0.06] dark:divide-white/[0.08] shadow-xs">
-        <button
-          type="button"
-          onClick={() => setShowHelpModal(true)}
-          className="w-full py-3 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <HelpCircle className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
-            <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white">
-              Centra Help &amp; Support FAQ
-            </span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setShowPrivacyModal(true)}
-          className="w-full py-3 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <FileText className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
-            <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white">
-              Privacy policy
-            </span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setShowTermsModal(true)}
-          className="w-full py-3 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <FileText className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
-            <span className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white">
-              Terms of service
-            </span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
-        </button>
-      </div>
-
-      {/* 7. Bottom Logout Pill Card */}
+      {/* 6. Bottom Logout Pill Card */}
       <div className="pt-2 space-y-4">
         {isGuest ? (
           <button
             type="button"
             onClick={() => setShowExitDemoConfirm(true)}
-            className="w-full py-4 px-5 rounded-[24px] flex items-center justify-center space-x-2 border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] transition-colors cursor-pointer shadow-xs font-semibold text-sm"
+            className="w-full py-4 px-5 rounded-[99px] flex items-center justify-center space-x-2 border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] transition-colors cursor-pointer shadow-xs font-semibold text-sm"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>Exit Demo</span>
@@ -659,7 +681,7 @@ export const SettingsScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full py-4 px-5 rounded-[24px] flex items-center justify-center space-x-2 border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] transition-colors cursor-pointer shadow-xs font-semibold text-sm"
+            className="w-full py-4 px-5 rounded-[99px] flex items-center justify-center space-x-2 border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] transition-colors cursor-pointer shadow-xs font-semibold text-sm"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>Log Out of Session</span>
@@ -667,7 +689,7 @@ export const SettingsScreen: React.FC = () => {
         )}
 
         <div className="text-center pb-2">
-          <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Version 1.0.0</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Version 1.59.03</p>
         </div>
       </div>
 

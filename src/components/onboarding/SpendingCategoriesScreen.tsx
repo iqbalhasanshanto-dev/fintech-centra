@@ -26,7 +26,7 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
   onFinish,
 }) => {
   const { saveOnboardingProfile } = useAuth();
-  const [selected, setSelected] = useState<string[]>(['Shopping', 'Entertainment']);
+  const [selected, setSelected] = useState<string[]>([]);
 
   const toggleCategory = (cat: string) => {
     setSelected(prev =>
@@ -35,6 +35,7 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
   };
 
   const handleFinish = async () => {
+    if (selected.length === 0) return;
     await saveOnboardingProfile({
       name: '',
       categories: selected,
@@ -91,9 +92,9 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
                   key={category}
                   type="button"
                   onClick={() => toggleCategory(category)}
-                  className={`min-h-[44px] py-2.5 px-5 rounded-full text-sm font-semibold transition-all duration-150 cursor-pointer select-none flex items-center justify-center ${
+                  className={`min-h-[44px] py-2.5 px-5 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer select-none flex items-center justify-center ${
                     isSelected
-                      ? 'bg-[#18212F] text-white dark:bg-white dark:text-black shadow-md scale-[1.02]'
+                      ? 'bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#0A0E1A] shadow-[0_0_16px_rgba(198,255,61,0.45)] border border-[#C6FF3D] scale-[1.03]'
                       : 'bg-[#F1F2F4] text-[#18212F] dark:bg-[#262626] dark:text-white hover:opacity-85 border border-transparent'
                   }`}
                 >
@@ -106,11 +107,12 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
           {/* Bottom Finish Setup Button */}
           <button
             type="button"
+            disabled={selected.length === 0}
             onClick={handleFinish}
-            className={`w-full py-4 px-6 rounded-full font-bold text-base transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2 ${
+            className={`w-full py-4 px-6 rounded-full font-bold text-base transition-all shadow-lg flex items-center justify-center gap-2 ${
               selected.length > 0
-                ? 'bg-[#18212F] dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-[0.99]'
-                : 'bg-gray-200 dark:bg-[#262626] text-gray-400 dark:text-gray-500 hover:opacity-90'
+                ? 'bg-[#18212F] dark:bg-[#C6FF3D] text-white dark:text-[#0A0E1A] hover:opacity-90 active:scale-[0.99] cursor-pointer'
+                : 'bg-gray-200 dark:bg-[#262626] text-gray-400 dark:text-gray-500 opacity-40 cursor-not-allowed shadow-none'
             }`}
           >
             <span>Finish Setup ↗</span>

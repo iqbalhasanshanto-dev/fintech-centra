@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, ChevronDown, Check } from 'lucide-react';
+import { Bell, ChevronDown, Check, LogOut } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { PeriodFilter } from '../../types';
@@ -19,9 +19,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAddAction: _onOpenAddAction,
 }) => {
   const { periodFilter, setPeriodFilter, unreadNotificationsCount, syncStatus } = useFinance();
-  const { user, isGuest, createAccountFromGuest } = useAuth();
+  const { user, isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   const [showGuestConfirm, setShowGuestConfirm] = useState(false);
+  const [showExitDemoConfirm, setShowExitDemoConfirm] = useState(false);
   const [greeting, setGreeting] = useState(() => getGreeting());
 
   useEffect(() => {
@@ -164,6 +165,20 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
+            {/* Direct Exit Demo Button for Visitors */}
+            {isGuest && (
+              <button
+                type="button"
+                onClick={() => setShowExitDemoConfirm(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-full border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                title="Exit Demo Mode"
+                aria-label="Exit Demo"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Exit Demo</span>
+              </button>
+            )}
+
             {/* User Profile Avatar (or Guest badge) - only way to Settings */}
             <button
               onClick={isGuest ? () => setShowGuestConfirm(true) : onNavigateToSettings}
@@ -195,6 +210,16 @@ export const Header: React.FC<HeaderProps> = ({
         message="Create a real account? Your demo data will be discarded."
         type="warning"
         confirmText="Create Account"
+      />
+
+      <ConfirmModal
+        isOpen={showExitDemoConfirm}
+        onClose={() => setShowExitDemoConfirm(false)}
+        onConfirm={exitGuestMode}
+        title="Exit Demo Mode"
+        message="Are you sure you want to exit demo mode and return to the login screen?"
+        type="warning"
+        confirmText="Exit Demo"
       />
     </header>
   );

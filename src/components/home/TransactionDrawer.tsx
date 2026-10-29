@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { Search, Download, ChevronLeft, X } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
-import { Modal } from '../ui/Modal';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatTime } from '../../utils/formatters';
 import { CentraDB } from '../../db/storage';
@@ -76,15 +75,22 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
     return `${d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} • ${timePart}`;
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} hideHeader maxWidth="max-w-lg">
-      <div className="p-4 sm:p-6 space-y-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Recent Activities - All Transactions"
+      className="fixed inset-0 z-50 bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto animate-fade-in"
+    >
+      <div className="w-full max-w-lg mx-auto p-4 sm:p-6 space-y-4 pb-28">
         {/* Top Header Bar (10-transactions-view-all.png) */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="w-11 h-11 rounded-full border border-black/[0.08] dark:border-white/[0.12] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shrink-0"
             aria-label="Back"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -95,42 +101,37 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
             <span className="sr-only"> - All Transactions</span>
           </h2>
 
-          <div className="w-11" aria-hidden="true" />
-        </div>
-
-        {/* Search input & CSV Export button */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-9 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-sm text-[#18212F] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-[#C6FF3D] transition-colors font-medium"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer"
-                aria-label="Clear search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
           <button
             type="button"
             onClick={handleExportCSV}
-            className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shrink-0"
             title="Export CSV"
             aria-label="Export CSV"
           >
             <Download className="w-4 h-4 text-[#4D6E18] dark:text-[#C6FF3D]" />
-            <span className="hidden sm:inline">CSV</span>
           </button>
+        </div>
+
+        {/* Full-width Rounded Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-9 py-3.5 rounded-[20px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] text-sm text-[#18212F] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-[#C6FF3D] transition-colors font-medium shadow-xs"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer"
+              aria-label="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Filter Pills */}
@@ -151,10 +152,10 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                 key={type}
                 type="button"
                 onClick={() => setSelectedType(type)}
-                className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-black dark:bg-white text-white dark:text-black shadow-xs'
-                    : 'bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white'
+                    ? 'bg-black dark:bg-[#C6FF3D] text-white dark:text-[#0A0E1A] shadow-xs'
+                    : 'bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white'
                 }`}
               >
                 {label}
@@ -163,12 +164,12 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
           })}
         </div>
 
-        {/* Category & Account Dropdowns */}
+        {/* Category & Account Selectors */}
         <div className="grid grid-cols-2 gap-2 text-xs">
           <select
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer"
+            className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer"
           >
             <option value="all">All Categories</option>
             {categories.map(c => (
@@ -181,7 +182,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
           <select
             value={selectedAccount}
             onChange={e => setSelectedAccount(e.target.value)}
-            className="px-3 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer"
+            className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer"
           >
             <option value="all">All Accounts</option>
             {accounts.map(a => (
@@ -192,10 +193,10 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
           </select>
         </div>
 
-        {/* Results List inside Card Container (10-transactions-view-all.png) */}
-        <div className="rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] p-3 max-h-[50vh] overflow-y-auto">
+        {/* Transactions Card (10-transactions-view-all.png) */}
+        <div className="rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.15] p-5 min-h-[70vh] shadow-xs">
           {filteredTransactions.length === 0 ? (
-            <div className="text-center py-12 text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
+            <div className="text-center py-24 text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
               No matching transactions found.
             </div>
           ) : (
@@ -209,9 +210,9 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                   <div
                     key={tx.id}
                     onClick={() => onSelectTransaction(tx)}
-                    className="py-3 px-2 flex items-center justify-between hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer rounded-xl transition-colors select-none"
+                    className="py-3.5 px-1 flex items-center justify-between hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer rounded-2xl transition-colors select-none"
                   >
-                    <div className="flex items-center gap-3 min-w-0 pr-3">
+                    <div className="flex items-center gap-3.5 min-w-0 pr-3">
                       <div
                         className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
                           isIncome
@@ -228,7 +229,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                           {tx.merchant || tx.categoryName}
                         </p>
                         <p className="text-xs text-[#667085] dark:text-[#9CA3AF] truncate mt-0.5">
-                          {tx.accountName} • {formatSubtitle(tx.date)}
+                          {formatSubtitle(tx.date)}
                         </p>
                       </div>
                     </div>
@@ -254,6 +255,6 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
           )}
         </div>
       </div>
-    </Modal>
+    </div>
   );
 };

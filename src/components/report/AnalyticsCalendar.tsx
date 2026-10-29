@@ -155,7 +155,7 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const weekdayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Formatted date title for selected date
   const formattedSelectedDate = useMemo(() => {
@@ -164,8 +164,8 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
     const dateObj = new Date(y, m - 1, d);
     return dateObj.toLocaleDateString('en-US', {
       weekday: 'short',
-      month: 'short',
       day: 'numeric',
+      month: 'long',
       year: 'numeric',
     });
   }, [selectedDate]);
@@ -182,20 +182,20 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
   };
 
   return (
-    <section id="interactive-calendar" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* Left Card: Calendar Grid (7 cols) */}
-      <div className="lg:col-span-7 bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] rounded-[24px] p-5 sm:p-6 transition-colors shadow-xs">
+    <section id="interactive-calendar" className="space-y-6">
+      {/* Card 2: Spending Calendar (12-analytics--full.png) */}
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] rounded-[28px] p-5 sm:p-6 transition-colors shadow-xs">
         {/* Calendar Header with aligned icon & text */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center text-[#18212F] dark:text-white shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-[#F1F2F4] dark:bg-white/10 border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center text-[#18212F] dark:text-white shrink-0">
               <CalendarIcon className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-[#18212F] dark:text-white">
                 Spending calendar
               </h3>
-              <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-0.5">
+              <p className="text-xs text-[#667085] dark:text-white/60 mt-0.5">
                 Click any date to inspect daily total spend and breakdown
               </p>
             </div>
@@ -205,14 +205,14 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               onClick={handleJumpToToday}
-              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#F1F2F4] dark:bg-white/10 border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
             >
               Today
             </button>
-            <div className="flex items-center bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-0.5">
+            <div className="flex items-center bg-[#F1F2F4] dark:bg-white/10 border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-0.5">
               <button
                 onClick={handlePrevMonth}
-                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-[#1D1D1D] text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-white/10 text-[#667085] dark:text-gray-400 hover:text-[#18212F] dark:hover:text-white transition-colors cursor-pointer"
                 aria-label="Previous Month"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -222,7 +222,7 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
               </span>
               <button
                 onClick={handleNextMonth}
-                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-[#1D1D1D] text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-white/10 text-[#667085] dark:text-gray-400 hover:text-[#18212F] dark:hover:text-white transition-colors cursor-pointer"
                 aria-label="Next Month"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -236,7 +236,7 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
           {weekdayNames.map(day => (
             <div
               key={day}
-              className="text-xs font-bold text-[#667085] dark:text-[#9CA3AF] uppercase py-1"
+              className="text-xs font-bold text-[#667085] dark:text-white/60 uppercase py-1"
             >
               {day}
             </div>
@@ -253,10 +253,10 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
                 onClick={() => setSelectedDate(item.dateKey)}
                 className={`relative flex flex-col items-center justify-center h-11 sm:h-12 rounded-2xl text-xs font-semibold transition-all cursor-pointer select-none ${
                   isSelected
-                    ? 'bg-[#C6FF3D] text-[#0A0E1A] font-bold shadow-xs ring-2 ring-offset-2 ring-[#C6FF3D] dark:ring-offset-[#1D1D1D]'
+                    ? 'bg-[#C6FF3D] text-[#0A0E1A] font-bold shadow-[0_0_12px_rgba(198,255,61,0.35)] ring-2 ring-offset-2 ring-[#C6FF3D] dark:ring-offset-[#0A0A0A]'
                     : item.isCurrentMonth
-                    ? 'text-[#18212F] dark:text-white hover:bg-[#F1F2F4] dark:hover:bg-[#262626]'
-                    : 'text-gray-400/40 dark:text-gray-600 hover:bg-[#F1F2F4]/50 dark:hover:bg-[#262626]/50'
+                    ? 'text-[#18212F] dark:text-white hover:bg-[#F1F2F4] dark:hover:bg-white/10'
+                    : 'text-gray-400/40 dark:text-gray-600 hover:bg-[#F1F2F4]/50 dark:hover:bg-white/5'
                 } ${item.isToday && !isSelected ? 'border border-[#C6FF3D]' : ''}`}
               >
                 <span className="tabular-nums">{item.dayNumber}</span>
@@ -267,14 +267,14 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
                     {item.totalSpend > 0 && (
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          isSelected ? 'bg-[#0A0E1A]' : 'bg-[#F43F5E]'
+                          isSelected ? 'bg-[#0A0E1A]' : 'bg-[#E11D48]'
                         }`}
                       />
                     )}
                     {item.totalIncome > 0 && (
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          isSelected ? 'bg-[#0A0E1A]' : 'bg-[#22C55E]'
+                          isSelected ? 'bg-[#0A0E1A]' : 'bg-[#16A34A]'
                         }`}
                       />
                     )}
@@ -286,50 +286,50 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
         </div>
 
         {/* Bottom Legend Row */}
-        <div className="flex items-center justify-center gap-5 pt-4 mt-3 border-t border-black/[0.04] dark:border-white/[0.06] text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
+        <div className="flex items-center justify-center gap-5 pt-4 mt-3 border-t border-black/[0.04] dark:border-white/[0.07] text-xs font-medium text-[#667085] dark:text-white/60">
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
+            <span className="w-2 h-2 rounded-full bg-[#16A34A]" />
             Income
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#F43F5E]" />
+            <span className="w-2 h-2 rounded-full bg-[#E11D48]" />
             Expenses
           </span>
         </div>
       </div>
 
-      {/* Right Card: Selected Date Breakdown Panel (5 cols) */}
-      <div className="lg:col-span-5 bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] rounded-[24px] p-5 sm:p-6 flex flex-col h-full min-h-[340px] shadow-xs">
+      {/* Card 3: Selected Date Breakdown (Separate Card Below the Calendar matching 12-analytics--full.png) */}
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] rounded-[28px] p-5 sm:p-6 flex flex-col shadow-xs">
         {/* Selected Date Header */}
         <div className="border-b border-black/[0.06] dark:border-white/[0.08] pb-4 mb-4">
-          <span className="text-xs font-medium text-[#667085] dark:text-[#9CA3AF] block mb-0.5">
+          <span className="text-xs font-medium text-[#667085] dark:text-gray-400 block mb-0.5">
             Selected date
           </span>
           <h4 className="text-lg font-bold text-[#18212F] dark:text-white truncate">
             {formattedSelectedDate}
           </h4>
 
-          {/* Total Spend & Income for Selected Day */}
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center gap-2.5">
-              <div className="w-1 h-7 rounded-full bg-[#E11D48] dark:bg-[#F43F5E] shrink-0" />
+          {/* 2-column summary with vertical bars matching Figma 12-analytics--full.png */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-3">
+            <div className="p-3.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center gap-3">
+              <div className="w-1 h-10 rounded-full bg-[#E11D48] dark:bg-[#F43F5E] shrink-0" />
               <div className="min-w-0">
-                <div className="text-[11px] font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
+                <div className="text-[11px] font-medium text-[#667085] dark:text-gray-400 truncate">
                   Total expenses
                 </div>
-                <div className="text-sm sm:text-base font-bold tabular-nums text-[#E11D48] dark:text-[#F43F5E] truncate">
+                <div className="text-base sm:text-lg font-bold tabular-nums text-[#E11D48] dark:text-[#F43F5E] truncate">
                   {formatCurrency(selectedDaySpend, settings.baseCurrency, settings.privacyMode)}
                 </div>
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center gap-2.5">
-              <div className="w-1 h-7 rounded-full bg-[#16A34A] dark:bg-[#22C55E] shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center gap-3">
+              <div className="w-1 h-10 rounded-full bg-[#16A34A] dark:bg-[#22C55E] shrink-0" />
               <div className="min-w-0">
-                <div className="text-[11px] font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
+                <div className="text-[11px] font-medium text-[#667085] dark:text-gray-400 truncate">
                   Total income
                 </div>
-                <div className="text-sm sm:text-base font-bold tabular-nums text-[#16A34A] dark:text-[#22C55E] truncate">
+                <div className="text-base sm:text-lg font-bold tabular-nums text-[#16A34A] dark:text-[#22C55E] truncate">
                   {formatCurrency(selectedDayIncome, settings.baseCurrency, settings.privacyMode)}
                 </div>
               </div>
@@ -339,26 +339,29 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
 
         {/* Day Transactions List Breakdown */}
         <div className="flex-1 flex flex-col">
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-bold text-[#667085] dark:text-[#9CA3AF] uppercase tracking-wider">
-              Transactions ({selectedDayTransactions.length})
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-bold text-[#18212F] dark:text-white">
+              Transactions
+            </span>
+            <span className="text-xs text-[#667085] dark:text-gray-400 font-medium">
+              {selectedDayTransactions.length} {selectedDayTransactions.length === 1 ? 'transaction' : 'transactions'}
             </span>
           </div>
 
           {selectedDayTransactions.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center rounded-2xl bg-[#F1F2F4]/50 dark:bg-[#262626]/40 border border-dashed border-black/[0.08] dark:border-white/[0.12]">
-              <div className="w-10 h-10 rounded-full bg-[#F1F2F4] dark:bg-[#262626] flex items-center justify-center text-gray-400 dark:text-gray-500 mb-2">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center rounded-2xl bg-[#F1F2F4]/50 dark:bg-white/[0.03] border border-dashed border-black/[0.08] dark:border-white/[0.12] min-h-[160px]">
+              <div className="w-10 h-10 rounded-full bg-[#F1F2F4] dark:bg-white/10 flex items-center justify-center text-gray-400 dark:text-gray-500 mb-2">
                 <CalendarIcon className="w-5 h-5" />
               </div>
               <p className="text-xs font-semibold text-[#18212F] dark:text-white">
                 No transactions on this day
               </p>
-              <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-0.5">
+              <p className="text-xs text-[#667085] dark:text-gray-400 mt-0.5">
                 Pick a highlighted day to view itemized records
               </p>
             </div>
           ) : (
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-[380px] sm:max-h-[460px] overflow-y-auto pr-1">
               {selectedDayTransactions.map(tx => {
                 const isIncome = tx.type === 'income';
                 const isExpense = tx.type === 'expense';
@@ -367,28 +370,28 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
                   <div
                     key={tx.id}
                     onClick={() => onSelectTransaction?.(tx)}
-                    className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] hover:border-brand-500 flex items-center justify-between text-xs cursor-pointer transition-all group"
+                    className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] hover:border-[#C6FF3D] dark:hover:border-[#C6FF3D] flex items-center justify-between text-xs cursor-pointer transition-all group shadow-xs"
                   >
                     <div className="flex items-center space-x-3 min-w-0 pr-2">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform ${getTxBadgeStyle(tx.type)}`}>
-                        <CategoryIcon name={tx.categoryIcon} className="w-4 h-4" />
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform ${getTxBadgeStyle(tx.type)}`}>
+                        <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-[#18212F] dark:text-white truncate">
                           {tx.merchant || tx.categoryName}
                         </p>
-                        <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-0.5">
-                          {tx.accountName} • {formatTime(tx.date)}
+                        <p className="text-xs text-[#667085] dark:text-gray-400 mt-0.5">
+                          {tx.categoryName} • {formatTime(tx.date)}
                         </p>
                       </div>
                     </div>
 
                     <span
-                      className={`font-bold tabular-nums shrink-0 text-xs ${
+                      className={`font-bold tabular-nums shrink-0 text-sm ${
                         isIncome
                           ? 'text-[#16A34A] dark:text-[#22C55E]'
                           : isExpense
-                          ? 'text-[#E11D48] dark:text-[#F43F5E]'
+                          ? 'text-[#E11D48] dark:text-[#FB7185]'
                           : 'text-[#0284C7] dark:text-[#38BDF8]'
                       }`}
                     >

@@ -18,7 +18,7 @@ const SettingsScreen = lazy(() => import('../settings/SettingsScreen').then(m =>
 export const AppShell: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget'>('transaction');
+  const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income'>('spend');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const mainContentRef = useRef<HTMLElement>(null);
@@ -60,7 +60,7 @@ export const AppShell: React.FC = () => {
     }
   };
 
-  const handleOpenAddWithTab = (tab: 'transaction' | 'transfer' | 'goal' | 'budget') => {
+  const handleOpenAddWithTab = (tab: 'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' = 'spend') => {
     setAddModalDefaultTab(tab);
     setShowAddModal(true);
   };
@@ -91,7 +91,7 @@ export const AppShell: React.FC = () => {
         </div>
 
         {/* Main Screen Content Container */}
-        <main ref={mainContentRef} className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-36 lg:pb-12 bg-[#F7F8FA] dark:bg-[#000000]">
+        <main ref={mainContentRef} className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-36 sm:pb-40 lg:pb-12 bg-[#F7F8FA] dark:bg-[#000000]">
           {activeTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => handleSelectTab('report')}
@@ -121,7 +121,7 @@ export const AppShell: React.FC = () => {
           {activeTab === 'settings' && (
             <LazyErrorBoundary fallbackTitle="Unable to load Settings">
               <Suspense fallback={<ScreenLoadingFallback />}>
-                <SettingsScreen />
+                <SettingsScreen onBack={() => handleSelectTab('home')} />
               </Suspense>
             </LazyErrorBoundary>
           )}
@@ -149,7 +149,7 @@ export const AppShell: React.FC = () => {
         <BottomNav
           activeTab={activeTab}
           onSelectTab={handleSelectTab}
-          onOpenAddAction={() => handleOpenAddWithTab('transaction')}
+          onOpenAddAction={handleOpenAddWithTab}
         />
       </div>
 

@@ -6,12 +6,11 @@ import {
   AlertTriangle, 
   Target, 
   CreditCard, 
-  Info,
-  Trash2,
-  ChevronRight
+  Info, 
+  Trash2, 
+  ChevronRight 
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
-import { Modal } from '../ui/Modal';
 import { NotificationType, NotificationItem } from '../../types';
 import { useBackHandler } from '../../utils/backButton';
 
@@ -57,7 +56,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   }, [notifications]);
 
   const getIcon = (type: NotificationType) => {
-    const iconClass = "w-5 h-5";
+    const iconClass = "w-4 h-4";
     switch (type) {
       case 'budget':
         return <AlertTriangle className={iconClass} />;
@@ -121,6 +120,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     return '';
   }, [earlierList]);
 
+  if (!isOpen) return null;
+
   const renderNotificationCard = (item: NotificationItem) => {
     const isUnread = !item.isRead;
     const categoryLabel = getCategoryLabel(item.type);
@@ -130,15 +131,15 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       <div
         key={item.id}
         onClick={() => markNotificationAsRead(item.id)}
-        className="rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] p-5 shadow-sm transition-all cursor-pointer hover:border-black/[0.12] dark:hover:border-white/[0.16] space-y-3"
+        className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 shadow-sm transition-all cursor-pointer hover:border-black/[0.12] dark:hover:border-white/[0.25] space-y-3.5"
       >
         {/* Card Header Row: Icon + Overline + Title + Unread Dot */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
                 isUnread
-                  ? 'bg-[#4D6E18]/15 text-[#4D6E18] dark:bg-[#C6FF3D]/15 dark:text-[#C6FF3D]'
+                  ? 'bg-[#C6FF3D]/15 text-[#4D6E18] dark:text-[#C6FF3D]'
                   : 'bg-[#F1F2F4] text-[#667085] dark:bg-[#262626] dark:text-[#9CA3AF]'
               }`}
             >
@@ -146,11 +147,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </div>
 
             <div className="min-w-0">
-              <span className="text-xs font-medium text-[#667085] dark:text-[#9CA3AF] block">
+              <span className="text-[11px] font-medium text-[#667085] dark:text-white/60 block">
                 {categoryLabel}
                 {!isUnread && ' • Read'}
               </span>
-              <h4 className="text-sm sm:text-base font-bold text-[#18212F] dark:text-white truncate mt-0.5">
+              <h4 className="text-base font-medium text-[#18212F] dark:text-white truncate mt-0.5">
                 {item.title}
               </h4>
             </div>
@@ -158,24 +159,24 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
           {isUnread && (
             <span
-              className="w-2 h-2 rounded-full bg-[#F97316] shrink-0 mt-2"
+              className="w-2 h-2 rounded-full bg-[#C6FF3D] shrink-0 mt-2 shadow-[0_0_8px_rgba(198,255,61,0.6)]"
               aria-label="Unread"
             />
           )}
         </div>
 
         {/* Message Body */}
-        <p className="text-xs sm:text-sm text-[#667085] dark:text-[#9CA3AF] leading-relaxed">
+        <p className="text-sm text-[#667085] dark:text-white/70 leading-relaxed">
           {item.message}
         </p>
 
         {/* Footer Row: Timestamp + Action Link */}
-        <div className="flex items-center justify-between pt-1 border-t border-black/[0.04] dark:border-white/[0.05]">
-          <span className="text-xs text-[#667085] dark:text-[#9CA3AF]">
+        <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.07]">
+          <span className="text-[11px] text-[#667085] dark:text-white/40">
             {formatItemTime(item.timestamp)}
           </span>
 
-          <span className="text-xs font-semibold text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer">
+          <span className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer">
             <span>{actionLabel}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </span>
@@ -185,20 +186,31 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} hideHeader maxWidth="max-w-lg">
-      <div className="p-4 sm:p-6 space-y-5">
-        {/* Top Bar (09-notifications.png) */}
-        <div className="flex items-center justify-between">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Notifications"
+      className="fixed inset-0 z-50 bg-[#F7F8FA] dark:bg-[#0A0A0A] overflow-y-auto flex flex-col text-[#18212F] dark:text-white transition-colors antialiased animate-fade-in"
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))',
+        paddingBottom: 'calc(3rem + env(safe-area-inset-bottom, 0px))',
+      }}
+    >
+      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-5 px-4 sm:px-6 py-2">
+        {/* Top Header Bar matching Figma Frame 10. Notifications (40px Back + 24px Title + Clear) */}
+        <div className="flex items-center justify-between pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="w-11 h-11 rounded-full border border-black/[0.08] dark:border-white/[0.12] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs"
             aria-label="Back"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <h2 className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white text-center">
+          <h2 className="text-2xl font-medium tracking-tight text-[#18212F] dark:text-white text-center">
             Notifications
           </h2>
 
@@ -206,25 +218,25 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             <button
               type="button"
               onClick={clearNotifications}
-              className="w-11 h-11 rounded-full border border-black/[0.08] dark:border-white/[0.12] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+              className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shadow-xs"
               title="Clear all"
               aria-label="Clear all notifications"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           ) : (
-            <div className="w-11" aria-hidden="true" />
+            <div className="w-10 h-10" aria-hidden="true" />
           )}
         </div>
 
-        {/* Sub-bar: Your updates + unread badge + Mark all as read */}
+        {/* Inbox Controls Bar: "Your updates" + unread badge + "Mark all as read" */}
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[#18212F] dark:text-white">
+            <span className="text-sm font-semibold text-[#18212F] dark:text-white/80">
               Your updates
             </span>
             {unreadCount > 0 && (
-              <span className="bg-[#4D6E18]/15 text-[#4D6E18] dark:bg-[#C6FF3D]/15 dark:text-[#C6FF3D] rounded-full px-2.5 py-0.5 text-xs font-semibold">
+              <span className="bg-[#C6FF3D]/10 text-[#4D6E18] dark:text-[#C6FF3D] border border-[#C6FF3D]/20 rounded-full px-2.5 py-0.5 text-[11px] font-semibold">
                 {unreadCount} unread
               </span>
             )}
@@ -234,29 +246,33 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             <button
               type="button"
               onClick={markAllNotificationsAsRead}
-              className="text-xs font-semibold text-[#4D6E18] dark:text-[#C6FF3D] hover:underline transition-colors cursor-pointer"
+              className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline transition-colors cursor-pointer"
             >
               Mark all as read
             </button>
           )}
         </div>
 
-        {/* Notifications Scroll Container */}
-        <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
+        {/* Notifications Scroll List Container */}
+        <div className="space-y-6 flex-1 pb-16">
           {notifications.length === 0 ? (
-            <div className="text-center py-12 text-xs text-[#667085] dark:text-[#9CA3AF] space-y-2">
-              <Bell className="w-10 h-10 mx-auto text-gray-400 dark:text-gray-600 mb-2" />
-              <p className="font-bold text-[#18212F] dark:text-white text-sm">No notifications right now</p>
-              <p>Budget warnings, transaction alerts and milestones will appear here.</p>
+            <div className="text-center py-20 text-xs text-[#667085] dark:text-[#9CA3AF] space-y-3">
+              <div className="w-16 h-16 mx-auto rounded-full bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.1] flex items-center justify-center shadow-xs">
+                <Bell className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              </div>
+              <p className="font-bold text-[#18212F] dark:text-white text-base">No notifications right now</p>
+              <p className="max-w-xs mx-auto text-gray-500 dark:text-gray-400 text-xs leading-relaxed">
+                Budget warnings, transaction alerts and milestones will appear here.
+              </p>
             </div>
           ) : (
             <>
               {/* Today Group */}
               {todayList.length > 0 && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-[#667085] dark:text-[#9CA3AF] px-1 font-medium">
-                    <span>Today</span>
-                    <span>{todayDateString}</span>
+                  <div className="flex items-center justify-between text-xs text-[#667085] dark:text-white/60 px-1 font-medium">
+                    <span className="font-semibold text-sm text-[#18212F] dark:text-white">Today</span>
+                    <span className="text-[11px] text-gray-400 dark:text-white/40">{todayDateString}</span>
                   </div>
                   <div className="space-y-3">
                     {todayList.map(renderNotificationCard)}
@@ -266,10 +282,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
               {/* Earlier Group */}
               {earlierList.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-[#667085] dark:text-[#9CA3AF] px-1 font-medium">
-                    <span>Earlier</span>
-                    {earlierDateString && <span>{earlierDateString}</span>}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between text-xs text-[#667085] dark:text-white/60 px-1 font-medium">
+                    <span className="font-semibold text-sm text-[#18212F] dark:text-white">Earlier</span>
+                    {earlierDateString && (
+                      <span className="text-[11px] text-gray-400 dark:text-white/40">{earlierDateString}</span>
+                    )}
                   </div>
                   <div className="space-y-3">
                     {earlierList.map(renderNotificationCard)}
@@ -280,6 +298,6 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           )}
         </div>
       </div>
-    </Modal>
+    </div>
   );
 };

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { AlertTriangle, X, CloudOff } from 'lucide-react';
+import { AlertTriangle, X, CloudOff, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ConfirmModal } from '../ui/ConfirmModal';
 
 export const GuestBanner: React.FC = () => {
-  const { isGuest, createAccountFromGuest } = useAuth();
+  const { isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
   const [dismissed, setDismissed] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Not a guest, or dismissed for this session — render nothing
   if (!isGuest || dismissed) return null;
@@ -37,12 +38,25 @@ export const GuestBanner: React.FC = () => {
             cloud. Clearing browser data, reinstalling the app, or switching devices will
             permanently lose your data.{' '}
             <button
+              type="button"
               onClick={() => setShowConfirm(true)}
               className="font-bold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition-colors cursor-pointer"
             >
               Create account to enable cloud sync.
             </button>
           </p>
+
+          {/* Action Row */}
+          <div className="flex flex-wrap items-center gap-2.5 mt-2.5">
+            <button
+              type="button"
+              onClick={() => setShowExitConfirm(true)}
+              className="px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-gray-800 dark:text-gray-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Exit Demo</span>
+            </button>
+          </div>
         </div>
 
         {/* Dismiss (session-only) */}
@@ -63,6 +77,16 @@ export const GuestBanner: React.FC = () => {
         message="Create a real account? Your demo data will be discarded."
         type="warning"
         confirmText="Create Account"
+      />
+
+      <ConfirmModal
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        onConfirm={exitGuestMode}
+        title="Exit Demo Mode"
+        message="Are you sure you want to exit demo mode and return to the login screen?"
+        type="warning"
+        confirmText="Exit Demo"
       />
     </>
   );

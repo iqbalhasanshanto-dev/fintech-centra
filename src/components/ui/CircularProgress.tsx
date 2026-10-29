@@ -32,7 +32,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
     } else if (percentage >= 75) {
       strokeColor = '#F5A524'; // Caution / Amber
     } else {
-      strokeColor = '#1FAE71'; // Growth / Green
+      strokeColor = '#C6FF3D'; // Vibrant Neon Lime
     }
   }
 

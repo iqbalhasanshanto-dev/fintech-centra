@@ -32,7 +32,7 @@ export const FirstAccountScreen: React.FC<FirstAccountScreenProps> = ({
 }) => {
   const { user, isGuest } = useAuth();
 
-  const baseCurrency = user?.baseCurrency || '';
+  const baseCurrency = user?.baseCurrency || CentraDB.getUser()?.baseCurrency || '';
   const [accountName, setAccountName] = useState('Primary Checking');
   const [accountNameError, setAccountNameError] = useState<string | null>(null);
   const [accountType, setAccountType] = useState<AccountType>('checking');

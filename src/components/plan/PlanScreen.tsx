@@ -64,40 +64,35 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
   const overallSavingsRate = totalGoalsTarget > 0 ? (totalGoalsSaved / totalGoalsTarget) * 100 : 0;
 
   return (
-    <div className="space-y-6 animate-fade-in pb-8">
+    <div className="space-y-6 animate-fade-in pb-36 sm:pb-40 lg:pb-8">
       
       {/* Header with title */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Goals &amp; Budgets
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Savings milestones and category monthly limits
-          </p>
-        </div>
+      <div className="flex items-center justify-between pt-1">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Goals &amp; Budgets
+        </h1>
       </div>
 
       {/* Plan Summary Hero Card */}
-      <div className="p-5 sm:p-6 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
+      <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
             Total saved across goals
           </span>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] tabular-nums">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-[#16A34A]/10 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] tabular-nums">
             {overallSavingsRate.toFixed(0)}% Achieved
           </span>
         </div>
 
         <div className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
           {formatCurrency(totalGoalsSaved, settings.baseCurrency, settings.privacyMode)}
-          <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+          <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2">
             of {formatCurrency(totalGoalsTarget, settings.baseCurrency, settings.privacyMode)}
           </span>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-2 rounded-full bg-[#E5E7EB] dark:bg-[#262626] overflow-hidden mt-4">
+        <div className="w-full h-1.5 rounded-full bg-[#E5E7EB] dark:bg-white/[0.07] overflow-hidden mt-4">
           <div
             className="h-full rounded-full bg-[#16A34A] dark:bg-[#22C55E] transition-all duration-700"
             style={{ width: `${Math.min(100, overallSavingsRate)}%` }}
@@ -151,12 +146,12 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                 goal.targetDate
               );
 
-              const progressBarColor = pace.isBehind ? '#F59E0B' : '#22C55E';
+              const progressBarColor = pace.isBehind ? '#F59E0B' : (goal.color || '#C6FF3D');
 
               return (
                 <div
                   key={goal.id}
-                  className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors space-y-4 shadow-xs"
+                  className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors space-y-3.5 shadow-sm"
                 >
                   {/* Top Row: Icon, Title, Actions */}
                   <div className="flex items-start justify-between gap-3">
@@ -210,23 +205,29 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                     </div>
                   </div>
 
-                  {/* Amounts readout */}
-                  <div className="flex items-baseline justify-between text-xs">
-                    <div>
-                      <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
-                        {formatCurrency(goal.currentAmount, settings.baseCurrency, settings.privacyMode)}
-                      </span>
-                      <span className="text-gray-500 dark:text-gray-400 ml-1.5 tabular-nums">
-                        of {formatCurrency(goal.targetAmount, settings.baseCurrency, settings.privacyMode)}
-                      </span>
-                    </div>
-                    <span className="font-semibold text-[#16A34A] dark:text-[#22C55E] tabular-nums">
+                  {/* Amounts row */}
+                  <div className="flex items-baseline space-x-2">
+                    <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tabular-nums currency-amount">
+                      {formatCurrency(goal.currentAmount, settings.baseCurrency, settings.privacyMode)}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+                      of {formatCurrency(goal.targetAmount, settings.baseCurrency, settings.privacyMode)}
+                    </span>
+                  </div>
+
+                  {/* Progress details row above track */}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">Saved so far</span>
+                    <span
+                      className="font-semibold tabular-nums"
+                      style={{ color: pace.isBehind ? '#F59E0B' : (goal.color || '#22C55E') }}
+                    >
                       {formatCurrency(pace.remainingAmount, settings.baseCurrency, settings.privacyMode)} left
                     </span>
                   </div>
 
-                  {/* Linear Progress Bar */}
-                  <div className="w-full h-2 rounded-full bg-[#E5E7EB] dark:bg-[#262626] overflow-hidden">
+                  {/* Progress track */}
+                  <div className="w-full h-1.5 rounded-full bg-[#E5E7EB] dark:bg-white/[0.07] overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{
@@ -236,7 +237,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                     />
                   </div>
 
-                  {/* Status */}
+                  {/* Pace row */}
                   {pace.isBehind ? (
                     <div className="flex items-center space-x-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs">
                       <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -245,8 +246,8 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                       </span>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#16A34A] dark:text-[#22C55E]">
-                      <CheckCircle2 className="w-4 h-4" />
+                    <div className="flex items-center space-x-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
                       <span>On target pace ({pace.percentComplete.toFixed(0)}% reached)</span>
                     </div>
                   )}
@@ -272,7 +273,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
 
         <div className="space-y-3">
           {budgets.length === 0 ? (
-            <div className="p-8 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.08] text-center">
+            <div className="p-8 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.08] text-center">
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No category budgets created yet</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Set monthly spending limits for your categories to keep spending on track.
@@ -287,7 +288,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               return (
                 <div
                   key={budget.id}
-                  className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors flex items-center justify-between shadow-xs"
+                  className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors flex items-center justify-between shadow-sm"
                 >
                   {/* Left: Icon & Info */}
                   <div className="flex items-center space-x-3.5 min-w-0 flex-1 pr-3">
