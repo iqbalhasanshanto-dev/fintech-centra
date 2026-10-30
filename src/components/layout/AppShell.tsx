@@ -18,7 +18,7 @@ const SettingsScreen = lazy(() => import('../settings/SettingsScreen').then(m =>
 export const AppShell: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income'>('spend');
+  const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal'>('spend');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const mainContentRef = useRef<HTMLElement>(null);
@@ -60,7 +60,7 @@ export const AppShell: React.FC = () => {
     }
   };
 
-  const handleOpenAddWithTab = (tab: 'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' = 'spend') => {
+  const handleOpenAddWithTab = (tab: 'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal' = 'spend') => {
     setAddModalDefaultTab(tab);
     setShowAddModal(true);
   };
@@ -114,7 +114,7 @@ export const AppShell: React.FC = () => {
             <LazyErrorBoundary fallbackTitle="Unable to load Goals & Budgets">
               <Suspense fallback={<ScreenLoadingFallback />}>
                 <PlanScreen
-                  onOpenAddGoal={() => handleOpenAddWithTab('goal')}
+                  onOpenAddGoal={() => handleOpenAddWithTab('create-goal')}
                 />
               </Suspense>
             </LazyErrorBoundary>
@@ -166,6 +166,7 @@ export const AppShell: React.FC = () => {
       <NotificationsModal
         isOpen={showNotificationsModal}
         onClose={() => setShowNotificationsModal(false)}
+        onOpenQuickAction={() => handleOpenAddWithTab('spend')}
       />
 
       {/* Hardware Back Root Exit Confirmation Modal */}

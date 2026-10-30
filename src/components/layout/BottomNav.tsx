@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Plus, X, Target, SlidersHorizontal, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
-import { useFinance } from '../../context/FinanceContext';
 
 export type TabType = 'home' | 'report' | 'plan' | 'settings';
 
@@ -67,9 +66,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onSelectTab,
   onOpenAddAction,
 }) => {
-  const finance = useFinance();
-  const hasMultipleAccounts = (finance?.accounts?.length ?? 0) >= 2;
-
   const [viewportBottom, setViewportBottom] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -259,21 +255,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                   <span className="text-sm font-semibold text-[#18212F] dark:text-white">Budget</span>
                 </button>
 
-                {hasMultipleAccounts && (
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onOpenAddAction('transfer');
-                    }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
-                    role="menuitem"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-[#38BDF8]/15 text-[#0284C7] dark:text-[#38BDF8] flex items-center justify-center shrink-0">
-                      <ArrowRightLeft className="w-4 h-4" />
-                    </div>
-                    <span className="text-sm font-semibold text-[#18212F] dark:text-white">Transfer</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenAddAction('transfer');
+                  }}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
+                  role="menuitem"
+                >
+                  <div className="w-9 h-9 rounded-full bg-[#38BDF8]/15 text-[#0284C7] dark:text-[#38BDF8] flex items-center justify-center shrink-0">
+                    <ArrowRightLeft className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-[#18212F] dark:text-white">Transfer</span>
+                </button>
               </div>
             )}
 

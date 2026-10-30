@@ -21,7 +21,7 @@ export const LockCoverScreen: React.FC = () => {
         <img
           src={logoImg}
           alt="Centra"
-          className="w-10 h-10 object-contain drop-shadow-sm select-none"
+          className="w-10 h-10 object-contain drop-shadow-sm select-none rounded-xl"
           draggable={false}
         />
       </div>

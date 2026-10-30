@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ArrowRight, Loader2, AlertCircle, ArrowLeft, Bot } from 'lucide-react';
+import { ArrowRight, Loader2, AlertCircle, ChevronLeft, Bot } from 'lucide-react';
 import logoOnDark from '../../assets/brand/logo-on-dark.svg';
 import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
@@ -174,48 +174,45 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
       ) : (
         /* VIEW STATE 2: AUTH SCREEN (03-auth.png) */
         <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10 animate-fade-in">
-          {/* Top Canvas Header: Giant Hero Display + Top-Right Centra Logo */}
-          <div className="px-6 pt-4 pb-6 flex items-start justify-between">
-            <div>
-              {!isTestEnv && (
+          {/* Top Canvas Header: Separate Top Row (Back on left, Logo on right) + Giant Hero Display below */}
+          <div className="px-6 pt-4 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              {!isTestEnv ? (
                 <button
                   type="button"
                   onClick={() => setViewState('intro')}
-                  className="mb-4 p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+                  className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shadow-xs"
                   aria-label="Back to intro"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
+              ) : (
+                <div className="w-10 h-10" />
               )}
-              <h1 className="text-[52px] sm:text-[64px] font-normal font-sans tracking-tight leading-[1.02] text-[#18212F] dark:text-white">
-                One<br />
-                <span className="text-[#56791E] dark:text-[#C6FF3D]">Last</span><br />
-                Step
-              </h1>
-            </div>
 
-            <div className="flex flex-col items-end gap-2 pt-1">
-              <img
-                src={logoOnLight}
-                alt="Centra"
-                className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden"
-                draggable={false}
-              />
-              <img
-                src={logoOnDark}
-                alt="Centra"
-                className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block"
-                draggable={false}
-              />
-              <div className="flex items-center gap-2">
-                <span className="sr-only">
-                  Sample preview
-                </span>
-                <span className="sr-only">
-                  {'> Secure sync'}
-                </span>
+              <div className="flex items-center">
+                <img
+                  src={logoOnLight}
+                  alt="Centra"
+                  className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden rounded-xl"
+                  draggable={false}
+                />
+                <img
+                  src={logoOnDark}
+                  alt="Centra"
+                  className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block rounded-xl"
+                  draggable={false}
+                />
+                <span className="sr-only">Sample preview</span>
+                <span className="sr-only">&gt; Secure sync</span>
               </div>
             </div>
+
+            <h1 className="text-[58px] sm:text-[68px] font-normal font-sans tracking-tight leading-[1.03] text-[#18212F] dark:text-white my-4">
+              One<br />
+              <span className="text-[#56791E] dark:text-[#C6FF3D]">Last</span><br />
+              Step
+            </h1>
           </div>
 
           {/* Elevated Bottom Sheet Card (03-auth.png) */}

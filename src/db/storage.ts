@@ -169,21 +169,35 @@ export const DEFAULT_INCOME_CATEGORIES_DEFINITIONS: Array<Omit<Category, 'id'>> 
   {
     name: 'Salary & Wages',
     icon: 'Briefcase',
-    color: '#1FAE71',
+    color: '#22C55E',
     type: 'income',
     hidden: false,
   },
   {
     name: 'Freelance & Bonus',
     icon: 'TrendingUp',
-    color: '#00B894',
+    color: '#10B981',
     type: 'income',
     hidden: false,
   },
   {
     name: 'Dividends & Yield',
     icon: 'Coins',
-    color: '#55EFC4',
+    color: '#06B6D4',
+    type: 'income',
+    hidden: false,
+  },
+  {
+    name: 'Investments',
+    icon: 'LineChart',
+    color: '#3B82F6',
+    type: 'income',
+    hidden: false,
+  },
+  {
+    name: 'Gifts / Allowance',
+    icon: 'Gift',
+    color: '#EC4899',
     type: 'income',
     hidden: false,
   },
@@ -1465,6 +1479,28 @@ export const CentraDB = {
         }
 
         if (!anyFetchError) {
+          // If user has 0 transactions, ensure account doesn't carry a mock balance (e.g., 20 or named after user)
+          if (cache.transactions.length === 0 && cache.accounts && cache.accounts.length > 0) {
+            const userFirstName = (cache.user?.name || userName || '').trim().split(/\s+/)[0]?.toLowerCase();
+            let accountsModified = false;
+            cache.accounts = cache.accounts.map(acc => {
+              const accNameLower = (acc.name || '').toLowerCase();
+              const matchesUserName = Boolean(userFirstName && accNameLower.includes(userFirstName));
+              if (acc.balance === 20 || matchesUserName) {
+                accountsModified = true;
+                return {
+                  ...acc,
+                  balance: 0,
+                  name: (acc.name === 'Checking' || acc.name === 'Savings' || acc.name === 'Investment') ? acc.name : 'Cash'
+                };
+              }
+              return acc;
+            });
+            if (accountsModified) {
+              safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
+            }
+          }
+
           lastPullTimestampByUser.set(userId, Date.now());
           safeSet(getUserStorageKey(userId, 'last_synced_at'), new Date().toISOString());
           setSyncStatus('synced');
@@ -1745,7 +1781,7 @@ export const CentraDB = {
         id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif_${Date.now()}`,
         type: 'system',
         title: 'Welcome to Centra',
-        message: 'Your account is ready. Add your first transaction or link an account to begin tracking.',
+        message: 'Your account is ready. Add your first transaction to begin tracking.',
         timestamp: new Date().toISOString(),
         isRead: false,
         severity: 'info',

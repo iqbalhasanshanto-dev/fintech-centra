@@ -16,31 +16,31 @@ export const GuestBanner: React.FC = () => {
     <>
       <div
         role="alert"
-        className="w-full border border-amber-300/50 dark:border-amber-500/20 bg-amber-500/10 dark:bg-amber-950/20 rounded-2xl px-4 py-3 flex items-start gap-3 backdrop-blur-xs"
+        className="w-full border-2 border-amber-400/80 dark:border-amber-500/30 bg-[#FFF8EB] dark:bg-amber-500/10 rounded-2xl px-4 py-3 flex items-start gap-3 backdrop-blur-xs text-[#78350F] dark:text-amber-200"
       >
         {/* Icon */}
         <div className="shrink-0 mt-0.5">
-          <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
-            <CloudOff className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <div className="w-8 h-8 rounded-full bg-amber-200/70 dark:bg-amber-900/40 flex items-center justify-center">
+            <CloudOff className="w-4 h-4 text-[#92400E] dark:text-amber-400" />
           </div>
         </div>
 
         {/* Message */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+            <AlertTriangle className="w-3 h-3 text-[#92400E] dark:text-amber-400 shrink-0" />
+            <span className="text-xs font-bold text-[#92400E] dark:text-amber-300 uppercase tracking-wider">
               Guest Mode (Local Demo)
             </span>
           </div>
-          <p className="text-xs text-amber-700 dark:text-amber-400/90 leading-relaxed">
+          <p className="text-xs text-[#78350F] dark:text-amber-200 leading-relaxed">
             Your data is stored <strong>only on this device</strong> and is not backed up to the
             cloud. Clearing browser data, reinstalling the app, or switching devices will
             permanently lose your data.{' '}
             <button
               type="button"
               onClick={() => setShowConfirm(true)}
-              className="font-bold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition-colors cursor-pointer"
+              className="font-bold underline underline-offset-2 hover:text-[#92400E] dark:hover:text-amber-100 transition-colors cursor-pointer"
             >
               Create account to enable cloud sync.
             </button>
@@ -51,7 +51,7 @@ export const GuestBanner: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowExitConfirm(true)}
-              className="px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-gray-800 dark:text-gray-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-amber-200/60 hover:bg-amber-200/80 dark:bg-white/10 dark:hover:bg-white/15 text-[#78350F] dark:text-gray-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Exit Demo</span>
@@ -63,7 +63,7 @@ export const GuestBanner: React.FC = () => {
         <button
           onClick={() => setDismissed(true)}
           aria-label="Dismiss guest banner"
-          className="shrink-0 p-1 rounded-lg text-amber-500 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
+          className="shrink-0 p-1 rounded-lg text-[#92400E] dark:text-amber-400 hover:bg-amber-200/50 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
         >
           <X className="w-3.5 h-3.5" />
         </button>

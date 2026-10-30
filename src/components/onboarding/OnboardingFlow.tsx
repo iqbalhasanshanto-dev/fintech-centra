@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { ProfileInfoScreen } from './ProfileInfoScreen';
+import { ProfileInfoScreen, ProfileDraftData } from './ProfileInfoScreen';
 import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { SpendingCategoriesScreen } from './SpendingCategoriesScreen';
 import { ConfirmModal } from '../ui/ConfirmModal';
@@ -18,10 +18,50 @@ const STEP_ORDER: OnboardingStep[] = [
 ];
 
 const ONBOARDING_STEP_STORAGE_KEY = 'centra_onboarding_step';
+const ONBOARDING_DRAFT_STORAGE_KEY = 'centra_onboarding_draft';
 
 export const OnboardingFlow: React.FC = () => {
-  const { logout, completeOnboarding } = useAuth();
+  const { logout, completeOnboarding, setAuthView } = useAuth();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const [draft, setDraft] = useState<ProfileDraftData>(() => {
+    try {
+      const saved = sessionStorage.getItem(ONBOARDING_DRAFT_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // Ignore storage errors
+    }
+    return {};
+  });
+
+  const updateDraft = (patch: Partial<ProfileDraftData>) => {
+    setDraft(prev => {
+      const next = { ...prev, ...patch };
+      try {
+        sessionStorage.setItem(ONBOARDING_DRAFT_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore storage errors
+      }
+      return next;
+    });
+  };
+
+  // When app is minimized or backgrounded during unfinished onboarding, reset draft and show accountIncomplete
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        try {
+          sessionStorage.removeItem(ONBOARDING_DRAFT_STORAGE_KEY);
+        } catch {}
+        setAuthView('accountIncomplete');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [setAuthView]);
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(() => {
     const savedStep = localStorage.getItem(ONBOARDING_STEP_STORAGE_KEY);
@@ -52,6 +92,9 @@ export const OnboardingFlow: React.FC = () => {
   });
 
   const handleFinishOnboarding = async () => {
+    try {
+      sessionStorage.removeItem(ONBOARDING_DRAFT_STORAGE_KEY);
+    } catch {}
     localStorage.removeItem(ONBOARDING_STEP_STORAGE_KEY);
     await completeOnboarding();
   };
@@ -68,8 +111,12 @@ export const OnboardingFlow: React.FC = () => {
       >
         {currentStep === 'profile' && (
           <ProfileInfoScreen
+            initialData={draft}
             onBack={() => setShowExitConfirm(true)}
-            onContinue={() => goToStep('theme', 'forward')}
+            onContinue={(profileData) => {
+              updateDraft(profileData);
+              goToStep('theme', 'forward');
+            }}
           />
         )}
 

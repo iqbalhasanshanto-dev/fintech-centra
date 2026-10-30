@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, ChevronDown, Check, LogOut } from 'lucide-react';
+import { Bell, ChevronDown, Check, LogOut, Sun, Moon } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { PeriodFilter } from '../../types';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { getGreeting } from '../../utils/greeting';
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { periodFilter, setPeriodFilter, unreadNotificationsCount, syncStatus } = useFinance();
   const { user, isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   const [showGuestConfirm, setShowGuestConfirm] = useState(false);
   const [showExitDemoConfirm, setShowExitDemoConfirm] = useState(false);
@@ -149,6 +151,17 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action Toolbar */}
           <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Theme Toggle Button (Sun/Moon) */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs"
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
+            </button>
+
             {/* Notification Bell with Unread Indicator */}
             <button
               onClick={onOpenNotifications}

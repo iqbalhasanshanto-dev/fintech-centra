@@ -37,7 +37,7 @@ export const SyncRetryScreen: React.FC<SyncRetryScreenProps> = ({ onRetry, onSig
           <img
             src={logoImg}
             alt="Centra"
-            className="w-8 h-8 object-contain drop-shadow-sm select-none"
+            className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl"
             draggable={false}
           />
           <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white font-display">

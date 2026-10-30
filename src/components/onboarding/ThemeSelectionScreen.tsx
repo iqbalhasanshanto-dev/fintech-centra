@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Sun, Moon } from 'lucide-react';
+import { ChevronLeft, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logoImg from '../../assets/brand/logo.png';
 import { CornerGlow } from '../ui/CornerGlow';
@@ -15,7 +15,7 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
   onBack,
   onContinue,
 }) => {
-  const { saveOnboardingProfile } = useAuth();
+  const { user, saveOnboardingProfile } = useAuth();
   const [selectedMode, setSelectedMode] = useState<ThemeMode>('dark');
 
   const handleSelectMode = (mode: ThemeMode) => {
@@ -44,7 +44,7 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
     }
 
     await saveOnboardingProfile({
-      name: '',
+      name: user?.name || '',
       theme: resolvedTheme,
     });
     onContinue(resolvedTheme);
@@ -61,24 +61,22 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
       <CornerGlow />
 
       <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10 animate-fade-in">
-        {/* Top Canvas Header: Centra Brand Mark (Top-Left per 06-onboarding-appearance.png) */}
-        <div className="px-6 pt-4 pb-6 flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onBack}
-              className="p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <img
-              src={logoImg}
-              alt="Centra"
-              className="w-10 h-10 object-contain drop-shadow-sm select-none"
-              draggable={false}
-            />
-          </div>
+        {/* Top Canvas Header: Separate Top Row (Back on left, Logo on right) */}
+        <div className="px-6 pt-4 pb-6 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shadow-xs"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <img
+            src={logoImg}
+            alt="Centra"
+            className="w-10 h-10 object-contain drop-shadow-sm select-none rounded-xl"
+            draggable={false}
+          />
         </div>
 
         {/* Elevated Bottom Sheet Card (06-onboarding-appearance.png) */}

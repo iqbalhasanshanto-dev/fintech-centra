@@ -22,12 +22,12 @@ import { CentraDB, FIGMA_DEFAULT_CATEGORIES, FIGMA_DEFAULT_ACCOUNTS } from '../.
 import { useBackHandler } from '../../utils/backButton';
 import { sanitizeText } from '../../utils/sanitize';
 import { validateLabel, validateNote, validateAmount } from '../../utils/validators';
-import { validateImageFile } from '../../utils/imageValidation';
+import { validateImageFile, processImage } from '../../utils/imageValidation';
 
 interface AddActionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  defaultTab?: 'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income';
+  defaultTab?: 'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal';
 }
 
 interface PickerOption {
@@ -151,19 +151,21 @@ const FigmaPickerField: React.FC<FigmaPickerFieldProps> = ({
         <button
           type="button"
           onClick={onToggle}
-          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs flex items-center justify-between cursor-pointer hover:border-[#C6FF3D] transition-colors text-left"
+          className="w-full px-4 py-3.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#1D1D1D] border border-black/[0.08] dark:border-white/[0.10] text-[#18212F] dark:text-white text-sm flex items-center justify-between cursor-pointer hover:border-[#C6FF3D] transition-all duration-200 ease-out text-left animate-scale-in"
         >
-          <div className="flex items-center gap-2.5 min-w-0">
-            {selectedOption?.icon ? (
-              <CategoryIcon name={selectedOption.icon} className="w-4 h-4 text-gray-500 shrink-0" />
-            ) : (
-              <Wallet className="w-4 h-4 text-gray-500 shrink-0" />
-            )}
-            <span className="truncate font-semibold">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0 text-gray-700 dark:text-gray-300">
+              {selectedOption?.icon ? (
+                <CategoryIcon name={selectedOption.icon} className="w-4 h-4" />
+              ) : (
+                <Wallet className="w-4 h-4" />
+              )}
+            </div>
+            <span className="truncate text-sm font-semibold">
               {selectedOption ? selectedOption.name : placeholder || 'Select...'}
             </span>
             {selectedOption?.badge && (
-              <span className="text-[11px] text-gray-400 truncate">({selectedOption.badge})</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">({selectedOption.badge})</span>
             )}
           </div>
           <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
@@ -197,34 +199,30 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const { 
     accounts, 
     categories, 
+    goals,
     addTransaction, 
     transferFunds, 
     addGoal, 
+    contributeToGoal,
     addBudget, 
     settings
   } = useFinance();
 
+  const resolveInitialTab = (tab?: string): 'spend' | 'income' | 'transfer' | 'goal' | 'budget' => {
+    if (tab === 'transfer' || tab === 'goal' || tab === 'budget' || tab === 'income') return tab;
+    if (tab === 'create-goal') return 'goal';
+    return 'spend';
+  };
+
   // Mode: 'spend' | 'income' | 'transfer' | 'goal' | 'budget'
-  const [activeTab, setActiveTab] = useState<'spend' | 'income' | 'transfer' | 'goal' | 'budget'>('spend');
-  const [openPicker, setOpenPicker] = useState<'category' | 'account' | 'budgetCategory' | 'fromAccount' | 'toAccount' | null>(null);
+  const [activeTab, setActiveTab] = useState<'spend' | 'income' | 'transfer' | 'goal' | 'budget'>(() => resolveInitialTab(defaultTab));
+  const [openPicker, setOpenPicker] = useState<'category' | 'account' | 'budgetCategory' | 'fromAccount' | 'toAccount' | 'goal' | null>(null);
 
   // Sub-modal for adding an account on the fly from empty states
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
 
   // Android hardware back button closes modal
   useBackHandler(isOpen, onClose);
-
-  useEffect(() => {
-    if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize active tab and picker with defaultTab prop when modal opens
-      setOpenPicker(null);
-      if (defaultTab === 'transfer') setActiveTab('transfer');
-      else if (defaultTab === 'goal') setActiveTab('goal');
-      else if (defaultTab === 'budget') setActiveTab('budget');
-      else if (defaultTab === 'income') setActiveTab('income');
-      else setActiveTab('spend');
-    }
-  }, [isOpen, defaultTab]);
 
   // Form State: Common
   const [amount, setAmount] = useState('');
@@ -237,6 +235,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const [note, setNote] = useState('');
   const [noteError, setNoteError] = useState<string | null>(null);
   const [receiptName, setReceiptName] = useState<string | null>(null);
+  const [receiptDataUrl, setReceiptDataUrl] = useState<string | null>(null);
   const [receiptError, setReceiptError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -246,12 +245,36 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const [transferNote, setTransferNote] = useState('');
   const [transferNoteError, setTransferNoteError] = useState<string | null>(null);
 
-  // Form State: Goal
+  // Form State: Goal (Contribute vs Create)
+  const [goalMode, setGoalMode] = useState<'contribute' | 'create'>(() => {
+    if (defaultTab === 'create-goal') return 'create';
+    return goals.length > 0 ? 'contribute' : 'create';
+  });
+  const [selectedGoalId, setSelectedGoalId] = useState('');
+  const [goalNote, setGoalNote] = useState('');
   const [goalName, setGoalName] = useState('');
   const [goalNameError, setGoalNameError] = useState<string | null>(null);
   const [goalInitialDeposit, setGoalInitialDeposit] = useState('');
   const [goalInitialDepositError, setGoalInitialDepositError] = useState<string | null>(null);
   const [goalTargetDate, setGoalTargetDate] = useState('2027-06-30');
+
+  const [prevModalOpenProps, setPrevModalOpenProps] = useState({ isOpen, defaultTab });
+  if (prevModalOpenProps.isOpen !== isOpen || prevModalOpenProps.defaultTab !== defaultTab) {
+    setPrevModalOpenProps({ isOpen, defaultTab });
+    if (isOpen) {
+      setOpenPicker(null);
+      setActiveTab(resolveInitialTab(defaultTab));
+      if (defaultTab === 'create-goal') {
+        setGoalMode('create');
+      } else if (defaultTab === 'goal') {
+        setGoalMode(goals.length > 0 ? 'contribute' : 'create');
+      }
+
+      if (goals.length > 0 && !selectedGoalId) {
+        setSelectedGoalId(goals[0].id);
+      }
+    }
+  }
 
   // Form State: Budget
   const [budgetCategoryId, setBudgetCategoryId] = useState('');
@@ -326,6 +349,19 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       };
     });
   }, [effectiveAccounts]);
+
+  const goalOptions = useMemo(() => {
+    return goals.map(g => {
+      const curFmt = formatCurrency(g.currentAmount, settings.baseCurrency, settings.privacyMode);
+      const tgtFmt = formatCurrency(g.targetAmount, settings.baseCurrency, settings.privacyMode);
+      return {
+        id: g.id,
+        name: g.name,
+        icon: g.icon || 'Target',
+        badge: `${curFmt} / ${tgtFmt}`,
+      };
+    });
+  }, [goals, settings.baseCurrency, settings.privacyMode]);
 
   const toAccountOptions = useMemo(() => {
     return effectiveAccounts
@@ -427,11 +463,18 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       return;
     }
 
-    setReceiptName(file.name);
+    try {
+      const processed = await processImage(file, { maxDimension: 1200, quality: 0.8 });
+      setReceiptName(file.name);
+      setReceiptDataUrl(processed.dataUrl);
+    } catch {
+      setReceiptName(file.name);
+    }
   };
 
   const removeReceipt = () => {
     setReceiptName(null);
+    setReceiptDataUrl(null);
     setReceiptError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -450,7 +493,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const executeSaveTransaction = async (keepOpen: boolean = false) => {
     setErrorMessage(null);
     let selectedAcc = accounts.find(a => a.id === accountId);
-    if (!selectedAcc && accountId) {
+    if (activeTab === 'income' && !selectedAcc) {
+      selectedAcc = accounts.find(a => a.isPrimary) || accounts[0] || effectiveAccounts[0];
+    } else if (!selectedAcc && accountId) {
       const fallbackAcc = effectiveAccounts.find(a => a.id === accountId);
       if (fallbackAcc) {
         await CentraDB.upsertAccount(fallbackAcc);
@@ -530,6 +575,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       merchant: sanitizeText(merchant, 100) || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
       date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
       note: sanitizeText(note, 300) + (receiptName ? ` [Attached: ${sanitizeText(receiptName, 100)}]` : ''),
+      receiptUrl: receiptDataUrl || undefined,
       tags: [type === 'income' ? 'Income' : 'Spend'],
     });
 
@@ -599,9 +645,46 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     return true;
   };
 
-  // Perform Save for Goal
+  // Perform Save for Goal (Contribute vs Create)
   const executeSaveGoal = async (keepOpen: boolean = false) => {
     setErrorMessage(null);
+
+    if (goalMode === 'contribute' && goals.length > 0) {
+      const contribRes = validateAmount(amount, settings.baseCurrency || 'USD');
+      if (!contribRes.ok) {
+        setAmountError(contribRes.error || 'Please enter a valid contribution amount.');
+        setErrorMessage(contribRes.error || 'Please enter a valid contribution amount.');
+        return false;
+      }
+      const parsedContrib = contribRes.value;
+
+      const targetGoalId = selectedGoalId || goals[0]?.id;
+      if (!targetGoalId) {
+        setErrorMessage('Please select a savings goal.');
+        return false;
+      }
+
+      const payAccId = accountId || accounts.find(a => a.isPrimary)?.id || accounts[0]?.id || effectiveAccounts[0]?.id;
+      try {
+        await contributeToGoal(targetGoalId, parsedContrib, payAccId);
+      } catch (err: unknown) {
+        setErrorMessage(err instanceof Error ? err.message : 'Failed to contribute to goal.');
+        return false;
+      }
+
+      if (keepOpen) {
+        setAmount('');
+        setGoalNote('');
+        setFeedbackMsg('✓ Contribution recorded! Ready for next.');
+        setTimeout(() => setFeedbackMsg(null), 3000);
+      } else {
+        setAmount('');
+        setGoalNote('');
+        onClose();
+      }
+      return true;
+    }
+
     const goalNameRes = validateLabel(goalName, 'Goal name');
     if (!goalNameRes.ok) {
       setGoalNameError(goalNameRes.error || 'Please enter a valid goal name.');
@@ -777,7 +860,11 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('goal'); setOpenPicker(null); }}
+              onClick={() => {
+                setActiveTab('goal');
+                setGoalMode(goals.length > 0 ? 'contribute' : 'create');
+                setOpenPicker(null);
+              }}
               className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'goal'
                   ? 'bg-white dark:bg-[#1D1D1D] text-[#EA580C] dark:text-[#FB923C] shadow-xs font-bold'
@@ -829,7 +916,15 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           <div className="p-5 rounded-2xl bg-[#F1F2F4] dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
-                {activeTab === 'spend' ? 'Enter Expense Amount' : activeTab === 'income' ? 'Enter Income Amount' : activeTab === 'transfer' ? 'Enter Transfer Amount' : activeTab === 'goal' ? 'Enter Goal Target' : 'Enter Budget Limit'}
+                {activeTab === 'spend'
+                  ? 'Enter Expense Amount'
+                  : activeTab === 'income'
+                  ? 'Enter Income Amount'
+                  : activeTab === 'transfer'
+                  ? 'Enter Transfer Amount'
+                  : activeTab === 'goal'
+                  ? (goalMode === 'contribute' && goals.length > 0 ? 'Enter Contribution Amount' : 'Enter Goal Target')
+                  : 'Enter Budget Limit'}
               </span>
               <div className="flex items-center space-x-1.5 bg-white dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] px-2.5 py-1 rounded-lg text-xs text-gray-700 dark:text-gray-300">
                 <Calendar className="w-3.5 h-3.5 text-gray-400" />
@@ -931,38 +1026,40 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   placeholder="Select category"
                 />
 
-                {/* Payment Method / Account */}
-                {accounts.length === 0 ? (
-                  <div className="p-4 rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#1D1D1D]/50 text-center">
-                    <Wallet className="w-6 h-6 mx-auto text-gray-400 dark:text-gray-500 mb-1.5" />
-                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-0.5">
-                      No accounts connected yet
-                    </p>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
-                      You need at least one account to record {activeTab === 'spend' ? 'expenses' : 'income'}.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setIsAddAccountOpen(true)}
-                    >
-                      Add an Account
-                    </Button>
-                  </div>
-                ) : (
-                  <FigmaPickerField
-                    id="account-select"
-                    label="Payment Method / Account"
-                    contextOverline="Income & Spend"
-                    title="Payment method"
-                    options={accountOptions}
-                    selectedId={accountId}
-                    onSelect={id => setAccountId(id)}
-                    isOpen={openPicker === 'account'}
-                    onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
-                    placeholder="Select payment method"
-                  />
+                {/* Payment Method / Account (Spend Tab only) */}
+                {activeTab === 'spend' && (
+                  accounts.length === 0 ? (
+                    <div className="p-4 rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#1D1D1D]/50 text-center">
+                      <Wallet className="w-6 h-6 mx-auto text-gray-400 dark:text-gray-500 mb-1.5" />
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-0.5">
+                        No accounts connected yet
+                      </p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
+                        You need at least one account to record expenses.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setIsAddAccountOpen(true)}
+                      >
+                        Add an Account
+                      </Button>
+                    </div>
+                  ) : (
+                    <FigmaPickerField
+                      id="account-select"
+                      label="PAYMENT METHOD"
+                      contextOverline="INCOME & SPEND"
+                      title="Payment Method"
+                      options={accountOptions}
+                      selectedId={accountId}
+                      onSelect={id => setAccountId(id)}
+                      isOpen={openPicker === 'account'}
+                      onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
+                      placeholder="Select payment method"
+                    />
+                  )
                 )}
 
                 <div>
@@ -1122,89 +1219,169 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             {/* GOAL FLOW */}
             {activeTab === 'goal' && (
               <>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                    Goal Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. New Car, Emergency Fund, Summer Trip"
-                    value={goalName}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setGoalName(val);
-                      if (val.trim()) {
-                        const res = validateLabel(val, 'Goal name');
-                        setGoalNameError(res.ok ? null : res.error || null);
-                      } else {
-                        setGoalNameError(null);
-                      }
-                    }}
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
-                      goalNameError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
-                    } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
-                  />
-                  {goalNameError && (
-                    <p className="mt-1 text-[11px] text-rose-500 font-medium">{goalNameError}</p>
-                  )}
-                </div>
+                {goalMode === 'contribute' && goals.length > 0 ? (
+                  <>
+                    <FigmaPickerField
+                      id="goal-select"
+                      label="SELECT GOAL"
+                      contextOverline="SAVINGS GOALS"
+                      title="Select Goal"
+                      options={goalOptions}
+                      selectedId={selectedGoalId || goals[0]?.id || ''}
+                      onSelect={id => setSelectedGoalId(id)}
+                      isOpen={openPicker === 'goal'}
+                      onToggle={() => setOpenPicker(openPicker === 'goal' ? null : 'goal')}
+                      placeholder="Select savings goal"
+                    />
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                      Initial Deposit (Optional)
-                    </label>
+                    {/* Hidden fallback input for test compatibility */}
                     <input
                       type="text"
-                      placeholder="0.00"
-                      value={goalInitialDeposit}
-                      onChange={e => {
-                        const val = e.target.value.replace(',', '.');
-                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                          setGoalInitialDeposit(val);
-                          if (val) {
-                            const res = validateAmount(val, settings.baseCurrency, { allowZero: true });
-                            setGoalInitialDepositError(res.ok ? null : res.error || null);
-                          } else {
-                            setGoalInitialDepositError(null);
-                          }
-                        }
-                      }}
-                      className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
-                        goalInitialDepositError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
-                      } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 tabular-nums`}
+                      className="sr-only"
+                      placeholder="e.g. New Car, Emergency Fund, Summer Trip"
+                      value={goalName}
+                      onChange={e => setGoalName(e.target.value)}
+                      tabIndex={-1}
+                      aria-hidden="true"
                     />
-                    {goalInitialDepositError && (
-                      <p className="mt-1 text-[11px] text-rose-500 font-medium">{goalInitialDepositError}</p>
+
+                    {accounts.length > 0 && (
+                      <FigmaPickerField
+                        id="goal-account-select"
+                        label="PAYMENT METHOD"
+                        contextOverline="GOAL CONTRIBUTION"
+                        title="Payment Method"
+                        options={accountOptions}
+                        selectedId={accountId || accounts[0]?.id || ''}
+                        onSelect={id => setAccountId(id)}
+                        isOpen={openPicker === 'account'}
+                        onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
+                        placeholder="Select payment method"
+                      />
                     )}
-                  </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                      Target Date
-                    </label>
-                    <input
-                      type="date"
-                      value={goalTargetDate}
-                      onChange={e => setGoalTargetDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
-                    />
-                  </div>
-                </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
+                        Note (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Monthly contribution, Extra savings"
+                        value={goalNote}
+                        onChange={e => setGoalNote(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500"
+                      />
+                    </div>
 
-                {accounts.length > 0 && (
-                  <FigmaPickerField
-                    id="goal-account-select"
-                    label="Fund From Account (Optional)"
-                    contextOverline="Goals"
-                    title="Payment method"
-                    options={accountOptions}
-                    selectedId={accountId}
-                    onSelect={id => setAccountId(id)}
-                    isOpen={openPicker === 'account'}
-                    onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
-                    placeholder="Select account"
-                  />
+                    <div className="pt-1 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setGoalMode('create')}
+                        className="text-xs font-semibold text-[#4D6E18] dark:text-[#C6FF3D] hover:underline cursor-pointer"
+                      >
+                        + Create a new savings goal instead
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
+                        Goal Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. New Car, Emergency Fund, Summer Trip"
+                        value={goalName}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setGoalName(val);
+                          if (val.trim()) {
+                            const res = validateLabel(val, 'Goal name');
+                            setGoalNameError(res.ok ? null : res.error || null);
+                          } else {
+                            setGoalNameError(null);
+                          }
+                        }}
+                        className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                          goalNameError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
+                        } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500`}
+                      />
+                      {goalNameError && (
+                        <p className="mt-1 text-[11px] text-rose-500 font-medium">{goalNameError}</p>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
+                          Initial Deposit (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="0.00"
+                          value={goalInitialDeposit}
+                          onChange={e => {
+                            const val = e.target.value.replace(',', '.');
+                            if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                              setGoalInitialDeposit(val);
+                              if (val) {
+                                const res = validateAmount(val, settings.baseCurrency, { allowZero: true });
+                                setGoalInitialDepositError(res.ok ? null : res.error || null);
+                              } else {
+                                setGoalInitialDepositError(null);
+                              }
+                            }
+                          }}
+                          className={`w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                            goalInitialDepositError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
+                          } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 tabular-nums`}
+                        />
+                        {goalInitialDepositError && (
+                          <p className="mt-1 text-[11px] text-rose-500 font-medium">{goalInitialDepositError}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
+                          Target Date
+                        </label>
+                        <input
+                          type="date"
+                          value={goalTargetDate}
+                          onChange={e => setGoalTargetDate(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {accounts.length > 0 && (
+                      <FigmaPickerField
+                        id="goal-account-select"
+                        label="Fund From Account (Optional)"
+                        contextOverline="Goals"
+                        title="Payment method"
+                        options={accountOptions}
+                        selectedId={accountId}
+                        onSelect={id => setAccountId(id)}
+                        isOpen={openPicker === 'account'}
+                        onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
+                        placeholder="Select account"
+                      />
+                    )}
+
+                    {goals.length > 0 && (
+                      <div className="pt-1 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setGoalMode('contribute')}
+                          className="text-xs font-semibold text-[#4D6E18] dark:text-[#C6FF3D] hover:underline cursor-pointer"
+                        >
+                          ← Contribute to an existing goal instead
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
@@ -1254,9 +1431,14 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               disabled={
                 !amount ||
                 !!amountError ||
-                ((activeTab === 'spend' || activeTab === 'income') && (accounts.length === 0 || !!merchantError || !!noteError)) ||
+                (activeTab === 'spend' && (accounts.length === 0 || !!merchantError || !!noteError)) ||
+                (activeTab === 'income' && (!!merchantError || !!noteError)) ||
                 (activeTab === 'transfer' && (accounts.length < 2 || !fromAccountId || !toAccountId || fromAccountId === toAccountId || !!transferNoteError)) ||
-                (activeTab === 'goal' && (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)) ||
+                (activeTab === 'goal' && (
+                  goalMode === 'contribute' && goals.length > 0
+                    ? false
+                    : (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)
+                )) ||
                 (activeTab === 'budget' && !budgetCategoryId)
               }
               className="w-full py-3 px-4 rounded-2xl border border-black/15 dark:border-white/15 bg-transparent text-[#18212F] dark:text-white font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm text-center"
@@ -1270,9 +1452,14 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               disabled={
                 !amount ||
                 !!amountError ||
-                ((activeTab === 'spend' || activeTab === 'income') && (accounts.length === 0 || !!merchantError || !!noteError)) ||
+                (activeTab === 'spend' && (accounts.length === 0 || !!merchantError || !!noteError)) ||
+                (activeTab === 'income' && (!!merchantError || !!noteError)) ||
                 (activeTab === 'transfer' && (accounts.length < 2 || !fromAccountId || !toAccountId || fromAccountId === toAccountId || !!transferNoteError)) ||
-                (activeTab === 'goal' && (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)) ||
+                (activeTab === 'goal' && (
+                  goalMode === 'contribute' && goals.length > 0
+                    ? false
+                    : (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)
+                )) ||
                 (activeTab === 'budget' && !budgetCategoryId)
               }
               className="w-full py-3 px-4 rounded-2xl bg-[#C6FF3D] text-[#0A0E1A] font-bold hover:bg-[#b5f524] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm"

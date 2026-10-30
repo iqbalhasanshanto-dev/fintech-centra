@@ -49,6 +49,7 @@ export interface Transaction {
   recurringInterval?: 'daily' | 'weekly' | 'monthly' | 'yearly';
   resultingBalance?: number;
   merchant?: string;
+  receiptUrl?: string;
 }
 
 export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';

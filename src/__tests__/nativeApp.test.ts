@@ -33,6 +33,7 @@ vi.mock('@capacitor/status-bar', () => ({
   StatusBar: {
     setStyle: vi.fn().mockResolvedValue(undefined),
     setBackgroundColor: vi.fn().mockResolvedValue(undefined),
+    setOverlaysWebView: vi.fn().mockResolvedValue(undefined),
   },
   Style: {
     Dark: 'DARK',
@@ -135,12 +136,14 @@ describe('Native Bootstrap (src/utils/nativeApp.ts)', () => {
     vi.mocked(platform.isNative).mockReturnValue(true);
 
     await updateNativeStatusBar(true);
+    expect(StatusBar.setOverlaysWebView).toHaveBeenCalledWith({ overlay: false });
     expect(StatusBar.setStyle).toHaveBeenCalledWith({ style: Style.Dark });
-    expect(StatusBar.setBackgroundColor).toHaveBeenCalledWith({ color: '#0A0E1A' });
+    expect(StatusBar.setBackgroundColor).toHaveBeenCalledWith({ color: '#000000' });
 
     await updateNativeStatusBar(false);
+    expect(StatusBar.setOverlaysWebView).toHaveBeenCalledWith({ overlay: false });
     expect(StatusBar.setStyle).toHaveBeenCalledWith({ style: Style.Light });
-    expect(StatusBar.setBackgroundColor).toHaveBeenCalledWith({ color: '#FAFAFA' });
+    expect(StatusBar.setBackgroundColor).toHaveBeenCalledWith({ color: '#F7F8FA' });
   });
 
   it('handles cold-start launch URL from getLaunchUrl', async () => {

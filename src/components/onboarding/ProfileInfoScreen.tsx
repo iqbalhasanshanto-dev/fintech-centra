@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  ArrowLeft,
+  ChevronLeft,
   Camera,
   ChevronDown,
   User,
@@ -14,6 +14,7 @@ import logoOnDark from '../../assets/brand/logo-on-dark.svg';
 import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
 import { DatePicker } from '../ui/DatePicker';
+import { ImageCropModal } from '../ui/ImageCropModal';
 import { useAuth } from '../../context/AuthContext';
 import {
   SUPPORTED_CURRENCIES,
@@ -32,8 +33,19 @@ import {
   MAX_AVATAR_BYTES,
 } from '../../utils/imageValidation';
 
+export interface ProfileDraftData {
+  name?: string;
+  fullName?: string;
+  dob?: string;
+  country?: string;
+  address?: string;
+  avatarUrl?: string;
+  currency?: string;
+}
+
 interface ProfileInfoScreenProps {
   initialName?: string;
+  initialData?: ProfileDraftData;
   onBack: () => void;
   onContinue: (profileData: {
     name: string;
@@ -47,17 +59,22 @@ interface ProfileInfoScreenProps {
 
 export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
   initialName = '',
+  initialData,
   onBack,
   onContinue,
 }) => {
   const { user, saveOnboardingProfile } = useAuth();
 
-  const [fullName, setFullName] = useState(initialName || user.name || '');
-  const [dob, setDob] = useState('');
-  const [country, setCountry] = useState('');
-  const [address, setAddress] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user.avatarUrl);
-  const [currency, setCurrency] = useState<string>('');
+  const [fullName, setFullName] = useState(
+    initialData?.fullName || initialData?.name || initialName || user.name || ''
+  );
+  const [dob, setDob] = useState(initialData?.dob || '');
+  const [country, setCountry] = useState(initialData?.country || '');
+  const [address, setAddress] = useState(initialData?.address || '');
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(
+    initialData?.avatarUrl || user.avatarUrl
+  );
+  const [currency, setCurrency] = useState<string>(initialData?.currency || '');
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [fullNameError, setFullNameError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
@@ -102,8 +119,10 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
 
-  // Handle avatar file upload with magic byte validation and canvas downscaling
+  // Handle avatar file upload with magic byte validation and crop modal
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -115,17 +134,36 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     if (!validation.ok) {
       setErrorMessage(validation.error || 'Please upload a valid JPEG, PNG, or WebP image.');
       setAvatarUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    try {
-      const processed = await processImage(file, {
-        maxDimension: MAX_AVATAR_DIMENSION,
-        maxSizeBytes: MAX_AVATAR_BYTES,
-        format: 'image/jpeg',
-      });
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+      setIsCropOpen(true);
+      setAvatarUploading(false);
+    };
+    reader.onerror = () => {
+      setErrorMessage('Failed to read image. Please try again.');
+      setAvatarUploading(false);
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
-      if (isSupabaseConfigured() && user.id) {
+  const handleCropComplete = async (croppedDataUrl: string) => {
+    setAvatarUrl(croppedDataUrl);
+
+    if (isSupabaseConfigured() && user.id) {
+      try {
+        const res = await fetch(croppedDataUrl);
+        const blob = await res.blob();
+        const processed = await processImage(blob, {
+          maxDimension: MAX_AVATAR_DIMENSION,
+          maxSizeBytes: MAX_AVATAR_BYTES,
+          format: 'image/jpeg',
+        });
         const filePath = `avatars/${user.id}-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('avatars')
@@ -134,16 +172,10 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
         if (!uploadError) {
           const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
           setAvatarUrl(data.publicUrl);
-          setAvatarUploading(false);
-          return;
         }
+      } catch {
+        // Fallback to dataUrl
       }
-
-      setAvatarUrl(processed.dataUrl);
-      setAvatarUploading(false);
-    } catch {
-      setErrorMessage('Failed to process image. Please try again.');
-      setAvatarUploading(false);
     }
   };
 
@@ -238,38 +270,39 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
       <CornerGlow />
 
       <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10 animate-fade-in">
-        {/* Top Canvas Header: Hero Text + Centra Brand Mark (Top-Right) */}
-        <div className="px-6 pt-4 pb-4 flex items-start justify-between">
-          <div>
+        {/* Top Canvas Header: Separate Top Row (Back on left, Logo on right) + Giant Hero Display below */}
+        <div className="px-6 pt-4 pb-4">
+          <div className="flex items-center justify-between mb-2">
             <button
               type="button"
               onClick={onBack}
-              className="mb-3 p-2 -ml-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+              className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shadow-xs"
               aria-label="Go back"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-[52px] sm:text-[64px] font-normal font-sans tracking-tight leading-[1.02] text-[#18212F] dark:text-white">
-              Tell us<br />
-              <span className="text-[#56791E] dark:text-[#C6FF3D]">about</span><br />
-              Yourself
-            </h1>
+
+            <div className="flex items-center">
+              <img
+                src={logoOnLight}
+                alt="Centra"
+                className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden rounded-xl"
+                draggable={false}
+              />
+              <img
+                src={logoOnDark}
+                alt="Centra"
+                className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block rounded-xl"
+                draggable={false}
+              />
+            </div>
           </div>
 
-          <div className="pt-1">
-            <img
-              src={logoOnLight}
-              alt="Centra"
-              className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden"
-              draggable={false}
-            />
-            <img
-              src={logoOnDark}
-              alt="Centra"
-              className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block"
-              draggable={false}
-            />
-          </div>
+          <h1 className="text-[58px] sm:text-[68px] font-normal font-sans tracking-tight leading-[1.03] text-[#18212F] dark:text-white my-4">
+            Tell us<br />
+            <span className="text-[#56791E] dark:text-[#C6FF3D]">about</span><br />
+            Yourself
+          </h1>
         </div>
 
         {/* Elevated Bottom Sheet Card (05-onboarding-profile.png) */}
@@ -507,6 +540,13 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
           </form>
         </div>
       </div>
+
+      <ImageCropModal
+        isOpen={isCropOpen}
+        imageSrc={cropImageSrc}
+        onClose={() => setIsCropOpen(false)}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 };

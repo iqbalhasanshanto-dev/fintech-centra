@@ -163,8 +163,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let isNewUser = false;
 
       // If profile row is missing after login, create it with insert-if-missing and treat as NEW
+      const googleAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
       if (!profile) {
-        const userAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null;
+        const userAvatar = googleAvatar || null;
         const { data: newProfile, error: insertProfileErr } = await supabase
           .from('profiles')
           .insert({
@@ -249,7 +250,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } else {
         // Sign-up intent or brand-new user missing profile: proceed into onboarding wizard
-        await CentraDB.createBlankUserData(userId, userEmail, userName);
+        await CentraDB.createBlankUserData(
+          userId,
+          userEmail,
+          userName,
+          googleAvatar || profile?.avatar_url || undefined
+        );
         setUser(CentraDB.getUser());
         setAuthView('onboarding');
       }

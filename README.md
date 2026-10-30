@@ -24,7 +24,7 @@
       <b>⚡ Instant Direct Downloads (No App Store / Sign-Up Required)</b>
       <br /><br />
       <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk">
-        <img src="https://img.shields.io/badge/📲_Download_Android_APK-v3.0.0_(Latest_Stable,_5.72_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v3.0.0 Android APK" />
+        <img src="https://img.shields.io/badge/📲_Download_Android_APK-v3.0.0_(Latest_Stable,_5.74_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v3.0.0 Android APK" />
       </a>
       &nbsp;
       <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v2.0.0-debug.apk">
@@ -35,7 +35,7 @@
         <img src="https://img.shields.io/badge/💻_Desktop_&_Mobile-Installation_Guide-white?style=for-the-badge&logo=desktop&logoColor=000000&labelColor=121212" alt="Build / Run on Desktop" />
       </a>
       <br /><br />
-      <b>👉 Direct One-Click APK Download (Android & Desktop):</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk">Download Centra v3.0.0 APK (5.72 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v2.0.0-debug.apk">Download Centra v2.0.0 APK (5.44 MB)</a>
+      <b>👉 Direct One-Click APK Download (Android & Desktop):</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk">Download Centra v3.0.0 APK (5.74 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v2.0.0-debug.apk">Download Centra v2.0.0 APK (5.44 MB)</a>
     </td>
   </tr>
 </table>
@@ -62,14 +62,14 @@ Download standalone Android application packages directly from GitHub. Every APK
 
 | Version | Channel | One-Click Direct Download | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v3.0.0`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.0.0-debug.apk) | 5.72 MB | Figma UI redesign, OLED Dark/Light themes, Analytics calendar, OAuth & OTP fixes |
+| **`v3.0.0`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.0.0-debug.apk) | 5.74 MB | Figma UI redesign, OLED Dark/Light themes, Analytics calendar, OAuth & OTP fixes |
 | **`v2.0.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v2.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v2.0.0-debug.apk) | 5.44 MB | Offline-first CentraDB sync, PBKDF2 PIN lock, Guest Demo mode, integer money math |
 | **`v1.0.0`** | 📦 Archive | [**Source (`57007c7`)**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/57007c7) | — | Initial React 18, Supabase & Capacitor multi-platform prototype |
 
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
-- **v3.0.0 (`Centra-v3.0.0-debug.apk`)**: `a33c368c1a74a0649e4bf1b5e183186a66b87eae24ffdd091c745ac58b1a1530`
+- **v3.0.0 (`Centra-v3.0.0-debug.apk`)**: `2bf9447eac3aeb1ce7c08fff62f2a41d12a2b1108d2955ab6ccf4887390f71a2`
 - **v2.0.0 (`Centra-v2.0.0-debug.apk`)**: `74c75d1314b7b45158045f5158595c3ce54726baab1f8822e8b034cdc9820196`
 
 Verify on macOS/Linux (`shasum -a 256 releases/Centra-v3.0.0-debug.apk`) or Windows (`CertUtil -hashfile releases\Centra-v3.0.0-debug.apk SHA256`).
@@ -149,7 +149,7 @@ Verify that your downloaded APK is 100% authentic and matches the source code:
 
 **Expected SHA-256 Hash for v3.0.0**:
 ```text
-a33c368c1a74a0649e4bf1b5e183186a66b87eae24ffdd091c745ac58b1a1530
+2bf9447eac3aeb1ce7c08fff62f2a41d12a2b1108d2955ab6ccf4887390f71a2
 ```
 
 ---

@@ -17,6 +17,7 @@ export interface NativeAppHandlers {
 let isInitialized = false;
 let activeListenerHandles: PluginListenerHandle[] = [];
 let currentHandlers: NativeAppHandlers | undefined = undefined;
+let themeObserver: MutationObserver | null = null;
 let lastNativeSyncTrigger = 0;
 const NATIVE_SYNC_THROTTLE_MS = 2000;
 
@@ -69,11 +70,12 @@ export const hideSplashScreen = async (): Promise<void> => {
 export const updateNativeStatusBar = async (isDark: boolean): Promise<void> => {
   if (!isNative()) return;
   try {
+    await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setStyle({
       style: isDark ? Style.Dark : Style.Light,
     });
     await StatusBar.setBackgroundColor({
-      color: isDark ? '#0A0E1A' : '#FAFAFA',
+      color: isDark ? '#000000' : '#F7F8FA',
     });
   } catch {
     // Status bar may not be available or may be edge-to-edge on newer Android versions
@@ -85,6 +87,10 @@ export const updateNativeStatusBar = async (isDark: boolean): Promise<void> => {
  */
 export const cleanupNativeApp = async (): Promise<void> => {
   if (!isNative()) return;
+  if (themeObserver) {
+    themeObserver.disconnect();
+    themeObserver = null;
+  }
   for (const handle of activeListenerHandles) {
     try {
       await handle.remove();
@@ -119,9 +125,23 @@ export const initNativeApp = async (handlers?: NativeAppHandlers): Promise<() =>
     // 1. Hide the splash screen after initial render
     await hideSplashScreen();
 
-    // 2. Set status bar based on initial theme class
+    // 2. Set status bar based on initial theme class and observe changes
     const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
     await updateNativeStatusBar(isDark);
+
+    if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
+      if (themeObserver) {
+        themeObserver.disconnect();
+      }
+      themeObserver = new MutationObserver(() => {
+        const currentlyDark = document.documentElement.classList.contains('dark');
+        updateNativeStatusBar(currentlyDark);
+      });
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    }
 
     // 3. Register deep link URL open listener
     const urlHandle = await CapApp.addListener('appUrlOpen', data => {

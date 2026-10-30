@@ -13,7 +13,7 @@ export const LoadingSplashScreen: React.FC = () => {
             <img
               src={logoImg}
               alt="Centra"
-              className="w-12 h-12 object-contain drop-shadow-sm select-none"
+              className="w-12 h-12 object-contain drop-shadow-sm select-none rounded-xl"
               draggable={false}
             />
           </div>

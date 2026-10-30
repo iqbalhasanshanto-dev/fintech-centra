@@ -94,7 +94,7 @@ export const AuthCallbackScreen: React.FC = () => {
           <img
             src={logoImg}
             alt="Centra"
-            className="w-8 h-8 object-contain drop-shadow-sm select-none"
+            className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl"
             draggable={false}
           />
           <span className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white font-display">

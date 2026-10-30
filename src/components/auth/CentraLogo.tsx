@@ -30,7 +30,7 @@ export const CentraLogo: React.FC<CentraLogoProps> = ({
       <img
         src={brandLogo}
         alt="Centra"
-        className={`${sizeMap[size]} object-contain select-none drop-shadow-sm`}
+        className={`${sizeMap[size]} object-contain select-none drop-shadow-sm rounded-xl`}
         draggable={false}
       />
     </div>

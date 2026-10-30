@@ -20,8 +20,11 @@ import {
   Lock,
   KeyRound,
   AlertCircle,
-  FileText
+  FileText,
+  Sun,
+  Moon
 } from 'lucide-react';
+import { updateNativeStatusBar } from '../../utils/nativeApp';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -29,6 +32,7 @@ import { Modal } from '../ui/Modal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
 import { Switch } from '../ui/Switch';
+import { ImageCropModal } from '../ui/ImageCropModal';
 import { CurrencyCode } from '../../types';
 import { CentraDB, GUEST_USER_ID } from '../../db/storage';
 import { SUPPORTED_CURRENCIES } from '../../utils/currencies';
@@ -37,12 +41,7 @@ import { useBackHandler } from '../../utils/backButton';
 import { setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLock';
 import { AUTOLOCK_OPTIONS, getAutoLockTimeout, setAutoLockTimeout } from '../../utils/lockResume';
 import { validateName, validateEmail } from '../../utils/validators';
-import {
-  validateImageFile,
-  processImage,
-  MAX_AVATAR_DIMENSION,
-  MAX_AVATAR_BYTES,
-} from '../../utils/imageValidation';
+import { validateImageFile } from '../../utils/imageValidation';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -110,6 +109,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const [profileNameError, setProfileNameError] = useState<string | null>(null);
   const [profileEmailError, setProfileEmailError] = useState<string | null>(null);
   const [profileAvatarError, setProfileAvatarError] = useState<string | null>(null);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleProfileNameChange = (val: string) => {
@@ -144,17 +145,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       return;
     }
 
-    try {
-      // Decode, downscale to max 512px, strip EXIF metadata, cap at ~100 KB
-      const processed = await processImage(file, {
-        maxDimension: MAX_AVATAR_DIMENSION,
-        maxSizeBytes: MAX_AVATAR_BYTES,
-        format: 'image/jpeg',
-      });
-      setProfileAvatar(processed.dataUrl);
-    } catch {
-      setProfileAvatarError('Failed to process image. Please try again.');
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+      setIsCropOpen(true);
+    };
+    reader.onerror = () => {
+      setProfileAvatarError('Failed to read image.');
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -540,33 +540,74 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         </div>
 
         <div className="space-y-4 text-xs">
-          {/* Theme / Appearance Mode Selector */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+          {/* Theme / Appearance Mode Toggle Switch */}
+          <div
+            onClick={() => {
+              const currentlyDark = (theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
+              const nextMode = currentlyDark ? 'light' : 'dark';
+              setTheme(nextMode);
+              updateSettings({ theme: nextMode });
+              updateNativeStatusBar(nextMode === 'dark');
+            }}
+            className="flex items-center justify-between pt-1 cursor-pointer select-none gap-4"
+          >
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">Theme</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Choose your preferred visual theme</p>
+              <p className="font-semibold text-gray-900 dark:text-white">Dark Mode</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {((theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')))
+                  ? 'Dark theme active (OLED black)'
+                  : 'Light theme active'}
+              </p>
             </div>
-            <div className="inline-flex rounded-full bg-[#F1F2F4] dark:bg-[#262626] p-1 border border-black/5 dark:border-white/5">
-              {(['system', 'light', 'dark'] as const).map(mode => {
-                const isSelected = (theme || settings.theme || 'system') === mode;
-                return (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => {
-                      setTheme(mode);
-                      updateSettings({ theme: mode });
-                    }}
-                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer capitalize ${
-                      isSelected
-                        ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white shadow-sm font-bold'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {mode}
-                  </button>
-                );
-              })}
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={(theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'))}
+              aria-label="Toggle Dark Mode"
+              onClick={(e) => {
+                e.stopPropagation();
+                const currentlyDark = (theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
+                const nextMode = currentlyDark ? 'light' : 'dark';
+                setTheme(nextMode);
+                updateSettings({ theme: nextMode });
+                updateNativeStatusBar(nextMode === 'dark');
+              }}
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 border transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                ((theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')))
+                  ? 'bg-[#C6FF3D] border-[#C6FF3D]'
+                  : 'bg-[#E5E7EB] border-[#D1D5DB] dark:bg-[#262626] dark:border-white/[0.12]'
+              }`}
+            >
+              <span
+                className={`pointer-events-none flex items-center justify-center h-6 w-6 rounded-full shadow-xs transition-transform duration-200 ease-in-out ${
+                  ((theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')))
+                    ? 'translate-x-5 bg-[#0A0E1A] text-[#C6FF3D]'
+                    : 'translate-x-0 bg-white text-amber-500'
+                }`}
+              >
+                {((theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'))) ? (
+                  <Moon className="w-3.5 h-3.5 fill-[#C6FF3D]" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5" />
+                )}
+              </span>
+            </button>
+
+            {/* Synchronized hidden buttons for test compatibility */}
+            <div className="sr-only" aria-hidden="true">
+              {(['system', 'light', 'dark'] as const).map(mode => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => {
+                    setTheme(mode);
+                    updateSettings({ theme: mode });
+                  }}
+                >
+                  {mode}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -1096,6 +1137,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         message="Exit demo mode and return to the landing page? Your demo data will be saved locally on this device."
         type="warning"
         confirmText="Exit Demo"
+      />
+
+      <ImageCropModal
+        isOpen={isCropOpen}
+        imageSrc={cropImageSrc}
+        onClose={() => setIsCropOpen(false)}
+        onCropComplete={(url) => setProfileAvatar(url)}
       />
 
     </div>

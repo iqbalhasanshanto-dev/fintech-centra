@@ -84,6 +84,9 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
       aria-modal="true"
       aria-label="Recent Activities - All Transactions"
       className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto animate-fade-in"
+      style={{
+        paddingTop: 'calc(1.25rem + env(safe-area-inset-top, 24px))',
+      }}
     >
       <div className="w-full max-w-lg mx-auto p-4 sm:p-6 space-y-4 pb-28">
         {/* Top Header Bar (10-transactions-view-all.png) */}

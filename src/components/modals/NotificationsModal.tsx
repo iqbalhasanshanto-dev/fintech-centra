@@ -18,11 +18,13 @@ import { useBackHandler } from '../../utils/backButton';
 interface NotificationsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenQuickAction?: () => void;
 }
 
 export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   isOpen,
   onClose,
+  onOpenQuickAction,
 }) => {
   const { 
     notifications, 
@@ -33,9 +35,22 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   useBackHandler(isOpen, onClose);
 
-  const unreadCount = useMemo(() => {
-    return notifications.filter(n => !n.isRead).length;
+  // Deduplicate notifications by title and message so multiple "Welcome to Centra" items don't stack up
+  const uniqueNotifications = useMemo(() => {
+    const seen = new Set<string>();
+    return notifications.filter(n => {
+      const key = `${n.title.trim().toLowerCase()}||${n.message.trim().toLowerCase()}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
   }, [notifications]);
+
+  const unreadCount = useMemo(() => {
+    return uniqueNotifications.filter(n => !n.isRead).length;
+  }, [uniqueNotifications]);
 
   // Group notifications into Today and Earlier
   const { todayList, earlierList } = useMemo(() => {
@@ -44,7 +59,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     const now = new Date();
     const todayStr = now.toDateString();
 
-    notifications.forEach(n => {
+    uniqueNotifications.forEach(n => {
       const d = new Date(n.timestamp);
       if (d.toDateString() === todayStr) {
         today.push(n);
@@ -54,7 +69,15 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     });
 
     return { todayList: today, earlierList: earlier };
-  }, [notifications]);
+  }, [uniqueNotifications]);
+
+  const isWelcomeNotification = (item: NotificationItem) => {
+    return (
+      item.title.toLowerCase().includes('welcome') ||
+      item.message.toLowerCase().includes('welcome') ||
+      item.message.toLowerCase().includes('first transaction')
+    );
+  };
 
   const getIcon = (type: NotificationType) => {
     const iconClass = "w-4 h-4";
@@ -87,8 +110,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     }
   };
 
-  const getActionLabel = (type: NotificationType) => {
-    switch (type) {
+  const getActionLabel = (item: NotificationItem) => {
+    if (isWelcomeNotification(item)) {
+      return 'Add transaction';
+    }
+    switch (item.type) {
       case 'budget':
         return 'View budget';
       case 'security':
@@ -97,6 +123,16 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         return 'View transaction';
       default:
         return 'View details';
+    }
+  };
+
+  const handleNotificationClick = (item: NotificationItem) => {
+    markNotificationAsRead(item.id);
+    if (isWelcomeNotification(item) || item.type === 'transaction') {
+      onClose();
+      if (onOpenQuickAction) {
+        onOpenQuickAction();
+      }
     }
   };
 
@@ -126,12 +162,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const renderNotificationCard = (item: NotificationItem) => {
     const isUnread = !item.isRead;
     const categoryLabel = getCategoryLabel(item.type);
-    const actionLabel = getActionLabel(item.type);
+    const actionLabel = getActionLabel(item);
 
     return (
       <div
         key={item.id}
-        onClick={() => markNotificationAsRead(item.id)}
+        onClick={() => handleNotificationClick(item)}
         className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 shadow-sm transition-all cursor-pointer hover:border-black/[0.12] dark:hover:border-white/[0.25] space-y-3.5"
       >
         {/* Card Header Row: Icon + Overline + Title + Unread Dot */}
@@ -177,7 +213,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             {formatItemTime(item.timestamp)}
           </span>
 
-          <span className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer">
+          <span 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNotificationClick(item);
+            }}
+            className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer"
+          >
             <span>{actionLabel}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </span>
@@ -215,7 +257,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             Notifications
           </h2>
 
-          {notifications.length > 0 ? (
+          {uniqueNotifications.length > 0 ? (
             <button
               type="button"
               onClick={clearNotifications}
@@ -256,7 +298,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
         {/* Notifications Scroll List Container */}
         <div className="space-y-6 flex-1 pb-16">
-          {notifications.length === 0 ? (
+          {uniqueNotifications.length === 0 ? (
             <div className="text-center py-20 text-xs text-[#667085] dark:text-[#9CA3AF] space-y-3">
               <div className="w-16 h-16 mx-auto rounded-full bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.1] flex items-center justify-center shadow-xs">
                 <Bell className="w-8 h-8 text-gray-400 dark:text-gray-500" />

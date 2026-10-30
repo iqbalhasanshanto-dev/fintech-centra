@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check } from 'lucide-react';
+import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check, Paperclip, X } from 'lucide-react';
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
@@ -32,6 +32,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   const [noteError, setNoteError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   const handleMerchantChange = (val: string) => {
     setMerchant(val);
@@ -197,6 +198,21 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 </div>
               )}
 
+              {transaction.receiptUrl && (
+                <div className="py-2.5 border-b border-black/[0.04] dark:border-white/[0.05]">
+                  <div className="flex items-center space-x-2 text-[#667085] dark:text-[#9CA3AF] font-bold uppercase tracking-widest text-[10px] mb-1.5">
+                    <Paperclip className="w-3.5 h-3.5" />
+                    <span>Attached Receipt</span>
+                  </div>
+                  <img
+                    src={transaction.receiptUrl}
+                    alt="Receipt"
+                    onClick={() => setShowLightbox(true)}
+                    className="w-full max-h-56 object-cover rounded-2xl border border-black/[0.08] dark:border-white/[0.12] cursor-pointer hover:opacity-90 transition-opacity"
+                  />
+                </div>
+              )}
+
               {transaction.tags && transaction.tags.length > 0 && (
                 <div className="flex items-center space-x-2 py-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF]">
@@ -344,6 +360,29 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
         type="danger"
         confirmText="Delete"
       />
+      {showLightbox && transaction.receiptUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowLightbox(false)}
+          className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+        >
+          <button
+            type="button"
+            onClick={() => setShowLightbox(false)}
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer"
+            aria-label="Close image preview"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={transaction.receiptUrl}
+            alt="Receipt Full Preview"
+            className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
     </>
   );
 };
