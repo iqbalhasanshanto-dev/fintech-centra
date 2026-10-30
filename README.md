@@ -44,7 +44,6 @@
 
 <p align="center">
   <a href="#-releases--version-history-table-download-any-version"><b>Downloads & Releases</b></a> •
-  <a href="#-visual-preview-hero-screenshots-showcase"><b>Screenshots</b></a> •
   <a href="#-key-features--open-source-privacy-guarantee"><b>Key Features</b></a> •
   <a href="#-open-source-security--privacy-architecture"><b>Open-Source Security</b></a> •
   <a href="#-reproducible-build-from-source--supabase-setup"><b>Build from Source</b></a> •
@@ -56,45 +55,25 @@
 
 ---
 
-<a id="visual-preview"></a>
-## 📸 Visual Preview (Hero Screenshots Showcase)
-
-Centra features a dual-identity design system: **OLED Pure Black (`#000000`)** optimized for battery efficiency and night use, and **Soft Light (`#F7F8FA`)** crafted for daytime clarity. Both themes are paired with our signature **Electric Neon Lime (`#C6FF3D`)** accent and self-hosted variable **Outfit** typography.
-
-<div align="center">
-
-### 1. Home Dashboard & Quick Action Trigger
-| Dark Theme (`#000000` OLED) | Light Theme (`#F7F8FA` Soft Light) |
-|:---:|:---:|
-| <img src="docs/screenshots/dark/08-home.png" width="340" alt="Home Dashboard Dark" /> | <img src="docs/screenshots/light/08-home.png" width="340" alt="Home Dashboard Light" /> |
-| <img src="docs/screenshots/dark/11-home-add-menu.png" width="340" alt="Quick Action Menu Dark" /> | <img src="docs/screenshots/light/11-home-add-menu.png" width="340" alt="Quick Action Menu Light" /> |
-
-### 2. Expense Entry & Category Selection
-| Dark Theme | Light Theme |
-|:---:|:---:|
-| <img src="docs/screenshots/dark/11-home-add-spend.png" width="340" alt="Add Expense Modal Dark" /> | <img src="docs/screenshots/light/11-home-add-spend.png" width="340" alt="Add Expense Modal Light" /> |
-
-### 3. Financial Analytics, Budgets & Security Settings
-| Dark Theme | Light Theme |
-|:---:|:---:|
-| <img src="docs/screenshots/dark/12-analytics.png" width="340" alt="Analytics and Spending Calendar Dark" /> | <img src="docs/screenshots/light/12-analytics.png" width="340" alt="Analytics and Spending Calendar Light" /> |
-| <img src="docs/screenshots/dark/13-budgets.png" width="340" alt="Budgets and Goals Dark" /> | <img src="docs/screenshots/light/13-budgets.png" width="340" alt="Budgets and Goals Light" /> |
-| <img src="docs/screenshots/dark/14-settings.png" width="340" alt="Settings & PIN Security Dark" /> | <img src="docs/screenshots/light/14-settings.png" width="340" alt="Settings & PIN Security Light" /> |
-
-</div>
-
----
-
 <a id="releases-table"></a>
 ## 📲 Releases & Version History Table (Download Any Version)
 
 Download standalone Android application packages directly from GitHub. Every APK is cryptographically fingerprinted with SHA-256 for integrity verification.
 
-| Version | Release Channel | One-Click Direct APK Download | Raw Mirror | File Size | SHA-256 Checksum | Release Highlights |
-|:---|:---|:---|:---|:---|:---|:---|
-| **`v3.0.0`** | 🟢 **Latest Stable** | [**📲 Download Centra-v3.0.0.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk) <br><sub>*(Fallback: [`releases/Centra-v3.0.0-debug.apk?raw=true`](releases/Centra-v3.0.0-debug.apk?raw=true))*</sub> | [Direct Raw Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.0.0-debug.apk) | **5.72 MB** <br>*(6,000,321 bytes)* | `a33c368c1a74a0649e4bf1b5e183186a66b87eae24ffdd091c745ac58b1a1530` | **Full Figma Design System Redesign**<br>• Electric Neon Lime (`#C6FF3D`) & OLED Dark / Soft Light themes<br>• Self-hosted `Outfit` font with Bangladeshi Taka (`৳`) symbol<br>• Floating `+` Quick Action menu with expandable pickers<br>• 3-card Analytics donut chart & interactive Spending Calendar<br>• Full-screen Notifications & Recent Activities feeds<br>• Native Google PKCE OAuth & 6-digit Email OTP auth<br>• Android 12+ adaptive splash screen |
-| **`v2.0.0`** | ⚪ **Previous Stable** | [**📦 Download Centra-v2.0.0.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v2.0.0-debug.apk) <br><sub>*(Fallback: [`releases/Centra-v2.0.0-debug.apk?raw=true`](releases/Centra-v2.0.0-debug.apk?raw=true))*</sub> | [Direct Raw Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v2.0.0-debug.apk) | **5.44 MB** <br>*(5,700,969 bytes)* | `74c75d1314b7b45158045f5158595c3ce54726baab1f8822e8b034cdc9820196` | **Core Architecture & Offline Sync**<br>• CentraDB offline-first repository & outbox queue<br>• WebCrypto PBKDF2 local PIN lock (150k iterations)<br>• Session-scoped Guest Demo mode (zero cloud leaks)<br>• Minor-unit integer currency calculation engine<br>• Capacitor 8 & Android 16 (SDK 36) runtime |
-| **`v1.0.0`** | 📦 **Initial Prototype** | [**Source Archive (`57007c7`)**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/57007c7) | — | — | `Initial Prototype Scaffold` | **Initial Multi-Platform Foundation**<br>• Multi-platform React 18, Supabase & Capacitor prototype<br>• Multi-account balance tracking, budgets & goals<br>• Build from source: `git checkout 57007c7 && npm install && npm run build` |
+| Version | Channel | One-Click Direct Download | Size | Highlights |
+|:---|:---|:---|:---|:---|
+| **`v3.0.0`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.0.0-debug.apk) | 5.72 MB | Figma UI redesign, OLED Dark/Light themes, Analytics calendar, OAuth & OTP fixes |
+| **`v2.0.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v2.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v2.0.0-debug.apk) | 5.44 MB | Offline-first CentraDB sync, PBKDF2 PIN lock, Guest Demo mode, integer money math |
+| **`v1.0.0`** | 📦 Archive | [**Source (`57007c7`)**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/57007c7) | — | Initial React 18, Supabase & Capacitor multi-platform prototype |
+
+<details>
+<summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
+
+- **v3.0.0 (`Centra-v3.0.0-debug.apk`)**: `a33c368c1a74a0649e4bf1b5e183186a66b87eae24ffdd091c745ac58b1a1530`
+- **v2.0.0 (`Centra-v2.0.0-debug.apk`)**: `74c75d1314b7b45158045f5158595c3ce54726baab1f8822e8b034cdc9820196`
+
+Verify on macOS/Linux (`shasum -a 256 releases/Centra-v3.0.0-debug.apk`) or Windows (`CertUtil -hashfile releases\Centra-v3.0.0-debug.apk SHA256`).
+</details>
 
 <details>
 <summary><b>🛠️ Maintainer Guide: How to Publish a New Release (<code>v3.1.0</code>, <code>v4.0.0</code>, etc.)</b></summary>
@@ -234,8 +213,7 @@ fintech-centra/
 │   ├── INPUT_RULES.md       # Input validation inventory, Unicode normalization, and length caps
 │   ├── PHASE7_TESTING.md    # Multi-platform QA matrix (Android, iOS, Desktop)
 │   ├── README.md            # Documentation directory index
-│   ├── SECURITY_AUDIT.md    # Full 13-point security audit and hardening report
-│   └── screenshots/         # Side-by-side Dark and Light theme screenshots
+│   └── SECURITY_AUDIT.md    # Full 13-point security audit and hardening report
 ├── ios/                     # Capacitor 8 iOS native project (Swift Package Manager)
 ├── public/                  # Static web assets, logos, and theme-init flash prevention script
 ├── releases/                # Versioned Android APK releases with SHA-256 verification

@@ -49,7 +49,7 @@ const githubUser = 'iqbalhasanshanto-dev';
 const repoName = 'fintech-centra';
 const branch = 'main';
 const rawUrl = `https://raw.githubusercontent.com/${githubUser}/${repoName}/${branch}/releases/${targetFileName}`;
-const directRelativeUrl = `releases/${targetFileName}?raw=true`;
+const directDownloadUrl = `https://github.com/${githubUser}/${repoName}/raw/${branch}/releases/${targetFileName}`;
 
 console.log('='.repeat(70));
 console.log(`🎉 Centra APK Release Prepared: v${version}`);
@@ -60,10 +60,11 @@ console.log(`⚖️  Size:         ${fileSizeMB} MB (${fileSize.toLocaleString()
 console.log(`🔑 SHA-256:      ${sha256}`);
 console.log(`🔗 Raw URL:      ${rawUrl}`);
 console.log('='.repeat(70));
-console.log('\n📋 Ready-to-paste Markdown table row for README.md:\n');
+console.log('\n📋 Ready-to-paste compact Markdown row for README.md & releases/README.md:\n');
 
-const markdownRow = `| **\`v${version}\`** <br>*(Latest)* | 🟢 **Latest Stable** | [**⬇ Download Centra-v${version}.apk**](${directRelativeUrl}) | [Direct Mirror](${rawUrl}) | **${fileSizeMB} MB** <br>_(${fileSize.toLocaleString()} bytes)_ | \`${sha256}\` | Complete changelog in [\`CHANGELOG.md\`](CHANGELOG.md) |`;
+const markdownRow = `| **\`v${version}\`** | 🟢 Latest | [**📲 Download APK**](${directDownloadUrl}) · [Mirror](${rawUrl}) | ${fileSizeMB} MB | Release highlights here |`;
 
 console.log(markdownRow);
+console.log('\n📋 Checksum block entry for <details>:\n');
+console.log(`- **v${version} (\`${targetFileName}\`)**: \`${sha256}\``);
 console.log('\n' + '='.repeat(70));
-
