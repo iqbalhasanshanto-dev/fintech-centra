@@ -10,6 +10,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "preview": "vite preview",
+    "release:apk": "node scripts/prepare-release.mjs",
     "cap:sync": "npx cap sync",
     "cap:sync:android": "npx cap sync android",
     "cap:sync:ios": "npx cap sync ios",

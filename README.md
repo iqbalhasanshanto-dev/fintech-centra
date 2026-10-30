@@ -7,14 +7,23 @@
 **Open-Source, Offline-First Personal Finance & Budgeting App for Android, Web, iOS & Desktop**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](LICENSE)
-[![Latest Release](https://img.shields.io/badge/Release-v3.0.0-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](https://github.com/iqbalhasanshanto-dev/fintech-centra/releases/tag/v3.0.0)
+[![Latest Release](https://img.shields.io/badge/Release-v3.0.0-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](#-download--new-releases-android--desktop)
 [![Platforms](https://img.shields.io/badge/Platform-Android%20%7C%20Web%20%7C%20iOS%20%7C%20Desktop-black.svg?style=flat-square&logo=android&logoColor=white)](releases/)
 [![Tests](https://img.shields.io/badge/Tests-274%20passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
 [![Capacitor](https://img.shields.io/badge/Capacitor-8.5-119EFF.svg?style=flat-square&logo=capacitor&logoColor=white)](https://capacitorjs.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-RLS%20Enforced-3ECF8E.svg?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com/)
 
+<br />
+
+<!-- One-Click Direct Download Hero Buttons -->
+[![Download Latest APK](https://img.shields.io/badge/⬇_Download_APK-v3.0.0_(Latest)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212)](releases/Centra-v3.0.0-debug.apk?raw=true)
+[![Download Previous APK](https://img.shields.io/badge/⬇_Download_APK-v2.0.0_(Previous)-3B82F6?style=for-the-badge&logo=android&logoColor=ffffff&labelColor=121212)](releases/Centra-v2.0.0-debug.apk?raw=true)
+[![View All Releases](https://img.shields.io/badge/🆕_All_Releases-Updates_Table-white?style=for-the-badge&logo=github&logoColor=000000&labelColor=121212)](#-download--new-releases-android--desktop)
+
+<br /><br />
+
 <p align="center">
-  <a href="#-download-android-apk-all-versions"><b>Download APK</b></a> •
+  <a href="#-download--new-releases-android--desktop"><b>Download APK</b></a> •
   <a href="#-screenshots-gallery"><b>Screenshots</b></a> •
   <a href="#-why-centra-is-open-source-transparency--privacy-guarantee"><b>Privacy & Security</b></a> •
   <a href="#-build-from-source-reproducible-apk-build-guide"><b>Build from Source</b></a> •
@@ -26,29 +35,45 @@
 
 ---
 
-## 📥 Download Android APK (All Versions)
+## 📲 Download & New Releases (Android & Desktop)
 
-Centra provides direct, standalone APK downloads for Android users who prefer freedom from proprietary app stores, along with verifiable cryptographic SHA-256 checksums for every build.
+Clicking any **⬇ Direct Download APK** button below immediately triggers a direct file download of the `.apk` onto your **Android phone** or **Desktop computer (Mac / Windows / Linux)** without leaving GitHub or navigating complex release sub-pages.
 
-| Version | Release Date | Highlights | Direct Download | SHA-256 Checksum |
-|:---|:---|:---|:---|:---|
-| **`v3.0.0`** <br>*(Latest)* | **2026-10-30** | **Full Figma UI Redesign & Polish**<br>• Neon Lime (`#C6FF3D`) & OLED Black / Soft Light themes<br>• Self-hosted `Outfit` font & `৳` Bangla Taka symbol<br>• Floating `+` Quick Action menu & expandable pickers<br>• Interactive Donut Chart & Spending Calendar<br>• Full-screen Notifications & Recent Activities<br>• Native Google OAuth PKCE & 6-digit Email OTP fixes | [**Download APK (v3.0.0)**](https://github.com/iqbalhasanshanto-dev/fintech-centra/releases/download/v3.0.0/Centra-v3.0.0-debug.apk)<br>*(In-Repo: [`releases/Centra-v3.0.0-debug.apk`](releases/Centra-v3.0.0-debug.apk))* | `a33c368c1a74a0649e4bf1b5e183186a66b87eae24ffdd091c745ac58b1a1530`<br>*(Size: 5.72 MB)* |
-| **`v2.0.0`** | **2026-10-26** | **Core Architecture, Security & Offline Sync**<br>• CentraDB offline-first repository & outbox queue<br>• WebCrypto PBKDF2 local PIN lock (150k iterations)<br>• Session-scoped Guest Demo mode (zero cloud leaks)<br>• Integer minor-unit currency calculations<br>• Capacitor 8 & Android 16 (SDK 36) runtime | [**Download APK (v2.0.0)**](https://github.com/iqbalhasanshanto-dev/fintech-centra/releases/download/v2.0.0/Centra-v2.0.0-debug.apk)<br>*(In-Repo: [`releases/Centra-v2.0.0-debug.apk`](releases/Centra-v2.0.0-debug.apk))* | `74c75d1314b7b45158045f5158595c3ce54726baab1f8822e8b034cdc9820196`<br>*(Size: 5.44 MB)* |
-| **`v1.0.0`** | **2026-09-10** | **Initial Foundation**<br>• Cross-platform React 18, Supabase & Capacitor scaffold<br>• Multi-account balance tracking, budgets & goals | [**Release Notes**](https://github.com/iqbalhasanshanto-dev/fintech-centra/releases/tag/v1.0.0) | *(Initial scaffold)* |
+| Version | Status | One-Click Direct Download (Android & Desktop) | Mirror (Raw URL) | Size | SHA-256 Checksum | What's New |
+|:---|:---|:---|:---|:---|:---|:---|
+| **`v3.0.0`** <br>*(Latest)* | 🟢 **Latest Stable** | [**⬇ Download Centra-v3.0.0.apk**](releases/Centra-v3.0.0-debug.apk?raw=true) | [Direct Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.0.0-debug.apk) | **5.72 MB** <br>_(6,000,321 bytes)_ | `a33c368c1a74a0649e4bf1b5e183186a66b87eae24ffdd091c745ac58b1a1530` | **Full Figma MCP UI Redesign**<br>• Neon Lime (`#C6FF3D`) & OLED Dark / Soft Light themes<br>• Self-hosted `Outfit` font & `৳` Bangla Taka support<br>• Floating `+` Quick Action menu & expandable pickers<br>• 3-card Analytics donut chart & Spending Calendar<br>• Portaled full-screen Notifications & Recent Activities<br>• Native Google PKCE OAuth & 6-digit Email OTP fixes<br>• Android 12+ adaptive splash screen |
+| **`v2.0.0`** | ⚪ **Previous Release** | [**⬇ Download Centra-v2.0.0.apk**](releases/Centra-v2.0.0-debug.apk?raw=true) | [Direct Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v2.0.0-debug.apk) | **5.44 MB** <br>_(5,700,969 bytes)_ | `74c75d1314b7b45158045f5158595c3ce54726baab1f8822e8b034cdc9820196` | **Core Architecture & Offline Sync**<br>• CentraDB offline-first repository & outbox queue<br>• WebCrypto PBKDF2 local PIN lock (150k iterations)<br>• Session-scoped Guest Demo mode (zero cloud leaks)<br>• Minor-unit integer currency calculation engine<br>• Capacitor 8 & Android 16 (SDK 36) runtime |
+| **`v1.0.0`** | 📦 **Prototype Archive** | [**Source Archive (`57007c7`)**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/57007c7) | — | — | `Initial Prototype Scaffold` | **Initial Multi-Platform Foundation**<br>• Initial React 18, Supabase & Capacitor prototype<br>• Multi-account balance tracking, budgets & goals<br>• Build from source: `git checkout 57007c7 && npm install && npm run build` |
 
-> 💡 **All releases and patch notes are cataloged in [`CHANGELOG.md`](CHANGELOG.md) and [`releases/`](releases/).**
+> 💡 **Detailed evolution of every release is maintained in [`CHANGELOG.md`](CHANGELOG.md) and [`releases/`](releases/).**
 
-### 📱 How to Install the APK on Android
+### 📱 Android & Desktop Installation Guide
 
-1. **Download**: Click the download link above directly on your Android phone (or download on your PC and transfer the `.apk` via USB).
-2. **Allow Installation**: Tap the downloaded file. If Android prompts: *"For your security, your phone is not allowed to install unknown apps from this source"*:
+#### On Android Phone:
+1. Tap **[⬇ Download Centra-v3.0.0.apk](releases/Centra-v3.0.0-debug.apk?raw=true)** above.
+2. Open the downloaded `.apk` file from your browser notification tray or your `Downloads` folder.
+3. If Android prompts: *"For your security, your phone is not allowed to install unknown apps from this source"*:
    - Tap **Settings**.
-   - Enable **Allow from this source**.
-3. **Open & Enjoy**: Tap **Install**, then tap **Open**. You can immediately explore the app with **Try Demo Mode** (no registration or internet required) or sign in securely with your email.
+   - Toggle **Allow from this source**.
+4. Tap **Install** (or **Update**), then launch **Centra**!
 
-### 🔍 How to Verify APK Cryptographic Integrity
+#### On Desktop (Mac / Windows / Linux):
+- **Option A (Download APK to Desktop for ADB / Emulator / Phone Transfer)**:
+  Click **[⬇ Download Centra-v3.0.0.apk](releases/Centra-v3.0.0-debug.apk?raw=true)** to save the `.apk` directly to your computer.
+  - **Install via ADB**: `adb install -r releases/Centra-v3.0.0-debug.apk`
+  - **Install in Emulator**: Drag and drop the `.apk` directly onto an open Android Studio Virtual Device (AVD).
+  - **Transfer to Phone**: Connect phone via USB or send via local network share.
+- **Option B (Run Native Desktop App via Tauri 2 or Web App)**:
+  - **Desktop Native App**: Compile standalone desktop binary (`.dmg` on macOS, `.exe` on Windows, `.AppImage` on Linux) with:
+    ```bash
+    npm run tauri:build
+    ```
+    Generated binaries are located in `src-tauri/target/release/bundle/`.
+  - **Local Web App**: Run `npm run dev` to access the local browser version at `http://localhost:3003`.
 
-To verify that your downloaded binary has not been tampered with:
+### 🔍 How to Verify APK Cryptographic Integrity (SHA-256)
+
+Verify that your downloaded binary is 100% authentic and untampered:
 
 - **macOS / Linux**:
   ```bash
@@ -59,8 +84,26 @@ To verify that your downloaded binary has not been tampered with:
   CertUtil -hashfile releases\Centra-v3.0.0-debug.apk SHA256
   ```
 
-Ensure the hash matches:
+Matches expected SHA-256 signature:
 `a33c368c1a74a0649e4bf1b5e183186a66b87eae24ffdd091c745ac58b1a1530`
+
+<details>
+<summary><b>🚀 Maintainer Guide: How to Publish a New Version Update (v3.1.0, v4.0.0, etc.)</b></summary>
+
+Publishing a new Android release to the repository with one-click download links takes 3 simple steps:
+
+1. **Bump Version**: Update `"version"` in [`package.json`](package.json) (e.g. `"version": "3.1.0"`).
+2. **Build Android APK**:
+   ```bash
+   npm run build && npx cap sync android && cd android && ./gradlew assembleDebug && cd ..
+   ```
+3. **Publish to Releases**:
+   ```bash
+   npm run release:apk
+   ```
+   This automated helper script copies `app-debug.apk` to `releases/Centra-v<version>-debug.apk`, computes the exact byte count and SHA-256 checksum, and prints the formatted markdown row ready to paste into `README.md` and `releases/README.md`. All previous APK versions (`v2.0.0`, `v3.0.0`, etc.) remain archived in `releases/` so users can download any release at any time.
+
+</details>
 
 ---
 
@@ -150,6 +193,8 @@ For an exhaustive audit of storage topology, physical access considerations, and
 │   ├── Centra-v3.0.0-debug.apk
 │   ├── Centra-v2.0.0-debug.apk
 │   └── README.md
+├── scripts/                 # Build and release automation scripts
+│   └── prepare-release.mjs  # One-command release packager and SHA-256 calculator
 ├── src-tauri/               # Tauri 2 desktop application source and Cargo manifest
 ├── src/
 │   ├── __tests__/           # Comprehensive test suite (32 test suites, 274 passing tests)
