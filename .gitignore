@@ -12,6 +12,9 @@ tsconfig.tsbuildinfo
 repomix-output.*
 repomix-output.xml
 
+# Root APK builds (keep releases/ directory for versioned distributions)
+/*.apk
+
 # Environment variables & secrets
 .env
 .env.*
@@ -36,7 +39,7 @@ ios/App/Pods/
 ios/App/build/
 ios/App/.build/
 *.xcworkspace
-xcuserdata/
+userdata/
 
 # Android build outputs
 android/.gradle/
