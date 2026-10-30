@@ -18,7 +18,7 @@ import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency } from '../../utils/formatters';
 import { getCurrencyInfo } from '../../utils/currencies';
 import { todayLocalDateKey } from '../../utils/dates';
-import { CentraDB } from '../../db/storage';
+import { CentraDB, FIGMA_DEFAULT_CATEGORIES, FIGMA_DEFAULT_ACCOUNTS } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
 import { sanitizeText } from '../../utils/sanitize';
 import { validateLabel, validateNote, validateAmount } from '../../utils/validators';
@@ -265,19 +265,23 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   // (Hidden system categories are ONLY transfer, goal_contribution, and uncategorized)
   const availableCategories = useMemo(() => {
     const isIncome = activeTab === 'income';
-    return categories.filter(c => {
+    const filtered = categories.filter(c => {
       const isHiddenSystem = ['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || '') || c.hidden;
       if (isHiddenSystem) return false;
       return isIncome ? c.type === 'income' : c.type === 'expense';
     });
+    if (filtered.length > 0) return filtered;
+    return FIGMA_DEFAULT_CATEGORIES.filter(c => isIncome ? c.type === 'income' : c.type === 'expense');
   }, [categories, activeTab]);
 
   // Expense categories specifically for Budgets
   const availableBudgetCategories = useMemo(() => {
-    return categories.filter(c => {
+    const filtered = categories.filter(c => {
       const isHiddenSystem = ['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || '') || c.hidden;
       return c.type === 'expense' && !isHiddenSystem;
     });
+    if (filtered.length > 0) return filtered;
+    return FIGMA_DEFAULT_CATEGORIES.filter(c => c.type === 'expense');
   }, [categories]);
 
   const categoryOptions = useMemo(() => {
@@ -296,23 +300,52 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     }));
   }, [availableBudgetCategories]);
 
-  const accountOptions = useMemo(() => {
-    return accounts.map(a => ({
-      id: a.id,
-      name: a.name,
-      badge: `Balance: ${formatCurrency(a.balance, a.currency)}`,
-    }));
-  }, [accounts]);
+  // Ensure the 4 Figma payment method accounts are always available even before linking accounts
+  const effectiveAccounts = useMemo(() => {
+    if (accounts && accounts.length > 0) {
+      return accounts;
+    }
+    const cur = settings.baseCurrency || 'USD';
+    return FIGMA_DEFAULT_ACCOUNTS.map(a => ({ ...a, currency: cur }));
+  }, [accounts, settings.baseCurrency]);
 
-  const toAccountOptions = useMemo(() => {
-    return accounts
-      .filter(a => a.id !== fromAccountId)
-      .map(a => ({
+  const accountOptions = useMemo(() => {
+    return effectiveAccounts.map(a => {
+      const icon = a.type === 'cash' || a.name.toLowerCase().includes('cash')
+        ? 'Banknote'
+        : a.type === 'credit' || a.name.toLowerCase().includes('card')
+        ? 'CreditCard'
+        : a.name.toLowerCase().includes('mobile')
+        ? 'Smartphone'
+        : 'Landmark';
+      return {
         id: a.id,
         name: a.name,
-        badge: `Balance: ${formatCurrency(a.balance, a.currency)}`,
-      }));
-  }, [accounts, fromAccountId]);
+        icon,
+        badge: a.balance !== undefined ? `Balance: ${formatCurrency(a.balance, a.currency)}` : undefined,
+      };
+    });
+  }, [effectiveAccounts]);
+
+  const toAccountOptions = useMemo(() => {
+    return effectiveAccounts
+      .filter(a => a.id !== fromAccountId)
+      .map(a => {
+        const icon = a.type === 'cash' || a.name.toLowerCase().includes('cash')
+          ? 'Banknote'
+          : a.type === 'credit' || a.name.toLowerCase().includes('card')
+          ? 'CreditCard'
+          : a.name.toLowerCase().includes('mobile')
+          ? 'Smartphone'
+          : 'Landmark';
+        return {
+          id: a.id,
+          name: a.name,
+          icon,
+          badge: a.balance !== undefined ? `Balance: ${formatCurrency(a.balance, a.currency)}` : undefined,
+        };
+      });
+  }, [effectiveAccounts, fromAccountId]);
 
   // Dynamic state synchronization effect (runs whenever modal opens, data changes, or tab changes)
   useEffect(() => {
@@ -339,9 +372,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       }
 
       // Validate accountId
-      if (accounts.length > 0) {
-        if (!accountId || !accounts.some(a => a.id === accountId)) {
-          setAccountId(accounts[0].id);
+      if (effectiveAccounts.length > 0) {
+        if (!accountId || !effectiveAccounts.some(a => a.id === accountId)) {
+          setAccountId(effectiveAccounts[0].id);
         }
       } else {
         setAccountId('');
@@ -349,23 +382,23 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
       // Validate transfer fromAccountId & toAccountId:
       // Transfer must NEVER default to the same account for from and to!
-      if (accounts.length >= 2) {
-        const validFrom = accounts.some(a => a.id === fromAccountId) ? fromAccountId : accounts[0].id;
+      if (effectiveAccounts.length >= 2) {
+        const validFrom = effectiveAccounts.some(a => a.id === fromAccountId) ? fromAccountId : effectiveAccounts[0].id;
         setFromAccountId(validFrom);
 
-        const otherAccounts = accounts.filter(a => a.id !== validFrom);
+        const otherAccounts = effectiveAccounts.filter(a => a.id !== validFrom);
         if (!toAccountId || toAccountId === validFrom || !otherAccounts.some(a => a.id === toAccountId)) {
           setToAccountId(otherAccounts[0].id);
         }
-      } else if (accounts.length === 1) {
-        setFromAccountId(accounts[0].id);
+      } else if (effectiveAccounts.length === 1) {
+        setFromAccountId(effectiveAccounts[0].id);
         setToAccountId('');
       } else {
         setFromAccountId('');
         setToAccountId('');
       }
     }
-  }, [isOpen, activeTab, availableCategories, availableBudgetCategories, accounts, categoryId, accountId, fromAccountId, toAccountId, budgetCategoryId]);
+  }, [isOpen, activeTab, availableCategories, availableBudgetCategories, effectiveAccounts, categoryId, accountId, fromAccountId, toAccountId, budgetCategoryId]);
 
   const handleFromAccountSelect = (newFromId: string) => {
     setFromAccountId(newFromId);
@@ -416,7 +449,19 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   // Perform Save for Transaction / Spend / Income
   const executeSaveTransaction = async (keepOpen: boolean = false) => {
     setErrorMessage(null);
-    const selectedAcc = accounts.find(a => a.id === accountId);
+    let selectedAcc = accounts.find(a => a.id === accountId);
+    if (!selectedAcc && accountId) {
+      const fallbackAcc = effectiveAccounts.find(a => a.id === accountId);
+      if (fallbackAcc) {
+        await CentraDB.upsertAccount(fallbackAcc);
+        selectedAcc = fallbackAcc;
+      }
+    } else if (!selectedAcc && effectiveAccounts.length > 0) {
+      const fallbackAcc = effectiveAccounts[0];
+      await CentraDB.upsertAccount(fallbackAcc);
+      selectedAcc = fallbackAcc;
+    }
+
     const txCurrency = selectedAcc?.currency || settings.baseCurrency || 'USD';
     const amountRes = validateAmount(amount, txCurrency);
     if (!amountRes.ok) {
@@ -444,13 +489,19 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       }
     }
 
-    if (accounts.length === 0 || !accountId) {
-      setErrorMessage('Please add an account first to record transactions.');
+    if (!selectedAcc) {
+      setErrorMessage('Please add or select an account first to record transactions.');
       return false;
     }
 
     let finalCategoryId = categoryId;
     let selectedCat = categories.find(c => c.id === categoryId);
+    if (!selectedCat) {
+      selectedCat = availableCategories.find(c => c.id === categoryId);
+      if (selectedCat) {
+        await CentraDB.upsertCategory(selectedCat);
+      }
+    }
     if (!finalCategoryId || !selectedCat) {
       let uncategorizedCat = categories.find(c => c.systemKey === 'uncategorized');
       if (!uncategorizedCat) {
@@ -474,7 +525,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       categoryName: selectedCat.name,
       categoryIcon: selectedCat.icon,
       categoryColor: selectedCat.color,
-      accountId,
+      accountId: selectedAcc.id,
       accountName: selectedAcc?.name || 'Primary Account',
       merchant: sanitizeText(merchant, 100) || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
       date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
@@ -650,7 +701,13 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       return false;
     }
 
-    const cat = categories.find(c => c.id === budgetCategoryId);
+    let cat = categories.find(c => c.id === budgetCategoryId);
+    if (!cat) {
+      cat = availableBudgetCategories.find(c => c.id === budgetCategoryId);
+      if (cat) {
+        CentraDB.upsertCategory(cat);
+      }
+    }
     addBudget({
       categoryId: budgetCategoryId,
       categoryName: cat?.name || 'Category',
@@ -874,7 +931,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   placeholder="Select category"
                 />
 
-                {/* Empty State for Accounts */}
+                {/* Payment Method / Account */}
                 {accounts.length === 0 ? (
                   <div className="p-4 rounded-xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#1D1D1D]/50 text-center">
                     <Wallet className="w-6 h-6 mx-auto text-gray-400 dark:text-gray-500 mb-1.5" />
@@ -886,10 +943,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     </p>
                     <Button
                       type="button"
-                      variant="primary"
+                      variant="secondary"
                       size="sm"
                       onClick={() => setIsAddAccountOpen(true)}
-                      className="bg-black dark:bg-white text-white dark:text-black font-bold text-xs"
                     >
                       Add an Account
                     </Button>

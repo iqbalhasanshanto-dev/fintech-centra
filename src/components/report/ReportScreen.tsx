@@ -27,6 +27,8 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
     settings,
   } = useFinance();
 
+  const [activeSliceIndex, setActiveSliceIndex] = useState<number | null>(null);
+
   const isDark =
     settings.theme === 'dark' ||
     (settings.theme === 'system' &&
@@ -95,9 +97,9 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
         ) : (
           <div>
             {/* Centered Donut Chart with Total expenses inside hole */}
-            <div className="relative h-64 sm:h-72 w-full flex items-center justify-center">
+            <div className="relative h-64 sm:h-72 w-full flex items-center justify-center focus:outline-none" style={{ outline: 'none' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart style={{ outline: 'none' }} className="focus:outline-none">
                   <Pie
                     data={expenseDonutData}
                     cx="50%"
@@ -109,49 +111,81 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                     nameKey="name"
                     stroke="none"
                     cursor="pointer"
+                    style={{ outline: 'none' }}
+                    className="focus:outline-none"
+                    onClick={(_, index) => setActiveSliceIndex(prev => (prev === index ? null : index))}
                   >
                     {expenseDonutData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
+                        style={{ outline: 'none', filter: activeSliceIndex === index ? 'brightness(1.15)' : undefined }}
+                        className="focus:outline-none cursor-pointer transition-all"
+                        stroke={activeSliceIndex === index ? '#FFFFFF' : 'none'}
+                        strokeWidth={activeSliceIndex === index ? 2 : 0}
+                      />
                     ))}
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
 
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-center">
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Total expenses
-                  </span>
-                  <span className="text-xl sm:text-2xl font-bold text-[#18212F] dark:text-white tabular-nums mt-0.5">
-                    {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
-                  </span>
-                </div>
+                {activeSliceIndex !== null && expenseDonutData[activeSliceIndex] ? (
+                  <div className="flex flex-col items-center px-4 animate-scale-up">
+                    <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate max-w-[130px]">
+                      {expenseDonutData[activeSliceIndex].name}
+                    </span>
+                    <span className="text-xl sm:text-2xl font-bold text-[#18212F] dark:text-white tabular-nums mt-0.5">
+                      {formatCurrency(expenseDonutData[activeSliceIndex].value, settings.baseCurrency, settings.privacyMode)}
+                    </span>
+                    <span className="text-xs font-semibold text-[#16A34A] dark:text-[#C6FF3D] mt-0.5">
+                      {expenseDonutData[activeSliceIndex].percentage.toFixed(0)}% of expenses
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Total expenses
+                    </span>
+                    <span className="text-xl sm:text-2xl font-bold text-[#18212F] dark:text-white tabular-nums mt-0.5">
+                      {formatCurrency(periodExpenses, settings.baseCurrency, settings.privacyMode)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Clean vertical list of categories (12-analytics--full.png) */}
-            <div className="mt-4 pt-4 border-t border-black/[0.06] dark:border-white/[0.08] space-y-3">
-              {expenseDonutData.map(item => (
-                <div
-                  key={item.categoryId}
-                  className="flex items-center justify-between py-1 select-none"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                    <span className="text-sm font-semibold text-[#18212F] dark:text-white truncate">
-                      {item.name}
-                    </span>
+            <div className="mt-4 pt-4 border-t border-black/[0.06] dark:border-white/[0.08] space-y-2">
+              {expenseDonutData.map((item, index) => {
+                const isSelected = activeSliceIndex === index;
+                return (
+                  <div
+                    key={item.categoryId}
+                    onClick={() => setActiveSliceIndex(prev => (prev === index ? null : index))}
+                    className={`flex items-center justify-between py-1.5 px-2 rounded-xl transition-colors cursor-pointer select-none ${
+                      isSelected
+                        ? 'bg-black/5 dark:bg-white/10 ring-1 ring-black/10 dark:ring-white/20'
+                        : 'hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                      <span className={`text-sm truncate ${isSelected ? 'font-bold text-[#18212F] dark:text-white' : 'font-medium text-[#18212F] dark:text-white'}`}>
+                        {item.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="text-xs font-medium text-gray-400 dark:text-gray-500 tabular-nums">
+                        {item.percentage.toFixed(0)}%
+                      </span>
+                      <span className="text-sm font-bold tabular-nums text-[#18212F] dark:text-white min-w-[70px] text-right">
+                        {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 shrink-0">
-                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500 tabular-nums">
-                      {item.percentage.toFixed(0)}%
-                    </span>
-                    <span className="text-sm font-bold tabular-nums text-[#18212F] dark:text-white min-w-[70px] text-right">
-                      {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode)}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

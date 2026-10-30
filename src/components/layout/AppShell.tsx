@@ -79,11 +79,13 @@ export const AppShell: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 w-full min-h-[100dvh] bg-[#F7F8FA] dark:bg-[#000000]">
 
         {/* Top Header Toolbar */}
-        <Header
-          onOpenNotifications={() => setShowNotificationsModal(true)}
-          onNavigateToSettings={() => handleSelectTab('settings')}
-          onOpenAddAction={() => handleOpenAddWithTab('transaction')}
-        />
+        <div className={activeTab === 'settings' ? 'hidden lg:block' : ''}>
+          <Header
+            onOpenNotifications={() => setShowNotificationsModal(true)}
+            onNavigateToSettings={() => handleSelectTab('settings')}
+            onOpenAddAction={() => handleOpenAddWithTab('transaction')}
+          />
+        </div>
 
         {/* Guest Mode Warning Banner */}
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">

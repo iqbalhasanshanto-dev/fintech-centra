@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
 
@@ -10,6 +11,7 @@ interface DatePickerProps {
   label?: string;
   placeholder?: string;
   className?: string;
+  buttonClassName?: string;
 }
 
 const MONTHS = [
@@ -25,6 +27,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   label,
   placeholder = 'Select date',
   className = '',
+  buttonClassName,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   useBackHandler(isOpen, () => setIsOpen(false), 5);
@@ -134,165 +137,170 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full px-4 py-3 sm:py-3.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white flex items-center justify-between hover:border-black/[0.12] dark:hover:border-white/[0.14] transition-all text-sm cursor-pointer select-none group"
+        className={
+          buttonClassName ||
+          "w-full px-4 py-3 sm:py-3.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white flex items-center justify-between hover:border-black/[0.12] dark:hover:border-white/[0.14] transition-all text-sm cursor-pointer select-none group"
+        }
       >
-        <span className={value ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
+        <span className={value ? 'font-medium text-[#18212F] dark:text-white' : 'text-gray-500 dark:text-gray-400 font-medium'}>
           {formatDisplayDate(value)}
         </span>
-        <CalendarIcon className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors shrink-0" />
+        <CalendarIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 group-hover:text-emerald-500 dark:group-hover:text-[#C6FF3D] transition-colors shrink-0" />
       </button>
 
       {/* Modal / Dialog */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
-          style={{
-            paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
-            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
-            paddingLeft: 'calc(1rem + env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
-            paddingRight: 'calc(1rem + env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
-          }}
-        >
+      {isOpen &&
+        createPortal(
           <div
-            ref={modalRef}
-            className="w-full max-w-sm rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 shadow-2xl p-5 text-gray-900 dark:text-white animate-scale-up"
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+            style={{
+              paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
+              paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+              paddingLeft: 'calc(1rem + env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
+              paddingRight: 'calc(1rem + env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
+            }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10 mb-4">
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-emerald-500 dark:text-[#C6FF3D]" />
-                <span className="text-sm font-bold tracking-tight">Select Date</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Month / Year Navigator */}
-            <div className="flex items-center justify-between mb-4">
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                className="p-2 rounded-full bg-gray-100 dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
-                aria-label="Previous Month"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              <div className="flex items-center gap-2">
-                {/* Month Selector */}
-                <select
-                  value={viewMonth}
-                  onChange={e => setViewMonth(Number(e.target.value))}
-                  className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#262626] text-xs font-bold text-gray-900 dark:text-white border-0 cursor-pointer focus:outline-none"
+            <div
+              ref={modalRef}
+              className="w-full max-w-sm rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 shadow-2xl p-5 text-gray-900 dark:text-white animate-scale-up"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10 mb-4">
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="w-5 h-5 text-emerald-500 dark:text-[#C6FF3D]" />
+                  <span className="text-sm font-bold tracking-tight">Select Date</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
                 >
-                  {MONTHS.map((m, idx) => (
-                    <option key={m} value={idx} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
-                      {m}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Year Selector */}
-                <select
-                  value={viewYear}
-                  onChange={e => setViewYear(Number(e.target.value))}
-                  className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#262626] text-xs font-bold text-gray-900 dark:text-white border-0 cursor-pointer focus:outline-none"
-                >
-                  {yearOptions.map(yr => (
-                    <option key={yr} value={yr} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
-                      {yr}
-                    </option>
-                  ))}
-                </select>
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                className="p-2 rounded-full bg-gray-100 dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
-                aria-label="Next Month"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+              {/* Month / Year Navigator */}
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  className="p-2 rounded-full bg-gray-100 dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
+                  aria-label="Previous Month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
 
-            {/* Weekday headers */}
-            <div className="grid grid-cols-7 gap-1 text-center mb-2">
-              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(w => (
-                <span key={w} className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">
-                  {w}
-                </span>
-              ))}
-            </div>
-
-            {/* Days grid */}
-            <div className="grid grid-cols-7 gap-1 text-center mb-4">
-              {/* Blank offset days */}
-              {Array.from({ length: startingDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-8" />
-              ))}
-
-              {/* Day numbers */}
-              {Array.from({ length: totalDays }).map((_, i) => {
-                const day = i + 1;
-                const mm = String(viewMonth + 1).padStart(2, '0');
-                const dd = String(day).padStart(2, '0');
-                const dateKey = `${viewYear}-${mm}-${dd}`;
-                const isSelected = value === dateKey;
-
-                const isOutOfMax = maxDate && dateKey > maxDate;
-                const isOutOfMin = minDate && dateKey < minDate;
-                const isDisabled = !!(isOutOfMax || isOutOfMin);
-
-                return (
-                  <button
-                    key={day}
-                    type="button"
-                    disabled={isDisabled}
-                    onClick={() => handleSelectDay(day)}
-                    className={`h-8 w-8 mx-auto rounded-xl text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
-                      isDisabled
-                        ? 'opacity-20 cursor-not-allowed text-gray-400'
-                        : isSelected
-                        ? 'bg-black dark:bg-white text-white dark:text-black font-bold shadow-md'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
-                    }`}
+                <div className="flex items-center gap-2">
+                  {/* Month Selector */}
+                  <select
+                    value={viewMonth}
+                    onChange={e => setViewMonth(Number(e.target.value))}
+                    className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#262626] text-xs font-bold text-gray-900 dark:text-white border-0 cursor-pointer focus:outline-none"
                   >
-                    {day}
-                  </button>
-                );
-              })}
-            </div>
+                    {MONTHS.map((m, idx) => (
+                      <option key={m} value={idx} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
+                        {m}
+                      </option>
+                    ))}
+                  </select>
 
-            {/* Footer quick button */}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-white/5">
-              <button
-                type="button"
-                onClick={() => {
-                  const today = new Date().toISOString().split('T')[0];
-                  onChange(today);
-                  setIsOpen(false);
-                }}
-                className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
-              >
-                Select Today
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="py-1.5 px-4 rounded-xl bg-gray-100 dark:bg-white/10 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-white/20 transition-colors cursor-pointer"
-              >
-                Close
-              </button>
+                  {/* Year Selector */}
+                  <select
+                    value={viewYear}
+                    onChange={e => setViewYear(Number(e.target.value))}
+                    className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#262626] text-xs font-bold text-gray-900 dark:text-white border-0 cursor-pointer focus:outline-none"
+                  >
+                    {yearOptions.map(yr => (
+                      <option key={yr} value={yr} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
+                        {yr}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  className="p-2 rounded-full bg-gray-100 dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
+                  aria-label="Next Month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Weekday headers */}
+              <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(w => (
+                  <span key={w} className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">
+                    {w}
+                  </span>
+                ))}
+              </div>
+
+              {/* Days grid */}
+              <div className="grid grid-cols-7 gap-1 text-center mb-4">
+                {/* Blank offset days */}
+                {Array.from({ length: startingDay }).map((_, i) => (
+                  <div key={`empty-${i}`} className="h-8" />
+                ))}
+
+                {/* Day numbers */}
+                {Array.from({ length: totalDays }).map((_, i) => {
+                  const day = i + 1;
+                  const mm = String(viewMonth + 1).padStart(2, '0');
+                  const dd = String(day).padStart(2, '0');
+                  const dateKey = `${viewYear}-${mm}-${dd}`;
+                  const isSelected = value === dateKey;
+
+                  const isOutOfMax = maxDate && dateKey > maxDate;
+                  const isOutOfMin = minDate && dateKey < minDate;
+                  const isDisabled = !!(isOutOfMax || isOutOfMin);
+
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => handleSelectDay(day)}
+                      className={`h-8 w-8 mx-auto rounded-xl text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                        isDisabled
+                          ? 'opacity-20 cursor-not-allowed text-gray-400'
+                          : isSelected
+                          ? 'bg-[#C6FF3D] text-black font-bold shadow-md'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Footer quick button */}
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-white/5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date().toISOString().split('T')[0];
+                    onChange(today);
+                    setIsOpen(false);
+                  }}
+                  className="text-xs font-bold text-emerald-600 dark:text-[#C6FF3D] hover:underline cursor-pointer"
+                >
+                  Select Today
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="py-1.5 px-4 rounded-xl bg-gray-100 dark:bg-white/10 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-white/20 transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
