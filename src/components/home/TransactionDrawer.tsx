@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Download, ChevronLeft, X } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
@@ -77,12 +78,12 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  const drawerNode = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Recent Activities - All Transactions"
-      className="fixed inset-0 z-50 bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto animate-fade-in"
     >
       <div className="w-full max-w-lg mx-auto p-4 sm:p-6 space-y-4 pb-28">
         {/* Top Header Bar (10-transactions-view-all.png) */}
@@ -257,4 +258,6 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(drawerNode, document.body) : drawerNode;
 };

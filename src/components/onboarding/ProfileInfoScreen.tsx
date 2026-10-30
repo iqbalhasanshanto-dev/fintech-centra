@@ -8,11 +8,12 @@ import {
   Coins,
   Check,
   Search,
-  Calendar,
   AlertCircle,
 } from 'lucide-react';
-import logoImg from '../../assets/brand/logo.png';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
+import { DatePicker } from '../ui/DatePicker';
 import { useAuth } from '../../context/AuthContext';
 import {
   SUPPORTED_CURRENCIES,
@@ -248,18 +249,24 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] text-[#18212F] dark:text-white">
+            <h1 className="text-[52px] sm:text-[64px] font-normal font-sans tracking-tight leading-[1.02] text-[#18212F] dark:text-white">
               Tell us<br />
-              <span className="text-[#4D6E18] dark:text-[#C6FF3D]">about</span><br />
+              <span className="text-[#56791E] dark:text-[#C6FF3D]">about</span><br />
               Yourself
             </h1>
           </div>
 
           <div className="pt-1">
             <img
-              src={logoImg}
+              src={logoOnLight}
               alt="Centra"
-              className="w-10 h-10 object-contain drop-shadow-sm select-none"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden"
+              draggable={false}
+            />
+            <img
+              src={logoOnDark}
+              alt="Centra"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block"
               draggable={false}
             />
           </div>
@@ -335,16 +342,15 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
               )}
             </div>
 
-            {/* Date of Birth with Calendar Icon */}
-            <div className="relative">
-              <input
-                type="date"
+            {/* Date of Birth with Custom DatePicker */}
+            <div>
+              <DatePicker
                 value={dob}
-                onChange={e => setDob(e.target.value)}
+                onChange={setDob}
                 placeholder="Date of Birth"
-                className="w-full px-5 py-3.5 pr-12 rounded-2xl bg-[#E8ECEF] dark:bg-[#2A2A2A] border border-transparent text-[#18212F] dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:border-[#C6FF3D] focus:ring-2 focus:ring-[#C6FF3D] transition-all text-sm font-medium"
+                maxDate={new Date().toISOString().split('T')[0]}
+                buttonClassName="w-full px-5 py-3.5 rounded-2xl bg-[#E8ECEF] dark:bg-[#2A2A2A] border border-transparent text-left flex items-center justify-between transition-all cursor-pointer focus:outline-none focus:border-[#C6FF3D] focus:ring-2 focus:ring-[#C6FF3D] text-sm font-medium"
               />
-              <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             {/* Country Selector */}

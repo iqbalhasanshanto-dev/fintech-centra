@@ -3,7 +3,6 @@ import { Bell, ChevronDown, Check, LogOut } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { PeriodFilter } from '../../types';
-import { ThemeToggle } from '../ui/ThemeToggle';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { getGreeting } from '../../utils/greeting';
 
@@ -89,10 +88,10 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Left: Greeting + User Name (matching frames 11-home) */}
         <div className="flex flex-col justify-center">
-          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium tracking-tight">
+          <span className="text-sm sm:text-base font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
             {greeting}
           </span>
-          <span className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+          <span className="text-xl sm:text-2xl font-semibold tracking-tight text-[#18212F] dark:text-white mt-0.5">
             {isGuest ? 'Demo User' : user.name || 'Adam James'}
           </span>
         </div>
@@ -150,9 +149,6 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action Toolbar */}
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Theme Toggle Switch */}
-            <ThemeToggle showLabel={false} />
-
             {/* Notification Bell with Unread Indicator */}
             <button
               onClick={onOpenNotifications}
@@ -161,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Bell className="w-4 h-4" />
               {unreadNotificationsCount > 0 && (
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full" />
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#F97316] rounded-full" />
               )}
             </button>
 
@@ -193,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <img
                   src={user.avatarUrl || "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg"}
                   alt={user.name}
-                  className="w-9 h-9 rounded-full border border-black/5 dark:border-white/10 object-cover hover:ring-2 hover:ring-[#C6FF3D] transition-all"
+                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-black/5 dark:border-white/10 object-cover hover:ring-2 hover:ring-[#C6FF3D] transition-all"
                 />
               )}
             </button>

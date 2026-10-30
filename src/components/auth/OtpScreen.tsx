@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
-import logoImg from '../../assets/brand/logo.png';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -204,18 +205,24 @@ export const OtpScreen: React.FC = () => {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] text-[#18212F] dark:text-white">
+            <h1 className="text-[52px] sm:text-[64px] font-normal font-sans tracking-tight leading-[1.02] text-[#18212F] dark:text-white">
               Verify<br />
-              <span className="text-[#4D6E18] dark:text-[#C6FF3D]">Your</span><br />
+              <span className="text-[#56791E] dark:text-[#C6FF3D]">Your</span><br />
               Email
             </h1>
           </div>
 
           <div className="pt-1">
             <img
-              src={logoImg}
+              src={logoOnLight}
               alt="Centra"
-              className="w-10 h-10 object-contain drop-shadow-sm select-none"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden"
+              draggable={false}
+            />
+            <img
+              src={logoOnDark}
+              alt="Centra"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block"
               draggable={false}
             />
           </div>

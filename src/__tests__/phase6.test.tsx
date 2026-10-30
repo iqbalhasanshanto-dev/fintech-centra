@@ -553,19 +553,20 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
     unmountFirst();
 
     // Render AddAccountModal
-    const { container: addContainer } = render(
+    const { container: addContainer, unmount: unmountAdd } = render(
       <FinanceProvider userId="guest">
         <AddAccountModal isOpen={true} onClose={() => {}} />
       </FinanceProvider>
     );
 
-    const addAccountSelect = addContainer.querySelector('select') as HTMLSelectElement;
+    const addAccountSelect = (addContainer.querySelector('select') || document.body.querySelector('select')) as HTMLSelectElement;
     expect(addAccountSelect).not.toBeNull();
     const addAccountCurrencies = Array.from(addAccountSelect.options).map(o => o.value);
     expect(addAccountCurrencies).toEqual(SUPPORTED_CURRENCIES.map(c => c.code));
 
     // Both match SUPPORTED_CURRENCIES and each other exactly
     expect(firstAccountCurrencies).toEqual(addAccountCurrencies);
+    unmountAdd();
   });
 
   it('10. Contributing to a goal when goal_contribution category does not exist yet creates it and uses its UUID', async () => {

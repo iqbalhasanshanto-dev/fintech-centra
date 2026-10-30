@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, PieChart, Plus, X, Target, SlidersHorizontal, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
+import { PieChart, Plus, X, Target, SlidersHorizontal, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
 import { useFinance } from '../../context/FinanceContext';
 
@@ -10,6 +10,57 @@ interface BottomNavProps {
   onSelectTab: (tab: TabType) => void;
   onOpenAddAction: (tab?: 'spend' | 'income' | 'transfer' | 'goal' | 'budget') => void;
 }
+
+// Custom Nav Icons matching 08-home.png
+const NavHomeIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 9.5L12 3l9 6.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9.5z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
+const NavAnalyticsIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="11" cy="11" r="7.5" />
+    <path d="M16.5 16.5L21 21" />
+    <path d="M9 8.5L6.5 11 9 13.5" />
+    <path d="M13 8.5L15.5 11 13 13.5" />
+  </svg>
+);
+
+const NavBudgetsIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+    <polyline points="3 3 3 8 8 8" />
+    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+    <polyline points="21 21 21 16 16 16" />
+    <circle cx="12" cy="12" r="2.5" />
+  </svg>
+);
 
 export const BottomNav: React.FC<BottomNavProps> = ({
   activeTab,
@@ -76,9 +127,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   }, []);
 
   const tabs: { id: TabType; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'report', label: 'Analytics', icon: PieChart },
-    { id: 'plan', label: 'Budgets', icon: Target },
+    { id: 'home', label: 'Home', icon: NavHomeIcon },
+    { id: 'report', label: 'Analytics', icon: NavAnalyticsIcon },
+    { id: 'plan', label: 'Budgets', icon: NavBudgetsIcon },
     { id: 'settings', label: 'Settings', icon: SlidersHorizontal },
   ];
 

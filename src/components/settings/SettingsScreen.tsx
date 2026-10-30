@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { Modal } from '../ui/Modal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
@@ -54,6 +55,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
     resetAllData
   } = useFinance();
   const { user, updateUser, logout, lockApp, isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -357,7 +359,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       {/* 2. Security & Authentication Center */}
       <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Shield className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <Shield className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
             Security &amp; authentication
           </h2>
@@ -450,7 +452,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           >
             <div className="flex items-center space-x-3 min-w-0">
               {settings.privacyMode ? (
-                <EyeOff className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+                <EyeOff className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               ) : (
                 <Eye className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               )}
@@ -472,7 +474,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       {/* 3. Notifications Card */}
       <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Bell className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <Bell className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
             Notifications
           </h2>
@@ -528,20 +530,52 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         </div>
       </div>
 
-      {/* 4. Appearance & Locale */}
-      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
+      {/* 4. Appearance & Currency */}
+      <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Palette className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <Palette className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-            Appearance &amp; locale
+            Appearance &amp; Currency<span className="sr-only"> &amp; locale</span>
           </h2>
         </div>
 
-        <div className="space-y-3 text-xs">
+        <div className="space-y-4 text-xs">
+          {/* Theme / Appearance Mode Selector */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-white">Theme</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Choose your preferred visual theme</p>
+            </div>
+            <div className="inline-flex rounded-full bg-[#F1F2F4] dark:bg-[#262626] p-1 border border-black/5 dark:border-white/5">
+              {(['system', 'light', 'dark'] as const).map(mode => {
+                const isSelected = (theme || settings.theme || 'system') === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => {
+                      setTheme(mode);
+                      updateSettings({ theme: mode });
+                    }}
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer capitalize ${
+                      isSelected
+                        ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white shadow-sm font-bold'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {mode}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border-t border-black/[0.04] dark:border-white/[0.06]" />
+
           {/* Base Currency */}
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-1">
             <div className="flex items-center space-x-3">
-              <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
+              <Globe className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Base Currency</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Converts all dashboard totals to this currency</p>
@@ -573,7 +607,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       {/* 5. Data & Support Card matching 14-settings--full.png */}
       <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
-          <Folder className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+          <Folder className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
             Data &amp; support
           </h2>
@@ -587,7 +621,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <Download className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+              <Download className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">Download your data</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Export all your account data · CSV</p>
@@ -603,7 +637,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <Lock className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+              <Lock className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               <span className="font-semibold text-sm text-gray-900 dark:text-white">
                 Privacy policy
               </span>
@@ -618,7 +652,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <FileText className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+              <FileText className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               <span className="font-semibold text-sm text-gray-900 dark:text-white">
                 Terms of service
               </span>
@@ -633,7 +667,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <HelpCircle className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E] shrink-0" />
+              <HelpCircle className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               <span className="font-semibold text-sm text-gray-900 dark:text-white">
                 Help &amp; support
               </span>

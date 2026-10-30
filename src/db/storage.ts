@@ -551,6 +551,38 @@ const PULL_THROTTLE_MS = 30_000;
 // Initialize cache for guest mode by default
 reloadCacheForUser(null);
 
+export const FIGMA_DEFAULT_CATEGORIES: Category[] = [
+  // 11 Expense Categories from 15-picker-budget.png
+  { id: 'cat_groceries', name: 'Groceries', icon: 'ShoppingCart', color: '#10B981', type: 'expense', budgetLimit: 600 },
+  { id: 'cat_food_drinks', name: 'Food & Drinks', icon: 'Utensils', color: '#F59E0B', type: 'expense', budgetLimit: 800 },
+  { id: 'cat_bills_utils', name: 'Bills & Utilities', icon: 'Receipt', color: '#6366F1', type: 'expense', budgetLimit: 500 },
+  { id: 'cat_transport', name: 'Transport', icon: 'Car', color: '#3B82F6', type: 'expense', budgetLimit: 300 },
+  { id: 'cat_subscriptions', name: 'Subscriptions', icon: 'Repeat', color: '#EC4899', type: 'expense', budgetLimit: 120 },
+  { id: 'cat_travel', name: 'Travel', icon: 'Plane', color: '#8B5CF6', type: 'expense', budgetLimit: 600 },
+  { id: 'cat_entertainment', name: 'Entertainment', icon: 'Film', color: '#F97316', type: 'expense', budgetLimit: 250 },
+  { id: 'cat_shopping', name: 'Shopping', icon: 'ShoppingBag', color: '#14B8A6', type: 'expense', budgetLimit: 500 },
+  { id: 'cat_health_medical', name: 'Health & Medical', icon: 'HeartPulse', color: '#EF4444', type: 'expense', budgetLimit: 200 },
+  { id: 'cat_education', name: 'Education', icon: 'GraduationCap', color: '#06B6D4', type: 'expense', budgetLimit: 400 },
+  { id: 'cat_personal_care', name: 'Personal Care', icon: 'Sparkles', color: '#84CC16', type: 'expense', budgetLimit: 150 },
+  // 5 Income Categories from 15-picker-income-category.png
+  { id: 'cat_salary_wages', name: 'Salary & Wages', icon: 'Briefcase', color: '#22C55E', type: 'income', hidden: false },
+  { id: 'cat_freelance_bonus', name: 'Freelance & Bonus', icon: 'TrendingUp', color: '#10B981', type: 'income', hidden: false },
+  { id: 'cat_dividends_yield', name: 'Dividends & Yield', icon: 'Coins', color: '#06B6D4', type: 'income', hidden: false },
+  { id: 'cat_investments', name: 'Investments', icon: 'LineChart', color: '#3B82F6', type: 'income', hidden: false },
+  { id: 'cat_gifts_allowance', name: 'Gifts / Allowance', icon: 'Gift', color: '#EC4899', type: 'income', hidden: false },
+  // System Categories
+  { id: 'cat_transfer', systemKey: 'transfer', name: 'Transfer & Payment', icon: 'ArrowRightLeft', color: '#636E72', type: 'expense', hidden: true },
+  { id: 'cat_goal_contrib', systemKey: 'goal_contribution', name: 'Goal Contribution', icon: 'Target', color: '#10B981', type: 'expense', hidden: true },
+  { id: 'cat_uncategorized', systemKey: 'uncategorized', name: 'Uncategorized', icon: 'HelpCircle', color: '#94A3B8', type: 'expense', hidden: true },
+];
+
+export const FIGMA_DEFAULT_ACCOUNTS: Account[] = [
+  { id: 'acc_cash', name: 'Cash', type: 'cash', balance: 0, currency: 'USD', accountNumberMasked: '•••• CASH', bankName: 'Physical Cash', color: '#10B981' },
+  { id: 'acc_card', name: 'Card Payment', type: 'credit', balance: 0, currency: 'USD', accountNumberMasked: '•••• CARD', bankName: 'Card Payment', color: '#6366F1' },
+  { id: 'acc_mobile', name: 'Mobile Banking (bKash, Nagad, Rocket)', type: 'checking', balance: 0, currency: 'USD', accountNumberMasked: '•••• MFS', bankName: 'Mobile Banking', color: '#EC4899' },
+  { id: 'acc_bank', name: 'Bank Transfer', type: 'checking', balance: 0, currency: 'USD', accountNumberMasked: '•••• BANK', bankName: 'Bank Transfer', color: '#0984E3' },
+];
+
 export const CentraDB = {
   // Sync Status API
   getSyncStatus,
@@ -1136,10 +1168,12 @@ export const CentraDB = {
   saveAccounts: async (accounts: Account[]) => {
     cache.accounts = accounts;
     safeSet(getUserStorageKey(currentActiveUserId, 'accounts'), accounts);
+    notifyDataChanged();
   },
   saveCategories: async (categories: Category[]) => {
     cache.categories = categories;
     safeSet(getUserStorageKey(currentActiveUserId, 'categories'), categories);
+    notifyDataChanged();
   },
   saveTransactions: async (txs: Transaction[]) => {
     cache.transactions = txs;
@@ -1438,6 +1472,7 @@ export const CentraDB = {
           return { ok: true, profile: profileData };
         } else {
           setSyncStatus('error');
+          notifyDataChanged();
           return { ok: false, profile: profileData };
         }
       } catch (err) {
@@ -1717,9 +1752,15 @@ export const CentraDB = {
       },
     ];
 
+    const cur = baseCurrency || 'USD';
+    const effectiveCategories = categories.length > 0 ? categories : FIGMA_DEFAULT_CATEGORIES;
+    const effectiveAccounts = initialAccounts.length > 0
+      ? initialAccounts
+      : FIGMA_DEFAULT_ACCOUNTS.map(a => ({ ...a, currency: cur }));
+
     cache.user = userProfile;
-    cache.accounts = initialAccounts;
-    cache.categories = categories;
+    cache.accounts = effectiveAccounts;
+    cache.categories = effectiveCategories;
     cache.transactions = [];
     cache.goals = [];
     cache.budgets = [];
@@ -1734,6 +1775,7 @@ export const CentraDB = {
     safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
     safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
     safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
+    notifyDataChanged();
 
     if (isSupabaseConfigured() && !isGuestUser(userId)) {
       try {

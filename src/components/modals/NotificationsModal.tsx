@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Bell, 
   ChevronLeft, 
@@ -185,12 +186,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     );
   };
 
-  return (
+  const modalNode = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Notifications"
-      className="fixed inset-0 z-50 bg-[#F7F8FA] dark:bg-[#0A0A0A] overflow-y-auto flex flex-col text-[#18212F] dark:text-white transition-colors antialiased animate-fade-in"
+      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#0A0A0A] overflow-y-auto flex flex-col text-[#18212F] dark:text-white transition-colors antialiased animate-fade-in"
       style={{
         paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
         paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
@@ -300,4 +301,6 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : modalNode;
 };

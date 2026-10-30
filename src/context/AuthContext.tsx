@@ -259,6 +259,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [authMode, lockApp]);
 
+  const handleSessionRef = useRef<(session: Session | null) => Promise<void>>(handleSession);
+  useEffect(() => {
+    handleSessionRef.current = handleSession;
+  }, [handleSession]);
+
+  const lockAppRef = useRef<() => void>(lockApp);
+  useEffect(() => {
+    lockAppRef.current = lockApp;
+  }, [lockApp]);
+
   // -------------------------------------------------------------------------
   // Retry profile fetch (for ProfileErrorScreen)
   // -------------------------------------------------------------------------
@@ -333,11 +343,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setTimeout(() => {
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session?.user) {
           if (lastUserIdRef.current === session.user.id && (authViewRef.current === 'app' || authViewRef.current === 'guest')) {
             return;
           }
-          handleSession(session);
+          handleSessionRef.current(session);
         } else if (event === 'SIGNED_OUT') {
           // Only perform sign out cleanup if user was actually in app session or locked.
           // Never overwrite intermediate unauthenticated views like 'otp' or 'onboarding'.
@@ -693,7 +703,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       );
 
       if (shouldLock) {
-        lockApp();
+        lockAppRef.current();
       }
       setIsAppCovered(false);
       hiddenTimestamp = null;
@@ -729,7 +739,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setOauthLoading(null);
               setOauthError(null);
               if (session?.user) {
-                await handleSession(session);
+                await handleSessionRef.current(session);
               }
             },
             onError: (err) => {
@@ -764,7 +774,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cleanupNative();
       }
     };
-  }, [handleSession, lockApp]);
+  }, []);
 
   const isCompletingRef = useRef(false);
 
@@ -909,41 +919,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isCompletingRef.current = true;
 
     try {
-      // 1. Ensure accounts exist: never create a second default Cash account if the user already has an account
+      // 1. Ensure accounts exist: never create duplicate accounts if user already has accounts
       const existingAccounts = CentraDB.getAccounts();
       if (existingAccounts.length === 0) {
-        const defaultCash: Account = {
-          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `acc_${Date.now()}`,
-          name: 'Cash',
-          type: 'cash',
-          balance: 0,
-          currency: user?.baseCurrency || 'USD',
-          accountNumberMasked: '•••• CASH',
-          bankName: 'Physical Cash',
-          color: '#10B981',
-          isPrimary: true,
-        };
-        await CentraDB.saveAccounts([defaultCash]);
+        const cur = user?.baseCurrency || 'USD';
+        const defaultAccounts: Account[] = [
+          {
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `acc_cash_${Date.now()}`,
+            name: 'Cash',
+            type: 'cash',
+            balance: 0,
+            currency: cur,
+            accountNumberMasked: '•••• CASH',
+            bankName: 'Physical Cash',
+            color: '#10B981',
+            isPrimary: true,
+          },
+        ];
+        await CentraDB.saveAccounts(defaultAccounts);
         if (user?.id && !isGuest) {
-          OutboxQueue.enqueue({
+          const outboxItems = defaultAccounts.map(acc => ({
             userId: user.id,
-            entity: 'accounts',
-            op: 'upsert',
-            recordId: defaultCash.id,
+            entity: 'accounts' as const,
+            op: 'upsert' as const,
+            recordId: acc.id,
             payload: {
-              id: defaultCash.id,
+              id: acc.id,
               user_id: user.id,
-              name: defaultCash.name,
-              type: defaultCash.type,
-              balance: defaultCash.balance,
-              currency: defaultCash.currency,
-              account_number_masked: defaultCash.accountNumberMasked,
-              bank_name: defaultCash.bankName,
-              color: defaultCash.color,
-              is_primary: true,
+              name: acc.name,
+              type: acc.type,
+              balance: acc.balance,
+              currency: acc.currency,
+              account_number_masked: acc.accountNumberMasked,
+              bank_name: acc.bankName,
+              color: acc.color,
+              is_primary: acc.isPrimary || false,
               updated_at: new Date().toISOString(),
             },
-          });
+          }));
+          OutboxQueue.enqueueGroup(outboxItems);
         }
       }
 

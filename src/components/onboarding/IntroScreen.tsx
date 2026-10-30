@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ArrowRight, Loader2, AlertCircle, ArrowLeft, Bot } from 'lucide-react';
-import logoImg from '../../assets/brand/logo.png';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
 import { useAuth, AuthMode } from '../../context/AuthContext';
 import { isTauri, getNativePlatform } from '../../utils/platform';
@@ -128,17 +129,23 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img
-                src={logoImg}
+                src={logoOnLight}
                 alt="Centra"
-                className="w-10 h-10 object-contain drop-shadow-sm select-none"
+                className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden"
+                draggable={false}
+              />
+              <img
+                src={logoOnDark}
+                alt="Centra"
+                className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block"
                 draggable={false}
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-gray-500 dark:text-gray-400">
+              <span className="sr-only">
                 Sample preview
               </span>
-              <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+              <span className="sr-only">
                 {'> Secure sync'}
               </span>
             </div>
@@ -146,9 +153,9 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
 
           {/* Bottom Display Content */}
           <div className="pt-24 sm:pt-32 pb-6">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#18212F] dark:text-white leading-[1.08] mb-4">
+            <h1 className="text-[52px] sm:text-[64px] font-normal font-sans tracking-tight text-[#18212F] dark:text-white leading-[1.02] mb-4">
               Track Your Daily<br />
-              <span className="text-[#4D6E18] dark:text-[#C6FF3D]">Expenses.</span>
+              <span className="text-[#56791E] dark:text-[#C6FF3D]">Expenses.</span>
             </h1>
 
             <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 font-normal leading-relaxed mb-8 max-w-md">
@@ -180,25 +187,31 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               )}
-              <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05] text-[#18212F] dark:text-white">
+              <h1 className="text-[52px] sm:text-[64px] font-normal font-sans tracking-tight leading-[1.02] text-[#18212F] dark:text-white">
                 One<br />
-                <span className="text-[#4D6E18] dark:text-[#C6FF3D]">Last</span><br />
+                <span className="text-[#56791E] dark:text-[#C6FF3D]">Last</span><br />
                 Step
               </h1>
             </div>
 
             <div className="flex flex-col items-end gap-2 pt-1">
               <img
-                src={logoImg}
+                src={logoOnLight}
                 alt="Centra"
-                className="w-10 h-10 object-contain drop-shadow-sm select-none"
+                className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden"
+                draggable={false}
+              />
+              <img
+                src={logoOnDark}
+                alt="Centra"
+                className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block"
                 draggable={false}
               />
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-gray-500 dark:text-gray-400">
+                <span className="sr-only">
                   Sample preview
                 </span>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                <span className="sr-only">
                   {'> Secure sync'}
                 </span>
               </div>

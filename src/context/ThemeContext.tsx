@@ -102,10 +102,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
+const fallbackThemeContext: ThemeContextType = {
+  theme: 'system',
+  isDark: false,
+  setTheme: () => {},
+  toggleTheme: () => {},
+};
+
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  return context || fallbackThemeContext;
 };

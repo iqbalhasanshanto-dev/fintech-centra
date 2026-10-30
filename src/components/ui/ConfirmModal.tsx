@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
 
@@ -72,9 +73,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     }
   };
 
-  return (
+  const modalNode = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4"
       style={{
         paddingTop: 'calc(1rem + env(safe-area-inset-top, var(--safe-area-inset-top, 0px)))',
         paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
@@ -85,11 +86,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-fade-in z-[110]"
       />
 
       {/* Dialog card */}
-      <div className="relative w-full max-w-sm rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 p-6 shadow-2xl animate-scale-up text-gray-900 dark:text-white transition-all">
+      <div className="relative z-[111] w-full max-w-sm rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 p-6 shadow-2xl animate-scale-up text-gray-900 dark:text-white transition-all">
         {/* Close icon */}
         <button
           onClick={onClose}
@@ -136,4 +137,6 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : modalNode;
 };

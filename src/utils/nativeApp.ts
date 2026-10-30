@@ -16,6 +16,7 @@ export interface NativeAppHandlers {
 
 let isInitialized = false;
 let activeListenerHandles: PluginListenerHandle[] = [];
+let currentHandlers: NativeAppHandlers | undefined = undefined;
 let lastNativeSyncTrigger = 0;
 const NATIVE_SYNC_THROTTLE_MS = 2000;
 
@@ -93,6 +94,7 @@ export const cleanupNativeApp = async (): Promise<void> => {
   }
   activeListenerHandles = [];
   isInitialized = false;
+  currentHandlers = undefined;
 };
 
 /**
@@ -102,6 +104,10 @@ export const cleanupNativeApp = async (): Promise<void> => {
 export const initNativeApp = async (handlers?: NativeAppHandlers): Promise<() => Promise<void>> => {
   if (!isNative()) {
     return async () => {};
+  }
+
+  if (handlers) {
+    currentHandlers = handlers;
   }
 
   if (isInitialized) {
@@ -119,8 +125,8 @@ export const initNativeApp = async (handlers?: NativeAppHandlers): Promise<() =>
 
     // 3. Register deep link URL open listener
     const urlHandle = await CapApp.addListener('appUrlOpen', data => {
-      if (data?.url && handlers?.onUrlOpen) {
-        handlers.onUrlOpen(data.url);
+      if (data?.url && currentHandlers?.onUrlOpen) {
+        currentHandlers.onUrlOpen(data.url);
       }
     });
     activeListenerHandles.push(urlHandle);
@@ -130,24 +136,24 @@ export const initNativeApp = async (handlers?: NativeAppHandlers): Promise<() =>
       if (state.isActive) {
         triggerNativeSync();
       }
-      if (handlers?.onAppStateChange) {
-        handlers.onAppStateChange(state.isActive);
+      if (currentHandlers?.onAppStateChange) {
+        currentHandlers.onAppStateChange(state.isActive);
       }
     });
     activeListenerHandles.push(stateHandle);
 
     // 5. Register hardware back button listener (Android)
     const backHandle = await CapApp.addListener('backButton', () => {
-      if (handlers?.onBackButton) {
-        handlers.onBackButton();
+      if (currentHandlers?.onBackButton) {
+        currentHandlers.onBackButton();
       }
     });
     activeListenerHandles.push(backHandle);
 
     // 6. Register network connection status listener
     const networkHandle = await Network.addListener('networkStatusChange', status => {
-      if (handlers?.onNetworkStatusChange) {
-        handlers.onNetworkStatusChange(status);
+      if (currentHandlers?.onNetworkStatusChange) {
+        currentHandlers.onNetworkStatusChange(status);
       }
       if (status.connected) {
         triggerNativeSync();
@@ -157,10 +163,10 @@ export const initNativeApp = async (handlers?: NativeAppHandlers): Promise<() =>
     });
     activeListenerHandles.push(networkHandle);
 
-    // 6. Check for cold-start launch URL (when app was opened directly from a deep link)
+    // 7. Check for cold-start launch URL (when app was opened directly from a deep link)
     const launchUrl = await CapApp.getLaunchUrl();
-    if (launchUrl?.url && handlers?.onUrlOpen) {
-      handlers.onUrlOpen(launchUrl.url);
+    if (launchUrl?.url && currentHandlers?.onUrlOpen) {
+      currentHandlers.onUrlOpen(launchUrl.url);
     }
   } catch (err) {
     logger.warn('Native Capacitor initialization error:', err);

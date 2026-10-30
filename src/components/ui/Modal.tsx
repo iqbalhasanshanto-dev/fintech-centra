@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -43,18 +44,18 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+  const modalNode = (
+    <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md transition-opacity animate-fade-in z-[100]"
+        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md transition-opacity animate-fade-in z-[110]"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Sheet / Dialog Container */}
       <div
-        className={`relative z-[101] w-full ${maxWidth} bg-white dark:bg-[#1D1D1D] rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-black/5 dark:border-white/10 text-gray-900 dark:text-white transition-colors ${
+        className={`relative z-[111] w-full ${maxWidth} bg-white dark:bg-[#1D1D1D] rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-black/5 dark:border-white/10 text-gray-900 dark:text-white transition-colors ${
           isBottomSheet ? 'animate-slide-up sm:animate-fade-in' : 'animate-fade-in'
         }`}
         style={{
@@ -102,4 +103,6 @@ export const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : modalNode;
 };
