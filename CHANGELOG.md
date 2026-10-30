@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 Centra `v3.0.0` delivers a complete, production-grade overhaul based on Figma design specifications, elevating the visual identity, touch responsiveness, accessibility, and financial workflow ergonomics.
 
 #### 📥 Direct Downloads & Verification
-- **Android APK (One-Click Direct Download)**: [**Centra-v3.0.0-debug.apk**](releases/Centra-v3.0.0-debug.apk?raw=true)
+- **Android APK (One-Click Direct Download)**: [**Centra-v3.0.0-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk) (Fallback: [`releases/Centra-v3.0.0-debug.apk?raw=true`](releases/Centra-v3.0.0-debug.apk?raw=true))
 - **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.0.0-debug.apk)
 - **File Size**: `6,000,321 bytes` (5.72 MB)
 - **SHA-256 Checksum**:
@@ -56,7 +56,7 @@ Centra `v3.0.0` delivers a complete, production-grade overhaul based on Figma de
 Centra `v2.0.0` introduced the offline-first repository engine, client-side cryptography, and strict data protection audit fixes.
 
 #### 📥 Direct Downloads & Verification
-- **Android APK (One-Click Direct Download)**: [**Centra-v2.0.0-debug.apk**](releases/Centra-v2.0.0-debug.apk?raw=true)
+- **Android APK (One-Click Direct Download)**: [**Centra-v2.0.0-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v2.0.0-debug.apk) (Fallback: [`releases/Centra-v2.0.0-debug.apk?raw=true`](releases/Centra-v2.0.0-debug.apk?raw=true))
 - **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v2.0.0-debug.apk)
 - **File Size**: `5,700,969 bytes` (5.44 MB)
 - **SHA-256 Checksum**:
