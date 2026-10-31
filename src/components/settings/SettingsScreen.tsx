@@ -310,7 +310,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       <div
         className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-4 sm:-mx-6 lg:-mx-8 border-b border-black/5 dark:border-white/10"
         style={{
-          paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
         <div className="w-full max-w-lg mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">

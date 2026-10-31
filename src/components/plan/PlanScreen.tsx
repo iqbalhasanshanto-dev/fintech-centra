@@ -148,35 +148,38 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                   className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors space-y-3.5 shadow-sm"
                 >
                   {/* Top Row: Icon, Title, Actions */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className="w-11 h-11 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 flex items-center justify-center shrink-0">
-                        <CategoryIcon name={goal.icon} className="w-5 h-5" />
+                  <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+                    <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 flex items-center justify-center shrink-0">
+                        <CategoryIcon name={goal.icon} className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <h4 className="text-base font-bold text-gray-900 dark:text-white leading-snug break-words">
+                        <h4
+                          className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-snug line-clamp-2"
+                          style={{ wordBreak: 'normal', overflowWrap: 'normal' }}
+                        >
                           {goal.name}
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 mt-0.5 truncate">
                           <Calendar className="w-3.5 h-3.5 shrink-0" />
-                          <span>Target: {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                          <span className="truncate">Target: {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                         </p>
                       </div>
                     </div>
 
                     {/* Add Funds & Menu */}
-                    <div className="flex items-center space-x-2 relative shrink-0">
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 relative shrink-0">
                       <button
                         onClick={() => setSelectedGoalForFunds(goal)}
-                        className="px-3 py-1.5 rounded-full border border-black/[0.12] dark:border-white/[0.14] bg-[#F1F2F4] dark:bg-[#262626] text-[#16A34A] dark:text-[#22C55E] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-full border border-black/[0.12] dark:border-white/[0.14] bg-[#F1F2F4] dark:bg-[#262626] text-[#16A34A] dark:text-[#22C55E] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] text-[11px] font-semibold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0"
                       >
                         + Add Funds
                       </button>
 
                       <button
                         onClick={() => setActiveGoalMenuId(activeGoalMenuId === goal.id ? null : goal.id)}
-                        className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-full hover:bg-[#F1F2F4] dark:hover:bg-[#262626] transition-colors cursor-pointer"
+                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-full hover:bg-[#F1F2F4] dark:hover:bg-[#262626] transition-colors cursor-pointer shrink-0"
                         aria-label="Goal options"
                       >
                         <MoreVertical className="w-4 h-4" />
@@ -282,12 +285,12 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               return (
                 <div
                   key={budget.id}
-                  className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors flex items-center justify-between shadow-sm"
+                  className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors flex items-center justify-between gap-2.5 sm:gap-4 shadow-sm"
                 >
                   {/* Left: Icon & Info */}
-                  <div className="flex items-center space-x-3.5 min-w-0 flex-1 pr-3">
-                    <div className="w-11 h-11 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 flex items-center justify-center shrink-0">
-                      <CategoryIcon name={budget.categoryIcon} className="w-5 h-5" />
+                  <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1 pr-2">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 flex items-center justify-center shrink-0">
+                      <CategoryIcon name={budget.categoryIcon} className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -296,13 +299,13 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                           {budget.categoryName}
                         </h4>
                         {isOver && (
-                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-semibold uppercase tracking-wider">
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-semibold uppercase tracking-wider shrink-0">
                             Over Limit
                           </span>
                         )}
                       </div>
 
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 tabular-nums">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 tabular-nums truncate whitespace-nowrap">
                         {formatCurrency(budget.spentAmount, settings.baseCurrency, settings.privacyMode)} of{' '}
                         {formatCurrency(budget.limitAmount, settings.baseCurrency, settings.privacyMode)}
                       </div>
@@ -310,8 +313,8 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                   </div>
 
                   {/* Right: Circular Progress Ring + Column-aligned Remaining Values */}
-                  <div className="shrink-0 flex items-center space-x-4">
-                    <div className="text-right min-w-[110px] font-mono tabular-nums text-xs">
+                  <div className="shrink-0 flex items-center gap-2.5 sm:gap-4">
+                    <div className="text-right whitespace-nowrap font-mono tabular-nums text-xs">
                       <span className={`font-semibold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300'}`}>
                         {isOver
                           ? `${formatCurrency(Math.abs(remaining), settings.baseCurrency, settings.privacyMode)} over`
@@ -321,7 +324,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
 
                     <CircularProgress
                       percentage={percentSpent}
-                      size={44}
+                      size={40}
                       strokeWidth={4}
                       showText={true}
                     />

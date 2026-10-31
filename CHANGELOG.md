@@ -6,9 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v3.1.4] — 2026-10-31
+
+### 🌟 Latest Release: Layout, Typography & Android Safe-Area Spacing Optimization
+
+Centra `v3.1.4` optimizes layout, typography, and safe-area spacing across all Android screen sizes (320px–430px width), aspect ratios, and aggressive system font scaling. It eliminates the excess black top-bar gap on Android devices by aligning with non-overlay status bars, prevents header title wrapping on narrow 360px phones, repairs mid-word text breaking on savings goal and budget cards, and locks root scrolling directly inside `<main>` with zero header overlap.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v3.1.4-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.4-debug.apk) (Fallback: [`releases/Centra-v3.1.4-debug.apk?raw=true`](releases/Centra-v3.1.4-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.4-debug.apk)
+- **File Size**: `6,227,662 bytes` (5.94 MB)
+- **SHA-256 Checksum**:
+  ```
+  984b4ab2c6f7a12c9dd1a160e6f1e254bb6e422b2549d014efcb7ea9073390bf
+  ```
+
+#### 📐 Safe-Area & Viewport Layout
+- **Zero Excess Top Bar Gap**: Set `--safe-area-inset-top: 0px` by default in `index.css` and replaced hardcoded padding fallbacks across `Header.tsx`, `SettingsScreen.tsx`, `NotificationsModal.tsx`, and `TransactionDrawer.tsx` with clean `env(safe-area-inset-top, 0px)`, removing the redundant black gap above the header on Android devices where WebView already renders beneath the native status bar.
+- **Font Scale Lock**: Added `-webkit-text-size-adjust: 100%; text-size-adjust: 100%` on `html, body` so large Android system display zoom settings do not distort card grids or overflow containers.
+- **Locked Main Scroll Container**: Locked the outer application shell to `h-[100dvh] overflow-hidden flex flex-col` and delegated all page scrolling strictly to `<main className="flex-1 min-h-0 overflow-y-auto">`, ensuring the header stays permanently docked above page content without content clipping or scroll bleed.
+
+#### 🔤 Header Typography & Compact Controls
+- **Non-Wrapping Header Titles**: Changed header titles on Analytics and Goals & Budgets to `text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap truncate`, preventing double-line wrapping on narrow 360px Android viewports.
+- **Header Action Bar Optimization**: Tightened action button gap (`gap-1.5 sm:gap-2.5`) and hid the redundant `GUEST` text badge on mobile screens (`hidden sm:inline-block`), allowing ample horizontal room for titles and icons.
+
+#### 🎯 Text Wrapping & Budget Card Ergonomics
+- **Whole-Word Wrapping on Savings Goals**: Removed `break-words` from Goal card headings, applied `word-break: normal; overflow-wrap: normal` with `line-clamp-2`, scaled the goal icon container to `w-9 h-9 sm:w-11 sm:h-11 shrink-0`, and made `+ Add Funds` compact (`px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap shrink-0`) to keep words like `"Apartment"` intact.
+- **Squeeze Prevention**: Ensured all numeric currency totals use `whitespace-nowrap tabular-nums shrink-0` across Monthly Budgets, Your Money cashflow summary, Report category items, and Recent Activity transactions.
+
+---
+
 ## [v3.1.3] — 2026-10-31
 
-### 🌟 Latest Release: Locked Sticky Headers, Unified Typography & 60fps Theme Toggle
+### ⚪ Previous Release: Locked Sticky Headers, Unified Typography & 60fps Theme Toggle
 
 Centra `v3.1.3` locks all top headers securely in place across Home, Analytics, Goals & Budgets, Settings, Notifications, and Recent Activities. It unifies header height, alignment, back button ergonomics, and title typography (`text-xl sm:text-2xl font-bold tracking-tight`), removes the theme transition lag on the `BDT (৳)` currency button and cards during Dark/Light toggling, and prevents content cards from bleeding above sticky headers during scroll.
 

@@ -258,7 +258,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       <div
         className="shrink-0 w-full bg-[#F7F8FA] dark:bg-[#000000] border-b border-black/5 dark:border-white/10"
         style={{
-          paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
           paddingLeft: 'env(safe-area-inset-left, 0px)',
           paddingRight: 'env(safe-area-inset-right, 0px)',
         }}

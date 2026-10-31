@@ -21,7 +21,7 @@
     --color-growth: #16A34A;
     --color-danger: #BE123C;
     --color-caution: #F59E0B;
-    --safe-area-inset-top: env(safe-area-inset-top, 0px);
+    --safe-area-inset-top: 0px;
     --safe-area-inset-right: env(safe-area-inset-right, 0px);
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-inset-left: env(safe-area-inset-left, 0px);
@@ -42,6 +42,11 @@
     --color-growth: #22C55E;
     --color-danger: #E11D48;
     --color-caution: #F59E0B;
+  }
+
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {

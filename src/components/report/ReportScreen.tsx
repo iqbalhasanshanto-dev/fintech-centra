@@ -163,11 +163,11 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
                         {item.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 shrink-0">
+                    <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
                       <span className="text-xs font-medium text-gray-400 dark:text-gray-500 tabular-nums">
                         {item.percentage.toFixed(0)}%
                       </span>
-                      <span className="text-sm font-bold tabular-nums text-[#18212F] dark:text-white min-w-[70px] text-right">
+                      <span className="text-sm font-bold tabular-nums text-[#18212F] dark:text-white whitespace-nowrap text-right">
                         {formatCurrency(item.value, settings.baseCurrency, settings.privacyMode)}
                       </span>
                     </div>

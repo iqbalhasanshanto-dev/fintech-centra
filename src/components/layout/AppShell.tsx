@@ -109,7 +109,7 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[#F7F8FA] dark:bg-[#000000] text-gray-900 dark:text-gray-100 flex antialiased">
+    <div className="h-[100dvh] overflow-hidden w-full bg-[#F7F8FA] dark:bg-[#000000] text-gray-900 dark:text-gray-100 flex antialiased">
 
       {/* 1. Desktop Left Sidebar Navigation (Visible on lg: ≥1024px) */}
       <Sidebar
@@ -119,10 +119,10 @@ export const AppShell: React.FC = () => {
       />
 
       {/* 2. Main Area (Header + Scrollable Content + Footer) */}
-      <div className="flex-1 flex flex-col min-w-0 w-full min-h-[100dvh] bg-[#F7F8FA] dark:bg-[#000000]">
+      <div className="flex-1 flex flex-col min-w-0 w-full h-[100dvh] overflow-hidden bg-[#F7F8FA] dark:bg-[#000000]">
 
         {/* Top Header Toolbar */}
-        <div className={effectiveTab === 'settings' ? 'hidden lg:block sticky top-0 z-40' : 'sticky top-0 z-40'}>
+        <div className={effectiveTab === 'settings' ? 'hidden lg:block shrink-0 z-40' : 'shrink-0 z-40'}>
           <Header
             activeTab={effectiveTab}
             onOpenNotifications={() => setShowNotificationsModal(true)}
@@ -133,13 +133,13 @@ export const AppShell: React.FC = () => {
 
         {/* Guest Mode Warning Banner */}
         {isGuest && (
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 shrink-0">
             <GuestBanner />
           </div>
         )}
 
-        {/* Main Screen Content Container */}
-        <main ref={mainContentRef} className={`flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${effectiveTab === 'settings' ? 'pt-0 pb-4' : 'pt-3 pb-4'} md:py-6 bg-[#F7F8FA] dark:bg-[#000000]`}>
+        {/* Main Screen Content Container (Locked Scrollable Area) */}
+        <main ref={mainContentRef} className={`flex-1 min-h-0 overflow-y-auto w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${effectiveTab === 'settings' ? 'pt-0 pb-4' : 'pt-3 pb-4'} md:py-6 bg-[#F7F8FA] dark:bg-[#000000]`}>
           {effectiveTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => handleSelectTab('report')}
@@ -167,20 +167,20 @@ export const AppShell: React.FC = () => {
               <SettingsScreen onBack={() => handleSelectTab('home')} />
             </LazyErrorBoundary>
           )}
-        </main>
 
-        {/* Centra Footer */}
-        <footer id="footer" className="max-w-7xl mx-auto w-full px-6 py-6 pb-24 lg:pb-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Centra Financial OS • Offline-First</span>
-          </div>
-          <div className="flex items-center gap-6 text-xs font-medium text-gray-500 dark:text-gray-400">
-            <button type="button" onClick={() => setLegalDoc('privacy')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
-            <button type="button" onClick={() => setLegalDoc('terms')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Terms</button>
-            <button type="button" onClick={() => setLegalDoc('support')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Support</button>
-            <button type="button" onClick={() => setLegalDoc('api')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">API Docs</button>
-          </div>
-        </footer>
+          {/* Centra Footer */}
+          <footer id="footer" className="max-w-7xl mx-auto w-full px-2 sm:px-6 py-6 pb-28 lg:pb-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-3 mt-8">
+            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+              <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Centra Financial OS • Offline-First</span>
+            </div>
+            <div className="flex items-center gap-6 text-xs font-medium text-gray-500 dark:text-gray-400">
+              <button type="button" onClick={() => setLegalDoc('privacy')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
+              <button type="button" onClick={() => setLegalDoc('terms')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Terms</button>
+              <button type="button" onClick={() => setLegalDoc('support')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Support</button>
+              <button type="button" onClick={() => setLegalDoc('api')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">API Docs</button>
+            </div>
+          </footer>
+        </main>
 
       </div>
 

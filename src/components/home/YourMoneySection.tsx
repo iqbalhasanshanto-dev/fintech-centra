@@ -100,20 +100,20 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
         <div className="space-y-3 pt-3 border-t border-black/[0.04] dark:border-white/[0.05]">
           {/* Total Income Row */}
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-1 h-5 rounded-full bg-[#16A34A] dark:bg-[#22C55E] shrink-0" />
-              <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF]">
+              <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
                 Total income
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white whitespace-nowrap">
                 {formatCurrency(periodIncome, settings?.baseCurrency, settings?.privacyMode)}
               </span>
               {incomeBadge && (
                 <span
                   data-testid="income-change-badge"
-                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold rounded-full tracking-wide ${
+                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold rounded-full tracking-wide shrink-0 ${
                     incomeBadge.isGood
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                       : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
@@ -132,20 +132,20 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
 
           {/* Total Expenses Row */}
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-1 h-5 rounded-full bg-[#E11D48] dark:bg-[#F43F5E] shrink-0" />
-              <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF]">
+              <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
                 Total expenses
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white whitespace-nowrap">
                 {formatCurrency(periodExpenses, settings?.baseCurrency, settings?.privacyMode)}
               </span>
               {expensesBadge && (
                 <span
                   data-testid="expenses-change-badge"
-                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold rounded-full tracking-wide ${
+                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold rounded-full tracking-wide shrink-0 ${
                     expensesBadge.isGood
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                       : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'

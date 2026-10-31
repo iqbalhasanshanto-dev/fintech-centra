@@ -8,7 +8,8 @@ This directory houses curated and verified Android APK builds for Centra. Every 
 
 | Version | Channel | One-Click Direct Download | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v3.1.3`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk) | 6.24 MB | Smart transaction titles & dates, locked sticky top headers, black app icon, 60fps theme toggle |
+| **`v3.1.4`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.4-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.4-debug.apk) | 5.94 MB | Android safe-area zero top gap, non-wrapping header titles, word-break fix on goal cards, locked main scroll |
+| **`v3.1.3`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk) | 6.24 MB | Smart transaction titles & dates, locked sticky top headers, black app icon, 60fps theme toggle |
 | **`v3.1.2`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.2-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.2-debug.apk) | 5.94 MB | System theme auto-detect, custom currency modal, fixed avatar zoom, Android CSV export, double-back exit |
 | **`v3.1.1`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.1-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.1-debug.apk) | 5.94 MB | Instant startup, auto offline background sync, OAuth avatar fix, compact ConfirmModal, 60fps dark toggle |
 | **`v3.1.0`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.0-debug.apk) | 5.76 MB | Zero-delay offline launch, unified avatar initials, brand logos & white launcher, legal modal, modal touch pull |
@@ -19,6 +20,7 @@ This directory houses curated and verified Android APK builds for Centra. Every 
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
+- **v3.1.4 (`Centra-v3.1.4-debug.apk`)**: `984b4ab2c6f7a12c9dd1a160e6f1e254bb6e422b2549d014efcb7ea9073390bf`
 - **v3.1.3 (`Centra-v3.1.3-debug.apk`)**: `54b3ef348989bcac50ee0ae5f12e38fedf26352422936823ae1c29549d012e4c`
 - **v3.1.2 (`Centra-v3.1.2-debug.apk`)**: `d8907bd7acccdf702327caff42d679d67ff9a7e9b24b75eb62ab50192b1f1d9d`
 - **v3.1.1 (`Centra-v3.1.1-debug.apk`)**: `7242ef498d59d28e4b55aa56308665cbdc235d9743c0bb5ed1697479607a4d01`
@@ -26,7 +28,7 @@ This directory houses curated and verified Android APK builds for Centra. Every 
 - **v3.0.0 (`Centra-v3.0.0-debug.apk`)**: `2bf9447eac3aeb1ce7c08fff62f2a41d12a2b1108d2955ab6ccf4887390f71a2`
 - **v2.0.0 (`Centra-v2.0.0-debug.apk`)**: `74c75d1314b7b45158045f5158595c3ce54726baab1f8822e8b034cdc9820196`
 
-Verify on macOS/Linux (`shasum -a 256 releases/Centra-v3.1.3-debug.apk`) or Windows (`CertUtil -hashfile releases\Centra-v3.1.3-debug.apk SHA256`).
+Verify on macOS/Linux (`shasum -a 256 releases/Centra-v3.1.4-debug.apk`) or Windows (`CertUtil -hashfile releases\Centra-v3.1.4-debug.apk SHA256`).
 </details>
 
 ---
@@ -37,12 +39,12 @@ Verify the integrity of downloaded APK binaries using the standard SHA-256 crypt
 
 ### macOS / Linux:
 ```bash
-shasum -a 256 releases/Centra-v3.1.3-debug.apk
+shasum -a 256 releases/Centra-v3.1.4-debug.apk
 ```
 
 ### Windows (PowerShell / Command Prompt):
 ```powershell
-CertUtil -hashfile releases\Centra-v3.1.3-debug.apk SHA256
+CertUtil -hashfile releases\Centra-v3.1.4-debug.apk SHA256
 ```
 
 ---

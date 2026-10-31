@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
       id="header"
       className="border-b border-black/5 dark:border-white/10 bg-[#F7F8FA] dark:bg-[#000000] sticky top-0 z-40 w-full"
       style={{
-        paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         paddingRight: 'env(safe-area-inset-right, 0px)',
       }}
@@ -93,21 +93,21 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="w-full px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
 
         {/* Left: Dynamic Header Title */}
-        <div className="flex flex-col justify-center">
+        <div className="flex flex-col justify-center min-w-0 pr-2">
           {activeTab === 'report' ? (
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#18212F] dark:text-white whitespace-nowrap truncate">
               Analytics
             </h1>
           ) : activeTab === 'plan' ? (
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#18212F] dark:text-white whitespace-nowrap truncate">
               Goals &amp; Budgets
             </h1>
           ) : (
             <>
-              <span className="text-xs sm:text-sm font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
+              <span className="text-xs sm:text-sm font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight whitespace-nowrap truncate">
                 {greeting}
               </span>
-              <span className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white mt-0.5">
+              <span className="text-base sm:text-lg font-bold tracking-tight text-[#18212F] dark:text-white mt-0.5 truncate max-w-[170px] sm:max-w-[240px]">
                 {isGuest ? 'Demo User' : user.name || 'Adam James'}
               </span>
             </>
@@ -121,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Controls */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
 
           {/* Period Selector Dropdown (Desktop & Tablet) */}
           <div className="relative hidden md:flex items-center gap-2">
@@ -166,7 +166,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Action Toolbar */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Theme Toggle Button (Sun/Moon - Demo Mode only for rapid light/dark preview) */}
             {isGuest && (
               <button
@@ -179,7 +179,7 @@ export const Header: React.FC<HeaderProps> = ({
                   setTheme(nextTheme);
                   updateSettings({ theme: nextTheme });
                 }}
-                className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs"
+                className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs shrink-0"
                 title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
@@ -190,7 +190,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Notification Bell with Unread Indicator */}
             <button
               onClick={onOpenNotifications}
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors relative cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 shadow-xs"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors relative cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 shadow-xs shrink-0"
               aria-label="Open notifications"
             >
               <Bell className="w-4 h-4" />
@@ -204,7 +204,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={() => setShowExitDemoConfirm(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-full border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-full border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0"
                 title="Exit Demo Mode"
                 aria-label="Exit Demo"
               >
@@ -216,11 +216,13 @@ export const Header: React.FC<HeaderProps> = ({
             {/* User Profile Avatar (or Guest badge) - only way to Settings */}
             <button
               onClick={isGuest ? () => setShowGuestConfirm(true) : onNavigateToSettings}
-              className="relative cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full focus:outline-none"
+              className={`relative cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full focus:outline-none shrink-0 ${
+                isGuest ? 'hidden sm:inline-flex' : ''
+              }`}
               aria-label="Open settings"
             >
               {isGuest ? (
-                <span className="flex items-center px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
+                <span className="hidden sm:inline-block px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
                   Guest
                 </span>
               ) : user.avatarUrl && !avatarLoadFailed ? (

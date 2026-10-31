@@ -81,7 +81,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                       <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
                     </div>
 
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white truncate leading-tight">
                         {display.title}
                       </p>
@@ -94,7 +94,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                   {/* Right: Signed Amount */}
                   <div className="text-right shrink-0">
                     <p
-                      className={`text-sm sm:text-base font-medium tabular-nums currency-amount ${
+                      className={`text-sm sm:text-base font-medium tabular-nums currency-amount whitespace-nowrap ${
                         isIncome
                           ? 'text-[#16A34A] dark:text-[#22C55E]'
                           : isExpense
