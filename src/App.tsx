@@ -1,6 +1,7 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FinanceProvider } from './context/FinanceContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { AppShell } from './components/layout/AppShell';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { IntroScreen } from './components/onboarding/IntroScreen';
@@ -86,9 +87,11 @@ export const MainApp: React.FC = () => {
 
 export function App() {
   return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -23,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { periodFilter, setPeriodFilter, unreadNotificationsCount, syncStatus, updateSettings } = useFinance();
   const { user, isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, setTheme } = useTheme();
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   const [showGuestConfirm, setShowGuestConfirm] = useState(false);
@@ -95,23 +95,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left: Dynamic Header Title */}
         <div className="flex flex-col justify-center">
           {activeTab === 'report' ? (
-            <>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
-                Analytics
-              </h1>
-              <p className="text-xs sm:text-sm font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
-                Category breakdown &amp; daily spending calendar
-              </p>
-            </>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
+              Analytics
+            </h1>
           ) : activeTab === 'plan' ? (
-            <>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
-                Goals &amp; Budgets
-              </h1>
-              <p className="text-xs sm:text-sm font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
-                Savings milestones &amp; category limits
-              </p>
-            </>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
+              Goals &amp; Budgets
+            </h1>
           ) : (
             <>
               <span className="text-sm sm:text-base font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
@@ -182,8 +172,12 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  toggleTheme();
-                  updateSettings({ theme: isDark ? 'light' : 'dark' });
+                  const currentlyDark = typeof document !== 'undefined'
+                    ? document.documentElement.classList.contains('dark')
+                    : isDark;
+                  const nextTheme = currentlyDark ? 'light' : 'dark';
+                  setTheme(nextTheme);
+                  updateSettings({ theme: nextTheme });
                 }}
                 className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs"
                 title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}

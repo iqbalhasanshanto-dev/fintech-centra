@@ -8,6 +8,7 @@ interface ModalProps {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
   isBottomSheet?: boolean;
   maxWidth?: string;
   hideHeader?: boolean;
@@ -19,6 +20,7 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   subtitle,
   children,
+  footer,
   isBottomSheet = true,
   maxWidth = 'max-w-md',
   hideHeader = false,
@@ -129,9 +131,16 @@ export const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 overscroll-contain pb-8 sm:pb-6">
+        <div className={`p-6 overflow-y-auto flex-1 overscroll-contain ${footer ? 'pb-4' : 'pb-8 sm:pb-6'}`}>
           {children}
         </div>
+
+        {/* Docked Non-scrolling Footer */}
+        {footer && (
+          <div className="shrink-0 bg-white dark:bg-[#1D1D1D] border-t border-black/[0.06] dark:border-white/[0.08] px-6 py-4">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

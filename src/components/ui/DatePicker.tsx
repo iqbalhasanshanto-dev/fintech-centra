@@ -143,7 +143,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           "w-full px-4 py-3 sm:py-3.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white flex items-center justify-between hover:border-black/[0.12] dark:hover:border-white/[0.14] transition-all text-sm cursor-pointer select-none group"
         }
       >
-        <span className={value ? 'font-medium text-[#18212F] dark:text-white' : 'text-gray-500 dark:text-gray-400 font-medium'}>
+        <span className={`whitespace-nowrap ${value ? 'font-medium text-[#18212F] dark:text-white' : 'text-gray-500 dark:text-gray-400 font-medium'}`}>
           {formatDisplayDate(value)}
         </span>
         <CalendarIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 group-hover:text-emerald-500 dark:group-hover:text-[#C6FF3D] transition-colors shrink-0" />

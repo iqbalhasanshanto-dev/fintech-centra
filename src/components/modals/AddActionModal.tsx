@@ -20,7 +20,7 @@ import { DatePicker } from '../ui/DatePicker';
 import { formatCurrency } from '../../utils/formatters';
 import { getCurrencyInfo } from '../../utils/currencies';
 import { todayLocalDateKey } from '../../utils/dates';
-import { CentraDB, FIGMA_DEFAULT_CATEGORIES, FIGMA_DEFAULT_ACCOUNTS } from '../../db/storage';
+import { CentraDB, FIGMA_DEFAULT_CATEGORIES, getStandardAccounts } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
 import { sanitizeText } from '../../utils/sanitize';
 import { validateLabel, validateNote, validateAmount } from '../../utils/validators';
@@ -76,9 +76,10 @@ const FigmaPickerField: React.FC<FigmaPickerFieldProps> = ({
       {isOpen ? (
         <div className="rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.08] dark:border-white/[0.12] p-4 sm:p-5 shadow-2xl space-y-3 animate-scale-in">
           {/* Header row with overline, title, and chevron-up */}
-          <div
+          <button
+            type="button"
             onClick={onToggle}
-            className="flex items-center justify-between cursor-pointer select-none"
+            className="w-full flex items-center justify-between cursor-pointer select-none text-left touch-manipulation"
           >
             <div>
               <span className="text-[11px] font-medium text-gray-500 dark:text-white/60 tracking-wider uppercase block">
@@ -91,7 +92,7 @@ const FigmaPickerField: React.FC<FigmaPickerFieldProps> = ({
             <div className="w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center text-gray-500 dark:text-gray-400">
               <ChevronUp className="w-5 h-5" />
             </div>
-          </div>
+          </button>
 
           <div className="h-px w-full bg-black/[0.08] dark:bg-white/[0.10]" />
 
@@ -100,13 +101,14 @@ const FigmaPickerField: React.FC<FigmaPickerFieldProps> = ({
             {options.map(opt => {
               const isSelected = opt.id === selectedId;
               return (
-                <div
+                <button
                   key={opt.id}
+                  type="button"
                   onClick={() => {
                     onSelect(opt.id);
                     onToggle();
                   }}
-                  className={`w-full p-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-colors select-none ${
+                  className={`w-full p-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-colors select-none text-left touch-manipulation ${
                     isSelected
                       ? 'bg-[#4D6E18]/10 text-[#4D6E18] dark:bg-[#C6FF3D]/15 dark:text-[#C6FF3D] font-semibold'
                       : 'text-[#18212F] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 font-medium'
@@ -143,7 +145,7 @@ const FigmaPickerField: React.FC<FigmaPickerFieldProps> = ({
                       <div className="w-5 h-5 rounded-full border border-black/20 dark:border-white/20" />
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -191,6 +193,15 @@ const FigmaPickerField: React.FC<FigmaPickerFieldProps> = ({
       </select>
     </div>
   );
+};
+
+const getTransactionTimestamp = (dateString: string): string => {
+  const now = new Date();
+  const [year, month, day] = dateString.split('-').map(Number);
+  const txDateObj = new Date();
+  txDateObj.setFullYear(year, month - 1, day);
+  txDateObj.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+  return txDateObj.toISOString();
 };
 
 export const AddActionModal: React.FC<AddActionModalProps> = ({
@@ -335,13 +346,22 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     }));
   }, [availableBudgetCategories]);
 
-  // Ensure the 4 Figma payment method accounts are always available even before linking accounts
+  // Ensure user accounts come first and all 4 standard payment methods are always present
   const effectiveAccounts = useMemo(() => {
-    if (accounts && accounts.length > 0) {
-      return accounts;
-    }
     const cur = settings.baseCurrency || 'USD';
-    return FIGMA_DEFAULT_ACCOUNTS.map(a => ({ ...a, currency: cur }));
+    const standardAccounts = getStandardAccounts(cur);
+
+    if (!accounts || accounts.length === 0) {
+      return standardAccounts;
+    }
+
+    const list = [...accounts];
+    for (const std of standardAccounts) {
+      if (!list.some(a => a.id === std.id || a.name.toLowerCase() === std.name.toLowerCase())) {
+        list.push(std);
+      }
+    }
+    return list;
   }, [accounts, settings.baseCurrency]);
 
   const accountOptions = useMemo(() => {
@@ -357,7 +377,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         id: a.id,
         name: a.name,
         icon,
-        badge: a.balance !== undefined ? `Balance: ${formatCurrency(a.balance, a.currency)}` : undefined,
+        badge: undefined, // Never display Balance: ... in payment method picker
       };
     });
   }, [effectiveAccounts]);
@@ -571,7 +591,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         accountId: activeAcc.id,
         accountName: activeAcc.name || 'Primary Account',
         merchant: sanitizeText(merchant, 100) || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
-        date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
+        date: getTransactionTimestamp(txDate),
         note: sanitizeText(note, 300) + (receiptName ? ` [Attached: ${sanitizeText(receiptName, 100)}]` : ''),
         receiptUrl: receiptDataUrl || undefined,
         tags: [type === 'income' ? 'Income' : 'Spend'],
@@ -751,7 +771,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           accountId: accountId,
           accountName: selectedDepositAcc?.name || 'Primary Account',
           merchant: `Goal: ${cleanGoalName}`,
-          date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
+          date: getTransactionTimestamp(txDate),
           note: `Initial deposit for goal: ${cleanGoalName}`,
           tags: ['Goal', 'Savings'],
         });
@@ -825,6 +845,21 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     }
   };
 
+  const handleTabSwitch = (newTab: 'spend' | 'income' | 'transfer' | 'goal' | 'budget') => {
+    setActiveTab(newTab);
+    setOpenPicker(null);
+    setAmount('');
+    setAmountError(null);
+    setErrorMessage(null);
+    setMerchant('');
+    setMerchantError(null);
+    setNote('');
+    setNoteError(null);
+    if (newTab === 'goal') {
+      setGoalMode(goals.length > 0 ? 'contribute' : 'create');
+    }
+  };
+
   const handleSave = (keepOpen: boolean = false) => {
     if (activeTab === 'spend' || activeTab === 'income') {
       executeSaveTransaction(keepOpen);
@@ -837,6 +872,42 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     }
   };
 
+  const isSaveDisabled =
+    !amount ||
+    !!amountError ||
+    (activeTab === 'spend' && (!!merchantError || !!noteError)) ||
+    (activeTab === 'income' && (!!merchantError || !!noteError)) ||
+    (activeTab === 'transfer' && (accounts.length < 2 || !fromAccountId || !toAccountId || fromAccountId === toAccountId || !!transferNoteError)) ||
+    (activeTab === 'goal' && (
+      goalMode === 'contribute' && goals.length > 0
+        ? false
+        : (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)
+    )) ||
+    (activeTab === 'budget' && !budgetCategoryId);
+
+  const modalFooter = (
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={() => handleSave(true)}
+        disabled={isSaveDisabled}
+        className="flex-1 h-12 rounded-full border border-black/15 dark:border-white/15 bg-transparent text-[#18212F] dark:text-white font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm text-center"
+      >
+        Save &amp; Add Another
+      </button>
+
+      <button
+        type="button"
+        onClick={() => handleSave(false)}
+        disabled={isSaveDisabled}
+        className="flex-1 h-12 rounded-full bg-[#C6FF3D] text-[#0A0E1A] font-bold hover:bg-[#b5f524] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm"
+      >
+        <Check className="w-4 h-4 stroke-[2.5]" />
+        <span>Confirm</span>
+      </button>
+    </div>
+  );
+
   return (
     <>
       <Modal
@@ -844,13 +915,14 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         onClose={onClose}
         title="Quick Action"
         subtitle="Record transaction or set financial plan"
+        footer={modalFooter}
       >
         <div className="space-y-4">
           {/* Top Segmented Control */}
           <div className="flex items-center gap-1 p-1 bg-[#F1F2F4] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-full text-xs font-semibold overflow-x-auto no-scrollbar">
             <button
               type="button"
-              onClick={() => { setActiveTab('income'); setOpenPicker(null); }}
+              onClick={() => handleTabSwitch('income')}
               className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'income'
                   ? 'bg-white dark:bg-[#1D1D1D] text-[#16A34A] dark:text-[#22C55E] shadow-xs font-bold'
@@ -861,7 +933,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('spend'); setOpenPicker(null); }}
+              onClick={() => handleTabSwitch('spend')}
               className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'spend'
                   ? 'bg-white dark:bg-[#1D1D1D] text-[#E11D48] dark:text-[#F43F5E] shadow-xs font-bold'
@@ -872,11 +944,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => {
-                setActiveTab('goal');
-                setGoalMode(goals.length > 0 ? 'contribute' : 'create');
-                setOpenPicker(null);
-              }}
+              onClick={() => handleTabSwitch('goal')}
               className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'goal'
                   ? 'bg-white dark:bg-[#1D1D1D] text-[#EA580C] dark:text-[#FB923C] shadow-xs font-bold'
@@ -887,7 +955,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('budget'); setOpenPicker(null); }}
+              onClick={() => handleTabSwitch('budget')}
               className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'budget'
                   ? 'bg-white dark:bg-[#1D1D1D] text-[#0891B2] dark:text-[#22D3EE] shadow-xs font-bold'
@@ -898,7 +966,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('transfer'); setOpenPicker(null); }}
+              onClick={() => handleTabSwitch('transfer')}
               className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
                 activeTab === 'transfer'
                   ? 'bg-white dark:bg-[#1D1D1D] text-[#0284C7] dark:text-[#38BDF8] shadow-xs font-bold'
@@ -943,7 +1011,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                   value={txDate}
                   onChange={setTxDate}
                   maxDate={new Date().toISOString().split('T')[0]}
-                  buttonClassName="py-1 px-2.5 text-xs rounded-lg bg-white dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08]"
+                  buttonClassName="inline-flex flex-row items-center gap-1.5 whitespace-nowrap py-1 px-2.5 text-xs rounded-lg bg-white dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08]"
                 />
                 <input
                   type="date"
@@ -989,7 +1057,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                     }
                   }
                 }}
-                className="w-full bg-transparent text-3xl font-bold text-gray-900 dark:text-white focus:outline-hidden placeholder-gray-400 tabular-nums"
+                className="w-full bg-transparent text-3xl font-bold text-gray-900 dark:text-white border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent shadow-none appearance-none placeholder-gray-400 tabular-nums"
               />
               <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 shrink-0 ml-2 font-mono">
                 {activeCurrencyInfo.code}
@@ -1406,52 +1474,6 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                 </div>
               </>
             )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="sticky bottom-0 -mx-6 -mb-6 px-6 pt-3 pb-4 bg-white dark:bg-[#1D1D1D] z-20 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => handleSave(true)}
-              disabled={
-                !amount ||
-                !!amountError ||
-                (activeTab === 'spend' && (!!merchantError || !!noteError)) ||
-                (activeTab === 'income' && (!!merchantError || !!noteError)) ||
-                (activeTab === 'transfer' && (accounts.length < 2 || !fromAccountId || !toAccountId || fromAccountId === toAccountId || !!transferNoteError)) ||
-                (activeTab === 'goal' && (
-                  goalMode === 'contribute' && goals.length > 0
-                    ? false
-                    : (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)
-                )) ||
-                (activeTab === 'budget' && !budgetCategoryId)
-              }
-              className="flex-1 h-12 rounded-full border border-black/15 dark:border-white/15 bg-transparent text-[#18212F] dark:text-white font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm text-center"
-            >
-              Save &amp; Add Another
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSave(false)}
-              disabled={
-                !amount ||
-                !!amountError ||
-                (activeTab === 'spend' && (!!merchantError || !!noteError)) ||
-                (activeTab === 'income' && (!!merchantError || !!noteError)) ||
-                (activeTab === 'transfer' && (accounts.length < 2 || !fromAccountId || !toAccountId || fromAccountId === toAccountId || !!transferNoteError)) ||
-                (activeTab === 'goal' && (
-                  goalMode === 'contribute' && goals.length > 0
-                    ? false
-                    : (!goalName.trim() || !!goalNameError || !!goalInitialDepositError)
-                )) ||
-                (activeTab === 'budget' && !budgetCategoryId)
-              }
-              className="flex-1 h-12 rounded-full bg-[#C6FF3D] text-[#0A0E1A] font-bold hover:bg-[#b5f524] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm"
-            >
-              <Check className="w-4 h-4 stroke-[2.5]" />
-              <span>Confirm</span>
-            </button>
           </div>
 
         </div>

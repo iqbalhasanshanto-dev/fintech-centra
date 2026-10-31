@@ -278,7 +278,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   useEffect(() => {
     if (settings.theme === 'dark') {
       document.documentElement.classList.add('dark');
-    } else {
+    } else if (settings.theme === 'light') {
       document.documentElement.classList.remove('dark');
     }
   }, [settings.theme]);

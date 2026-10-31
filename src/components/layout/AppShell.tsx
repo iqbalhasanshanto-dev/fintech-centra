@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav, TabType } from './BottomNav';
@@ -15,6 +16,7 @@ import { ConfirmModal } from '../ui/ConfirmModal';
 import { BackButtonManager, exitNativeApp } from '../../utils/backButton';
 
 export const AppShell: React.FC = () => {
+  const { isGuest } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal'>('spend');
@@ -23,17 +25,20 @@ export const AppShell: React.FC = () => {
   const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
   const mainContentRef = useRef<HTMLElement>(null);
 
+  // Synchronously ensure Demo Mode never renders settings screen
+  const effectiveTab: TabType = (isGuest && activeTab === 'settings') ? 'home' : activeTab;
+
   // Hardware back button root handler: switches to 'home' tab first, then prompts to exit app
   useEffect(() => {
     const unregister = BackButtonManager.registerRootHandler(() => {
-      if (activeTab !== 'home') {
+      if (effectiveTab !== 'home') {
         setActiveTab('home');
       } else {
         setShowExitConfirm(true);
       }
     });
     return unregister;
-  }, [activeTab]);
+  }, [effectiveTab]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -50,13 +55,14 @@ export const AppShell: React.FC = () => {
 
   useLayoutEffect(() => {
     scrollToTop();
-  }, [activeTab]);
+  }, [effectiveTab]);
 
   const handleSelectTab = (tab: TabType) => {
-    if (tab === activeTab) {
+    const targetTab = (isGuest && tab === 'settings') ? 'home' : tab;
+    if (targetTab === effectiveTab) {
       scrollToTop();
     } else {
-      setActiveTab(tab);
+      setActiveTab(targetTab);
     }
   };
 
@@ -70,7 +76,7 @@ export const AppShell: React.FC = () => {
 
       {/* 1. Desktop Left Sidebar Navigation (Visible on lg: ≥1024px) */}
       <Sidebar
-        activeTab={activeTab}
+        activeTab={effectiveTab}
         onSelectTab={handleSelectTab}
         onOpenAddAction={() => handleOpenAddWithTab('transaction')}
       />
@@ -79,9 +85,9 @@ export const AppShell: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 w-full min-h-[100dvh] bg-[#F7F8FA] dark:bg-[#000000]">
 
         {/* Top Header Toolbar */}
-        <div className={activeTab === 'settings' ? 'hidden lg:block' : ''}>
+        <div className={effectiveTab === 'settings' ? 'hidden lg:block' : ''}>
           <Header
-            activeTab={activeTab}
+            activeTab={effectiveTab}
             onOpenNotifications={() => setShowNotificationsModal(true)}
             onNavigateToSettings={() => handleSelectTab('settings')}
             onOpenAddAction={() => handleOpenAddWithTab('transaction')}
@@ -95,7 +101,7 @@ export const AppShell: React.FC = () => {
 
         {/* Main Screen Content Container */}
         <main ref={mainContentRef} className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-36 sm:pb-40 lg:pb-12 bg-[#F7F8FA] dark:bg-[#000000]">
-          {activeTab === 'home' && (
+          {effectiveTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => handleSelectTab('report')}
               onOpenTransfer={() => handleOpenAddWithTab('transfer')}
@@ -103,13 +109,13 @@ export const AppShell: React.FC = () => {
             />
           )}
 
-          {activeTab === 'report' && (
+          {effectiveTab === 'report' && (
             <LazyErrorBoundary fallbackTitle="Unable to load Report">
               <ReportScreen />
             </LazyErrorBoundary>
           )}
 
-          {activeTab === 'plan' && (
+          {effectiveTab === 'plan' && (
             <LazyErrorBoundary fallbackTitle="Unable to load Goals & Budgets">
               <PlanScreen
                 onOpenAddGoal={() => handleOpenAddWithTab('create-goal')}
@@ -117,7 +123,7 @@ export const AppShell: React.FC = () => {
             </LazyErrorBoundary>
           )}
 
-          {activeTab === 'settings' && (
+          {effectiveTab === 'settings' && (
             <LazyErrorBoundary fallbackTitle="Unable to load Settings">
               <SettingsScreen onBack={() => handleSelectTab('home')} />
             </LazyErrorBoundary>
@@ -142,7 +148,7 @@ export const AppShell: React.FC = () => {
       {/* 3. Mobile Floating Bottom Navigation (Hidden on lg: ≥1024px) */}
       <div className="lg:hidden">
         <BottomNav
-          activeTab={activeTab}
+          activeTab={effectiveTab}
           onSelectTab={handleSelectTab}
           onOpenAddAction={handleOpenAddWithTab}
         />

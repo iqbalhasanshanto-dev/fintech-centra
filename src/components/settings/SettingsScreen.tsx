@@ -48,6 +48,7 @@ import { AUTOLOCK_OPTIONS, getAutoLockTimeout, setAutoLockTimeout } from '../../
 import { validateName, validateEmail } from '../../utils/validators';
 import { validateImageFile } from '../../utils/imageValidation';
 import { APP_VERSION } from '../../utils/version';
+import { downloadOrShareCSV } from '../../utils/csvExport';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -191,16 +192,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
     setShowEditProfile(false);
   };
 
-  const handleExportData = () => {
-    const json = CentraDB.exportAllData();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `centra_backup_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportData = async () => {
+    const csvContent = CentraDB.exportTransactionsCSV();
+    const filename = `centra_transactions_${new Date().toISOString().split('T')[0]}.csv`;
+    const success = await downloadOrShareCSV(csvContent, filename);
+    if (success) {
+      setStatusToast('✓ Exported transactions to CSV');
+    } else {
+      setStatusToast('No transactions to export yet');
+    }
+    setTimeout(() => setStatusToast(null), 3500);
   };
 
   const handleResetGuestData = () => {
@@ -280,10 +281,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   ];
 
   return (
-    <div className="space-y-6 pb-36 sm:pb-40 lg:pb-8 animate-fade-in">
+    <div
+      className="space-y-6 pb-36 sm:pb-40 lg:pb-8 animate-fade-in"
+      style={{
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+      }}
+    >
 
       {/* Top Header Bar matching 14-settings.png */}
-      <div className="flex items-center justify-between pt-1">
+      <div className="flex items-center justify-between pb-3">
         <button
           type="button"
           onClick={onBack}

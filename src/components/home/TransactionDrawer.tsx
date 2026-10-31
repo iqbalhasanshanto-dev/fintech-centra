@@ -1,18 +1,27 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Download, ChevronLeft, X, ChevronDown } from 'lucide-react';
+import { Search, Download, ChevronLeft, X, ChevronDown, Check } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { formatCurrency, formatTime } from '../../utils/formatters';
 import { CentraDB } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
+import { downloadOrShareCSV } from '../../utils/csvExport';
 
 interface TransactionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectTransaction: (tx: Transaction) => void;
 }
+
+const PAYMENT_METHODS = [
+  { id: 'all', label: 'All Payment Methods' },
+  { id: 'Cash', label: 'Cash' },
+  { id: 'Card Payment', label: 'Card Payment' },
+  { id: 'Mobile Banking', label: 'Mobile Banking' },
+  { id: 'Bank Transfer', label: 'Bank Transfer' },
+];
 
 export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
   isOpen,
@@ -21,45 +30,69 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
 }) => {
   useBackHandler(isOpen, onClose);
 
-  const { transactions, categories, accounts, settings } = useFinance();
+  const { transactions, categories, settings } = useFinance();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedAccount, setSelectedAccount] = useState<string>('all');
+  const [openDropdown, setOpenDropdown] = useState<'category' | 'account' | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Filter out internal system categories (e.g. transfer, goal contribution, uncategorized)
+  const visibleCategories = useMemo(() => {
+    return categories.filter(c => !['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || ''));
+  }, [categories]);
+
+  const selectedCategoryLabel = useMemo(() => {
+    if (selectedCategory === 'all') return 'All Categories';
+    const found = categories.find(c => c.id === selectedCategory);
+    return found ? found.name : 'All Categories';
+  }, [selectedCategory, categories]);
+
+  const selectedAccountLabel = useMemo(() => {
+    const found = PAYMENT_METHODS.find(m => m.id === selectedAccount);
+    return found ? found.label : selectedAccount;
+  }, [selectedAccount]);
+
+  // Strict LIFO Newest-First Ordering
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(tx => {
-      // Search
-      const matchesSearch =
-        !searchQuery ||
-        (tx.merchant && tx.merchant.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        tx.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (tx.note && tx.note.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (tx.tags && tx.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())));
+    return [...transactions]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .filter(tx => {
+        // Search
+        const matchesSearch =
+          !searchQuery ||
+          (tx.merchant && tx.merchant.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          tx.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (tx.note && tx.note.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tx.tags && tx.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())));
 
-      // Category
-      const matchesCategory = selectedCategory === 'all' || tx.categoryId === selectedCategory;
+        // Category
+        const matchesCategory = selectedCategory === 'all' || tx.categoryId === selectedCategory;
 
-      // Type
-      const matchesType = selectedType === 'all' || tx.type === selectedType;
+        // Type
+        const matchesType = selectedType === 'all' || tx.type === selectedType;
 
-      // Account
-      const matchesAccount = selectedAccount === 'all' || tx.accountId === selectedAccount;
+        // Payment Method / Account
+        const matchesAccount =
+          selectedAccount === 'all' ||
+          tx.accountId === selectedAccount ||
+          (tx.accountName && tx.accountName.toLowerCase().includes(selectedAccount.toLowerCase()));
 
-      return matchesSearch && matchesCategory && matchesType && matchesAccount;
-    });
+        return matchesSearch && matchesCategory && matchesType && matchesAccount;
+      });
   }, [transactions, searchQuery, selectedCategory, selectedType, selectedAccount]);
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const csvContent = CentraDB.exportTransactionsCSV();
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `centra_transactions_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filename = `centra_transactions_${new Date().toISOString().split('T')[0]}.csv`;
+    const success = await downloadOrShareCSV(csvContent, filename);
+    if (success) {
+      setToastMessage('✓ Exported transactions to CSV');
+    } else {
+      setToastMessage('No transactions to export yet');
+    }
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const formatSubtitle = (dateStr: string) => {
@@ -85,12 +118,21 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
       aria-label="Recent Activities - All Transactions"
       className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto animate-fade-in"
       style={{
-        paddingTop: 'calc(1.25rem + env(safe-area-inset-top, 24px))',
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
       }}
     >
-      <div className="w-full max-w-lg mx-auto p-4 sm:p-6 space-y-4 pb-28">
-        {/* Top Header Bar (10-transactions-view-all.png) */}
-        <div className="flex items-center justify-between pt-2">
+      {/* Toast notification banner */}
+      {toastMessage && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[120] bg-black/90 dark:bg-white text-white dark:text-black text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl animate-fade-in pointer-events-none">
+          {toastMessage}
+        </div>
+      )}
+
+      <div className="w-full max-w-lg mx-auto px-4 sm:px-6 space-y-4 pb-28">
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between pb-3">
           <button
             type="button"
             onClick={onClose}
@@ -168,45 +210,85 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
           })}
         </div>
 
-        {/* Category & Account Selectors */}
+        {/* Category & Payment Method Custom Dropdowns */}
         <div className="grid grid-cols-2 gap-2 text-xs">
+          {/* Custom Category Dropdown */}
           <div className="relative">
-            <select
-              value={selectedCategory}
-              onChange={e => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none pr-8 px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer font-medium"
+            <button
+              type="button"
+              onClick={() => setOpenDropdown(prev => prev === 'category' ? null : 'category')}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white font-medium text-xs hover:border-[#C6FF3D] transition-colors cursor-pointer"
+              aria-label="Filter by category"
             >
-              <option value="all">All Categories</option>
-              {categories.map(c => (
-                <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-400 dark:text-gray-500" />
+              <span className="truncate">{selectedCategoryLabel}</span>
+              <ChevronDown className={`ml-1.5 w-3.5 h-3.5 text-gray-400 transition-transform ${openDropdown === 'category' ? 'rotate-180' : ''}`} />
+            </button>
+
+            {openDropdown === 'category' && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)} />
+                <div className="absolute left-0 top-full mt-1.5 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#1D1D1D] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.12] py-1.5 z-50 animate-fade-in no-scrollbar">
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedCategory('all'); setOpenDropdown(null); }}
+                    className="w-full px-3.5 py-2 text-left text-xs font-semibold flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-[#F1F2F4] dark:hover:bg-[#262626] hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                  >
+                    <span>All Categories</span>
+                    {selectedCategory === 'all' && <Check className="w-3.5 h-3.5 text-[#4D6E18] dark:text-[#C6FF3D]" />}
+                  </button>
+                  {visibleCategories.map(c => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => { setSelectedCategory(c.id); setOpenDropdown(null); }}
+                      className="w-full px-3.5 py-2 text-left text-xs font-semibold flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-[#F1F2F4] dark:hover:bg-[#262626] hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                    >
+                      <span className="truncate">{c.name}</span>
+                      {selectedCategory === c.id && <Check className="w-3.5 h-3.5 text-[#4D6E18] dark:text-[#C6FF3D]" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
+          {/* Custom Payment Method Dropdown */}
           <div className="relative">
-            <select
-              value={selectedAccount}
-              onChange={e => setSelectedAccount(e.target.value)}
-              className="w-full appearance-none pr-8 px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer font-medium"
+            <button
+              type="button"
+              onClick={() => setOpenDropdown(prev => prev === 'account' ? null : 'account')}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white font-medium text-xs hover:border-[#C6FF3D] transition-colors cursor-pointer"
+              aria-label="Filter by payment method"
             >
-              <option value="all">All Accounts</option>
-              {accounts.map(a => (
-                <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
-                  {a.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-400 dark:text-gray-500" />
+              <span className="truncate">{selectedAccountLabel}</span>
+              <ChevronDown className={`ml-1.5 w-3.5 h-3.5 text-gray-400 transition-transform ${openDropdown === 'account' ? 'rotate-180' : ''}`} />
+            </button>
+
+            {openDropdown === 'account' && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)} />
+                <div className="absolute right-0 top-full mt-1.5 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#1D1D1D] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.12] py-1.5 z-50 animate-fade-in no-scrollbar">
+                  {PAYMENT_METHODS.map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => { setSelectedAccount(m.id); setOpenDropdown(null); }}
+                      className="w-full px-3.5 py-2 text-left text-xs font-semibold flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-[#F1F2F4] dark:hover:bg-[#262626] hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                    >
+                      <span className="truncate">{m.label}</span>
+                      {selectedAccount === m.id && <Check className="w-3.5 h-3.5 text-[#4D6E18] dark:text-[#C6FF3D]" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Transactions Card (10-transactions-view-all.png) */}
-        <div className="rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.15] p-5 min-h-[70vh] shadow-xs">
+        {/* Transactions Card */}
+        <div className="rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.15] p-5 shadow-xs">
           {filteredTransactions.length === 0 ? (
-            <div className="text-center py-24 text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
+            <div className="text-center py-16 text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
               No matching transactions found.
             </div>
           ) : (

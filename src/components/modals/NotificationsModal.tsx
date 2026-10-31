@@ -12,6 +12,7 @@ import {
   ChevronRight 
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
+import { useAuth } from '../../context/AuthContext';
 import { NotificationType, NotificationItem } from '../../types';
 import { useBackHandler } from '../../utils/backButton';
 
@@ -38,6 +39,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     markAllNotificationsAsRead, 
     clearNotifications 
   } = useFinance();
+  const { isGuest } = useAuth();
 
   useBackHandler(isOpen, onClose);
 
@@ -116,7 +118,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     }
   };
 
-  const getActionLabel = (item: NotificationItem) => {
+  const getActionLabel = (item: NotificationItem): string | null => {
     if (isWelcomeNotification(item)) {
       return 'Add transaction';
     }
@@ -124,7 +126,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       case 'budget':
         return 'View budget';
       case 'security':
-        return 'Review session';
+        return isGuest ? null : 'Review session';
       case 'transaction':
         return 'View transaction';
       default:
@@ -135,13 +137,16 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const handleNotificationClick = (item: NotificationItem) => {
     markNotificationAsRead(item.id);
     onClose();
+    if (item.type === 'security') {
+      if (isGuest) return;
+      if (onNavigateToSettings) onNavigateToSettings();
+      else onNavigateToTab?.('settings');
+      return;
+    }
     if (isWelcomeNotification(item) || item.type === 'system') {
       onOpenQuickAction?.();
     } else if (item.type === 'budget' || item.type === 'goal') {
       onNavigateToTab?.('plan');
-    } else if (item.type === 'security') {
-      if (onNavigateToSettings) onNavigateToSettings();
-      else onNavigateToTab?.('settings');
     } else if (item.type === 'transaction') {
       if (onOpenRecentActivities) onOpenRecentActivities();
       else onNavigateToTab?.('home');
@@ -225,16 +230,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             {formatItemTime(item.timestamp)}
           </span>
 
-          <span 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNotificationClick(item);
-            }}
-            className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer"
-          >
-            <span>{actionLabel}</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
+          {actionLabel && (
+            <span 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNotificationClick(item);
+              }}
+              className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer"
+            >
+              <span>{actionLabel}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </span>
+          )}
         </div>
       </div>
     );
@@ -247,13 +254,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       aria-label="Notifications"
       className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#0A0A0A] overflow-y-auto flex flex-col text-[#18212F] dark:text-white transition-colors antialiased animate-fade-in"
       style={{
-        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
-        paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
-        paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))',
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
         paddingBottom: 'calc(3rem + env(safe-area-inset-bottom, 0px))',
       }}
     >
-      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-5 px-4 sm:px-6 py-2">
+      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-5 px-4 sm:px-6 pb-3">
         {/* Top Header Bar matching Figma Frame 10. Notifications (40px Back + 24px Title + Clear) */}
         <div className="flex items-center justify-between pt-2">
           <button
