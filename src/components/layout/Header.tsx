@@ -227,6 +227,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <img
                   src={user.avatarUrl}
                   alt={user.name || 'User'}
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
                   onError={() => setAvatarLoadFailed(true)}
                   className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-black/5 dark:border-white/10 object-cover hover:ring-2 hover:ring-[#C6FF3D] transition-all"
                 />

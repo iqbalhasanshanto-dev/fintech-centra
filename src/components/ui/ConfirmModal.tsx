@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
 
 export interface ConfirmModalProps {
@@ -60,29 +60,16 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   if (!isOpen) return null;
 
-  const getIcon = () => {
-    switch (type) {
-      case 'danger':
-        return <AlertCircle className="w-6 h-6 text-rose-500" />;
-      case 'warning':
-        return <AlertTriangle className="w-6 h-6 text-amber-500" />;
-      case 'success':
-        return <CheckCircle2 className="w-6 h-6 text-emerald-500" />;
-      default:
-        return <Info className="w-6 h-6 text-brand-500" />;
-    }
-  };
-
   const getButtonClass = () => {
     switch (type) {
       case 'danger':
-        return 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20';
+        return 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20';
       case 'warning':
-        return 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20';
+        return 'bg-amber-500 hover:bg-amber-600 text-black shadow-amber-500/20';
       case 'success':
-        return 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20';
+        return 'bg-emerald-500 hover:bg-emerald-600 text-black shadow-emerald-500/20';
       default:
-        return 'bg-black dark:bg-white text-white dark:text-black shadow-black/20 dark:shadow-white/10';
+        return 'bg-[#C6FF3D] hover:bg-[#b8f52e] text-black shadow-[#C6FF3D]/20';
     }
   };
 
@@ -104,7 +91,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       />
 
       {/* Dialog card */}
-      <div className="relative z-[111] w-full max-w-sm rounded-[32px] bg-white dark:bg-[#181818] border border-black/10 dark:border-white/10 p-6 shadow-2xl animate-scale-up text-gray-900 dark:text-white transition-all">
+      <div className="relative z-[111] w-full max-w-sm rounded-[28px] bg-white dark:bg-[#171717] border border-black/[0.08] dark:border-white/[0.10] p-6 shadow-2xl animate-scale-up text-gray-900 dark:text-white transition-all">
         {/* Close icon */}
         <button
           onClick={onClose}
@@ -114,12 +101,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <X className="w-4 h-4" />
         </button>
 
-        <div className="flex flex-col items-center text-center">
-          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4 border border-black/5 dark:border-white/10">
-            {getIcon()}
-          </div>
-
-          <h3 className="text-lg font-bold tracking-tight mb-2">{title}</h3>
+        <div className="flex flex-col items-center text-center pt-2">
+          <h3 className="text-base font-bold tracking-tight mb-2 text-gray-900 dark:text-white">{title}</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-6 whitespace-pre-line">
             {message}
           </p>
@@ -129,7 +112,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 px-4 min-h-[44px] rounded-full border border-black/5 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-[#F1F2F4] dark:bg-[#262626] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] transition-all cursor-pointer"
+                className="flex-1 py-3 px-4 min-h-[44px] rounded-full border border-black/10 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-[#F1F2F4] dark:bg-[#262626] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] transition-all cursor-pointer"
               >
                 {cancelText}
               </button>
@@ -142,7 +125,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 }
                 onClose();
               }}
-              className={`flex-1 py-3 px-4 min-h-[44px] rounded-full text-xs font-bold transition-all active:scale-[0.98] cursor-pointer ${getButtonClass()}`}
+              className={`flex-1 py-3 px-4 min-h-[44px] rounded-full text-xs font-bold transition-all active:scale-[0.98] cursor-pointer shadow-md ${getButtonClass()}`}
             >
               {isAlertOnly ? 'OK' : confirmText}
             </button>

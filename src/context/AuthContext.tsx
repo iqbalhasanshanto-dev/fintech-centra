@@ -939,12 +939,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isNative()) {
       initNativeApp({
         onUrlOpen: async (url: string) => {
+          setOauthLoading('google');
           await handleNativeDeepLink(url, {
             onSuccess: async (session) => {
-              setOauthLoading(null);
+              setOauthLoading('google');
               setOauthError(null);
-              if (session?.user) {
-                await handleSessionRef.current(session);
+              try {
+                if (session?.user) {
+                  await handleSessionRef.current(session);
+                }
+              } finally {
+                setOauthLoading(null);
               }
             },
             onError: (err) => {

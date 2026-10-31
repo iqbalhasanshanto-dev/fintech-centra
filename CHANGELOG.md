@@ -6,9 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v3.1.1] — 2026-10-31
+
+### 🌟 Latest Release: Instant App Startup, 100% Offline Transactions & Visual Polish
+
+Centra `v3.1.1` delivers synchronous instant app boot for online and offline sessions, 100% functional offline transaction processing with automated background sync on reconnect, cross-platform Google OAuth profile avatar fixes, a sleek redesigned ConfirmModal dialog card, a lag-free 60fps Dark Mode toggle, and updated dark launcher icons and splash screens.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v3.1.1-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.1-debug.apk) (Fallback: [`releases/Centra-v3.1.1-debug.apk?raw=true`](releases/Centra-v3.1.1-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.1-debug.apk)
+- **File Size**: `6,224,806 bytes` (5.94 MB)
+- **SHA-256 Checksum**:
+  ```
+  7242ef498d59d28e4b55aa56308665cbdc235d9743c0bb5ed1697479607a4d01
+  ```
+
+#### 🚀 Offline-First & App Boot Performance
+- **Instant Synchronous Startup**: Removed the blocking "Starting Centra..." loading screen on startup when a cached session exists; renders the home dashboard immediately.
+- **100% Working Offline Transactions**: Local balance updates, outbox queuing, and transaction creations work flawlessly offline and automatically synchronize to Supabase when back online.
+- **Background Scroll Locking**: Modal and popup backdrops prevent body and root scroll bleed-through.
+- **Fast OAuth Deep Link Transition**: Eliminated 2–3s pause on "One Last Step" after Google sign-in by keeping loader state active until session processing completes.
+
+#### 🎨 Visual Identity & Android Enhancements
+- **Google OAuth Profile Avatars**: Added `referrerPolicy="no-referrer"` and `crossOrigin="anonymous"` with automatic uppercase initials fallback to prevent broken profile pictures in Android WebViews.
+- **Sleek ConfirmModal Redesign**: Removed oversized dialog warning icon in favor of a sleek, compact Centra dialog card with pill action buttons.
+- **60fps Lag-Free Dark Mode Toggle**: Responsive optimistic toggle switch with clean "Switch between Dark and Light mode" copy.
+- **Updated Dark Launcher Icons & Splash Screens**: Regenerated all Android `mipmap-*` launcher icons with 22% safe-zone padding and `drawable*` splash screens within 48% bounding box on `#000000` to prevent Android 12 circular mask clipping.
+- **Quick Action & Drawer UX**: Form reset on tab switches, custom dropdown selects for Category and Payment Method, docked modal footers, and timestamp precision.
+
+---
+
 ## [v3.1.0] — 2026-10-31
 
-### 🌟 Latest Release: Offline-First Reliability, Clean Branding & UX Polish
+### ⚪ Previous Release: Offline-First Reliability, Clean Branding & UX Polish
 
 Centra `v3.1.0` delivers substantial offline-first enhancements, zero-delay launches, dynamic brand logos, white launcher icons, pull-to-dismiss modal ergonomics, and dedicated legal & support centers.
 

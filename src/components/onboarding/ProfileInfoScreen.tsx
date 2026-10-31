@@ -32,6 +32,7 @@ import {
   MAX_AVATAR_DIMENSION,
   MAX_AVATAR_BYTES,
 } from '../../utils/imageValidation';
+import { getUserInitials } from '../../utils/initials';
 
 export interface ProfileDraftData {
   name?: string;
@@ -74,6 +75,7 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(
     initialData?.avatarUrl || user.avatarUrl
   );
+  const [avatarError, setAvatarError] = useState(false);
   const [currency, setCurrency] = useState<string>(initialData?.currency || '');
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [fullNameError, setFullNameError] = useState<string | null>(null);
@@ -107,6 +109,7 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     }
     if (!avatarUrl && user.avatarUrl) {
       setAvatarUrl(user.avatarUrl);
+      setAvatarError(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only sync when user prop updates to avoid overwriting active user edits
   }, [user.name, user.avatarUrl]);
@@ -154,6 +157,7 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
 
   const handleCropComplete = async (croppedDataUrl: string) => {
     setAvatarUrl(croppedDataUrl);
+    setAvatarError(false);
 
     if (isSupabaseConfigured() && user.id) {
       try {
@@ -317,12 +321,19 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
               className="relative w-20 h-20 rounded-full bg-gray-200 dark:bg-[#2A2A2A] border-2 border-black/10 dark:border-white/10 hover:border-[#C6FF3D] transition-all cursor-pointer flex items-center justify-center overflow-visible group shrink-0"
               title="Tap to upload profile picture"
             >
-              {avatarUrl ? (
+              {avatarUrl && !avatarError ? (
                 <img
                   src={avatarUrl}
                   alt="Profile Avatar"
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                  onError={() => setAvatarError(true)}
                   className="w-full h-full object-cover rounded-full"
                 />
+              ) : (fullName.trim() || user.name) ? (
+                <div className="w-full h-full rounded-full bg-[#C6FF3D] text-[#0A0E1A] font-bold text-xl flex items-center justify-center select-none">
+                  {getUserInitials(fullName.trim() || user.name || 'User')}
+                </div>
               ) : (
                 <User className="w-9 h-9 text-gray-400 dark:text-gray-500" />
               )}

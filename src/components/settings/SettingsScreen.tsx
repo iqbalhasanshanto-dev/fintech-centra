@@ -63,6 +63,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const { user, updateUser, logout, lockApp, isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
   const { theme, setTheme } = useTheme();
 
+  const isDarkComputed = (theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
+  const [prevDarkComputed, setPrevDarkComputed] = useState(isDarkComputed);
+  const [isDarkActive, setIsDarkActive] = useState(isDarkComputed);
+
+  if (prevDarkComputed !== isDarkComputed) {
+    setPrevDarkComputed(isDarkComputed);
+    setIsDarkActive(isDarkComputed);
+  }
+
+  const handleToggleTheme = () => {
+    const nextDark = !isDarkActive;
+    setIsDarkActive(nextDark);
+    const nextMode = nextDark ? 'dark' : 'light';
+    setTheme(nextMode);
+    updateSettings({ theme: nextMode });
+    updateNativeStatusBar(nextDark);
+  };
+
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -337,6 +355,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
               <img
                 src={user.avatarUrl}
                 alt={user.name || 'User'}
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
                 className="w-16 h-16 rounded-full object-cover border border-black/[0.06] dark:border-white/[0.08]"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
@@ -565,51 +585,39 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         <div className="space-y-4 text-xs">
           {/* Theme / Appearance Mode Toggle Switch */}
           <div
-            onClick={() => {
-              const currentlyDark = (theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
-              const nextMode = currentlyDark ? 'light' : 'dark';
-              setTheme(nextMode);
-              updateSettings({ theme: nextMode });
-              updateNativeStatusBar(nextMode === 'dark');
-            }}
+            onClick={handleToggleTheme}
             className="flex items-center justify-between pt-1 cursor-pointer select-none gap-4"
           >
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">Dark Mode</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {((theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')))
-                  ? 'Dark theme active (OLED black)'
-                  : 'Light theme active'}
+                Switch between Dark and Light mode
               </p>
             </div>
 
             <button
               type="button"
               role="switch"
-              aria-checked={(theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'))}
+              aria-checked={isDarkActive}
               aria-label="Toggle Dark Mode"
               onClick={(e) => {
                 e.stopPropagation();
-                const currentlyDark = (theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
-                const nextMode = currentlyDark ? 'light' : 'dark';
-                setTheme(nextMode);
-                updateSettings({ theme: nextMode });
-                updateNativeStatusBar(nextMode === 'dark');
+                handleToggleTheme();
               }}
               className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 border transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                ((theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')))
+                isDarkActive
                   ? 'bg-[#C6FF3D] border-[#C6FF3D]'
                   : 'bg-[#E5E7EB] border-[#D1D5DB] dark:bg-[#262626] dark:border-white/[0.12]'
               }`}
             >
               <span
                 className={`pointer-events-none flex items-center justify-center h-6 w-6 rounded-full shadow-xs transition-transform duration-200 ease-in-out ${
-                  ((theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')))
+                  isDarkActive
                     ? 'translate-x-5 bg-[#0A0E1A] text-[#C6FF3D]'
                     : 'translate-x-0 bg-white text-amber-500'
                 }`}
               >
-                {((theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'))) ? (
+                {isDarkActive ? (
                   <Moon className="w-3.5 h-3.5 fill-[#C6FF3D]" />
                 ) : (
                   <Sun className="w-3.5 h-3.5" />

@@ -121,6 +121,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <img
                 src={user.avatarUrl}
                 alt={user.name || 'User'}
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
                 className="w-9 h-9 rounded-full object-cover border border-black/[0.06] dark:border-white/[0.08] shrink-0"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
