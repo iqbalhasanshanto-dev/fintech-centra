@@ -15,11 +15,14 @@ Centra `v3.1.3` locks all top headers securely in place across Home, Analytics, 
 #### 📥 Direct Downloads & Verification
 - **Android APK (One-Click Direct Download)**: [**Centra-v3.1.3-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) (Fallback: [`releases/Centra-v3.1.3-debug.apk?raw=true`](releases/Centra-v3.1.3-debug.apk?raw=true))
 - **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk)
-- **File Size**: `6,226,934 bytes` (5.94 MB)
+- **File Size**: `6,542,541 bytes` (6.24 MB)
 - **SHA-256 Checksum**:
   ```
-  6248c2286c48cd0c9cb8da287ff157bdc88c0d8040c8aa6522f92ae4cb7bf93a
+  ed609ba447ec1b5cad0b0b4553d2b82b11f52c66b29ef7515671a38184feee59
   ```
+
+#### 🎨 Visual Identity & Android Launcher Icon
+- **Black App Launcher Icon Background**: Set the adaptive launcher icon background to pure black (`#000000` in `android/app/src/main/res/values/ic_launcher_background.xml` and legacy mipmap icon assets), matching the AMOLED dark UI and OLED system launcher aesthetic.
 
 #### 📌 Header Locking & Unified Alignment
 - **Locked Sticky Top Headers on Dashboard**: Added `sticky top-0 z-40` directly to the `<Header>` wrapper in `AppShell.tsx` and unified `<header>` with an opaque solid background (`bg-[#F7F8FA] dark:bg-[#000000]`) and standard `h-14` inner toolbar height.

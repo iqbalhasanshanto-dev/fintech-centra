@@ -24,7 +24,7 @@
       <b>⚡ Instant Direct Downloads (No App Store / Sign-Up Required)</b>
       <br /><br />
       <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk">
-        <img src="https://img.shields.io/badge/📲_Download_Android_APK-v3.1.3_(Latest_Stable,_5.94_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v3.1.3 Android APK" />
+        <img src="https://img.shields.io/badge/📲_Download_Android_APK-v3.1.3_(Latest_Stable,_6.24_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v3.1.3 Android APK" />
       </a>
       &nbsp;
       <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.2-debug.apk">
@@ -35,7 +35,7 @@
         <img src="https://img.shields.io/badge/💻_Desktop_&_Mobile-Installation_Guide-white?style=for-the-badge&logo=desktop&logoColor=000000&labelColor=121212" alt="Build / Run on Desktop" />
       </a>
       <br /><br />
-      <b>👉 Direct One-Click APK Download (Android & Desktop):</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk">Download Centra v3.1.3 APK (5.94 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.2-debug.apk">Download Centra v3.1.2 APK (5.94 MB)</a>
+      <b>👉 Direct One-Click APK Download (Android & Desktop):</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk">Download Centra v3.1.3 APK (6.24 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.2-debug.apk">Download Centra v3.1.2 APK (5.94 MB)</a>
     </td>
   </tr>
 </table>
@@ -62,7 +62,7 @@ Download standalone Android application packages directly from GitHub. Every APK
 
 | Version | Channel | One-Click Direct Download | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v3.1.3`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk) | 5.94 MB | Locked sticky top headers, unified header typography, lag-free 60fps Dark/Light toggle on BDT |
+| **`v3.1.3`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk) | 6.24 MB | Locked sticky top headers, black app launcher icon, lag-free 60fps Dark/Light toggle on BDT |
 | **`v3.1.2`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.2-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.2-debug.apk) | 5.94 MB | System theme auto-detect, custom currency modal, fixed avatar zoom, Android CSV export, double-back exit |
 | **`v3.1.1`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.1-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.1-debug.apk) | 5.94 MB | Instant startup, auto offline background sync, OAuth avatar fix, compact ConfirmModal, 60fps dark toggle |
 | **`v3.1.0`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.0-debug.apk) | 5.76 MB | Zero-delay offline launch, unified avatar initials, brand logos & white launcher, legal modal, modal touch pull |
@@ -73,7 +73,7 @@ Download standalone Android application packages directly from GitHub. Every APK
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
-- **v3.1.3 (`Centra-v3.1.3-debug.apk`)**: `6248c2286c48cd0c9cb8da287ff157bdc88c0d8040c8aa6522f92ae4cb7bf93a`
+- **v3.1.3 (`Centra-v3.1.3-debug.apk`)**: `ed609ba447ec1b5cad0b0b4553d2b82b11f52c66b29ef7515671a38184feee59`
 - **v3.1.2 (`Centra-v3.1.2-debug.apk`)**: `d8907bd7acccdf702327caff42d679d67ff9a7e9b24b75eb62ab50192b1f1d9d`
 - **v3.1.1 (`Centra-v3.1.1-debug.apk`)**: `7242ef498d59d28e4b55aa56308665cbdc235d9743c0bb5ed1697479607a4d01`
 - **v3.1.0 (`Centra-v3.1.0-debug.apk`)**: `f0f909b678ba8d8a82a4c106bef6c57da4e80f664597ad5a3edfa6e243dacd98`
