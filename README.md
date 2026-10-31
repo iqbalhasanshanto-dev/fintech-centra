@@ -115,7 +115,7 @@ Publishing a new Android release with one-click direct download links takes 3 au
 ## 💻 Desktop & Mobile Installation Guide
 
 ### 📱 Android Phone Installation
-1. Tap the [**📲 Download Centra v3.1.3 APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) button above.
+1. Tap the [**📲 Download Centra v3.2.0 APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.2.0-debug.apk) button above.
 2. Once the download finishes, open the `.apk` file from your browser's notification tray or the `Downloads` folder.
 3. If Android displays: *"For your security, your phone is not allowed to install unknown apps from this source"*:
    - Tap **Settings**.
@@ -128,10 +128,10 @@ Publishing a new Android release with one-click direct download links takes 3 au
 Download the `.apk` directly to your computer using the download buttons or table above:
 - **Install via ADB onto Connected Device or Emulator**:
   ```bash
-  adb install -r Centra-v3.0.0-debug.apk
+  adb install -r Centra-v3.2.0-debug.apk
   ```
 - **Android Studio Virtual Device (AVD)**: Drag and drop the downloaded `.apk` directly onto any running Android emulator window.
-- **Windows Subsystem for Android (WSA)**: Install using `adb connect 127.0.0.1:58526 && adb install Centra-v3.0.0-debug.apk`.
+- **Windows Subsystem for Android (WSA)**: Install using `adb connect 127.0.0.1:58526 && adb install Centra-v3.2.0-debug.apk`.
 
 #### Option 2: Native Desktop Build via Tauri 2
 Centra includes a native Rust-powered desktop bundle for macOS (`.dmg`), Windows (`.msi` / `.exe`), and Linux (`.AppImage` / `.deb`):
@@ -152,16 +152,16 @@ Verify that your downloaded APK is 100% authentic and matches the source code:
 
 - **macOS / Linux**:
   ```bash
-  shasum -a 256 releases/Centra-v3.0.0-debug.apk
+  shasum -a 256 releases/Centra-v3.2.0-debug.apk
   ```
 - **Windows (PowerShell / Command Prompt)**:
   ```powershell
-  CertUtil -hashfile releases\Centra-v3.0.0-debug.apk SHA256
+  CertUtil -hashfile releases\Centra-v3.2.0-debug.apk SHA256
   ```
 
-**Expected SHA-256 Hash for v3.0.0**:
+**Expected SHA-256 Hash for v3.2.0**:
 ```text
-2bf9447eac3aeb1ce7c08fff62f2a41d12a2b1108d2955ab6ccf4887390f71a2
+c977cdc4787747597795e2e35e13dccd6bf78be6d08fe99077a533b826095b3e
 ```
 
 ---
@@ -209,7 +209,7 @@ For a comprehensive technical review of storage topology, physical device access
 | **Database & Auth** | Supabase (PostgreSQL 15) | Row-Level Security (RLS), PKCE OAuth, 6-digit passwordless Email OTP |
 | **Offline Engine** | CentraDB | Client repository with transactional outbox queue and automatic sync on reconnect |
 | **Visualizations & Charts** | Recharts, Lucide Icons | Responsive SVG spending donut charts, category distribution, custom spending calendar |
-| **Testing Suite** | Vitest, Testing Library, jsdom | Comprehensive unit and integration test suite with **274 passing tests** |
+| **Testing Suite** | Vitest, Testing Library, jsdom | Comprehensive unit and integration test suite with **292 passing tests** |
 
 ### Repository Architecture Tree
 
@@ -229,6 +229,8 @@ fintech-centra/
 ├── ios/                     # Capacitor 8 iOS native project (Swift Package Manager)
 ├── public/                  # Static web assets, logos, and theme-init flash prevention script
 ├── releases/                # Versioned Android APK releases with SHA-256 verification
+│   ├── Centra-v3.2.0-debug.apk
+│   ├── Centra-v3.1.4-debug.apk
 │   ├── Centra-v3.1.3-debug.apk
 │   ├── Centra-v3.1.2-debug.apk
 │   ├── Centra-v3.1.1-debug.apk
@@ -240,7 +242,7 @@ fintech-centra/
 │   └── prepare-release.mjs  # One-command release packager and SHA-256 calculator
 ├── src-tauri/               # Tauri 2 desktop application source and Cargo manifest
 ├── src/
-│   ├── __tests__/           # Comprehensive test suite (32 test suites, 274 passing tests)
+│   ├── __tests__/           # Comprehensive test suite (33 test suites, 292 passing tests)
 │   ├── assets/              # Brand icons, logo images, and vector artwork
 │   ├── components/
 │   │   ├── auth/            # Sign-in, sign-up, 6-digit OTP verification, PIN lock screens
@@ -308,7 +310,7 @@ npm run typecheck
 # Verify ESLint rules (0 errors, 0 warnings)
 npm run lint
 
-# Run full test suite (274 unit & integration tests)
+# Run full test suite (292 unit & integration tests)
 npm test
 ```
 
