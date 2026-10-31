@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Pin } from 'lucide-react';
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
@@ -24,6 +24,11 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
+  const todayKey = todayLocalDateKey();
+  const now = new Date();
+  const isViewingCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+  const isOnToday = isViewingCurrentMonth && selectedDate === todayKey;
+
   // Month navigation
   const handlePrevMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
@@ -34,9 +39,8 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
   };
 
   const handleJumpToToday = () => {
-    const today = new Date();
-    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
-    setSelectedDate(todayLocalDateKey());
+    setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    setSelectedDate(todayKey);
   };
 
   // Group transactions by date key (YYYY-MM-DD)
@@ -133,9 +137,13 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
     return days;
   }, [year, month, transactionsByDate]);
 
-  // Selected date's transactions & totals
+  // Selected date's transactions & totals (pinned transactions sorted to top)
   const selectedDayTransactions = useMemo(() => {
-    return transactionsByDate[selectedDate] || [];
+    const list = transactionsByDate[selectedDate] || [];
+    return [...list].sort((a, b) => {
+      if (Boolean(a.isPinned) !== Boolean(b.isPinned)) return a.isPinned ? -1 : 1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
   }, [transactionsByDate, selectedDate]);
 
   const selectedDaySpend = useMemo(() => {
@@ -204,10 +212,18 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
           {/* Month Navigator */}
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
+              type="button"
               onClick={handleJumpToToday}
-              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#F1F2F4] dark:bg-white/10 border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+              disabled={isOnToday}
+              aria-label="Jump to Today in calendar"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl transition-all ${
+                !isOnToday
+                  ? 'bg-[#C6FF3D] text-[#0A0E1A] border border-[#C6FF3D] font-bold shadow-[0_0_14px_rgba(198,255,61,0.55)] hover:brightness-105 active:scale-95 cursor-pointer'
+                  : 'bg-[#F1F2F4]/60 dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.05] text-gray-400 dark:text-white/30 font-semibold opacity-60 cursor-default shadow-none'
+              }`}
             >
-              Today
+              <CalendarIcon className="w-3.5 h-3.5" />
+              <span>Today</span>
             </button>
             <div className="flex items-center bg-[#F1F2F4] dark:bg-white/10 border border-black/[0.06] dark:border-white/[0.08] rounded-xl p-0.5">
               <button
@@ -371,16 +387,25 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
                   <div
                     key={tx.id}
                     onClick={() => onSelectTransaction?.(tx)}
-                    className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] hover:border-[#C6FF3D] dark:hover:border-[#C6FF3D] flex items-center justify-between text-xs cursor-pointer transition-all group shadow-xs"
+                    className={`p-3 rounded-2xl border flex items-center justify-between text-xs cursor-pointer transition-all group shadow-xs ${
+                      tx.isPinned
+                        ? 'bg-[#C6FF3D]/[0.06] dark:bg-[#C6FF3D]/[0.05] border-[#C6FF3D]/30 dark:border-[#C6FF3D]/25'
+                        : 'bg-[#F1F2F4] dark:bg-[#262626] border-black/[0.06] dark:border-white/[0.08] hover:border-[#C6FF3D] dark:hover:border-[#C6FF3D]'
+                    }`}
                   >
                     <div className="flex items-center space-x-3 min-w-0 pr-2">
                       <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform ${getTxBadgeStyle(tx.type)}`}>
                         <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-[#18212F] dark:text-white truncate">
-                          {display.title}
-                        </p>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <p className="font-semibold text-[#18212F] dark:text-white truncate">
+                            {display.title}
+                          </p>
+                          {tx.isPinned && (
+                            <Pin className="w-3.5 h-3.5 text-[#659300] dark:text-[#C6FF3D] fill-current shrink-0 rotate-45" />
+                          )}
+                        </div>
                         <p className="text-xs text-[#667085] dark:text-gray-400 mt-0.5">
                           {display.subtitle}
                         </p>

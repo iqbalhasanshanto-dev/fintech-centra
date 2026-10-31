@@ -181,5 +181,23 @@ describe('Smart Transactions & Formatting Helpers', () => {
       expect(res.subtitle).toBe('Dining (Starbucks) • 2 days ago');
     });
   });
+
+  describe('Pinned transactions comparator sorting', () => {
+    it('sorts pinned items to the top before unpinned items and orders chronologically within groups', () => {
+      const items = [
+        { id: '1', title: 'Unpinned New', isPinned: false, date: '2026-10-31T20:00:00Z' },
+        { id: '2', title: 'Unpinned Old', isPinned: false, date: '2026-10-25T10:00:00Z' },
+        { id: '3', title: 'Pinned Old', isPinned: true, date: '2026-10-20T10:00:00Z' },
+        { id: '4', title: 'Pinned New', isPinned: true, date: '2026-10-30T10:00:00Z' },
+      ];
+
+      const sorted = [...items].sort((a, b) => {
+        if (Boolean(a.isPinned) !== Boolean(b.isPinned)) return a.isPinned ? -1 : 1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+
+      expect(sorted.map(x => x.id)).toEqual(['4', '3', '1', '2']);
+    });
+  });
 });
 

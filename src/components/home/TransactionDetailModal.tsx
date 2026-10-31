@@ -21,7 +21,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { togglePinTransaction, deleteTransaction, updateTransaction, settings, categories } = useFinance();
+  const { togglePinTransaction, deleteTransaction, updateTransaction, settings, categories, transactions } = useFinance();
+  const currentTx = (transaction ? transactions.find(t => t.id === transaction.id) : null) || transaction;
 
   useBackHandler(isOpen, onClose);
 
@@ -68,9 +69,9 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     }
   }, [transaction]);
 
-  if (!transaction) return null;
+  if (!currentTx) return null;
 
-  const display = getTransactionDisplay(transaction);
+  const display = getTransactionDisplay(currentTx);
 
   const handleSaveEdit = () => {
     if (merchant.trim()) {
@@ -89,15 +90,15 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     }
 
     const chosenCategory = categories.find(c => c.id === categoryId);
-    updateTransaction(transaction.id, {
+    updateTransaction(currentTx.id, {
       merchant: merchant.trim() ? sanitizeText(merchant, 60) : '',
       note: note.trim()
-        ? sanitizeText(note, 500) + (transaction.receiptUrl && !note.includes('[Attached:') ? ` [Attached: Receipt]` : '')
-        : (transaction.receiptUrl ? `[Attached: Receipt]` : ''),
+        ? sanitizeText(note, 500) + (currentTx.receiptUrl && !note.includes('[Attached:') ? ` [Attached: Receipt]` : '')
+        : (currentTx.receiptUrl ? `[Attached: Receipt]` : ''),
       categoryId,
-      categoryName: chosenCategory ? chosenCategory.name : transaction.categoryName,
-      categoryIcon: chosenCategory ? chosenCategory.icon : transaction.categoryIcon,
-      categoryColor: chosenCategory ? chosenCategory.color : transaction.categoryColor,
+      categoryName: chosenCategory ? chosenCategory.name : currentTx.categoryName,
+      categoryIcon: chosenCategory ? chosenCategory.icon : currentTx.categoryIcon,
+      categoryColor: chosenCategory ? chosenCategory.color : currentTx.categoryColor,
     });
     setIsEditing(false);
   };
@@ -107,14 +108,14 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   };
 
   const handleConfirmDelete = () => {
-    deleteTransaction(transaction.id);
+    deleteTransaction(currentTx.id);
     setShowDeleteConfirm(false);
     onClose();
   };
 
-  const isIncome = transaction.type === 'income';
-  const isExpense = transaction.type === 'expense';
-  const isTransfer = transaction.type === 'transfer';
+  const isIncome = currentTx.type === 'income';
+  const isExpense = currentTx.type === 'expense';
+  const isTransfer = currentTx.type === 'transfer';
 
   return (
     <>
@@ -131,7 +132,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
               }`}
             >
-              <CategoryIcon name={transaction.categoryIcon} className="w-6 h-6" />
+              <CategoryIcon name={currentTx.categoryIcon} className="w-6 h-6" />
             </div>
 
             <div
@@ -144,7 +145,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               }`}
             >
               {isIncome ? '+' : isExpense ? '-' : ''}
-              {formatCurrency(transaction.amount, transaction.currency, settings.privacyMode)}
+              {formatCurrency(currentTx.amount, currentTx.currency, settings.privacyMode)}
             </div>
 
             <h2 className="text-base sm:text-lg font-bold text-[#18212F] dark:text-white mt-1.5 truncate max-w-full px-2">
@@ -153,11 +154,11 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
             <div className="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-black/5 dark:bg-white/10 text-gray-700 dark:text-gray-300">
-                {transaction.categoryName}
+                {currentTx.categoryName}
               </span>
-              {transaction.isRecurring && (
+              {currentTx.isRecurring && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/5 dark:bg-white/10 text-gray-700 dark:text-gray-300">
-                  Recurring ({transaction.recurringInterval})
+                  Recurring ({currentTx.recurringInterval})
                 </span>
               )}
             </div>
@@ -172,7 +173,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   <span>Account</span>
                 </div>
                 <span className="font-semibold text-[#18212F] dark:text-white">
-                  {transaction.accountName}
+                  {currentTx.accountName}
                 </span>
               </div>
 
@@ -182,7 +183,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   <span>Date & Time</span>
                 </div>
                 <span className="font-semibold text-[#18212F] dark:text-white">
-                  {formatFullDate(transaction.date)} at {formatTime(transaction.date)}
+                  {formatFullDate(currentTx.date)} at {formatTime(currentTx.date)}
                 </span>
               </div>
 
@@ -192,7 +193,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   <span>Category</span>
                 </div>
                 <span className="font-semibold text-[#18212F] dark:text-white">
-                  {transaction.categoryName}
+                  {currentTx.categoryName}
                 </span>
               </div>
 
@@ -220,14 +221,14 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 </div>
               )}
 
-              {transaction.receiptUrl && (
+              {currentTx.receiptUrl && (
                 <div className="py-2.5 border-b border-black/[0.04] dark:border-white/[0.05]">
                   <div className="flex items-center space-x-2 text-[#667085] dark:text-[#9CA3AF] font-bold uppercase tracking-widest text-[10px] mb-1.5">
                     <Paperclip className="w-3.5 h-3.5" />
                     <span>Attached Receipt</span>
                   </div>
                   <img
-                    src={transaction.receiptUrl}
+                    src={currentTx.receiptUrl}
                     alt="Receipt"
                     onClick={() => setShowLightbox(true)}
                     className="w-full max-h-56 object-cover rounded-2xl border border-black/[0.08] dark:border-white/[0.12] cursor-pointer hover:opacity-90 transition-opacity"
@@ -235,13 +236,13 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 </div>
               )}
 
-              {transaction.tags && transaction.tags.length > 0 && (
+              {currentTx.tags && currentTx.tags.length > 0 && (
                 <div className="flex items-center space-x-2 py-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF]">
                     Tags:
                   </span>
                   <div className="flex flex-wrap gap-1">
-                    {transaction.tags.map((t, idx) => (
+                    {currentTx.tags.map((t, idx) => (
                       <span
                         key={idx}
                         className="px-2.5 py-0.5 rounded-full bg-[#F1F2F4] dark:bg-[#262626] text-[#18212F] dark:text-white text-[10px] font-semibold"
@@ -257,18 +258,18 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               <div className="pt-3 grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => togglePinTransaction(transaction.id)}
+                  onClick={() => togglePinTransaction(currentTx.id)}
                   className={`py-2.5 px-3 rounded-full text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
-                    transaction.isPinned
+                    currentTx.isPinned
                       ? 'bg-[#C6FF3D] text-black shadow-xs'
                       : 'bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
-                  <Pin className={`w-3.5 h-3.5 ${transaction.isPinned ? 'fill-black' : ''}`} />
-                  <span>{transaction.isPinned ? 'Pinned' : 'Pin'}</span>
+                  <Pin className={`w-3.5 h-3.5 ${currentTx.isPinned ? 'fill-black' : ''}`} />
+                  <span>{currentTx.isPinned ? 'Pinned' : 'Pin'}</span>
                 </button>
 
-                {transaction.type !== 'transfer' ? (
+                {currentTx.type !== 'transfer' ? (
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
@@ -302,11 +303,11 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1">
-                  {transaction.type === 'income' ? 'Received From' : 'Paid To'}
+                  {currentTx.type === 'income' ? 'Received From' : 'Paid To'}
                 </label>
                 <input
                   type="text"
-                  placeholder={transaction.type === 'income' ? 'e.g. Employer, Client' : 'e.g. Supermarket, Landlord'}
+                  placeholder={currentTx.type === 'income' ? 'e.g. Employer, Client' : 'e.g. Supermarket, Landlord'}
                   value={merchant}
                   onChange={e => handleMerchantChange(e.target.value)}
                   className={`w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${
@@ -386,7 +387,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
         type="danger"
         confirmText="Delete"
       />
-      {showLightbox && transaction.receiptUrl && (
+      {showLightbox && currentTx.receiptUrl && (
         <div
           role="dialog"
           aria-modal="true"
@@ -402,7 +403,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             <X className="w-5 h-5" />
           </button>
           <img
-            src={transaction.receiptUrl}
+            src={currentTx.receiptUrl}
             alt="Receipt Full Preview"
             className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
             onClick={e => e.stopPropagation()}

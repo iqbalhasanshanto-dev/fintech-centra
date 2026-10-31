@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Pin } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
@@ -15,10 +16,13 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
 }) => {
   const { transactions, settings } = useFinance();
 
-  // Show the latest 5 transactions in the Recent Activity card
+  // Show the latest 5 transactions in the Recent Activity card (pinned stick to top)
   const recentTransactions = useMemo(() => {
     return [...transactions]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .sort((a, b) => {
+        if (Boolean(a.isPinned) !== Boolean(b.isPinned)) return a.isPinned ? -1 : 1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      })
       .slice(0, 5);
   }, [transactions]);
 
@@ -69,7 +73,11 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                 <div
                   key={tx.id}
                   onClick={() => onSelectTransaction(tx)}
-                  className="flex items-center justify-between py-3.5 px-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors cursor-pointer select-none rounded-2xl -mx-2"
+                  className={`flex items-center justify-between py-3 px-2.5 transition-colors cursor-pointer select-none rounded-2xl -mx-1 my-0.5 border ${
+                    tx.isPinned
+                      ? 'bg-[#C6FF3D]/[0.06] dark:bg-[#C6FF3D]/[0.05] border-[#C6FF3D]/30 dark:border-[#C6FF3D]/25'
+                      : 'border-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.03]'
+                  }`}
                 >
                   {/* Left: Category Icon + Merchant / Category Title + Timestamp Subtitle */}
                   <div className="flex items-center gap-3.5 min-w-0 pr-3">
@@ -82,9 +90,14 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white truncate leading-tight">
-                        {display.title}
-                      </p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white truncate leading-tight">
+                          {display.title}
+                        </p>
+                        {tx.isPinned && (
+                          <Pin className="w-3.5 h-3.5 text-[#659300] dark:text-[#C6FF3D] fill-current shrink-0 rotate-45" />
+                        )}
+                      </div>
                       <p className="text-xs text-[#667085] dark:text-white/40 truncate mt-1">
                         {display.subtitle}
                       </p>

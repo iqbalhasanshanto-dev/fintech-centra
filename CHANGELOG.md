@@ -6,9 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v3.2.0] — 2026-10-31
+
+### 🌟 Latest Release: Glowing Calendar "Today" Navigation & Pinned Transactions
+
+Centra `v3.2.0` introduces an interactive, glowing "Today" quick-jump action in the Spending Calendar that auto-dims when already viewing today, ensures pinned transactions stick to the top with rotating pin badges across all transaction lists (Recent Activity, View All Drawer, and Calendar Day view), enables immediate pin-state toggling inside Transaction Details without reopening the modal, and bumps the application version to `3.2.0`.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v3.2.0-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.2.0-debug.apk) (Fallback: [`releases/Centra-v3.2.0-debug.apk?raw=true`](releases/Centra-v3.2.0-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.2.0-debug.apk)
+- **File Size**: `6,228,266 bytes` (5.94 MB)
+- **SHA-256 Checksum**:
+  ```
+  c977cdc4787747597795e2e35e13dccd6bf78be6d08fe99077a533b826095b3e
+  ```
+
+#### 📅 Spending Calendar "Today" Glow & Auto-Dim
+- **Context-Aware Today Glow**: Added dynamic state checking (`isOnToday = isViewingCurrentMonth && selectedDate === todayKey`) in `AnalyticsCalendar.tsx`. When navigating to past/future months or selecting any other day, the "Today" button glows with an electric neon lime badge (`bg-[#C6FF3D] text-[#0A0E1A] shadow-[0_0_14px_rgba(198,255,61,0.55)]`) paired with a calendar icon (`<CalendarIcon className="w-3.5 h-3.5" />`).
+- **Auto-Dim & One-Tap Jump**: When viewing today's date in the current month, the button auto-dims (`opacity-60 cursor-default shadow-none`) with `disabled={isOnToday}`. Tapping when active instantly sets the month view to the current month and selects today's date cell.
+
+#### 📌 Pinned Transactions Stick to Top Across All Lists
+- **Immediate In-Modal Toggle**: In `TransactionDetailModal.tsx`, bound the live record via `useFinance().transactions.find(t => t.id === transaction.id)`, making the `Pin` / `Pinned` button reflect state changes immediately upon click without reopening the drawer.
+- **Recent Activity on Home**: Pinned transactions (`tx.isPinned === true`) now stick to the top of the 5-item Recent Activity list, styled with a distinct lime card highlight and a rotating lime `<Pin />` badge next to the transaction title.
+- **View All Activities Drawer**: Sorted filtered search results with pinned transactions prioritized at the top followed by chronological ordering, featuring the `<Pin />` badge and card highlight.
+- **Calendar Daily Breakdown**: Transactions on any selected date prioritize pinned entries at the top of the list with the `<Pin />` indicator.
+
+---
+
 ## [v3.1.4] — 2026-10-31
 
-### 🌟 Latest Release: Layout, Typography & Android Safe-Area Spacing Optimization
+### ⚪ Previous Release: Layout, Typography & Android Safe-Area Spacing Optimization
 
 Centra `v3.1.4` optimizes layout, typography, and safe-area spacing across all Android screen sizes (320px–430px width), aspect ratios, and aggressive system font scaling. It eliminates the excess black top-bar gap on Android devices by aligning with non-overlay status bars, prevents header title wrapping on narrow 360px phones, repairs mid-word text breaking on savings goal and budget cards, and locks root scrolling directly inside `<main>` with zero header overlap.
 
