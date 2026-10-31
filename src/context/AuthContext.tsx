@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
-import { UserProfile, Category, Account } from '../types';
+import { UserProfile, Category, Account, CurrencyCode } from '../types';
 import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS, GUEST_USER_ID, isGuestUser, cleanupLegacyGuestData, safeSet, getUserStorageKey } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
@@ -252,6 +252,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     lastUserIdRef.current = userId;
 
+    const alreadyInApp =
+      authViewRef.current === 'app' ||
+      authViewRef.current === 'locked' ||
+      (CentraDB.getUser()?.id === userId && CentraDB.getUser()?.onboardingCompleted === true) ||
+      CentraDB.hasCachedData(userId);
+
     // Offline short-circuit: immediately use cached state without network calls
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       if (CentraDB.hasCachedData(userId) || CentraDB.getUser()?.id === userId || CentraDB.getAccounts().length > 0) {
@@ -294,17 +300,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (profileErr) {
         logger.warn('Profile fetch error from Supabase:', profileErr);
-        if (CentraDB.hasCachedData(userId) || CentraDB.getAccounts().length > 0) {
+        if (alreadyInApp || CentraDB.hasCachedData(userId) || CentraDB.getAccounts().length > 0) {
           CentraDB.setActiveUser(userId);
           const currentUser = CentraDB.getUser();
-          setUser(currentUser.id ? currentUser : {
+          const resolvedUser = currentUser.id ? { ...currentUser, onboardingCompleted: true } : {
             id: userId,
             name: userName || 'User',
             email: userEmail || '',
             isPro: false,
             onboardingCompleted: true,
             createdAt: new Date().toISOString(),
-          });
+          };
+          CentraDB.saveUser(resolvedUser);
+          setUser(resolvedUser);
           setIsAuthenticated(true);
           setIsGuest(false);
           CentraDB.setSyncStatus('offline');
@@ -388,11 +396,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, { onConflict: 'user_id' });
       }
 
-      // If user is existing and has completed onboarding, go straight to main app
-      if (!isNewUser && profile?.onboarding_completed) {
+      // If user is already in the app, or has completed onboarding:
+      if ((!isNewUser && profile?.onboarding_completed) || alreadyInApp) {
+        if (profile && !profile.onboarding_completed) {
+          CentraDB.markOnboardingCompleted(userId).catch(() => {});
+        }
         await CentraDB.syncFromSupabase(userId, userEmail, userName);
         const currentUser = CentraDB.getUser();
-        setUser(currentUser);
+        const resolvedUser = currentUser.id ? { ...currentUser, onboardingCompleted: true } : {
+          id: userId,
+          name: userName || 'User',
+          email: userEmail || '',
+          isPro: false,
+          onboardingCompleted: true,
+          createdAt: new Date().toISOString(),
+        };
+        CentraDB.saveUser(resolvedUser);
+        setUser(resolvedUser);
         setIsAuthenticated(true);
         setIsGuest(false);
 
@@ -421,17 +441,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthView('onboarding');
     } catch (err) {
       logger.warn('Failed to resolve user profile:', err);
-      if (CentraDB.hasCachedData(userId) || CentraDB.getAccounts().length > 0) {
+      if (alreadyInApp || CentraDB.hasCachedData(userId) || CentraDB.getAccounts().length > 0) {
         CentraDB.setActiveUser(userId);
         const currentUser = CentraDB.getUser();
-        setUser(currentUser.id ? currentUser : {
+        const resolvedUser = currentUser.id ? { ...currentUser, onboardingCompleted: true } : {
           id: userId,
           name: userName || 'User',
           email: userEmail || '',
           isPro: false,
           onboardingCompleted: true,
           createdAt: new Date().toISOString(),
-        });
+        };
+        CentraDB.saveUser(resolvedUser);
+        setUser(resolvedUser);
         setIsAuthenticated(true);
         setIsGuest(false);
         CentraDB.setSyncStatus('offline');
@@ -1032,6 +1054,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       theme: data.theme || currentSettings.theme,
     };
     await CentraDB.saveSettings(updatedSettings);
+
+    if (data.currency) {
+      const currentAccounts = CentraDB.getAccounts();
+      if (currentAccounts.length > 0) {
+        const updatedAccounts = currentAccounts.map(acc => {
+          if (acc.balance === 0) {
+            return { ...acc, currency: data.currency as CurrencyCode };
+          }
+          return acc;
+        });
+        await CentraDB.saveAccounts(updatedAccounts);
+      }
+    }
 
     if (data.theme === 'dark') {
       document.documentElement.classList.add('dark');

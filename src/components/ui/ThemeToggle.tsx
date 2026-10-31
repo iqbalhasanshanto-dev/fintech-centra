@@ -17,6 +17,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     settings.theme === 'dark' ||
     (settings.theme === 'system' &&
       typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const handleToggle = (e: React.MouseEvent) => {

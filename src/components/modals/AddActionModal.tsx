@@ -448,10 +448,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     }
   }, [isOpen, activeTab, availableCategories, availableBudgetCategories, effectiveAccounts, categoryId, accountId, fromAccountId, toAccountId, budgetCategoryId]);
 
-  // Active currency info based on selected account or settings
+  // Active currency info based on settings or selected account
   const relevantAccountId = activeTab === 'transfer' ? fromAccountId : accountId;
   const selectedAcc = accounts.find(a => a.id === relevantAccountId) || accounts[0];
-  const activeCurrencyInfo = getCurrencyInfo(selectedAcc?.currency || settings.baseCurrency);
+  const activeCurrencyInfo = getCurrencyInfo(settings.baseCurrency || selectedAcc?.currency || 'USD');
 
   const handleReceiptChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -529,7 +529,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       await CentraDB.upsertAccount(activeAcc);
     }
 
-    const txCurrency = activeAcc.currency || settings.baseCurrency || 'USD';
+    const txCurrency = settings.baseCurrency || activeAcc.currency || 'USD';
     const amountRes = validateAmount(amount, txCurrency);
     if (!amountRes.ok) {
       setAmountError(amountRes.error || 'Please enter a valid amount.');
@@ -583,7 +583,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       await addTransaction({
         type,
         amount: parsedAmount,
-        currency: activeAcc.currency || settings.baseCurrency || 'USD',
+        currency: settings.baseCurrency || activeAcc.currency || 'USD',
         categoryId: finalCategoryId,
         categoryName: selectedCat.name,
         categoryIcon: selectedCat.icon,
@@ -617,7 +617,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const executeSaveTransfer = async (keepOpen: boolean = false) => {
     setErrorMessage(null);
     const fromAcc = accounts.find(a => a.id === fromAccountId);
-    const transferCurrency = fromAcc?.currency || settings.baseCurrency || 'USD';
+    const transferCurrency = settings.baseCurrency || fromAcc?.currency || 'USD';
     const amountRes = validateAmount(amount, transferCurrency);
     if (!amountRes.ok) {
       setAmountError(amountRes.error || 'Please enter a valid transfer amount.');
@@ -763,7 +763,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         await addTransaction({
           type: 'expense',
           amount: deposit,
-          currency: selectedDepositAcc?.currency || settings.baseCurrency || 'USD',
+          currency: settings.baseCurrency || selectedDepositAcc?.currency || 'USD',
           categoryId: goalContribCat.id,
           categoryName: goalContribCat.name || 'Goal Funding',
           categoryIcon: goalContribCat.icon || 'Target',

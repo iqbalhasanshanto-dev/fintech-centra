@@ -200,8 +200,12 @@ export function applyAddTransaction(
     targetAccount.name.toLowerCase().includes('bank') ||
     targetAccount.name.toLowerCase().includes('mobile');
 
+  const amountInAccountCurrency = (txInput.currency && txInput.currency !== targetAccount.currency)
+    ? convertCurrency(txAmount, txInput.currency, targetAccount.currency)
+    : txAmount;
+
   if (txInput.type === 'expense' && !isStandardPaymentMethod) {
-    const fundsCheck = validateAccountFunds(targetAccount, txAmount);
+    const fundsCheck = validateAccountFunds(targetAccount, amountInAccountCurrency);
     if (!fundsCheck.hasFunds) {
       return {
         ok: false,
@@ -216,9 +220,9 @@ export function applyAddTransaction(
   // Compute resulting balance
   let newBalance = targetAccount.balance;
   if (txInput.type === 'expense') {
-    newBalance = subMoney(targetAccount.balance, txAmount, targetAccount.currency);
+    newBalance = subMoney(targetAccount.balance, amountInAccountCurrency, targetAccount.currency);
   } else if (txInput.type === 'income') {
-    newBalance = addMoney(targetAccount.balance, txAmount, targetAccount.currency);
+    newBalance = addMoney(targetAccount.balance, amountInAccountCurrency, targetAccount.currency);
   }
 
   let finalCategoryId = txInput.categoryId;
@@ -346,11 +350,15 @@ export function applyUpdateTransaction(
     return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Source account not found' };
   }
 
+  const oldAmountInAccCurrency = (existingTx.currency && existingTx.currency !== oldAccount.currency)
+    ? convertCurrency(oldAmount, existingTx.currency, oldAccount.currency)
+    : oldAmount;
+
   let revertedOldBalance = oldAccount.balance;
   if (oldType === 'expense') {
-    revertedOldBalance = addMoney(oldAccount.balance, oldAmount, oldAccount.currency);
+    revertedOldBalance = addMoney(oldAccount.balance, oldAmountInAccCurrency, oldAccount.currency);
   } else if (oldType === 'income') {
-    revertedOldBalance = subMoney(oldAccount.balance, oldAmount, oldAccount.currency);
+    revertedOldBalance = subMoney(oldAccount.balance, oldAmountInAccCurrency, oldAccount.currency);
   }
 
   let nextAccounts = state.accounts.map(a => a.id === oldAccountId ? { ...a, balance: revertedOldBalance } : a);
@@ -361,11 +369,16 @@ export function applyUpdateTransaction(
     return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Destination account not found' };
   }
 
+  const newTxCurrency = (updates.currency || existingTx.currency || newAccount.currency) as CurrencyCode;
+  const newAmountInAccCurrency = (newTxCurrency && newTxCurrency !== newAccount.currency)
+    ? convertCurrency(newAmount, newTxCurrency, newAccount.currency)
+    : newAmount;
+
   let appliedNewBalance = newAccount.balance;
   if (newType === 'expense') {
-    appliedNewBalance = subMoney(newAccount.balance, newAmount, newAccount.currency);
+    appliedNewBalance = subMoney(newAccount.balance, newAmountInAccCurrency, newAccount.currency);
   } else if (newType === 'income') {
-    appliedNewBalance = addMoney(newAccount.balance, newAmount, newAccount.currency);
+    appliedNewBalance = addMoney(newAccount.balance, newAmountInAccCurrency, newAccount.currency);
   }
 
   const updatedTargetAccount: Account = { ...newAccount, balance: appliedNewBalance };
@@ -442,9 +455,12 @@ export function applyDeleteTransaction(
     const toAcc = nextAccounts.find(a => a.id === tx.toAccountId);
 
     if (fromAcc) {
+      const fromAmount = (tx.currency && tx.currency !== fromAcc.currency)
+        ? convertCurrency(tx.amount, tx.currency, fromAcc.currency)
+        : tx.amount;
       const restoredFrom = {
         ...fromAcc,
-        balance: addMoney(fromAcc.balance, tx.amount, fromAcc.currency),
+        balance: addMoney(fromAcc.balance, fromAmount, fromAcc.currency),
       };
       nextAccounts = nextAccounts.map(a => a.id === fromAcc.id ? restoredFrom : a);
       touchedAccounts.push(restoredFrom);
@@ -467,9 +483,12 @@ export function applyDeleteTransaction(
     // Linked goal contribution reversal
     const acc = nextAccounts.find(a => a.id === tx.accountId);
     if (acc) {
+      const amountInAcc = (tx.currency && tx.currency !== acc.currency)
+        ? convertCurrency(tx.amount, tx.currency, acc.currency)
+        : tx.amount;
       const restoredAcc = {
         ...acc,
-        balance: addMoney(acc.balance, tx.amount, acc.currency),
+        balance: addMoney(acc.balance, amountInAcc, acc.currency),
       };
       nextAccounts = nextAccounts.map(a => a.id === acc.id ? restoredAcc : a);
       touchedAccounts.push(restoredAcc);
@@ -491,9 +510,12 @@ export function applyDeleteTransaction(
     // Normal expense or income
     const acc = nextAccounts.find(a => a.id === tx.accountId);
     if (acc) {
+      const amountInAcc = (tx.currency && tx.currency !== acc.currency)
+        ? convertCurrency(tx.amount, tx.currency, acc.currency)
+        : tx.amount;
       const newBal = tx.type === 'expense'
-        ? addMoney(acc.balance, tx.amount, acc.currency)
-        : subMoney(acc.balance, tx.amount, acc.currency);
+        ? addMoney(acc.balance, amountInAcc, acc.currency)
+        : subMoney(acc.balance, amountInAcc, acc.currency);
       const restoredAcc = { ...acc, balance: newBal };
       nextAccounts = nextAccounts.map(a => a.id === acc.id ? restoredAcc : a);
       touchedAccounts.push(restoredAcc);

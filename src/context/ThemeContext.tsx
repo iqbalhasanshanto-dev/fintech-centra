@@ -18,9 +18,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     try {
       const settings = CentraDB.getSettings();
-      return settings?.theme || 'light';
+      if (settings?.theme && settings.theme !== 'system') {
+        return settings.theme;
+      }
+      const hint = typeof localStorage !== 'undefined' ? localStorage.getItem('centra_theme_hint') : null;
+      if (hint === 'dark' || hint === 'light') {
+        return hint;
+      }
+      return 'system';
     } catch {
-      return 'light';
+      return 'system';
     }
   });
 

@@ -280,6 +280,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       document.documentElement.classList.add('dark');
     } else if (settings.theme === 'light') {
       document.documentElement.classList.remove('dark');
+    } else {
+      const isSystemDark = typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isSystemDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   }, [settings.theme]);
 
@@ -304,11 +311,54 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
 
   // Compute Total Live Balance across all accounts in base currency
   const totalBalance = useMemo(() => {
+    if (!isGuest && transactions.length > 0) {
+      let income = 0;
+      let expenses = 0;
+      transactions.forEach(tx => {
+        const amountInBase = convertCurrency(tx.amount, tx.currency, baseCurrency);
+        if (tx.type === 'income') income += amountInBase;
+        else if (tx.type === 'expense') expenses += amountInBase;
+      });
+      return income - expenses;
+    }
     return accounts.reduce((acc, account) => {
       const converted = convertCurrency(account.balance, account.currency, baseCurrency);
       return acc + converted;
     }, 0);
-  }, [accounts, baseCurrency]);
+  }, [accounts, baseCurrency, isGuest, transactions]);
+
+  // Synchronize accounts to match totalBalance if there's any discrepancy
+  const synchronizedAccounts = useMemo(() => {
+    if (isGuest || transactions.length === 0 || accounts.length === 0) {
+      return accounts;
+    }
+    const currentSumInBase = accounts.reduce((sum, acc) => {
+      return sum + convertCurrency(acc.balance, acc.currency, baseCurrency);
+    }, 0);
+
+    const diff = totalBalance - currentSumInBase;
+    if (Math.abs(diff) < 0.001) {
+      return accounts;
+    }
+
+    // Apply the diff to the primary account (or first account)
+    const primaryIndex = accounts.findIndex(a => a.isPrimary);
+    const targetIndex = primaryIndex >= 0 ? primaryIndex : 0;
+    const targetAccount = accounts[targetIndex];
+    const diffInTargetCurrency = convertCurrency(diff, baseCurrency, targetAccount.currency);
+
+    return accounts.map((acc, idx) => {
+      if (idx !== targetIndex) return acc;
+      return {
+        ...acc,
+        balance: Math.round((acc.balance + diffInTargetCurrency) * 100) / 100,
+      };
+    });
+  }, [accounts, baseCurrency, isGuest, totalBalance, transactions.length]);
+
+  useEffect(() => {
+    latestStateRef.current.accounts = synchronizedAccounts;
+  }, [synchronizedAccounts]);
 
   // Compute Period Income and Expenses
   const { periodIncome, periodExpenses } = useMemo(() => {
@@ -866,7 +916,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   return (
     <FinanceContext.Provider
       value={{
-        accounts,
+        accounts: synchronizedAccounts,
         transactions,
         categories,
         goals,

@@ -33,6 +33,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
     settings.theme === 'dark' ||
     (settings.theme === 'system' &&
       typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);

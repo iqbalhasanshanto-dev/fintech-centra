@@ -272,6 +272,7 @@ function reloadCacheForUser(userId: string | null): void {
       createdAt: new Date().toISOString(),
     };
     const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+    cache.settings = safeGet<AppSettings>(getUserStorageKey(userId, 'settings'), INITIAL_SETTINGS);
     cache.user = safeGet<UserProfile>(getUserStorageKey(userId, 'user'), emptyUser);
     const rawAccounts = safeGet<Account[]>(getUserStorageKey(userId, 'accounts'), []);
     const filteredAccounts = !isTest ? rawAccounts.filter(a => !DEMO_ACCOUNT_IDS.has(a.id)) : rawAccounts;
@@ -290,7 +291,6 @@ function reloadCacheForUser(userId: string | null): void {
     const rawBudgets = safeGet<Budget[]>(getUserStorageKey(userId, 'budgets'), []);
     cache.budgets = !isTest ? rawBudgets.filter(b => !DEMO_BUDGET_IDS.has(b.id)) : rawBudgets;
     cache.notifications = safeGet<NotificationItem[]>(getUserStorageKey(userId, 'notifications'), []);
-    cache.settings = safeGet<AppSettings>(getUserStorageKey(userId, 'settings'), INITIAL_SETTINGS);
   }
 }
 
@@ -1394,6 +1394,11 @@ export const CentraDB = {
       return { ok: true };
     }
 
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setSyncStatus('offline');
+      return { ok: false };
+    }
+
     // 1. Drain outbox first (unthrottled!)
     await CentraDB.processOutbox();
 
@@ -1444,7 +1449,6 @@ export const CentraDB = {
         }
 
         let anyFetchError = false;
-        const pending = OutboxQueue.getPending(userId);
 
         // 2. Fetch Accounts
         const { data: accountsData, error: accountsError } = await supabase
@@ -1454,7 +1458,8 @@ export const CentraDB = {
 
         if (!accountsError && accountsData) {
           const remote = accountsData.map(mapAccountFromDb);
-          cache.accounts = mergeEntityWithOutbox('accounts', remote, cache.accounts, pending);
+          const pendingAccounts = OutboxQueue.getPending(userId);
+          cache.accounts = mergeEntityWithOutbox('accounts', remote, cache.accounts, pendingAccounts);
           safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
         } else if (accountsError) {
           logger.warn('Failed to fetch accounts:', accountsError);
@@ -1469,7 +1474,8 @@ export const CentraDB = {
 
         if (!categoriesError && categoriesData) {
           const remote = categoriesData.map(mapCategoryFromDb);
-          cache.categories = mergeEntityWithOutbox('categories', remote, cache.categories, pending);
+          const pendingCategories = OutboxQueue.getPending(userId);
+          cache.categories = mergeEntityWithOutbox('categories', remote, cache.categories, pendingCategories);
           safeSet(getUserStorageKey(userId, 'categories'), cache.categories);
         } else if (categoriesError) {
           logger.warn('Failed to fetch categories:', categoriesError);
@@ -1485,7 +1491,8 @@ export const CentraDB = {
 
         if (!transactionsError && transactionsData) {
           const remote = transactionsData.map(mapTransactionFromDb);
-          cache.transactions = mergeEntityWithOutbox('transactions', remote, cache.transactions, pending);
+          const pendingTransactions = OutboxQueue.getPending(userId);
+          cache.transactions = mergeEntityWithOutbox('transactions', remote, cache.transactions, pendingTransactions);
           safeSet(getUserStorageKey(userId, 'transactions'), cache.transactions);
         } else if (transactionsError) {
           logger.warn('Failed to fetch transactions:', transactionsError);
@@ -1500,7 +1507,8 @@ export const CentraDB = {
 
         if (!goalsError && goalsData) {
           const remote = goalsData.map(mapGoalFromDb);
-          cache.goals = mergeEntityWithOutbox('goals', remote, cache.goals, pending);
+          const pendingGoals = OutboxQueue.getPending(userId);
+          cache.goals = mergeEntityWithOutbox('goals', remote, cache.goals, pendingGoals);
           safeSet(getUserStorageKey(userId, 'goals'), cache.goals);
         } else if (goalsError) {
           logger.warn('Failed to fetch goals:', goalsError);
@@ -1515,7 +1523,8 @@ export const CentraDB = {
 
         if (!budgetsError && budgetsData) {
           const remote = budgetsData.map(mapBudgetFromDb);
-          cache.budgets = mergeEntityWithOutbox('budgets', remote, cache.budgets, pending);
+          const pendingBudgets = OutboxQueue.getPending(userId);
+          cache.budgets = mergeEntityWithOutbox('budgets', remote, cache.budgets, pendingBudgets);
           safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
         } else if (budgetsError) {
           logger.warn('Failed to fetch budgets:', budgetsError);
@@ -1531,7 +1540,8 @@ export const CentraDB = {
 
         if (!notifError && notifData) {
           const remote = notifData.map(mapNotificationFromDb);
-          cache.notifications = mergeEntityWithOutbox('notifications', remote, cache.notifications, pending);
+          const pendingNotifs = OutboxQueue.getPending(userId);
+          cache.notifications = mergeEntityWithOutbox('notifications', remote, cache.notifications, pendingNotifs);
           safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
         } else if (notifError) {
           logger.warn('Failed to fetch notifications:', notifError);
@@ -1545,7 +1555,7 @@ export const CentraDB = {
           .eq('user_id', userId)
           .maybeSingle();
 
-        const pendingSettings = pending.find(item => item.entity === 'settings');
+        const pendingSettings = OutboxQueue.getPending(userId).find(item => item.entity === 'settings');
         if (!settingsError && settingsData) {
           if (!pendingSettings) {
             cache.settings = mapSettingsFromDb(settingsData);
