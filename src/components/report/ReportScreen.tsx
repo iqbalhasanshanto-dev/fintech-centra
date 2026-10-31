@@ -61,7 +61,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
   }, []);
 
   return (
-    <div className="space-y-6 animate-fade-in pb-36 sm:pb-40 lg:pb-12 pt-1 sm:pt-2">
+    <div className="space-y-6 animate-fade-in pb-2 pt-1 sm:pt-2">
       {/* =========================================================================
           CARD 1: Expenses by category (12-analytics--full.png)
           ========================================================================= */}

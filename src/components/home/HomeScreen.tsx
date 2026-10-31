@@ -21,7 +21,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showSeeAllDrawer, setShowSeeAllDrawer] = useState(false);
 
   return (
-    <div className="animate-fade-in pb-36 sm:pb-40 lg:pb-8 w-full">
+    <div className="animate-fade-in pb-2 w-full">
       
       {/* =========================================================================
           1. MOBILE COMPOSITION (below `lg` breakpoint)

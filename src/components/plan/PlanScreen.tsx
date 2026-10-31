@@ -64,7 +64,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
   const overallSavingsRate = totalGoalsTarget > 0 ? (totalGoalsSaved / totalGoalsTarget) * 100 : 0;
 
   return (
-    <div className="space-y-6 animate-fade-in pb-36 sm:pb-40 lg:pb-8 pt-1 sm:pt-2">
+    <div className="space-y-6 animate-fade-in pb-2 pt-1 sm:pt-2">
       {/* Plan Summary Hero Card */}
       <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
         <div className="flex items-center justify-between mb-3">

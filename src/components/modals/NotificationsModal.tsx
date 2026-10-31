@@ -252,7 +252,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Notifications"
-      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#0A0A0A] overflow-y-auto flex flex-col text-[#18212F] dark:text-white transition-colors antialiased animate-fade-in"
+      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto flex flex-col text-[#18212F] dark:text-white transition-colors antialiased animate-fade-in"
       style={{
         paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
@@ -260,9 +260,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         paddingBottom: 'calc(3rem + env(safe-area-inset-bottom, 0px))',
       }}
     >
-      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-5 px-4 sm:px-6 pb-3">
+      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-4 px-4 sm:px-6 pb-3">
         {/* Top Header Bar matching Figma Frame 10. Notifications (40px Back + 24px Title + Clear) */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 pb-2 flex items-center justify-between">
           <button
             type="button"
             onClick={onClose}
@@ -272,7 +272,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <h2 className="text-2xl font-medium tracking-tight text-[#18212F] dark:text-white text-center">
+          <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight text-[#18212F] dark:text-white text-center">
             Notifications
           </h2>
 

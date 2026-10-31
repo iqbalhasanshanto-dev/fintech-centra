@@ -106,7 +106,7 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
             <button
               type="button"
               onClick={() => handleSelectMode('system')}
-              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                 selectedMode === 'system'
                   ? 'bg-[#18212F] text-white dark:bg-[#000000] dark:text-white ring-2 ring-black dark:ring-white shadow-md'
                   : 'bg-[#E8ECEF] text-gray-600 dark:bg-[#2A2A2A] dark:text-gray-400 hover:opacity-80'
@@ -117,13 +117,14 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
                 <circle cx="12" cy="12" r="9" />
                 <path d="M12 3v18A9 9 0 0 0 12 3z" fill="currentColor" />
               </svg>
+              <span className="text-xs font-bold">System</span>
             </button>
 
             {/* Light Card */}
             <button
               type="button"
               onClick={() => handleSelectMode('light')}
-              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                 selectedMode === 'light'
                   ? 'bg-[#18212F] text-white dark:bg-[#000000] dark:text-white ring-2 ring-black dark:ring-white shadow-md'
                   : 'bg-[#E8ECEF] text-gray-600 dark:bg-[#2A2A2A] dark:text-gray-400 hover:opacity-80'
@@ -131,13 +132,14 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
               aria-label="Light mode"
             >
               <Sun className="w-7 h-7" />
+              <span className="text-xs font-bold">Light</span>
             </button>
 
             {/* Dark Card */}
             <button
               type="button"
               onClick={() => handleSelectMode('dark')}
-              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${
+              className={`h-20 sm:h-24 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                 selectedMode === 'dark'
                   ? 'bg-[#18212F] text-white dark:bg-[#000000] dark:text-white ring-2 ring-black dark:ring-white shadow-md'
                   : 'bg-[#E8ECEF] text-gray-600 dark:bg-[#2A2A2A] dark:text-gray-400 hover:opacity-80'
@@ -145,6 +147,7 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
               aria-label="Dark mode"
             >
               <Moon className="w-7 h-7 fill-current" />
+              <span className="text-xs font-bold">Dark</span>
             </button>
           </div>
 

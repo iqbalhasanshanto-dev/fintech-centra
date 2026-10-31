@@ -1,5 +1,6 @@
 import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useFinance } from '../../context/FinanceContext';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav, TabType } from './BottomNav';
@@ -17,24 +18,55 @@ import { BackButtonManager, exitNativeApp } from '../../utils/backButton';
 
 export const AppShell: React.FC = () => {
   const { isGuest } = useAuth();
+  const { transactions } = useFinance();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal'>('spend');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showExitToast, setShowExitToast] = useState(false);
   const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
   const mainContentRef = useRef<HTMLElement>(null);
+  const lastBackPressRef = useRef<number>(0);
+  const exitToastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (exitToastTimerRef.current) {
+        clearTimeout(exitToastTimerRef.current);
+      }
+    };
+  }, []);
 
   // Synchronously ensure Demo Mode never renders settings screen
   const effectiveTab: TabType = (isGuest && activeTab === 'settings') ? 'home' : activeTab;
 
-  // Hardware back button root handler: switches to 'home' tab first, then prompts to exit app
+  // Hardware back button root handler: switches to 'home' tab first, then requires double-back to prompt exit
   useEffect(() => {
     const unregister = BackButtonManager.registerRootHandler(() => {
       if (effectiveTab !== 'home') {
         setActiveTab('home');
-      } else {
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastBackPressRef.current < 2000) {
+        if (exitToastTimerRef.current) {
+          clearTimeout(exitToastTimerRef.current);
+          exitToastTimerRef.current = null;
+        }
+        setShowExitToast(false);
         setShowExitConfirm(true);
+      } else {
+        lastBackPressRef.current = now;
+        setShowExitToast(true);
+        if (exitToastTimerRef.current) {
+          clearTimeout(exitToastTimerRef.current);
+        }
+        exitToastTimerRef.current = setTimeout(() => {
+          setShowExitToast(false);
+          exitToastTimerRef.current = null;
+        }, 2000);
       }
     });
     return unregister;
@@ -67,7 +99,12 @@ export const AppShell: React.FC = () => {
   };
 
   const handleOpenAddWithTab = (tab: 'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal' = 'spend') => {
-    setAddModalDefaultTab(tab);
+    if (tab === 'transaction') {
+      const resolved = transactions.length === 0 ? 'income' : 'spend';
+      setAddModalDefaultTab(resolved);
+    } else {
+      setAddModalDefaultTab(tab);
+    }
     setShowAddModal(true);
   };
 
@@ -95,12 +132,14 @@ export const AppShell: React.FC = () => {
         </div>
 
         {/* Guest Mode Warning Banner */}
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <GuestBanner />
-        </div>
+        {isGuest && (
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3">
+            <GuestBanner />
+          </div>
+        )}
 
         {/* Main Screen Content Container */}
-        <main ref={mainContentRef} className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-36 sm:pb-40 lg:pb-12 bg-[#F7F8FA] dark:bg-[#000000]">
+        <main ref={mainContentRef} className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 md:py-6 bg-[#F7F8FA] dark:bg-[#000000]">
           {effectiveTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => handleSelectTab('report')}
@@ -165,7 +204,7 @@ export const AppShell: React.FC = () => {
       <NotificationsModal
         isOpen={showNotificationsModal}
         onClose={() => setShowNotificationsModal(false)}
-        onOpenQuickAction={() => handleOpenAddWithTab('spend')}
+        onOpenQuickAction={() => handleOpenAddWithTab('income')}
         onNavigateToTab={handleSelectTab}
         onNavigateToSettings={() => handleSelectTab('settings')}
         onOpenRecentActivities={() => handleSelectTab('home')}
@@ -177,6 +216,13 @@ export const AppShell: React.FC = () => {
         initialDoc={legalDoc || 'privacy'}
         onClose={() => setLegalDoc(null)}
       />
+
+      {/* Floating Exit Toast Pill (Above Bottom Nav on Mobile) */}
+      {showExitToast && (
+        <div className="fixed bottom-24 lg:bottom-10 left-1/2 -translate-x-1/2 z-[90] px-4 py-2 rounded-full bg-black/90 dark:bg-white text-white dark:text-black text-xs font-semibold shadow-xl border border-white/10 dark:border-black/10 animate-fade-in pointer-events-none select-none flex items-center gap-2">
+          <span>Swipe back again to exit</span>
+        </div>
+      )}
 
       {/* Hardware Back Root Exit Confirmation Modal */}
       <ConfirmModal

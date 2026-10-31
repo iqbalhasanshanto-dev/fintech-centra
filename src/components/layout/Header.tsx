@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id="header"
-      className="border-b border-black/5 dark:border-white/10 bg-[#F7F8FA]/90 dark:bg-[#000000]/90 backdrop-blur-md sticky top-0 z-40 transition-colors w-full"
+      className="border-b border-black/5 dark:border-white/10 bg-[#F7F8FA] dark:bg-[#000000] sticky top-0 z-40 transition-colors w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top, var(--safe-area-inset-top, 0px))',
         paddingLeft: 'env(safe-area-inset-left, var(--safe-area-inset-left, 0px))',
@@ -95,11 +95,11 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left: Dynamic Header Title */}
         <div className="flex flex-col justify-center">
           {activeTab === 'report' ? (
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
+            <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-[#18212F] dark:text-white">
               Analytics
             </h1>
           ) : activeTab === 'plan' ? (
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
+            <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-[#18212F] dark:text-white">
               Goals &amp; Budgets
             </h1>
           ) : (
@@ -107,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="text-sm sm:text-base font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
                 {greeting}
               </span>
-              <span className="text-xl sm:text-2xl font-semibold tracking-tight text-[#18212F] dark:text-white mt-0.5">
+              <span className="text-2xl sm:text-[28px] font-bold tracking-tight text-[#18212F] dark:text-white mt-0.5">
                 {isGuest ? 'Demo User' : user.name || 'Adam James'}
               </span>
             </>

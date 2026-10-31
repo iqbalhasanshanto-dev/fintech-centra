@@ -126,9 +126,9 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
 
       {/* VIEW STATE 1: INTRO HERO (02-onboarding-intro.png) */}
       {viewState === 'intro' ? (
-        <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto px-6 py-4 z-10 animate-fade-in">
+        <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10">
           {/* Top Bar with Centra Brand Mark (Top-Left) */}
-          <div className="flex items-center justify-between">
+          <div className="px-6 pt-4 h-14 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <img
                 src={logoOnLight}
@@ -154,7 +154,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
           </div>
 
           {/* Bottom Display Content */}
-          <div className="pt-24 sm:pt-32 pb-6">
+          <div className="px-6 pt-24 sm:pt-32 pb-6">
             <h1 className="text-[52px] sm:text-[64px] font-normal font-sans tracking-tight text-[#18212F] dark:text-white leading-[1.02] mb-4">
               Track Your Daily<br />
               <span className="text-[#56791E] dark:text-[#C6FF3D]">Expenses.</span>
@@ -175,42 +175,42 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
         </div>
       ) : (
         /* VIEW STATE 2: AUTH SCREEN (03-auth.png) */
-        <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10 animate-fade-in">
+        <div className="flex-1 flex flex-col justify-between w-full max-w-lg mx-auto z-10">
           {/* Top Canvas Header: Separate Top Row (Back on left, Logo on right) + Giant Hero Display below */}
-          <div className="px-6 pt-4 pb-4">
-            <div className="flex items-center justify-between mb-2">
-              {!isTestEnv ? (
-                <button
-                  type="button"
-                  onClick={() => setViewState('intro')}
-                  className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shadow-xs"
-                  aria-label="Back to intro"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-              ) : (
-                <div className="w-10 h-10" />
-              )}
+          <div className="px-6 pt-4 h-14 flex items-center justify-between shrink-0">
+            {!isTestEnv ? (
+              <button
+                type="button"
+                onClick={() => setViewState('intro')}
+                className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shadow-xs"
+                aria-label="Back to intro"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            ) : (
+              <div className="w-10 h-10" />
+            )}
 
-              <div className="flex items-center">
-                <img
-                  src={logoOnLight}
-                  alt="Centra"
-                  className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden rounded-xl"
-                  draggable={false}
-                />
-                <img
-                  src={logoOnDark}
-                  alt="Centra"
-                  className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block rounded-xl"
-                  draggable={false}
-                />
-                <span className="sr-only">Sample preview</span>
-                <span className="sr-only">&gt; Secure sync</span>
-              </div>
+            <div className="flex items-center">
+              <img
+                src={logoOnLight}
+                alt="Centra"
+                className="w-10 h-10 object-contain drop-shadow-sm select-none dark:hidden rounded-xl"
+                draggable={false}
+              />
+              <img
+                src={logoOnDark}
+                alt="Centra"
+                className="w-10 h-10 object-contain drop-shadow-sm select-none hidden dark:block rounded-xl"
+                draggable={false}
+              />
+              <span className="sr-only">Sample preview</span>
+              <span className="sr-only">&gt; Secure sync</span>
             </div>
+          </div>
 
-            <h1 className="text-[58px] sm:text-[68px] font-normal font-sans tracking-tight leading-[1.03] text-[#18212F] dark:text-white my-4">
+          <div className="px-6 my-auto py-2">
+            <h1 className="text-[64px] sm:text-[74px] font-medium font-sans tracking-tight leading-[1.02] text-[#18212F] dark:text-white">
               One<br />
               <span className="text-[#56791E] dark:text-[#C6FF3D]">Last</span><br />
               Step

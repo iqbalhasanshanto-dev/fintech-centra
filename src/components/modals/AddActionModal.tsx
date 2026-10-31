@@ -211,6 +211,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 }) => {
   const { 
     accounts, 
+    transactions,
     categories, 
     goals,
     addTransaction, 
@@ -224,7 +225,11 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const resolveInitialTab = (tab?: string): 'spend' | 'income' | 'transfer' | 'goal' | 'budget' => {
     if (tab === 'transfer' || tab === 'goal' || tab === 'budget' || tab === 'income') return tab;
     if (tab === 'create-goal') return 'goal';
-    return 'spend';
+    if (tab === 'transaction') {
+      return transactions.length === 0 ? 'income' : 'spend';
+    }
+    if (tab === 'spend') return 'spend';
+    return transactions.length === 0 ? 'income' : 'spend';
   };
 
   // Mode: 'spend' | 'income' | 'transfer' | 'goal' | 'budget'

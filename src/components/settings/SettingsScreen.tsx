@@ -300,14 +300,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
 
   return (
     <div
-      className="space-y-6 pb-36 sm:pb-40 lg:pb-8 animate-fade-in"
+      className="space-y-4 pb-2 animate-fade-in"
       style={{
         paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
       }}
     >
 
       {/* Top Header Bar matching 14-settings.png */}
-      <div className="flex items-center justify-between pb-3">
+      <div className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 pb-2 flex items-center justify-between">
         <button
           type="button"
           onClick={onBack}
@@ -317,7 +317,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           <ChevronLeft className="w-5 h-5" />
         </button>
 
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white text-center flex-1 pr-10">
+        <h1 className="text-2xl sm:text-[28px] font-bold text-gray-900 dark:text-white text-center flex-1 pr-10 tracking-tight">
           Settings
         </h1>
       </div>
