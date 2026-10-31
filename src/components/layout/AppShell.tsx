@@ -1,5 +1,4 @@
 import React, { useState, useLayoutEffect, useEffect, useRef, lazy, Suspense } from 'react';
-import { Shield } from 'lucide-react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav, TabType } from './BottomNav';
@@ -8,6 +7,7 @@ import { HomeScreen } from '../home/HomeScreen';
 import { LazyErrorBoundary, ScreenLoadingFallback } from '../ui/LazyErrorBoundary';
 import { AddActionModal } from '../modals/AddActionModal';
 import { NotificationsModal } from '../modals/NotificationsModal';
+import { LegalDocsModal, LegalDocType } from '../modals/LegalDocsModal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { BackButtonManager, exitNativeApp } from '../../utils/backButton';
 
@@ -21,6 +21,7 @@ export const AppShell: React.FC = () => {
   const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal'>('spend');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
   const mainContentRef = useRef<HTMLElement>(null);
 
   // Hardware back button root handler: switches to 'home' tab first, then prompts to exit app
@@ -81,6 +82,7 @@ export const AppShell: React.FC = () => {
         {/* Top Header Toolbar */}
         <div className={activeTab === 'settings' ? 'hidden lg:block' : ''}>
           <Header
+            activeTab={activeTab}
             onOpenNotifications={() => setShowNotificationsModal(true)}
             onNavigateToSettings={() => handleSelectTab('settings')}
             onOpenAddAction={() => handleOpenAddWithTab('transaction')}
@@ -130,17 +132,15 @@ export const AppShell: React.FC = () => {
         </main>
 
         {/* Centra Footer */}
-        <footer id="footer" className="max-w-7xl mx-auto w-full px-6 py-8 pb-28 lg:pb-8 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-4 transition-colors">
+        <footer id="footer" className="max-w-7xl mx-auto w-full px-6 py-6 pb-24 lg:pb-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-3 transition-colors">
           <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-            <div className="w-6 h-6 bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] rounded flex items-center justify-center">
-              <Shield className="w-3 h-3 text-gray-600 dark:text-gray-400" />
-            </div>
-            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Centra Secure Systems</span>
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Centra Financial OS • Offline-First</span>
           </div>
           <div className="flex items-center gap-6 text-xs font-medium text-gray-500 dark:text-gray-400">
-            <button onClick={() => handleSelectTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
-            <button onClick={() => handleSelectTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Support</button>
-            <button onClick={() => handleSelectTab('settings')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">API Docs</button>
+            <button type="button" onClick={() => setLegalDoc('privacy')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
+            <button type="button" onClick={() => setLegalDoc('terms')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Terms</button>
+            <button type="button" onClick={() => setLegalDoc('support')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Support</button>
+            <button type="button" onClick={() => setLegalDoc('api')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">API Docs</button>
           </div>
         </footer>
 
@@ -167,6 +167,16 @@ export const AppShell: React.FC = () => {
         isOpen={showNotificationsModal}
         onClose={() => setShowNotificationsModal(false)}
         onOpenQuickAction={() => handleOpenAddWithTab('spend')}
+        onNavigateToTab={handleSelectTab}
+        onNavigateToSettings={() => handleSelectTab('settings')}
+        onOpenRecentActivities={() => handleSelectTab('home')}
+      />
+
+      {/* Dedicated Legal & Support Modal */}
+      <LegalDocsModal
+        isOpen={!!legalDoc}
+        initialDoc={legalDoc || 'privacy'}
+        onClose={() => setLegalDoc(null)}
       />
 
       {/* Hardware Back Root Exit Confirmation Modal */}

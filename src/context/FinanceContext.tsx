@@ -851,7 +851,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       reloadFromCache();
       return { ok: true, error: null };
     } else {
-      const res = await CentraDB.deleteAllUserData(activeUid);
+      const res = await CentraDB.deleteAllUserData(activeUid, { forceLocalReset: true, resetStandardAccounts: true });
       if (res.ok) {
         reloadFromCache();
       }

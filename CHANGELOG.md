@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v3.1.0] — 2026-10-31
+
+### 🌟 Latest Release: Offline-First Reliability, Clean Branding & UX Polish
+
+Centra `v3.1.0` delivers substantial offline-first enhancements, zero-delay launches, dynamic brand logos, white launcher icons, pull-to-dismiss modal ergonomics, and dedicated legal & support centers.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v3.1.0-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.0-debug.apk) (Fallback: [`releases/Centra-v3.1.0-debug.apk?raw=true`](releases/Centra-v3.1.0-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.0-debug.apk)
+- **File Size**: `6,036,315 bytes` (5.76 MB)
+- **SHA-256 Checksum**:
+  ```
+  f0f909b678ba8d8a82a4c106bef6c57da4e80f664597ad5a3edfa6e243dacd98
+  ```
+
+#### 🚀 Offline-First & Launch Performance
+- **Zero-Delay Startup**: Removed the artificial blocking loading screen (`Starting Centra...`) when cached user data or valid session is present.
+- **Graceful Offline Routing**: Network drops during session resolution gracefully route to cached state or onboarding wizard instead of halting on a blocking error.
+- **4 Standard Account Templates**: Seeded initial setups with Cash (Primary), Card Payment, Mobile Banking, and Bank Transfer with zero initial balance.
+- **Demo Data Isolation**: Strictly filters out sample demo IDs (`acc_1`..`acc_4`, `tx_1`..`tx_10`) for real authenticated users during cloud sync.
+
+#### 🎨 Branding & Visual Polish
+- **Adaptive Brand Logos**: Integrated official Dark/Light SVG logos across onboarding, lock screen, OTP, auth callback, and sidebar.
+- **White Android Launcher Icon**: Replaced old launcher icons with clean white background and official Centra "C" branding across all mipmap densities.
+- **Dynamic User Initials**: Clean avatar fallback generating uppercase two-letter initials (e.g. "MI") across headers, sidebars, and profile screens.
+- **Contextual Screen Headers**: Dynamic header titles reflecting active tabs (e.g. "Analytics", "Goals & Budgets") and clean demo-only theme toggles.
+
+#### 🛠️ Modal & Navigation Ergonomics
+- **Touch Pull-to-Dismiss**: Integrated mobile touch drag-down handle on all bottom-sheet modals with threshold-based snap-to-close.
+- **Dedicated Legal & Support Center**: Added full in-app modal covering Privacy Policy, Terms of Service, Support, and Supabase Architecture without external browser hops.
+- **Quick Action Modal Refinement**: Equal-width sticky bottom action buttons (`Save Transaction`, `Save Budget`, `Save Goal`), integrated custom date pickers, and Centra Pro preview for multi-account transfers.
+- **Enhanced Select Dropdowns**: Standardized custom caret styling (`appearance-none` with `ChevronDown`) across drawers and settings.
+
+---
+
 ## [v3.0.0] — 2026-10-30
 
 ### 🌟 Latest Release: Full Figma UI Redesign & Polish

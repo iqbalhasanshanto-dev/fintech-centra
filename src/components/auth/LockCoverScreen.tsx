@@ -1,5 +1,6 @@
 import React from 'react';
-import logoImg from '../../assets/brand/logo.png';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
 
 /**
  * Opaque cover screen rendered instead of financial screens when the app
@@ -19,9 +20,15 @@ export const LockCoverScreen: React.FC = () => {
     >
       <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#1D1D1D] p-2.5 shadow-xl border border-black/5 dark:border-white/10 flex items-center justify-center mb-3">
         <img
-          src={logoImg}
+          src={logoOnLight}
           alt="Centra"
-          className="w-10 h-10 object-contain drop-shadow-sm select-none rounded-xl"
+          className="w-10 h-10 object-contain drop-shadow-sm select-none rounded-xl dark:hidden"
+          draggable={false}
+        />
+        <img
+          src={logoOnDark}
+          alt="Centra"
+          className="w-10 h-10 object-contain drop-shadow-sm select-none rounded-xl hidden dark:block"
           draggable={false}
         />
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Download, ChevronLeft, X } from 'lucide-react';
+import { Search, Download, ChevronLeft, X, ChevronDown } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
@@ -170,31 +170,37 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
 
         {/* Category & Account Selectors */}
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <select
-            value={selectedCategory}
-            onChange={e => setSelectedCategory(e.target.value)}
-            className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer"
-          >
-            <option value="all">All Categories</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedCategory}
+              onChange={e => setSelectedCategory(e.target.value)}
+              className="w-full appearance-none pr-8 px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer font-medium"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-400 dark:text-gray-500" />
+          </div>
 
-          <select
-            value={selectedAccount}
-            onChange={e => setSelectedAccount(e.target.value)}
-            className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer"
-          >
-            <option value="all">All Accounts</option>
-            {accounts.map(a => (
-              <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
-                {a.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedAccount}
+              onChange={e => setSelectedAccount(e.target.value)}
+              className="w-full appearance-none pr-8 px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white focus:outline-none focus:border-[#C6FF3D] cursor-pointer font-medium"
+            >
+              <option value="all">All Accounts</option>
+              {accounts.map(a => (
+                <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
+                  {a.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-400 dark:text-gray-500" />
+          </div>
         </div>
 
         {/* Transactions Card (10-transactions-view-all.png) */}

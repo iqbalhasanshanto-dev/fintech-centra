@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { UserProfile, Category, Account } from '../types';
-import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS, GUEST_USER_ID, isGuestUser, cleanupLegacyGuestData } from '../db/storage';
+import { CentraDB, CATEGORY_STYLE_MAP, DEFAULT_INCOME_CATEGORIES_DEFINITIONS, GUEST_USER_ID, isGuestUser, cleanupLegacyGuestData, safeSet, getUserStorageKey } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import type { Session, AuthError } from '@supabase/supabase-js';
@@ -143,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedIntent) {
       localStorage.removeItem(INTENT_STORAGE_KEY);
     }
-    const effectiveMode = storedIntent || authMode;
+    const _effectiveMode = storedIntent || authMode;
 
     try {
       const { data: initialProfile, error: profileErr } = await supabase
@@ -154,7 +154,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (profileErr) {
         logger.warn('Profile fetch error from Supabase:', profileErr);
-        setAuthView('profileError');
+        if (CentraDB.hasCachedData(userId) || CentraDB.getAccounts().length > 0) {
+          CentraDB.setActiveUser(userId);
+          const currentUser = CentraDB.getUser();
+          setUser(currentUser.id ? currentUser : {
+            id: userId,
+            name: userName || 'User',
+            email: userEmail || '',
+            isPro: false,
+            onboardingCompleted: true,
+            createdAt: new Date().toISOString(),
+          });
+          setIsAuthenticated(true);
+          setIsGuest(false);
+          CentraDB.setSyncStatus('offline');
+          const settings = CentraDB.getSettings();
+          if (settings.security.pinLockEnabled && hasDevicePin(userId)) {
+            lockApp();
+          } else {
+            setAuthView('app');
+          }
+          return;
+        }
+
+        // If no cache, route directly to onboarding rather than blocking error screen
+        const googleAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
+        await CentraDB.createBlankUserData(
+          userId,
+          userEmail,
+          userName,
+          googleAvatar || undefined
+        );
+        setUser(CentraDB.getUser());
+        setIsAuthenticated(true);
+        setIsGuest(false);
+        setAuthView('onboarding');
         return;
       }
 
@@ -236,32 +270,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(true);
       setIsGuest(false);
 
-      if (effectiveMode === 'signin' && !isNewUser) {
-        const isOAuth =
-          session.user.app_metadata?.provider === 'google' ||
-          session.user.app_metadata?.provider === 'apple';
-
-        if (isOAuth) {
-          // Google/Apple user on sign-in with no completed account
-          setAuthView('noAccountFound');
+      // Never show noAccountFound or accountIncomplete prior to onboarding or before login: proceed directly into onboarding wizard
+      await CentraDB.createBlankUserData(
+        userId,
+        userEmail,
+        userName,
+        googleAvatar || profile?.avatar_url || undefined
+      );
+      setUser(CentraDB.getUser());
+      setAuthView('onboarding');
+    } catch (err) {
+      logger.warn('Failed to resolve user profile:', err);
+      if (CentraDB.hasCachedData(userId) || CentraDB.getAccounts().length > 0) {
+        CentraDB.setActiveUser(userId);
+        const currentUser = CentraDB.getUser();
+        setUser(currentUser.id ? currentUser : {
+          id: userId,
+          name: userName || 'User',
+          email: userEmail || '',
+          isPro: false,
+          onboardingCompleted: true,
+          createdAt: new Date().toISOString(),
+        });
+        setIsAuthenticated(true);
+        setIsGuest(false);
+        CentraDB.setSyncStatus('offline');
+        const settings = CentraDB.getSettings();
+        if (settings.security.pinLockEnabled && hasDevicePin(userId)) {
+          lockApp();
         } else {
-          // Email user on sign-in with incomplete account
-          setAuthView('accountIncomplete');
+          setAuthView('app');
         }
       } else {
-        // Sign-up intent or brand-new user missing profile: proceed into onboarding wizard
+        const googleAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
         await CentraDB.createBlankUserData(
           userId,
           userEmail,
           userName,
-          googleAvatar || profile?.avatar_url || undefined
+          googleAvatar || undefined
         );
         setUser(CentraDB.getUser());
+        setIsAuthenticated(true);
+        setIsGuest(false);
         setAuthView('onboarding');
       }
-    } catch (err) {
-      logger.warn('Failed to resolve user profile:', err);
-      setAuthView('profileError');
+    } finally {
+      setOauthLoading(null);
     }
   }, [authMode, lockApp]);
 
@@ -542,10 +596,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setOauthLoading(null);
           },
           onSuccess: async (session) => {
-            setOauthLoading(null);
             setOauthError(null);
-            if (session?.user) {
-              await handleSession(session);
+            try {
+              if (session?.user) {
+                await handleSession(session);
+              }
+            } finally {
+              setOauthLoading(null);
             }
           },
           onResetLoading: () => {
@@ -972,6 +1029,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 3. Mark completed in DB
       if (user?.id && !isGuest) {
+        safeSet(getUserStorageKey(user.id, 'last_synced_at'), new Date().toISOString());
         const ok = await CentraDB.markOnboardingCompleted(user.id);
         if (!ok) {
           throw new Error('Failed to save completed setup status. Please retry.');

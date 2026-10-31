@@ -79,7 +79,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         isOpen={showSeeAllDrawer}
         onClose={() => setShowSeeAllDrawer(false)}
         onSelectTransaction={tx => {
-          setShowSeeAllDrawer(false);
           setSelectedTransaction(tx);
         }}
       />

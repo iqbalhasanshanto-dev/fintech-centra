@@ -3,7 +3,8 @@ import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import { logger } from '../../utils/logger';
-import logoImg from '../../assets/brand/logo.png';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
 
 export const AuthCallbackScreen: React.FC = () => {
@@ -92,9 +93,15 @@ export const AuthCallbackScreen: React.FC = () => {
       <div className="w-full max-w-sm bg-white dark:bg-[#1D1D1D] rounded-[32px] p-8 sm:p-10 border border-black/5 dark:border-white/10 shadow-2xl text-center animate-fade-in z-10">
         <div className="flex items-center justify-center gap-2 mb-6">
           <img
-            src={logoImg}
+            src={logoOnLight}
             alt="Centra"
-            className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl"
+            className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl dark:hidden"
+            draggable={false}
+          />
+          <img
+            src={logoOnDark}
+            alt="Centra"
+            className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl hidden dark:block"
             draggable={false}
           />
           <span className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white font-display">

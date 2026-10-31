@@ -22,7 +22,8 @@ import {
   AlertCircle,
   FileText,
   Sun,
-  Moon
+  Moon,
+  ChevronDown
 } from 'lucide-react';
 import { updateNativeStatusBar } from '../../utils/nativeApp';
 import { useFinance } from '../../context/FinanceContext';
@@ -33,6 +34,10 @@ import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
 import { Switch } from '../ui/Switch';
 import { ImageCropModal } from '../ui/ImageCropModal';
+import { LegalDocsModal } from '../modals/LegalDocsModal';
+import { getUserInitials } from '../../utils/initials';
+import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
+import { logger } from '../../utils/logger';
 import { CurrencyCode } from '../../types';
 import { CentraDB, GUEST_USER_ID } from '../../db/storage';
 import { SUPPORTED_CURRENCIES } from '../../utils/currencies';
@@ -42,6 +47,7 @@ import { setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLo
 import { AUTOLOCK_OPTIONS, getAutoLockTimeout, setAutoLockTimeout } from '../../utils/lockResume';
 import { validateName, validateEmail } from '../../utils/validators';
 import { validateImageFile } from '../../utils/imageValidation';
+import { APP_VERSION } from '../../utils/version';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -168,6 +174,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
     if (!emailResult.ok) {
       setProfileEmailError(emailResult.error || 'Please enter a valid email address.');
       return;
+    }
+
+    if (emailResult.value !== user.email && !isGuest && isSupabaseConfigured()) {
+      supabase.auth.updateUser({ email: emailResult.value }).catch((err) => {
+        logger.warn('Failed to send email update confirmation:', err);
+      });
+      setStatusToast('Confirmation email sent to new address. Please verify to complete the change.');
     }
 
     updateUser({
@@ -317,18 +330,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
-                alt={user.name}
+                alt={user.name || 'User'}
                 className="w-16 h-16 rounded-full object-cover border border-black/[0.06] dark:border-white/[0.08]"
                 onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg";
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                  if (fallback) fallback.style.display = 'flex';
                 }}
               />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-[#F1F2F4] dark:bg-[#262626] text-gray-800 dark:text-gray-100 font-bold text-xl flex items-center justify-center border border-black/[0.06] dark:border-white/[0.08]">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </div>
-            )}
+            ) : null}
+            <div
+              className={`w-16 h-16 rounded-full bg-[#C6FF3D] text-[#0A0E1A] font-bold text-xl items-center justify-center border border-black/[0.06] dark:border-white/[0.08] select-none ${
+                user.avatarUrl ? 'hidden' : 'flex'
+              }`}
+            >
+              {getUserInitials(user.name, user.email)}
+            </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-[#C6FF3D] text-[#0A0E1A] flex items-center justify-center shadow-xs">
               <Camera className="w-3.5 h-3.5" />
             </div>
@@ -623,22 +640,25 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
               </div>
             </div>
             <div className="text-right">
-              <select
-                value={settings.baseCurrency || ''}
-                onChange={e => updateSettings({ baseCurrency: (e.target.value as CurrencyCode) || null })}
-                className="px-3 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-[#C6FF3D] cursor-pointer text-xs max-w-[200px]"
-              >
-                {!settings.baseCurrency && <option value="">Select currency...</option>}
-                {SUPPORTED_CURRENCIES.map(c => (
-                  <option
-                    key={c.code}
-                    value={c.code}
-                    className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white"
-                  >
-                    {c.flag} {c.code} ({c.symbol}) - {c.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative inline-block">
+                <select
+                  value={settings.baseCurrency || ''}
+                  onChange={e => updateSettings({ baseCurrency: (e.target.value as CurrencyCode) || null })}
+                  className="appearance-none pr-7 px-3 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-[#C6FF3D] cursor-pointer text-xs max-w-[200px]"
+                >
+                  {!settings.baseCurrency && <option value="">Select currency...</option>}
+                  {SUPPORTED_CURRENCIES.map(c => (
+                    <option
+                      key={c.code}
+                      value={c.code}
+                      className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white"
+                    >
+                      {c.flag} {c.code} ({c.symbol}) - {c.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-400 dark:text-gray-500" />
+              </div>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Rates updated: {RATES_LAST_UPDATED}</p>
             </div>
           </div>
@@ -764,7 +784,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         )}
 
         <div className="text-center pb-2">
-          <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Version 1.59.03</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Version {APP_VERSION}</p>
         </div>
       </div>
 
@@ -853,67 +873,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         </form>
       </Modal>
 
-      {/* Help Modal */}
-      <Modal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} title="Centra Help &amp; FAQ">
-        <div className="space-y-3 text-xs text-gray-700 dark:text-gray-300">
-          <div className="p-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] space-y-1">
-            <h4 className="font-bold text-gray-900 dark:text-white">How is my balance calculated?</h4>
-            <p className="text-gray-500 dark:text-gray-400">Total balance is aggregated in real-time across all connected wallets and bank accounts in your chosen base currency (৳ BDT).</p>
-          </div>
-          <div className="p-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] space-y-1">
-            <h4 className="font-bold text-gray-900 dark:text-white">How do I export my data?</h4>
-            <p className="text-gray-500 dark:text-gray-400">Navigate to Data Management in Settings and click "Export JSON" to download your complete data as a JSON file.</p>
-          </div>
-          <Button
-            variant="primary"
-            size="md"
-            fullWidth
-            onClick={() => setShowHelpModal(false)}
-          >
-            Close FAQ
-          </Button>
-        </div>
-      </Modal>
-
-      {/* Privacy Policy Modal */}
-      <Modal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} title="Privacy Policy">
-        <div className="space-y-3 text-xs text-gray-700 dark:text-gray-300">
-          <div className="p-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] space-y-2">
-            <h4 className="font-bold text-gray-900 dark:text-white">Your Privacy at Centra</h4>
-            <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-              Centra is built local-first. In guest mode, all financial records and settings remain strictly on your local device. When you create an account, data synchronizes to your personal database via secure connections. We do not sell or track your personal financial transactions.
-            </p>
-          </div>
-          <Button
-            variant="primary"
-            size="md"
-            fullWidth
-            onClick={() => setShowPrivacyModal(false)}
-          >
-            Close
-          </Button>
-        </div>
-      </Modal>
-
-      {/* Terms of Service Modal */}
-      <Modal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} title="Terms of Service">
-        <div className="space-y-3 text-xs text-gray-700 dark:text-gray-300">
-          <div className="p-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] space-y-2">
-            <h4 className="font-bold text-gray-900 dark:text-white">Terms of Usage</h4>
-            <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-              Centra is a personal finance management tool provided as-is. Users are responsible for backing up their data using the Export JSON feature. Centra does not provide financial or tax advice.
-            </p>
-          </div>
-          <Button
-            variant="primary"
-            size="md"
-            fullWidth
-            onClick={() => setShowTermsModal(false)}
-          >
-            Close
-          </Button>
-        </div>
-      </Modal>
+      {/* Unified Legal & Support Docs Modal */}
+      <LegalDocsModal
+        isOpen={showPrivacyModal || showTermsModal || showHelpModal}
+        initialDoc={showPrivacyModal ? 'privacy' : showTermsModal ? 'terms' : 'support'}
+        onClose={() => {
+          setShowPrivacyModal(false);
+          setShowTermsModal(false);
+          setShowHelpModal(false);
+        }}
+      />
 
       {/* Delete All Data Modal (Requires typing DELETE) */}
       <Modal

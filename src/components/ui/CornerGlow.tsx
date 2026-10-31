@@ -22,14 +22,14 @@ export const CornerGlow: React.FC<CornerGlowProps> = ({ className = '' }) => {
         src={glowLight}
         alt=""
         draggable={false}
-        className="block dark:hidden w-[320px] sm:w-[412px] h-auto object-contain object-top-right transform translate-x-6 -translate-y-6 select-none"
+        className="block dark:hidden w-[320px] sm:w-[412px] h-auto object-contain object-top-right transform translate-x-6 -translate-y-6 select-none pointer-events-none transform-gpu will-change-opacity"
       />
       {/* Dark mode corner glow */}
       <img
         src={glowDark}
         alt=""
         draggable={false}
-        className="hidden dark:block w-[320px] sm:w-[412px] h-auto object-contain object-top-right transform translate-x-6 -translate-y-6 select-none"
+        className="hidden dark:block w-[320px] sm:w-[412px] h-auto object-contain object-top-right transform translate-x-6 -translate-y-6 select-none pointer-events-none transform-gpu will-change-opacity"
       />
     </div>
   );

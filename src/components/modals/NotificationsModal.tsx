@@ -19,12 +19,18 @@ interface NotificationsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenQuickAction?: () => void;
+  onNavigateToTab?: (tab: 'home' | 'report' | 'plan' | 'settings') => void;
+  onOpenRecentActivities?: () => void;
+  onNavigateToSettings?: () => void;
 }
 
 export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   isOpen,
   onClose,
   onOpenQuickAction,
+  onNavigateToTab,
+  onOpenRecentActivities,
+  onNavigateToSettings,
 }) => {
   const { 
     notifications, 
@@ -128,11 +134,17 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   const handleNotificationClick = (item: NotificationItem) => {
     markNotificationAsRead(item.id);
-    if (isWelcomeNotification(item) || item.type === 'transaction') {
-      onClose();
-      if (onOpenQuickAction) {
-        onOpenQuickAction();
-      }
+    onClose();
+    if (isWelcomeNotification(item) || item.type === 'system') {
+      onOpenQuickAction?.();
+    } else if (item.type === 'budget' || item.type === 'goal') {
+      onNavigateToTab?.('plan');
+    } else if (item.type === 'security') {
+      if (onNavigateToSettings) onNavigateToSettings();
+      else onNavigateToTab?.('settings');
+    } else if (item.type === 'transaction') {
+      if (onOpenRecentActivities) onOpenRecentActivities();
+      else onNavigateToTab?.('home');
     }
   };
 

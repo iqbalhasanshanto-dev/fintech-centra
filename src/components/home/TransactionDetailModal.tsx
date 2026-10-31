@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check, Paperclip, X } from 'lucide-react';
+import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check, Paperclip, X, ChevronDown } from 'lucide-react';
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
@@ -299,17 +299,20 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1">
                   Category
                 </label>
-                <select
-                  value={categoryId}
-                  onChange={e => setCategoryId(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white text-xs focus:outline-none focus:border-[#C6FF3D] font-medium cursor-pointer"
-                >
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={categoryId}
+                    onChange={e => setCategoryId(e.target.value)}
+                    className="w-full appearance-none pr-8 px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white text-xs focus:outline-none focus:border-[#C6FF3D] font-medium cursor-pointer"
+                  >
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400 dark:text-gray-500" />
+                </div>
               </div>
 
               <div>

@@ -11,7 +11,9 @@ import { TabType } from './BottomNav';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
 import { ConfirmModal } from '../ui/ConfirmModal';
-import brandLogo from '../../assets/brand/logo.png';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
+import { getUserInitials } from '../../utils/initials';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -43,9 +45,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center space-x-3 px-2 pt-1">
           <div className="w-10 h-10 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] p-1.5 flex items-center justify-center shadow-xs border border-black/[0.06] dark:border-white/[0.08]">
             <img
-              src={brandLogo}
+              src={logoOnLight}
               alt="Centra"
-              className="w-full h-full object-contain select-none"
+              className="w-full h-full object-contain select-none dark:hidden"
+              draggable={false}
+            />
+            <img
+              src={logoOnDark}
+              alt="Centra"
+              className="w-full h-full object-contain select-none hidden dark:block"
               draggable={false}
             />
           </div>
@@ -112,18 +120,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
-                alt={user.name}
+                alt={user.name || 'User'}
                 className="w-9 h-9 rounded-full object-cover border border-black/[0.06] dark:border-white/[0.08] shrink-0"
                 onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg";
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                  if (fallback) fallback.style.display = 'flex';
                 }}
               />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 font-bold text-xs flex items-center justify-center border border-black/[0.06] dark:border-white/[0.08] shrink-0">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </div>
-            )}
+            ) : null}
+            <div
+              className={`w-9 h-9 rounded-full bg-[#C6FF3D] text-[#0A0E1A] font-bold text-xs items-center justify-center border border-black/[0.06] dark:border-white/[0.08] shrink-0 select-none ${
+                user.avatarUrl ? 'hidden' : 'flex'
+              }`}
+            >
+              {getUserInitials(user.name, user.email)}
+            </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
                 {user.name}

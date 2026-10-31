@@ -3,6 +3,7 @@ import { ChevronLeft, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import logoOnDark from '../../assets/brand/logo-on-dark.svg';
 import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
+import { LegalDocsModal, LegalDocType } from '../modals/LegalDocsModal';
 import { useAuth } from '../../context/AuthContext';
 import {
   isNetworkConnected,
@@ -29,6 +30,7 @@ export const OtpScreen: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [resendCooldown, setResendCooldown] = useState(60);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -358,12 +360,30 @@ export const OtpScreen: React.FC = () => {
           {/* Footer Terms */}
           <p className="text-[10px] text-center text-gray-400 dark:text-gray-500 leading-relaxed mt-6">
             By continuing you are agreeing to our{' '}
-            <span className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
-              Privacy Policy and Terms & Conditions
-            </span>
+            <button
+              type="button"
+              onClick={() => setLegalDoc('privacy')}
+              className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+            >
+              Privacy Policy
+            </button>{' '}
+            and{' '}
+            <button
+              type="button"
+              onClick={() => setLegalDoc('terms')}
+              className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+            >
+              Terms &amp; Conditions
+            </button>
           </p>
         </div>
       </div>
+
+      <LegalDocsModal
+        isOpen={!!legalDoc}
+        initialDoc={legalDoc || 'privacy'}
+        onClose={() => setLegalDoc(null)}
+      />
     </div>
   );
 };

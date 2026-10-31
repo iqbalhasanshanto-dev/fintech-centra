@@ -60,20 +60,7 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
   }, []);
 
   return (
-    <div className="space-y-6 animate-fade-in pb-36 sm:pb-40 lg:pb-12">
-      
-      {/* Header (Figma 12-analytics--full.png) */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Analysis
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Category breakdown &amp; daily spending calendar
-          </p>
-        </div>
-      </div>
-
+    <div className="space-y-6 animate-fade-in pb-36 sm:pb-40 lg:pb-12 pt-1 sm:pt-2">
       {/* =========================================================================
           CARD 1: Expenses by category (12-analytics--full.png)
           ========================================================================= */}

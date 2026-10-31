@@ -1,5 +1,6 @@
 import React from 'react';
-import brandLogo from '../../assets/brand/logo.png';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
 
 interface CentraLogoProps {
   className?: string;
@@ -28,9 +29,15 @@ export const CentraLogo: React.FC<CentraLogoProps> = ({
         />
       )}
       <img
-        src={brandLogo}
+        src={logoOnLight}
         alt="Centra"
-        className={`${sizeMap[size]} object-contain select-none drop-shadow-sm rounded-xl`}
+        className={`${sizeMap[size]} object-contain select-none drop-shadow-sm rounded-xl dark:hidden`}
+        draggable={false}
+      />
+      <img
+        src={logoOnDark}
+        alt="Centra"
+        className={`${sizeMap[size]} object-contain select-none drop-shadow-sm rounded-xl hidden dark:block`}
         draggable={false}
       />
     </div>

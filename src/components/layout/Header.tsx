@@ -6,21 +6,25 @@ import { useTheme } from '../../context/ThemeContext';
 import { PeriodFilter } from '../../types';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { getGreeting } from '../../utils/greeting';
+import { getUserInitials } from '../../utils/initials';
 
 interface HeaderProps {
   onOpenNotifications: () => void;
   onNavigateToSettings: () => void;
   onOpenAddAction?: () => void;
+  activeTab?: 'home' | 'report' | 'plan' | 'settings' | 'cards';
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onNavigateToSettings,
   onOpenAddAction: _onOpenAddAction,
+  activeTab = 'home',
 }) => {
-  const { periodFilter, setPeriodFilter, unreadNotificationsCount, syncStatus } = useFinance();
+  const { periodFilter, setPeriodFilter, unreadNotificationsCount, syncStatus, updateSettings } = useFinance();
   const { user, isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   const [showGuestConfirm, setShowGuestConfirm] = useState(false);
   const [showExitDemoConfirm, setShowExitDemoConfirm] = useState(false);
@@ -88,14 +92,36 @@ export const Header: React.FC<HeaderProps> = ({
     >
       <div className="w-full px-4 sm:px-6 lg:px-8 h-18 py-2 flex items-center justify-between">
 
-        {/* Left: Greeting + User Name (matching frames 11-home) */}
+        {/* Left: Dynamic Header Title */}
         <div className="flex flex-col justify-center">
-          <span className="text-sm sm:text-base font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
-            {greeting}
-          </span>
-          <span className="text-xl sm:text-2xl font-semibold tracking-tight text-[#18212F] dark:text-white mt-0.5">
-            {isGuest ? 'Demo User' : user.name || 'Adam James'}
-          </span>
+          {activeTab === 'report' ? (
+            <>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
+                Analytics
+              </h1>
+              <p className="text-xs sm:text-sm font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
+                Category breakdown &amp; daily spending calendar
+              </p>
+            </>
+          ) : activeTab === 'plan' ? (
+            <>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white">
+                Goals &amp; Budgets
+              </h1>
+              <p className="text-xs sm:text-sm font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
+                Savings milestones &amp; category limits
+              </p>
+            </>
+          ) : (
+            <>
+              <span className="text-sm sm:text-base font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight">
+                {greeting}
+              </span>
+              <span className="text-xl sm:text-2xl font-semibold tracking-tight text-[#18212F] dark:text-white mt-0.5">
+                {isGuest ? 'Demo User' : user.name || 'Adam James'}
+              </span>
+            </>
+          )}
         </div>
 
         {/* Desktop center sync status indicator */}
@@ -151,16 +177,21 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action Toolbar */}
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Theme Toggle Button (Sun/Moon) */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs"
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
-            </button>
+            {/* Theme Toggle Button (Sun/Moon - Demo Mode only for rapid light/dark preview) */}
+            {isGuest && (
+              <button
+                type="button"
+                onClick={() => {
+                  toggleTheme();
+                  updateSettings({ theme: isDark ? 'light' : 'dark' });
+                }}
+                className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs"
+                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
+              </button>
+            )}
 
             {/* Notification Bell with Unread Indicator */}
             <button
@@ -198,12 +229,20 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="flex items-center px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
                   Guest
                 </span>
-              ) : (
+              ) : user.avatarUrl && !avatarLoadFailed ? (
                 <img
-                  src={user.avatarUrl || "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg"}
-                  alt={user.name}
+                  src={user.avatarUrl}
+                  alt={user.name || 'User'}
+                  onError={() => setAvatarLoadFailed(true)}
                   className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-black/5 dark:border-white/10 object-cover hover:ring-2 hover:ring-[#C6FF3D] transition-all"
                 />
+              ) : (
+                <div
+                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#C6FF3D] text-[#0A0E1A] font-bold text-xs sm:text-sm flex items-center justify-center shadow-xs border border-black/10 dark:border-white/10 hover:ring-2 hover:ring-[#C6FF3D] transition-all select-none"
+                  title={user.name || user.email || 'User'}
+                >
+                  {getUserInitials(user.name, user.email)}
+                </div>
               )}
             </button>
           </div>

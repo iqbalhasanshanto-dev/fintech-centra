@@ -64,15 +64,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
   const overallSavingsRate = totalGoalsTarget > 0 ? (totalGoalsSaved / totalGoalsTarget) * 100 : 0;
 
   return (
-    <div className="space-y-6 animate-fade-in pb-36 sm:pb-40 lg:pb-8">
-      
-      {/* Header with title */}
-      <div className="flex items-center justify-between pt-1">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Goals &amp; Budgets
-        </h1>
-      </div>
-
+    <div className="space-y-6 animate-fade-in pb-36 sm:pb-40 lg:pb-8 pt-1 sm:pt-2">
       {/* Plan Summary Hero Card */}
       <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
         <div className="flex items-center justify-between mb-3">
@@ -112,13 +104,15 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
             </span>
           </div>
 
-          <button
-            onClick={onOpenAddGoal}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] text-xs font-semibold hover:bg-[#16A34A]/25 dark:hover:bg-[#22C55E]/25 transition-colors cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ New Target</span>
-          </button>
+          {goals.length > 0 && (
+            <button
+              onClick={onOpenAddGoal}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] text-xs font-semibold hover:bg-[#16A34A]/25 dark:hover:bg-[#22C55E]/25 transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Target</span>
+            </button>
+          )}
         </div>
 
         <div className="space-y-3">

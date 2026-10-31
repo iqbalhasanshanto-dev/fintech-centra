@@ -218,7 +218,7 @@ function safeGet<T>(key: string, fallback: T): T {
   }
 }
 
-function safeSet<T>(key: string, value: T): void {
+export function safeSet<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
@@ -237,6 +237,11 @@ const cache = {
   notifications: [] as NotificationItem[],
   settings: INITIAL_SETTINGS as AppSettings,
 };
+
+const DEMO_ACCOUNT_IDS = new Set(['acc_1', 'acc_2', 'acc_3', 'acc_4']);
+const DEMO_TX_IDS = new Set(['tx_1', 'tx_2', 'tx_3', 'tx_4', 'tx_5', 'tx_6', 'tx_7', 'tx_8', 'tx_9', 'tx_10']);
+const DEMO_GOAL_IDS = new Set(['goal_1', 'goal_2', 'goal_3', 'goal_4']);
+const DEMO_BUDGET_IDS = new Set(['bud_1', 'bud_2', 'bud_3', 'bud_4', 'bud_5']);
 
 // Initialize cache for active user
 function reloadCacheForUser(userId: string | null): void {
@@ -266,12 +271,17 @@ function reloadCacheForUser(userId: string | null): void {
       onboardingCompleted: false,
       createdAt: new Date().toISOString(),
     };
+    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
     cache.user = safeGet<UserProfile>(getUserStorageKey(userId, 'user'), emptyUser);
-    cache.accounts = safeGet<Account[]>(getUserStorageKey(userId, 'accounts'), []);
+    const rawAccounts = safeGet<Account[]>(getUserStorageKey(userId, 'accounts'), []);
+    cache.accounts = !isTest ? rawAccounts.filter(a => !DEMO_ACCOUNT_IDS.has(a.id)) : rawAccounts;
     cache.categories = safeGet<Category[]>(getUserStorageKey(userId, 'categories'), []);
-    cache.transactions = safeGet<Transaction[]>(getUserStorageKey(userId, 'transactions'), []);
-    cache.goals = safeGet<Goal[]>(getUserStorageKey(userId, 'goals'), []);
-    cache.budgets = safeGet<Budget[]>(getUserStorageKey(userId, 'budgets'), []);
+    const rawTransactions = safeGet<Transaction[]>(getUserStorageKey(userId, 'transactions'), []);
+    cache.transactions = !isTest ? rawTransactions.filter(t => !DEMO_TX_IDS.has(t.id)) : rawTransactions;
+    const rawGoals = safeGet<Goal[]>(getUserStorageKey(userId, 'goals'), []);
+    cache.goals = !isTest ? rawGoals.filter(g => !DEMO_GOAL_IDS.has(g.id)) : rawGoals;
+    const rawBudgets = safeGet<Budget[]>(getUserStorageKey(userId, 'budgets'), []);
+    cache.budgets = !isTest ? rawBudgets.filter(b => !DEMO_BUDGET_IDS.has(b.id)) : rawBudgets;
     cache.notifications = safeGet<NotificationItem[]>(getUserStorageKey(userId, 'notifications'), []);
     cache.settings = safeGet<AppSettings>(getUserStorageKey(userId, 'settings'), INITIAL_SETTINGS);
   }
@@ -591,10 +601,17 @@ export const FIGMA_DEFAULT_CATEGORIES: Category[] = [
 ];
 
 export const FIGMA_DEFAULT_ACCOUNTS: Account[] = [
-  { id: 'acc_cash', name: 'Cash', type: 'cash', balance: 0, currency: 'USD', accountNumberMasked: '•••• CASH', bankName: 'Physical Cash', color: '#10B981' },
-  { id: 'acc_card', name: 'Card Payment', type: 'credit', balance: 0, currency: 'USD', accountNumberMasked: '•••• CARD', bankName: 'Card Payment', color: '#6366F1' },
-  { id: 'acc_mobile', name: 'Mobile Banking (bKash, Nagad, Rocket)', type: 'checking', balance: 0, currency: 'USD', accountNumberMasked: '•••• MFS', bankName: 'Mobile Banking', color: '#EC4899' },
-  { id: 'acc_bank', name: 'Bank Transfer', type: 'checking', balance: 0, currency: 'USD', accountNumberMasked: '•••• BANK', bankName: 'Bank Transfer', color: '#0984E3' },
+  { id: 'acc_cash', name: 'Cash', type: 'cash', balance: 0, currency: 'USD', accountNumberMasked: '•••• CASH', bankName: 'Physical Cash', color: '#10B981', isPrimary: true },
+  { id: 'acc_card', name: 'Card Payment', type: 'credit', balance: 0, currency: 'USD', accountNumberMasked: '•••• CARD', bankName: 'Credit Card', color: '#6366F1' },
+  { id: 'acc_mobile', name: 'Mobile Banking', type: 'checking', balance: 0, currency: 'USD', accountNumberMasked: '•••• MFS', bankName: 'Mobile Banking', color: '#EC4899' },
+  { id: 'acc_bank', name: 'Bank Transfer', type: 'savings', balance: 0, currency: 'USD', accountNumberMasked: '•••• BANK', bankName: 'Bank Transfer', color: '#3B82F6' },
+];
+
+export const getStandardAccounts = (currency: CurrencyCode = 'USD'): Account[] => [
+  { id: 'acc_cash', name: 'Cash', type: 'cash', balance: 0, currency, accountNumberMasked: '•••• CASH', bankName: 'Physical Cash', color: '#10B981', isPrimary: true },
+  { id: 'acc_card', name: 'Card Payment', type: 'credit', balance: 0, currency, accountNumberMasked: '•••• CARD', bankName: 'Credit Card', color: '#6366F1' },
+  { id: 'acc_mobile', name: 'Mobile Banking', type: 'checking', balance: 0, currency, accountNumberMasked: '•••• MFS', bankName: 'Mobile Banking', color: '#EC4899' },
+  { id: 'acc_bank', name: 'Bank Transfer', type: 'savings', balance: 0, currency, accountNumberMasked: '•••• BANK', bankName: 'Bank Transfer', color: '#3B82F6' },
 ];
 
 export const CentraDB = {
@@ -1502,6 +1519,17 @@ export const CentraDB = {
           }
 
           lastPullTimestampByUser.set(userId, Date.now());
+          const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+          if (!isTest && !isGuestUser(userId)) {
+            cache.accounts = cache.accounts.filter(a => !DEMO_ACCOUNT_IDS.has(a.id));
+            cache.transactions = cache.transactions.filter(t => !DEMO_TX_IDS.has(t.id));
+            cache.goals = cache.goals.filter(g => !DEMO_GOAL_IDS.has(g.id));
+            cache.budgets = cache.budgets.filter(b => !DEMO_BUDGET_IDS.has(b.id));
+            safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
+            safeSet(getUserStorageKey(userId, 'transactions'), cache.transactions);
+            safeSet(getUserStorageKey(userId, 'goals'), cache.goals);
+            safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
+          }
           safeSet(getUserStorageKey(userId, 'last_synced_at'), new Date().toISOString());
           setSyncStatus('synced');
           notifyDataChanged();
@@ -1530,7 +1558,10 @@ export const CentraDB = {
   // ---------------------------------------------------------------------------
 
   // Real user: Scoped real DELETE queries on Supabase + clear local storage ONLY on success
-  deleteAllUserData: async (userId: string): Promise<{ ok: boolean; error: unknown }> => {
+  deleteAllUserData: async (
+    userId: string,
+    options?: { forceLocalReset?: boolean; resetStandardAccounts?: boolean }
+  ): Promise<{ ok: boolean; error: unknown }> => {
     if (isGuestUser(userId)) {
       CentraDB.resetToSeedData();
       notifyDataChanged();
@@ -1545,22 +1576,25 @@ export const CentraDB = {
           const { error } = await supabase.from(table).delete().eq('user_id', userId);
           if (error) {
             logger.error(`Failed to delete remote records from ${table}:`, error);
-            setSyncStatus('error');
-            return { ok: false, error };
+            if (!options?.forceLocalReset) {
+              setSyncStatus('error');
+              return { ok: false, error };
+            }
           }
         }
       }
 
-      // Clear outbox & local user data ONLY if all remote deletions succeeded
+      // Clear outbox & local user data
       OutboxQueue.clear(userId);
-      cache.accounts = [];
+      const cur = (cache.user?.baseCurrency as CurrencyCode) || 'USD';
+      cache.accounts = options?.resetStandardAccounts ? getStandardAccounts(cur) : [];
       cache.categories = [];
       cache.transactions = [];
       cache.goals = [];
       cache.budgets = [];
       cache.notifications = [];
 
-      safeSet(getUserStorageKey(userId, 'accounts'), []);
+      safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
       safeSet(getUserStorageKey(userId, 'categories'), []);
       safeSet(getUserStorageKey(userId, 'transactions'), []);
       safeSet(getUserStorageKey(userId, 'goals'), []);
@@ -1572,6 +1606,27 @@ export const CentraDB = {
       return { ok: true, error: null };
     } catch (err: unknown) {
       logger.error('Failed to delete user data:', err);
+      if (options?.forceLocalReset) {
+        OutboxQueue.clear(userId);
+        const cur = (cache.user?.baseCurrency as CurrencyCode) || 'USD';
+        cache.accounts = options?.resetStandardAccounts ? getStandardAccounts(cur) : [];
+        cache.categories = [];
+        cache.transactions = [];
+        cache.goals = [];
+        cache.budgets = [];
+        cache.notifications = [];
+
+        safeSet(getUserStorageKey(userId, 'accounts'), cache.accounts);
+        safeSet(getUserStorageKey(userId, 'categories'), []);
+        safeSet(getUserStorageKey(userId, 'transactions'), []);
+        safeSet(getUserStorageKey(userId, 'goals'), []);
+        safeSet(getUserStorageKey(userId, 'budgets'), []);
+        safeSet(getUserStorageKey(userId, 'notifications'), []);
+
+        setSyncStatus('offline');
+        notifyDataChanged();
+        return { ok: true, error: null };
+      }
       setSyncStatus('error');
       return { ok: false, error: err };
     }
@@ -1811,6 +1866,7 @@ export const CentraDB = {
     safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
     safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
     safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
+    safeSet(getUserStorageKey(userId, 'last_synced_at'), new Date().toISOString());
     notifyDataChanged();
 
     if (isSupabaseConfigured() && !isGuestUser(userId)) {

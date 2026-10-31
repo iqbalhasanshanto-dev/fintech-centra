@@ -90,7 +90,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       />
 
       {/* Dialog card */}
-      <div className="relative z-[111] w-full max-w-sm rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 p-6 shadow-2xl animate-scale-up text-gray-900 dark:text-white transition-all">
+      <div className="relative z-[111] w-full max-w-sm rounded-[32px] bg-white dark:bg-[#181818] border border-black/10 dark:border-white/10 p-6 shadow-2xl animate-scale-up text-gray-900 dark:text-white transition-all">
         {/* Close icon */}
         <button
           onClick={onClose}

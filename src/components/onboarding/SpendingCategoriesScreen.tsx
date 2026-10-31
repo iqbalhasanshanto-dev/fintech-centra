@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import logoImg from '../../assets/brand/logo.png';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
 
 interface SpendingCategoriesScreenProps {
@@ -64,12 +65,20 @@ export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> =
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <img
-            src={logoImg}
-            alt="Centra"
-            className="w-10 h-10 object-contain drop-shadow-sm select-none rounded-xl"
-            draggable={false}
-          />
+          <div className="flex items-center">
+            <img
+              src={logoOnLight}
+              alt="Centra"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none rounded-xl dark:hidden"
+              draggable={false}
+            />
+            <img
+              src={logoOnDark}
+              alt="Centra"
+              className="w-10 h-10 object-contain drop-shadow-sm select-none rounded-xl hidden dark:block"
+              draggable={false}
+            />
+          </div>
         </div>
 
         {/* Elevated Bottom Sheet Card (07-onboarding-categories.png) */}

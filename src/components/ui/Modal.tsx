@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -23,6 +23,31 @@ export const Modal: React.FC<ModalProps> = ({
   maxWidth = 'max-w-md',
   hideHeader = false,
 }) => {
+  const touchStartY = useRef<number>(0);
+  const touchDeltaY = useRef<number>(0);
+  const [translateY, setTranslateY] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchDeltaY.current = 0;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const delta = e.touches[0].clientY - touchStartY.current;
+    if (delta > 0) {
+      touchDeltaY.current = delta;
+      setTranslateY(delta);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchDeltaY.current > 70) {
+      onClose();
+    }
+    setTranslateY(0);
+    touchDeltaY.current = 0;
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -59,6 +84,8 @@ export const Modal: React.FC<ModalProps> = ({
           isBottomSheet ? 'animate-slide-up sm:animate-fade-in' : 'animate-fade-in'
         }`}
         style={{
+          transform: translateY > 0 ? `translateY(${translateY}px)` : undefined,
+          transition: translateY === 0 ? 'transform 0.2s ease-out' : 'none',
           paddingBottom: 'env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px))',
           paddingLeft: 'env(safe-area-inset-left, var(--safe-area-inset-left, 0px))',
           paddingRight: 'env(safe-area-inset-right, var(--safe-area-inset-right, 0px))',
@@ -66,9 +93,14 @@ export const Modal: React.FC<ModalProps> = ({
         role="dialog"
         aria-modal="true"
       >
-        {/* Mobile Pull Handle Indicator */}
-        <div className="sm:hidden w-full flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-12 h-1.5 bg-black/15 dark:bg-white/20 rounded-full" />
+        {/* Mobile Pull Handle Indicator with Drag Down to Close */}
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="sm:hidden w-full flex justify-center pt-3 pb-2 shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
+        >
+          <div className="w-12 h-1.5 bg-black/20 dark:bg-white/20 rounded-full" />
         </div>
 
         {/* Header */}
