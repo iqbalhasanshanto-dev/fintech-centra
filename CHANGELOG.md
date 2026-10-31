@@ -6,9 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v3.1.2] — 2026-10-31
+
+### 🌟 Latest Release: System Theme Auto-Detection, Custom Currency Picker & Settings Polish
+
+Centra `v3.1.2` delivers system theme auto-detection on first launch, persistent user sessions across app updates, account balance consistency with transaction activity, onboarding jitter fixes, custom full-featured currency picker modal with real-time search, repaired avatar cropper zoom scaling, cross-platform Android CSV export and sharing, double-back to exit on Android, and updated developer support contacts.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v3.1.2-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.2-debug.apk) (Fallback: [`releases/Centra-v3.1.2-debug.apk?raw=true`](releases/Centra-v3.1.2-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.2-debug.apk)
+- **File Size**: `6,226,714 bytes` (5.94 MB)
+- **SHA-256 Checksum**:
+  ```
+  d8907bd7acccdf702327caff42d679d67ff9a7e9b24b75eb62ab50192b1f1d9d
+  ```
+
+#### ⚙️ Settings, Currency & Avatar Improvements
+- **Custom Base Currency Picker**: Replaced native browser select with a custom modal featuring real-time currency search, flag emojis, currency symbols, and active lime selection states.
+- **Settings Hierarchy & Appearance Label**: Renamed "Dark Mode" row to "Appearance" and established a clean 3-level typographic hierarchy across all setting cards (Section Header: 16px bold; Setting Title: 14px semibold; Subtitle: 11px muted).
+- **Repaired Avatar Cropper Scaling**: Fixed excessive 15x zoom in `ImageCropModal` by dynamically measuring image natural dimensions, auto-scaling to fit the 240px circular viewport, and supporting fine-grained `0.8x - 3.0x` zoom adjustment.
+- **Direct Developer Email**: Updated in-app legal and support contact to `mdiqbalhasan.dev@gmail.com` with clickable `mailto:` link.
+- **Android CSV Export & Sharing**: Enhanced `downloadOrShareCSV` with direct Web Share API file sharing, native text-share fallbacks, and octet-stream triggers for smooth Android downloads.
+
+#### 🚀 System Theming & User Lifecycle
+- **System Theme Auto-Detection**: Fresh launches dynamically match the host system's dark/light appearance preferences (`theme: 'system'`).
+- **Session Continuity Across App Updates**: App updates safely preserve authenticated credentials without kicking users back to the onboarding screens.
+- **Demo Mode Currency Alignment**: Retains the user's selected base currency (e.g. BDT ৳) consistently even when toggling Demo Mode.
+- **Account Information Balance Sync**: Guaranteed synchronization between Account Information summary cards and transaction balances.
+- **Onboarding Polish**: Fixed header row jumps between "Track Your Daily Expenses" and "One Last Step", enlarged title typography, and defaulted the first transaction type to Income.
+- **Double-Back to Exit**: Added standard Android double-back gesture on the Home dashboard with prompt toast to prevent accidental app exits.
+
+---
+
 ## [v3.1.1] — 2026-10-31
 
-### 🌟 Latest Release: Instant App Startup, 100% Offline Transactions & Visual Polish
+### ⚪ Previous Release: Instant App Startup, 100% Offline Transactions & Visual Polish
 
 Centra `v3.1.1` delivers synchronous instant app boot for online and offline sessions, 100% functional offline transaction processing with automated background sync on reconnect, cross-platform Google OAuth profile avatar fixes, a sleek redesigned ConfirmModal dialog card, a lag-free 60fps Dark Mode toggle, and updated dark launcher icons and splash screens.
 

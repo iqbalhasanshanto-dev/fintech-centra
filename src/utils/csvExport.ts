@@ -1,3 +1,5 @@
+import { isNative } from './platform';
+
 /**
  * Cross-platform CSV download & share utility.
  * Supports Android WebView, Capacitor, iOS, and desktop browsers.
@@ -9,26 +11,61 @@ export async function downloadOrShareCSV(csvContent: string, filename: string): 
   }
 
   // 1. Try Web Share API with File (Supported in modern mobile WebViews and browsers)
-  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof File !== 'undefined') {
-    try {
-      const file = new File([csvContent], filename, { type: 'text/csv;charset=utf-8;' });
-      if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    if (typeof File !== 'undefined') {
+      try {
+        const file = new File([csvContent], filename, { type: 'text/csv;charset=utf-8;' });
         await navigator.share({
           files: [file],
-          title: 'Export Transactions',
+          title: filename,
           text: 'Centra transactions export',
         });
         return true;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return true; // User dismissed share sheet
+        }
+        // If file sharing throws (NotSupportedError / TypeError in WebView), proceed to fallbacks
       }
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return true; // User dismissed share sheet
+    }
+
+    // Fallback share with text content on native platforms
+    if (isNative()) {
+      try {
+        await navigator.share({
+          title: filename,
+          text: csvContent,
+        });
+        return true;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return true;
+        }
       }
-      // If share throws other errors, proceed to blob download fallback
     }
   }
 
-  // 2. Try standard Blob ObjectURL download
+  // 2. On native Android/Capacitor, trigger application/octet-stream data URI
+  // so Android WebView's DownloadListener / system handles it cleanly
+  if (isNative() && typeof document !== 'undefined') {
+    try {
+      const octetUri = 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(csvContent);
+      const link = document.createElement('a');
+      link.href = octetUri;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 200);
+      return true;
+    } catch {
+      // Proceed to standard blob download
+    }
+  }
+
+  // 3. Try standard Blob ObjectURL download
   if (typeof document !== 'undefined' && typeof Blob !== 'undefined' && typeof URL !== 'undefined') {
     try {
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -48,9 +85,9 @@ export async function downloadOrShareCSV(csvContent: string, filename: string): 
       // Proceed to data URI fallback
     }
 
-    // 3. Data URI fallback
+    // 4. Data URI fallback
     try {
-      const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+      const encodedUri = 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(csvContent);
       const link = document.createElement('a');
       link.setAttribute('href', encodedUri);
       link.setAttribute('download', filename);

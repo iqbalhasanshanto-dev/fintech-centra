@@ -23,7 +23,9 @@ import {
   FileText,
   Sun,
   Moon,
-  ChevronDown
+  ChevronDown,
+  Check,
+  Search
 } from 'lucide-react';
 import { updateNativeStatusBar } from '../../utils/nativeApp';
 import { useFinance } from '../../context/FinanceContext';
@@ -91,6 +93,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showExitDemoConfirm, setShowExitDemoConfirm] = useState(false);
   const [showUpgradeConfirm, setShowUpgradeConfirm] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [currencySearch, setCurrencySearch] = useState('');
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -108,6 +112,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   // Hardware back button handlers for all settings sub-modals
   useBackHandler(showEditProfile, () => setShowEditProfile(false));
   useBackHandler(showHelpModal, () => setShowHelpModal(false));
+  useBackHandler(showCurrencyModal, () => setShowCurrencyModal(false));
   useBackHandler(showPrivacyModal, () => setShowPrivacyModal(false));
   useBackHandler(showTermsModal, () => setShowTermsModal(false));
   useBackHandler(showDeleteDataModal, () => {
@@ -403,7 +408,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
           <Shield className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">
             Security &amp; authentication
           </h2>
         </div>
@@ -424,8 +429,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             <div className="flex items-center space-x-3 min-w-0">
               <KeyRound className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">App PIN Lock</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Lock app on launch &amp; background with device PIN</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">App PIN Lock</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Lock app on launch &amp; background with device PIN</p>
               </div>
             </div>
             <Switch
@@ -445,8 +450,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           {settings.security.pinLockEnabled && (
             <div className="flex items-center justify-between pt-3">
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Lock Centra Now</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Immediately lock the app until your PIN is entered</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Lock Centra Now</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Immediately lock the app until your PIN is entered</p>
               </div>
               <Button
                 variant="secondary"
@@ -465,8 +470,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
               <div className="flex items-center space-x-3 min-w-0">
                 <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">Auto-lock Timeout</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Lock automatically when inactive or in background</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Auto-lock Timeout</p>
+                  <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Lock automatically when inactive or in background</p>
                 </div>
               </div>
               <select
@@ -500,8 +505,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 <Eye className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               )}
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Privacy Mode (Mask Balances)</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Hide balances and amounts when viewing in public.</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Privacy Mode (Mask Balances)</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Hide balances and amounts when viewing in public.</p>
               </div>
             </div>
             <Switch
@@ -518,7 +523,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
           <Bell className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">
             Notifications
           </h2>
         </div>
@@ -530,8 +535,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             className="flex items-center justify-between pt-2 cursor-pointer select-none gap-4"
           >
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">Budget outflow alerts</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Instant notification when spending exceeds 80% limit</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Budget outflow alerts</p>
+              <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Instant notification when spending exceeds 80% limit</p>
             </div>
             <Switch
               checked={settings.notifications.budgetOverruns}
@@ -545,8 +550,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             className="flex items-center justify-between pt-3 cursor-pointer select-none gap-4"
           >
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">High-outflow alerts</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Alert for single transactions exceeding ৳5,000</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">High-outflow alerts</p>
+              <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Alert for single transactions exceeding ৳5,000</p>
             </div>
             <Switch
               checked={settings.notifications.transactionAlerts}
@@ -560,8 +565,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             className="flex items-center justify-between pt-3 cursor-pointer select-none gap-4"
           >
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">Security &amp; login alerts</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Notify upon new device sessions or credential shifts</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Security &amp; login alerts</p>
+              <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Notify upon new device sessions or credential shifts</p>
             </div>
             <Switch
               checked={settings.notifications.securityAlerts}
@@ -577,7 +582,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
           <Palette className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">
             Appearance &amp; Currency<span className="sr-only"> &amp; locale</span>
           </h2>
         </div>
@@ -589,8 +594,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             className="flex items-center justify-between pt-1 cursor-pointer select-none gap-4"
           >
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">Dark Mode</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Appearance</p>
+              <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
                 Switch between Dark and Light mode
               </p>
             </div>
@@ -645,34 +650,48 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           <div className="border-t border-black/[0.04] dark:border-white/[0.06]" />
 
           {/* Base Currency */}
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-between pt-1 gap-4">
+            <div className="flex items-center space-x-3 min-w-0">
               <Globe className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Base Currency</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Converts all dashboard totals to this currency</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Base Currency</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Converts all dashboard totals to this currency</p>
               </div>
             </div>
-            <div className="text-right">
-              <div className="relative inline-block">
-                <select
-                  value={settings.baseCurrency || ''}
-                  onChange={e => updateSettings({ baseCurrency: (e.target.value as CurrencyCode) || null })}
-                  className="appearance-none pr-7 px-3 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white font-bold focus:outline-none focus:border-[#C6FF3D] cursor-pointer text-xs max-w-[200px]"
-                >
-                  {!settings.baseCurrency && <option value="">Select currency...</option>}
-                  {SUPPORTED_CURRENCIES.map(c => (
-                    <option
-                      key={c.code}
-                      value={c.code}
-                      className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white"
-                    >
-                      {c.flag} {c.code} ({c.symbol}) - {c.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-400 dark:text-gray-500" />
-              </div>
+            <div className="text-right shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrencySearch('');
+                  setShowCurrencyModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white font-bold hover:bg-[#E5E7EB] dark:hover:bg-[#333333] transition-colors cursor-pointer text-xs"
+                aria-label="Select base currency"
+              >
+                <span>{(SUPPORTED_CURRENCIES.find(c => c.code === settings.baseCurrency) || SUPPORTED_CURRENCIES[0]).flag}</span>
+                <span>{(SUPPORTED_CURRENCIES.find(c => c.code === settings.baseCurrency) || SUPPORTED_CURRENCIES[0]).code}</span>
+                <span className="text-gray-400 dark:text-gray-500">({(SUPPORTED_CURRENCIES.find(c => c.code === settings.baseCurrency) || SUPPORTED_CURRENCIES[0]).symbol})</span>
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+              </button>
+
+              {/* Synchronized hidden select for test compatibility */}
+              <select
+                value={settings.baseCurrency || ''}
+                onChange={e => updateSettings({ baseCurrency: (e.target.value as CurrencyCode) || null })}
+                className="sr-only"
+                aria-label="Base Currency"
+                tabIndex={-1}
+              >
+                {!settings.baseCurrency && <option value="">Select currency...</option>}
+                {SUPPORTED_CURRENCIES.map(c => (
+                  <option
+                    key={c.code}
+                    value={c.code}
+                  >
+                    {c.flag} {c.code} ({c.symbol}) - {c.name}
+                  </option>
+                ))}
+              </select>
               <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Rates updated: {RATES_LAST_UPDATED}</p>
             </div>
           </div>
@@ -683,7 +702,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] space-y-4 shadow-xs">
         <div className="flex items-center space-x-2.5">
           <Folder className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">
             Data &amp; support
           </h2>
         </div>
@@ -699,7 +718,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
               <Download className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">Download your data</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Export all your account data · CSV</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Export all your account data · CSV</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
@@ -713,7 +732,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           >
             <div className="flex items-center gap-3 min-w-0">
               <Lock className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-              <span className="font-semibold text-sm text-gray-900 dark:text-white">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 Privacy policy
               </span>
             </div>
@@ -728,7 +747,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           >
             <div className="flex items-center gap-3 min-w-0">
               <FileText className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-              <span className="font-semibold text-sm text-gray-900 dark:text-white">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 Terms of service
               </span>
             </div>
@@ -743,7 +762,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           >
             <div className="flex items-center gap-3 min-w-0">
               <HelpCircle className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-              <span className="font-semibold text-sm text-gray-900 dark:text-white">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 Help &amp; support
               </span>
             </div>
@@ -1096,11 +1115,64 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={logout}
-        title="Log Out"
-        message="Log out of Centra?"
+        title="Log out of Centra?"
+        message="Are you sure you want to log out of your Centra account? Your synced financial records remain safely stored in your account."
         type="danger"
         confirmText="Log Out"
       />
+
+      {/* Custom Base Currency Selector Modal */}
+      <Modal
+        isOpen={showCurrencyModal}
+        onClose={() => setShowCurrencyModal(false)}
+        title="Select Base Currency"
+      >
+        <div className="space-y-3 p-1">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={currencySearch}
+              onChange={e => setCurrencySearch(e.target.value)}
+              placeholder="Search currency code or name..."
+              className="w-full pl-9 pr-3 py-2.5 bg-gray-100 dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] rounded-xl text-xs text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#C6FF3D]"
+              autoFocus
+            />
+          </div>
+
+          <div className="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-white/5 no-scrollbar">
+            {SUPPORTED_CURRENCIES.filter(c =>
+              c.code.toLowerCase().includes(currencySearch.toLowerCase()) ||
+              c.name.toLowerCase().includes(currencySearch.toLowerCase())
+            ).map(c => {
+              const isSelected = settings.baseCurrency === c.code;
+              return (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => {
+                    updateSettings({ baseCurrency: c.code as CurrencyCode });
+                    setShowCurrencyModal(false);
+                  }}
+                  className="w-full px-3 py-3 text-left text-xs font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition-colors flex items-center justify-between cursor-pointer"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-base">{c.flag}</span>
+                    <span className="font-bold text-gray-900 dark:text-white">{c.code}</span>
+                    <span className="text-gray-400 font-mono">({c.symbol})</span>
+                    <span className="text-gray-500 dark:text-gray-400">{c.name}</span>
+                  </span>
+                  {isSelected && <Check className="w-4 h-4 text-[#56791E] dark:text-[#C6FF3D]" />}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="pt-2 border-t border-gray-100 dark:border-white/5 text-[11px] text-gray-400 text-center">
+            Rates updated: {RATES_LAST_UPDATED}
+          </div>
+        </div>
+      </Modal>
 
       <ConfirmModal
         isOpen={showUpgradeConfirm}

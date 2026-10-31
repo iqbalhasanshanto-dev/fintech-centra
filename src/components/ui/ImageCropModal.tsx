@@ -26,6 +26,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const dragStartRef = useRef({ x: 0, y: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [naturalSize, setNaturalSize] = useState({ width: 240, height: 240 });
 
   // Reset when opening with a new image
   const [prevModalState, setPrevModalState] = useState({ isOpen, imageSrc });
@@ -35,8 +36,13 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
       setScale(1);
       setPosition({ x: 0, y: 0 });
       setImageLoaded(false);
+      setNaturalSize({ width: 240, height: 240 });
     }
   }
+
+  const baseScale = Math.max(240 / (naturalSize.width || 240), 240 / (naturalSize.height || 240));
+  const displayedWidth = naturalSize.width * baseScale;
+  const displayedHeight = naturalSize.height * baseScale;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -187,8 +193,17 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             ref={imgRef}
             src={imageSrc}
             alt="Source preview"
-            onLoad={() => setImageLoaded(true)}
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              setNaturalSize({
+                width: img.naturalWidth || 240,
+                height: img.naturalHeight || 240,
+              });
+              setImageLoaded(true);
+            }}
             style={{
+              width: `${displayedWidth}px`,
+              height: `${displayedHeight}px`,
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transformOrigin: 'center center',
               maxWidth: 'none',
@@ -213,7 +228,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
           <ZoomOut className="w-4 h-4 text-gray-400 shrink-0" />
           <input
             type="range"
-            min="1"
+            min="0.8"
             max="3"
             step="0.05"
             value={scale}

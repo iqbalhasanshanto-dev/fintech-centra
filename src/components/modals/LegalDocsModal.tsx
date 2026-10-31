@@ -193,7 +193,12 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/10">
                   <span className="font-semibold text-gray-900 dark:text-white">Direct Developer Email</span>
-                  <span className="font-mono text-xs text-gray-500 dark:text-gray-400">iqbalhasanshanto@gmail.com</span>
+                  <a
+                    href="mailto:mdiqbalhasan.dev@gmail.com?subject=Centra%20Support%20%26%20Feedback"
+                    className="font-mono text-xs text-[#56791E] dark:text-[#C6FF3D] underline underline-offset-2 hover:opacity-80"
+                  >
+                    mdiqbalhasan.dev@gmail.com
+                  </a>
                 </div>
               </div>
             </div>
