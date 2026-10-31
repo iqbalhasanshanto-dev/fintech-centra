@@ -109,7 +109,7 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[#F7F8FA] dark:bg-[#000000] text-gray-900 dark:text-gray-100 flex antialiased transition-colors duration-200">
+    <div className="min-h-[100dvh] w-full bg-[#F7F8FA] dark:bg-[#000000] text-gray-900 dark:text-gray-100 flex antialiased">
 
       {/* 1. Desktop Left Sidebar Navigation (Visible on lg: ≥1024px) */}
       <Sidebar
@@ -122,7 +122,7 @@ export const AppShell: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 w-full min-h-[100dvh] bg-[#F7F8FA] dark:bg-[#000000]">
 
         {/* Top Header Toolbar */}
-        <div className={effectiveTab === 'settings' ? 'hidden lg:block' : ''}>
+        <div className={effectiveTab === 'settings' ? 'hidden lg:block sticky top-0 z-40' : 'sticky top-0 z-40'}>
           <Header
             activeTab={effectiveTab}
             onOpenNotifications={() => setShowNotificationsModal(true)}
@@ -139,7 +139,7 @@ export const AppShell: React.FC = () => {
         )}
 
         {/* Main Screen Content Container */}
-        <main ref={mainContentRef} className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4 md:py-6 bg-[#F7F8FA] dark:bg-[#000000]">
+        <main ref={mainContentRef} className={`flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${effectiveTab === 'settings' ? 'pt-0 pb-4' : 'pt-3 pb-4'} md:py-6 bg-[#F7F8FA] dark:bg-[#000000]`}>
           {effectiveTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => handleSelectTab('report')}
@@ -170,7 +170,7 @@ export const AppShell: React.FC = () => {
         </main>
 
         {/* Centra Footer */}
-        <footer id="footer" className="max-w-7xl mx-auto w-full px-6 py-6 pb-24 lg:pb-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-3 transition-colors">
+        <footer id="footer" className="max-w-7xl mx-auto w-full px-6 py-6 pb-24 lg:pb-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Centra Financial OS • Offline-First</span>
           </div>

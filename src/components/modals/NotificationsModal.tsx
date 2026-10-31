@@ -252,44 +252,53 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Notifications"
-      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto flex flex-col text-[#18212F] dark:text-white transition-colors antialiased animate-fade-in"
-      style={{
-        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
-        paddingLeft: 'env(safe-area-inset-left, 0px)',
-        paddingRight: 'env(safe-area-inset-right, 0px)',
-        paddingBottom: 'calc(3rem + env(safe-area-inset-bottom, 0px))',
-      }}
+      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] flex flex-col overflow-hidden text-[#18212F] dark:text-white antialiased"
     >
-      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-4 px-4 sm:px-6 pb-3">
-        {/* Top Header Bar matching Figma Frame 10. Notifications (40px Back + 24px Title + Clear) */}
-        <div className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 pb-2 flex items-center justify-between">
+      {/* Top Header Bar matching unified spec */}
+      <div
+        className="shrink-0 w-full bg-[#F7F8FA] dark:bg-[#000000] border-b border-black/5 dark:border-white/10"
+        style={{
+          paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+        }}
+      >
+        <div className="w-full max-w-lg mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shadow-xs"
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 cursor-pointer shrink-0"
             aria-label="Back"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight text-[#18212F] dark:text-white text-center">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white text-center">
             Notifications
-          </h2>
+          </h1>
 
           {uniqueNotifications.length > 0 ? (
             <button
               type="button"
               onClick={clearNotifications}
-              className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shadow-xs"
+              className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0 shadow-xs"
               title="Clear all"
               aria-label="Clear all notifications"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           ) : (
-            <div className="w-10 h-10" aria-hidden="true" />
+            <div className="w-10 h-10 shrink-0" aria-hidden="true" />
           )}
         </div>
+      </div>
+
+      {/* Notifications Scroll List Container */}
+      <div
+        className="flex-1 overflow-y-auto px-4 sm:px-6 pt-3 pb-24"
+        style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-4 pb-3">
 
         {/* Inbox Controls Bar: "Your updates" + unread badge + "Mark all as read" */}
         <div className="flex items-center justify-between pt-1">
@@ -361,6 +370,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         </div>
       </div>
     </div>
+  </div>
   );
 
   return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : modalNode;

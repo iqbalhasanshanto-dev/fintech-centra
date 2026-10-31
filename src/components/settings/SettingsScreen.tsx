@@ -304,27 +304,31 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   ];
 
   return (
-    <div
-      className="space-y-4 pb-2 animate-fade-in"
-      style={{
-        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
-      }}
-    >
+    <div className="space-y-4 pb-2">
 
-      {/* Top Header Bar matching 14-settings.png */}
-      <div className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 pb-2 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Back"
-          className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer shadow-xs"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
+      {/* Top Header Bar matching unified spec */}
+      <div
+        className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-4 sm:-mx-6 lg:-mx-8 border-b border-black/5 dark:border-white/10"
+        style={{
+          paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+        }}
+      >
+        <div className="w-full max-w-lg mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back"
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 cursor-pointer shrink-0"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
 
-        <h1 className="text-2xl sm:text-[28px] font-bold text-gray-900 dark:text-white text-center flex-1 pr-10 tracking-tight">
-          Settings
-        </h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white text-center">
+            Settings
+          </h1>
+
+          <div className="w-10 h-10 shrink-0" aria-hidden="true" />
+        </div>
       </div>
 
       {/* Guest Mode Upgrade Banner */}
@@ -353,7 +357,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       )}
 
       {/* 1. Profile Card with Camera Badge Overlay & Edit button */}
-      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between transition-colors shadow-xs">
+      <div className="p-5 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between shadow-xs">
         <div className="flex items-center space-x-4 min-w-0">
           <div className="relative shrink-0">
             {user.avatarUrl ? (
@@ -398,7 +402,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             setShowEditProfile(true);
           }}
           aria-label="Edit user profile"
-          className="w-10 h-10 rounded-full bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#E5E7EB] dark:hover:bg-[#333333] transition-colors cursor-pointer shrink-0"
+          className="w-10 h-10 rounded-full bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-[#E5E7EB] dark:hover:bg-[#333333] cursor-pointer shrink-0"
         >
           <Edit2 className="w-4 h-4" />
         </button>
@@ -609,14 +613,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 e.stopPropagation();
                 handleToggleTheme();
               }}
-              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 border transition-colors duration-200 ease-in-out focus:outline-hidden ${
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 border focus:outline-hidden ${
                 isDarkActive
                   ? 'bg-[#C6FF3D] border-[#C6FF3D]'
                   : 'bg-[#E5E7EB] border-[#D1D5DB] dark:bg-[#262626] dark:border-white/[0.12]'
               }`}
             >
               <span
-                className={`pointer-events-none flex items-center justify-center h-6 w-6 rounded-full shadow-xs transition-transform duration-200 ease-in-out ${
+                className={`pointer-events-none flex items-center justify-center h-6 w-6 rounded-full shadow-xs transition-transform duration-150 ease-out ${
                   isDarkActive
                     ? 'translate-x-5 bg-[#0A0E1A] text-[#C6FF3D]'
                     : 'translate-x-0 bg-white text-amber-500'
@@ -665,7 +669,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                   setCurrencySearch('');
                   setShowCurrencyModal(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white font-bold hover:bg-[#E5E7EB] dark:hover:bg-[#333333] transition-colors cursor-pointer text-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white font-bold hover:bg-[#E5E7EB] dark:hover:bg-[#333333] cursor-pointer text-xs"
                 aria-label="Select base currency"
               >
                 <span>{(SUPPORTED_CURRENCIES.find(c => c.code === settings.baseCurrency) || SUPPORTED_CURRENCIES[0]).flag}</span>
@@ -721,7 +725,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">Export all your account data · CSV</p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
 
           {/* Privacy Policy */}
@@ -736,7 +740,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 Privacy policy
               </span>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
 
           {/* Terms of Service */}
@@ -751,7 +755,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 Terms of service
               </span>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
 
           {/* Help & Support */}
@@ -766,7 +770,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 Help &amp; support
               </span>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors shrink-0" />
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
         </div>
 
@@ -800,7 +804,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           <button
             type="button"
             onClick={() => setShowExitDemoConfirm(true)}
-            className="w-full py-4 px-5 rounded-[99px] flex items-center justify-center space-x-2 border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] transition-colors cursor-pointer shadow-xs font-semibold text-sm"
+            className="w-full py-4 px-5 rounded-[99px] flex items-center justify-center space-x-2 border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] cursor-pointer shadow-xs font-semibold text-sm"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>Exit Demo</span>
@@ -809,7 +813,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           <button
             type="button"
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full py-4 px-5 rounded-[99px] flex items-center justify-center space-x-2 border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] transition-colors cursor-pointer shadow-xs font-semibold text-sm"
+            className="w-full py-4 px-5 rounded-[99px] flex items-center justify-center space-x-2 border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] hover:bg-[#F1F2F4] dark:hover:bg-[#262626] text-[#E11D48] dark:text-[#F43F5E] cursor-pointer shadow-xs font-semibold text-sm"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>Log Out of Session</span>

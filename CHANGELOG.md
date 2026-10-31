@@ -6,9 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v3.1.3] — 2026-10-31
+
+### 🌟 Latest Release: Locked Sticky Headers, Unified Typography & 60fps Theme Toggle
+
+Centra `v3.1.3` locks all top headers securely in place across Home, Analytics, Goals & Budgets, Settings, Notifications, and Recent Activities. It unifies header height, alignment, back button ergonomics, and title typography (`text-xl sm:text-2xl font-bold tracking-tight`), removes the theme transition lag on the `BDT (৳)` currency button and cards during Dark/Light toggling, and prevents content cards from bleeding above sticky headers during scroll.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v3.1.3-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) (Fallback: [`releases/Centra-v3.1.3-debug.apk?raw=true`](releases/Centra-v3.1.3-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk)
+- **File Size**: `6,226,934 bytes` (5.94 MB)
+- **SHA-256 Checksum**:
+  ```
+  6248c2286c48cd0c9cb8da287ff157bdc88c0d8040c8aa6522f92ae4cb7bf93a
+  ```
+
+#### 📌 Header Locking & Unified Alignment
+- **Locked Sticky Top Headers on Dashboard**: Added `sticky top-0 z-40` directly to the `<Header>` wrapper in `AppShell.tsx` and unified `<header>` with an opaque solid background (`bg-[#F7F8FA] dark:bg-[#000000]`) and standard `h-14` inner toolbar height.
+- **Unified Settings, Notifications & Recent Activities Headers**: Standardized header bars across all three views with identical `h-14` height, 40px circular back button (`w-10 h-10`), mathematically centered `text-xl sm:text-2xl font-bold tracking-tight` titles, and balanced 40px right utility/dummy targets (`w-10 h-10 shrink-0`).
+- **Eliminated Scroll Gap & Content Bleed**: Relocated `safe-area-inset-top` padding inside the sticky/fixed header containers rather than outer scroll wrappers, and isolated `NotificationsModal` and `TransactionDrawer` inside separate flex-column layout shells where the header never scrolls and cards cannot bleed through.
+
+#### ⚡ 60fps Dark/Light Mode Frame Consistency
+- **Zero Lag on Currency Button & Setting Cards**: Removed mismatched `transition-colors` delays (`150ms–200ms`) from the `BDT (৳)` currency trigger button, user profile card, edit button, and setting cards.
+- **Synchronous 60fps Palette Shift**: Retained CSS transition exclusively on the toggle switch thumb (`transition-transform duration-150 ease-out`), guaranteeing that the entire page, buttons, cards, and borders change theme simultaneously on the exact same frame with zero visible delay.
+
+---
+
 ## [v3.1.2] — 2026-10-31
 
-### 🌟 Latest Release: System Theme Auto-Detection, Custom Currency Picker & Settings Polish
+### ⚪ Previous Release: System Theme Auto-Detection, Custom Currency Picker & Settings Polish
 
 Centra `v3.1.2` delivers system theme auto-detection on first launch, persistent user sessions across app updates, account balance consistency with transaction activity, onboarding jitter fixes, custom full-featured currency picker modal with real-time search, repaired avatar cropper zoom scaling, cross-platform Android CSV export and sharing, double-back to exit on Android, and updated developer support contacts.
 

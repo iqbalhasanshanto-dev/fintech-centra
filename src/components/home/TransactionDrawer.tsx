@@ -116,12 +116,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Recent Activities - All Transactions"
-      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] overflow-y-auto animate-fade-in"
-      style={{
-        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
-        paddingLeft: 'env(safe-area-inset-left, 0px)',
-        paddingRight: 'env(safe-area-inset-right, 0px)',
-      }}
+      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] flex flex-col overflow-hidden"
     >
       {/* Toast notification banner */}
       {toastMessage && (
@@ -130,22 +125,29 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
         </div>
       )}
 
-      <div className="w-full max-w-lg mx-auto px-4 sm:px-6 space-y-4 pb-28">
-        {/* Top Header Bar */}
-        <div className="flex items-center justify-between pb-3">
+      {/* Top Header Bar matching unified spec */}
+      <div
+        className="shrink-0 w-full bg-[#F7F8FA] dark:bg-[#000000] border-b border-black/5 dark:border-white/10"
+        style={{
+          paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+        }}
+      >
+        <div className="w-full max-w-lg mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer shrink-0"
+            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 cursor-pointer shrink-0"
             aria-label="Back"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <h2 className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white text-center">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white text-center">
             Recent Activities
             <span className="sr-only"> - All Transactions</span>
-          </h2>
+          </h1>
 
           <button
             type="button"
@@ -157,6 +159,14 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
             <Download className="w-4 h-4 text-[#4D6E18] dark:text-[#C6FF3D]" />
           </button>
         </div>
+      </div>
+
+      {/* Content Scroll Container */}
+      <div
+        className="flex-1 overflow-y-auto px-4 sm:px-6 pt-3 pb-28"
+        style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="w-full max-w-lg mx-auto space-y-4">
 
         {/* Full-width Rounded Search Bar */}
         <div className="relative">
@@ -348,6 +358,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
         </div>
       </div>
     </div>
+  </div>
   );
 
   return typeof document !== 'undefined' ? createPortal(drawerNode, document.body) : drawerNode;
