@@ -73,6 +73,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   // Close floating menu on Android hardware back
   useBackHandler(isMenuOpen, () => setIsMenuOpen(false));
 
+  // Lock background scrolling when quick action menu is open
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevDocOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevDocOverflow;
+    };
+  }, [isMenuOpen]);
+
   useEffect(() => {
     const isFormField = (el: Element | null) => {
       if (!el) return false;
@@ -137,7 +150,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {isMenuOpen && (
         <div
           onClick={() => setIsMenuOpen(false)}
-          className="fixed inset-0 backdrop-blur-md bg-black/50 z-40 animate-fade-in pointer-events-auto select-none"
+          onTouchMove={e => e.preventDefault()}
+          className="fixed inset-0 backdrop-blur-md bg-black/50 z-40 animate-fade-in pointer-events-auto select-none touch-none"
           aria-hidden="true"
         />
       )}

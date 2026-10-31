@@ -445,7 +445,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
 
 export const INITIAL_SETTINGS: AppSettings = {
   theme: 'light',
-  baseCurrency: null,
+  baseCurrency: 'USD',
   privacyMode: false,
   security: {
     biometricEnabled: false,

@@ -11,6 +11,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
+import { Account } from '../../types';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { AddAccountModal } from './AddAccountModal';
@@ -488,7 +489,27 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       selectedAcc = fallbackAcc;
     }
 
-    const txCurrency = selectedAcc?.currency || settings.baseCurrency || 'USD';
+    if (!selectedAcc && accounts.length > 0) {
+      selectedAcc = accounts[0];
+    }
+
+    const activeAcc: Account = selectedAcc || {
+      id: 'acc_cash',
+      name: 'Cash',
+      type: 'cash',
+      balance: 0,
+      currency: settings.baseCurrency || 'USD',
+      accountNumberMasked: '•••• CASH',
+      bankName: 'Cash',
+      color: '#10B981',
+      isPrimary: true,
+    };
+
+    if (!selectedAcc) {
+      await CentraDB.upsertAccount(activeAcc);
+    }
+
+    const txCurrency = activeAcc.currency || settings.baseCurrency || 'USD';
     const amountRes = validateAmount(amount, txCurrency);
     if (!amountRes.ok) {
       setAmountError(amountRes.error || 'Please enter a valid amount.');
@@ -515,11 +536,6 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       }
     }
 
-    if (!selectedAcc) {
-      setErrorMessage('Please add or select an account first to record transactions.');
-      return false;
-    }
-
     let finalCategoryId = categoryId;
     let selectedCat = categories.find(c => c.id === categoryId);
     if (!selectedCat) {
@@ -543,32 +559,38 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     }
     const type = activeTab === 'income' ? 'income' : 'expense';
 
-    await addTransaction({
-      type,
-      amount: parsedAmount,
-      currency: selectedAcc?.currency || settings.baseCurrency || 'USD',
-      categoryId: finalCategoryId,
-      categoryName: selectedCat.name,
-      categoryIcon: selectedCat.icon,
-      categoryColor: selectedCat.color,
-      accountId: selectedAcc.id,
-      accountName: selectedAcc?.name || 'Primary Account',
-      merchant: sanitizeText(merchant, 100) || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
-      date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
-      note: sanitizeText(note, 300) + (receiptName ? ` [Attached: ${sanitizeText(receiptName, 100)}]` : ''),
-      receiptUrl: receiptDataUrl || undefined,
-      tags: [type === 'income' ? 'Income' : 'Spend'],
-    });
+    try {
+      await addTransaction({
+        type,
+        amount: parsedAmount,
+        currency: activeAcc.currency || settings.baseCurrency || 'USD',
+        categoryId: finalCategoryId,
+        categoryName: selectedCat.name,
+        categoryIcon: selectedCat.icon,
+        categoryColor: selectedCat.color,
+        accountId: activeAcc.id,
+        accountName: activeAcc.name || 'Primary Account',
+        merchant: sanitizeText(merchant, 100) || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
+        date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
+        note: sanitizeText(note, 300) + (receiptName ? ` [Attached: ${sanitizeText(receiptName, 100)}]` : ''),
+        receiptUrl: receiptDataUrl || undefined,
+        tags: [type === 'income' ? 'Income' : 'Spend'],
+      });
 
-    if (keepOpen) {
-      resetTransactionFields();
-      setFeedbackMsg(`✓ ${type === 'income' ? 'Income' : 'Spend'} saved! Ready for next.`);
-      setTimeout(() => setFeedbackMsg(null), 3000);
-    } else {
-      resetTransactionFields();
-      onClose();
+      if (keepOpen) {
+        resetTransactionFields();
+        setFeedbackMsg(`✓ ${type === 'income' ? 'Income' : 'Spend'} saved! Ready for next.`);
+        setTimeout(() => setFeedbackMsg(null), 3000);
+      } else {
+        resetTransactionFields();
+        onClose();
+      }
+      return true;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to save transaction';
+      setErrorMessage(msg);
+      return false;
     }
-    return true;
   };
 
   // Perform Save for Transfer
@@ -714,24 +736,28 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       }
       if (!goalContribCat) {
         setErrorMessage('Missing system category for goal contribution.');
-        return;
+        return false;
       }
 
-      await addTransaction({
-        type: 'expense',
-        amount: deposit,
-        currency: selectedDepositAcc?.currency || settings.baseCurrency || 'USD',
-        categoryId: goalContribCat.id,
-        categoryName: goalContribCat.name || 'Goal Funding',
-        categoryIcon: goalContribCat.icon || 'Target',
-        categoryColor: goalContribCat.color || '#6366f1',
-        accountId: accountId,
-        accountName: selectedDepositAcc?.name || 'Primary Account',
-        merchant: `Goal: ${cleanGoalName}`,
-        date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
-        note: `Initial deposit for goal: ${cleanGoalName}`,
-        tags: ['Goal', 'Savings'],
-      });
+      try {
+        await addTransaction({
+          type: 'expense',
+          amount: deposit,
+          currency: selectedDepositAcc?.currency || settings.baseCurrency || 'USD',
+          categoryId: goalContribCat.id,
+          categoryName: goalContribCat.name || 'Goal Funding',
+          categoryIcon: goalContribCat.icon || 'Target',
+          categoryColor: goalContribCat.color || '#6366f1',
+          accountId: accountId,
+          accountName: selectedDepositAcc?.name || 'Primary Account',
+          merchant: `Goal: ${cleanGoalName}`,
+          date: new Date(`${txDate}T12:00:00.000Z`).toISOString(),
+          note: `Initial deposit for goal: ${cleanGoalName}`,
+          tags: ['Goal', 'Savings'],
+        });
+      } catch (err: unknown) {
+        console.error('Error recording initial deposit for goal:', err);
+      }
     }
 
     if (keepOpen) {
@@ -772,26 +798,31 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         CentraDB.upsertCategory(cat);
       }
     }
-    addBudget({
-      categoryId: budgetCategoryId,
-      categoryName: cat?.name || 'Category',
-      categoryIcon: cat?.icon || 'PieChart',
-      categoryColor: cat?.color || '#6366f1',
-      limitAmount: limit,
-      spentAmount: 0,
-      alertThreshold: budgetAlertThreshold,
-      period: 'monthly',
-    });
+    try {
+      addBudget({
+        categoryId: budgetCategoryId,
+        categoryName: cat?.name || 'Category',
+        categoryIcon: cat?.icon || 'PieChart',
+        categoryColor: cat?.color || '#6366f1',
+        limitAmount: limit,
+        spentAmount: 0,
+        alertThreshold: budgetAlertThreshold,
+        period: 'monthly',
+      });
 
-    if (keepOpen) {
-      setAmount('');
-      setFeedbackMsg('✓ Budget created! Ready for next.');
-      setTimeout(() => setFeedbackMsg(null), 3000);
-    } else {
-      setAmount('');
-      onClose();
+      if (keepOpen) {
+        setAmount('');
+        setFeedbackMsg('✓ Budget created! Ready for next.');
+        setTimeout(() => setFeedbackMsg(null), 3000);
+      } else {
+        setAmount('');
+        onClose();
+      }
+      return true;
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to create budget.');
+      return false;
     }
-    return true;
   };
 
   const handleSave = (keepOpen: boolean = false) => {

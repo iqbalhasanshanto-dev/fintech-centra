@@ -83,7 +83,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
     vi.clearAllMocks();
   });
 
-  it('user with empty cache sees the loading screen until the first sync ends', async () => {
+  it('user with empty cache renders immediately without blocking on the first sync', async () => {
     const uid = '11111111-1111-4111-8111-111111111111';
     CentraDB.setActiveUser(uid);
     expect(CentraDB.hasCachedData(uid)).toBe(false);
@@ -109,9 +109,9 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
       </FinanceProvider>
     );
 
-    // Initial render: user must see loading splash screen
-    expect(screen.getByText('Starting Centra...')).toBeInTheDocument();
-    expect(screen.queryByTestId('accounts-count')).not.toBeInTheDocument();
+    // Initial render: user renders immediately without blocking splash screen
+    expect(screen.getByTestId('accounts-count')).toBeInTheDocument();
+    expect(screen.queryByText('Starting Centra...')).not.toBeInTheDocument();
 
     // Now resolve sync
     await act(async () => {
@@ -121,7 +121,7 @@ describe('Phase 3: FinanceProvider First-Sync Gating & Rehydration', () => {
       });
     });
 
-    // After sync settles, loading screen disappears and main content renders
+    // After sync settles, content remains rendered
     await waitFor(() => {
       expect(screen.getByTestId('accounts-count')).toBeInTheDocument();
     });

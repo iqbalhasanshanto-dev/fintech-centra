@@ -156,25 +156,29 @@ export function applyAddTransaction(
   state: FinanceState,
   txInput: Omit<Transaction, 'id'>
 ): OperationResult {
-  if (!state.settings.baseCurrency) {
-    return {
-      ok: false,
-      nextState: state,
-      mutated: {},
-      notificationsToEmit: [],
-      error: 'BASE_CURRENCY_REQUIRED: Please choose a base currency in Settings before recording transactions.',
-    };
-  }
+  const effectiveBaseCurrency = state.settings.baseCurrency || 'USD';
 
-  const targetAccount = state.accounts.find(a => a.id === txInput.accountId);
+  let targetAccount = state.accounts.find(a => a.id === txInput.accountId);
+  let createdAccount: Account | undefined;
+  let nextAccounts = [...state.accounts];
+  const accountsToUpsert: Account[] = [];
+
   if (!targetAccount) {
-    return {
-      ok: false,
-      nextState: state,
-      mutated: {},
-      notificationsToEmit: [],
-      error: `Account not found with ID: ${txInput.accountId}`,
+    const accCurrency = txInput.currency || effectiveBaseCurrency;
+    targetAccount = {
+      id: txInput.accountId || 'acc_cash',
+      name: txInput.accountName || 'Cash',
+      type: 'cash',
+      balance: 0,
+      currency: accCurrency,
+      accountNumberMasked: '•••• CASH',
+      bankName: 'Cash',
+      color: '#10B981',
+      isPrimary: state.accounts.length === 0,
     };
+    createdAccount = targetAccount;
+    nextAccounts.push(targetAccount);
+    accountsToUpsert.push(targetAccount);
   }
 
   const txAmount = roundMoney(Number(txInput.amount), txInput.currency || targetAccount.currency);
@@ -188,8 +192,15 @@ export function applyAddTransaction(
     };
   }
 
-  // Validate funds for expense
-  if (txInput.type === 'expense') {
+  // Validate funds for expense: Allow standard payment methods (Cash, Card Payment, Mobile Banking, Bank Transfer)
+  // or depository/credit accounts to record expenses without blocking offline or online usage
+  const isStandardPaymentMethod = ['cash', 'credit', 'checking', 'savings'].includes(targetAccount.type) ||
+    targetAccount.name.toLowerCase().includes('cash') ||
+    targetAccount.name.toLowerCase().includes('card') ||
+    targetAccount.name.toLowerCase().includes('bank') ||
+    targetAccount.name.toLowerCase().includes('mobile');
+
+  if (txInput.type === 'expense' && !isStandardPaymentMethod) {
     const fundsCheck = validateAccountFunds(targetAccount, txAmount);
     if (!fundsCheck.hasFunds) {
       return {
@@ -247,7 +258,7 @@ export function applyAddTransaction(
   };
 
   const updatedAccount: Account = { ...targetAccount, balance: newBalance };
-  const nextAccounts = state.accounts.map(a => a.id === updatedAccount.id ? updatedAccount : a);
+  nextAccounts = nextAccounts.map(a => a.id === updatedAccount.id ? updatedAccount : a);
   const nextTransactions = [newTx, ...state.transactions];
 
   // Evaluate budget alerts post-commit
@@ -255,7 +266,7 @@ export function applyAddTransaction(
     state.budgets,
     nextTransactions,
     state.notifications,
-    state.settings.baseCurrency
+    effectiveBaseCurrency
   );
 
   const notificationsToEmit = [...newNotifications];
@@ -286,13 +297,14 @@ export function applyAddTransaction(
       notifications: nextNotifications,
     },
     mutated: {
-      accountsToUpsert: [updatedAccount],
+      accountsToUpsert: [updatedAccount, ...accountsToUpsert.filter(a => a.id !== updatedAccount.id)],
       transactionsToUpsert: [newTx],
       budgetsToUpsert: updatedBudgets,
       notificationsToUpsert: notificationsToEmit,
     },
     notificationsToEmit,
     createdTransaction: newTx,
+    createdAccount,
   };
 }
 
@@ -526,16 +538,6 @@ export function applyTransferFunds(
   state: FinanceState,
   payload: { fromId: string; toId: string; amount: number; note?: string }
 ): OperationResult {
-  if (!state.settings.baseCurrency) {
-    return {
-      ok: false,
-      nextState: state,
-      mutated: {},
-      notificationsToEmit: [],
-      error: 'BASE_CURRENCY_REQUIRED: Please choose a base currency in Settings before transferring funds.',
-    };
-  }
-
   const { fromId, toId, amount, note } = payload;
   if (fromId === toId) {
     return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Source and destination accounts must be different' };
@@ -648,25 +650,33 @@ export function applyContributeToGoal(
   state: FinanceState,
   payload: { goalId: string; amount: number; accountId: string }
 ): OperationResult {
-  if (!state.settings.baseCurrency) {
-    return {
-      ok: false,
-      nextState: state,
-      mutated: {},
-      notificationsToEmit: [],
-      error: 'BASE_CURRENCY_REQUIRED: Please choose a base currency in Settings before contributing to goals.',
-    };
-  }
+  const baseCurrency = state.settings.baseCurrency || 'USD';
 
   const { goalId, amount, accountId } = payload;
   const goal = state.goals.find(g => g.id === goalId);
-  const acc = state.accounts.find(a => a.id === accountId);
+  let acc = state.accounts.find(a => a.id === accountId);
 
   if (!goal) {
     return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Goal not found' };
   }
+
+  let nextAccounts = [...state.accounts];
+  const accountsToUpsert: Account[] = [];
+
   if (!acc) {
-    return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Account not found' };
+    acc = {
+      id: accountId || 'acc_cash',
+      name: 'Cash',
+      type: 'cash',
+      balance: 0,
+      currency: baseCurrency,
+      accountNumberMasked: '•••• CASH',
+      bankName: 'Cash',
+      color: '#10B981',
+      isPrimary: state.accounts.length === 0,
+    };
+    nextAccounts.push(acc);
+    accountsToUpsert.push(acc);
   }
 
   const safeAmount = roundMoney(amount, acc.currency);
@@ -674,15 +684,22 @@ export function applyContributeToGoal(
     return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Contribution amount must be greater than zero' };
   }
 
-  const fundsCheck = validateAccountFunds(acc, safeAmount);
-  if (!fundsCheck.hasFunds) {
-    return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: fundsCheck.error || 'Insufficient funds' };
+  const isStandardPaymentMethod = ['cash', 'credit', 'checking', 'savings'].includes(acc.type) ||
+    acc.name.toLowerCase().includes('cash') ||
+    acc.name.toLowerCase().includes('card') ||
+    acc.name.toLowerCase().includes('bank') ||
+    acc.name.toLowerCase().includes('mobile');
+
+  if (!isStandardPaymentMethod) {
+    const fundsCheck = validateAccountFunds(acc, safeAmount);
+    if (!fundsCheck.hasFunds) {
+      return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: fundsCheck.error || 'Insufficient funds' };
+    }
   }
 
   // Convert to base currency / goal target currency
   let convertedAmount = safeAmount;
   let exchangeRate = 1.0;
-  const baseCurrency = state.settings.baseCurrency;
   if (acc.currency !== baseCurrency) {
     try {
       const res = convertCurrencyWithRate(safeAmount, acc.currency, baseCurrency);
@@ -732,7 +749,7 @@ export function applyContributeToGoal(
     resultingBalance: newAccBalance,
   };
 
-  const nextAccounts = state.accounts.map(a => a.id === acc.id ? updatedAccount : a);
+  nextAccounts = nextAccounts.map(a => a.id === updatedAccount.id ? updatedAccount : a);
   const nextGoals = state.goals.map(g => g.id === goal.id ? updatedGoal : g);
   const nextTransactions = [goalTx, ...state.transactions];
 
@@ -759,7 +776,7 @@ export function applyContributeToGoal(
       notifications: [...notificationsToEmit, ...state.notifications],
     },
     mutated: {
-      accountsToUpsert: [updatedAccount],
+      accountsToUpsert: [updatedAccount, ...accountsToUpsert.filter(a => a.id !== updatedAccount.id)],
       goalsToUpsert: [updatedGoal],
       transactionsToUpsert: [goalTx],
       notificationsToUpsert: notificationsToEmit,

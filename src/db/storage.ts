@@ -274,7 +274,14 @@ function reloadCacheForUser(userId: string | null): void {
     const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
     cache.user = safeGet<UserProfile>(getUserStorageKey(userId, 'user'), emptyUser);
     const rawAccounts = safeGet<Account[]>(getUserStorageKey(userId, 'accounts'), []);
-    cache.accounts = !isTest ? rawAccounts.filter(a => !DEMO_ACCOUNT_IDS.has(a.id)) : rawAccounts;
+    const filteredAccounts = !isTest ? rawAccounts.filter(a => !DEMO_ACCOUNT_IDS.has(a.id)) : rawAccounts;
+    if (!isTest && filteredAccounts.length === 0 && userId && !isGuest) {
+      const standards = getStandardAccounts(cache.settings?.baseCurrency || 'USD');
+      cache.accounts = standards;
+      safeSet(getUserStorageKey(userId, 'accounts'), standards);
+    } else {
+      cache.accounts = filteredAccounts;
+    }
     cache.categories = safeGet<Category[]>(getUserStorageKey(userId, 'categories'), []);
     const rawTransactions = safeGet<Transaction[]>(getUserStorageKey(userId, 'transactions'), []);
     cache.transactions = !isTest ? rawTransactions.filter(t => !DEMO_TX_IDS.has(t.id)) : rawTransactions;
@@ -661,14 +668,22 @@ export const CentraDB = {
       cache.accounts.push(acc);
     }
     safeSet(getUserStorageKey(currentActiveUserId, 'accounts'), cache.accounts);
+    notifyDataChanged();
 
     const userId = getActiveUserId();
     if (isGuestUser(userId) || !isSupabaseConfigured() || !userId) {
       return { data: acc, error: null };
     }
 
-    // 2. Remote write with outbox fallback
     const dbRow = mapAccountToDb(acc, userId);
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      OutboxQueue.enqueue({ userId, entity: 'accounts', op: 'upsert', recordId: acc.id, payload: dbRow });
+      setSyncStatus('offline');
+      return { data: acc, error: null };
+    }
+
+    // 2. Remote write with outbox fallback
     try {
       setSyncStatus('syncing');
       const { error } = await supabase.from('accounts').upsert(dbRow, { onConflict: 'user_id,id' });
@@ -691,9 +706,16 @@ export const CentraDB = {
   deleteAccount: async (id: string): Promise<{ ok: boolean; error: unknown }> => {
     cache.accounts = cache.accounts.filter(a => a.id !== id);
     safeSet(getUserStorageKey(currentActiveUserId, 'accounts'), cache.accounts);
+    notifyDataChanged();
 
     const userId = getActiveUserId();
     if (isGuestUser(userId) || !isSupabaseConfigured() || !userId) {
+      return { ok: true, error: null };
+    }
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      OutboxQueue.enqueue({ userId, entity: 'accounts', op: 'delete', recordId: id });
+      setSyncStatus('offline');
       return { ok: true, error: null };
     }
 
@@ -724,6 +746,7 @@ export const CentraDB = {
       cache.categories.push(cat);
     }
     safeSet(getUserStorageKey(currentActiveUserId, 'categories'), cache.categories);
+    notifyDataChanged();
 
     const userId = getActiveUserId();
     if (isGuestUser(userId) || !isSupabaseConfigured() || !userId) {
@@ -731,6 +754,13 @@ export const CentraDB = {
     }
 
     const dbRow = mapCategoryToDb(cat, userId);
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      OutboxQueue.enqueue({ userId, entity: 'categories', op: 'upsert', recordId: cat.id, payload: dbRow });
+      setSyncStatus('offline');
+      return { data: cat, error: null };
+    }
+
     try {
       setSyncStatus('syncing');
       const { error } = await supabase.from('categories').upsert(dbRow, { onConflict: 'user_id,id' });
@@ -751,9 +781,16 @@ export const CentraDB = {
   deleteCategory: async (id: string): Promise<{ ok: boolean; error: unknown }> => {
     cache.categories = cache.categories.filter(c => c.id !== id);
     safeSet(getUserStorageKey(currentActiveUserId, 'categories'), cache.categories);
+    notifyDataChanged();
 
     const userId = getActiveUserId();
     if (isGuestUser(userId) || !isSupabaseConfigured() || !userId) {
+      return { ok: true, error: null };
+    }
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      OutboxQueue.enqueue({ userId, entity: 'categories', op: 'delete', recordId: id });
+      setSyncStatus('offline');
       return { ok: true, error: null };
     }
 
@@ -1140,6 +1177,13 @@ export const CentraDB = {
     }
 
     const dbRow = mapSettingsToDb(settings, userId);
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      OutboxQueue.enqueue({ userId, entity: 'settings', op: 'upsert', recordId: userId, payload: dbRow });
+      setSyncStatus('offline');
+      return { data: settings, error: null };
+    }
+
     try {
       setSyncStatus('syncing');
       const { error } = await supabase.from('settings').upsert(dbRow, { onConflict: 'user_id' });
@@ -1178,6 +1222,12 @@ export const CentraDB = {
       if (user.baseCurrency !== undefined) updates.base_currency = user.baseCurrency;
       if (user.onboardingCompleted === true) {
         updates.onboarding_completed = true;
+      }
+
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        OutboxQueue.enqueue({ userId, entity: 'profiles', op: 'upsert', recordId: userId, payload: updates });
+        setSyncStatus('offline');
+        return { data: user, error: null };
       }
 
       setSyncStatus('syncing');
@@ -1242,7 +1292,28 @@ export const CentraDB = {
     let processed = 0;
     let errors = 0;
 
-    for (const item of pending) {
+    const ENTITY_PRIORITY: Record<string, number> = {
+      profiles: 1,
+      settings: 1,
+      accounts: 2,
+      categories: 2,
+      goals: 3,
+      budgets: 3,
+      transactions: 4,
+      notifications: 5,
+    };
+
+    const sortedPending = [...pending].sort((a, b) => {
+      if (a.groupId && b.groupId && a.groupId === b.groupId && a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      const pA = ENTITY_PRIORITY[a.entity] || 99;
+      const pB = ENTITY_PRIORITY[b.entity] || 99;
+      if (pA !== pB) return pA - pB;
+      return a.timestamp - b.timestamp;
+    });
+
+    for (const item of sortedPending) {
       try {
         let err: { code?: string; message?: string } | null = null;
         if (item.op === 'upsert') {
@@ -2102,6 +2173,11 @@ export const CentraDB = {
 
     if (outboxItems.length > 0) {
       OutboxQueue.enqueueGroup(outboxItems, operationId);
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        setSyncStatus('offline');
+        notifyDataChanged();
+        return { ok: true };
+      }
       if (navigator.onLine) {
         CentraDB.processOutbox().catch(err => {
           logger.warn('Outbox process error after persistBatch:', err);

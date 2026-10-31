@@ -615,7 +615,7 @@ describe('Phase 5: Financial Logic & Correctness', () => {
   });
 
   describe('10. Null BaseCurrency Safety', () => {
-    it('blocks saving transactions/transfers when baseCurrency is null without crashing formatters', () => {
+    it('allows saving transactions/transfers with USD fallback when baseCurrency is null without crashing formatters', () => {
       const state = createMockState({
         settings: {
           ...createMockState().settings,
@@ -636,8 +636,8 @@ describe('Phase 5: Financial Logic & Correctness', () => {
         date: new Date().toISOString(),
       });
 
-      expect(txAttempt.ok).toBe(false);
-      expect(txAttempt.error).toContain('BASE_CURRENCY_REQUIRED');
+      expect(txAttempt.ok).toBe(true);
+      expect(txAttempt.createdTransaction?.currency).toBe('USD');
 
       const transferAttempt = applyTransferFunds(state, {
         fromId: 'acc_usd',
@@ -645,8 +645,8 @@ describe('Phase 5: Financial Logic & Correctness', () => {
         amount: 50,
       });
 
-      expect(transferAttempt.ok).toBe(false);
-      expect(transferAttempt.error).toContain('BASE_CURRENCY_REQUIRED');
+      expect(transferAttempt.ok).toBe(true);
+      expect(transferAttempt.createdTransaction?.amount).toBe(50);
     });
   });
 

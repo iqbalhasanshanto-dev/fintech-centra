@@ -25,7 +25,6 @@ import {
   applyContributeToGoal,
   applyDeleteAccount,
 } from '../utils/financeOperations';
-import { LoadingSplashScreen } from '../components/auth/LoadingSplashScreen';
 import { SyncRetryScreen } from '../components/auth/SyncRetryScreen';
 import { logger } from '../utils/logger';
 
@@ -858,11 +857,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       return res;
     }
   };
-
-  // Render clean loader before hydration completes (real users only)
-  if (!isGuest && (firstSyncState === 'loading' || !isHydrated)) {
-    return <LoadingSplashScreen />;
-  }
 
   // First-sync failed for real user with no local cache -> Retry screen (real users only)
   if (!isGuest && firstSyncState === 'error') {

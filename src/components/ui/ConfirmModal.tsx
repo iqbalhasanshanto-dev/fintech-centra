@@ -28,6 +28,19 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
   // Register with hardware back button (priority 10 so it closes before any underlying modal)
   useBackHandler(isOpen, onClose, 10);
+
+  // Lock background scrolling when modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevDocOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevDocOverflow;
+    };
+  }, [isOpen]);
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -86,7 +99,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-fade-in z-[110]"
+        onTouchMove={e => e.preventDefault()}
+        className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-fade-in z-[110] touch-none"
       />
 
       {/* Dialog card */}

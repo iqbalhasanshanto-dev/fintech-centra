@@ -88,14 +88,128 @@ export const GUEST_SESSION_FLAG_KEY = 'centra_is_guest_session';
 const INTENT_STORAGE_KEY = 'centra_auth_intent';
 
 // ---------------------------------------------------------------------------
+// Synchronous Initial Auth State Resolver (Zero-Delay Instant Boot)
+// ---------------------------------------------------------------------------
+
+function getInitialAuthState(): {
+  user: UserProfile;
+  isAuthenticated: boolean;
+  isGuest: boolean;
+  isLockedByPin: boolean;
+  authView: AuthState;
+} {
+  // 1. Session-scoped guest mode check (CURRENT session only via sessionStorage)
+  try {
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(GUEST_SESSION_FLAG_KEY) === 'true') {
+      CentraDB.setActiveUser(GUEST_USER_ID);
+      return {
+        user: CentraDB.getUser(),
+        isAuthenticated: true,
+        isGuest: true,
+        isLockedByPin: false,
+        authView: 'guest',
+      };
+    }
+  } catch {}
+
+  // 2. Check for OAuth callback in URL
+  let hasOAuthCallback = false;
+  try {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      hasOAuthCallback = params.has('code') || window.location.hash.includes('access_token=');
+    }
+  } catch {}
+
+  if (hasOAuthCallback) {
+    return {
+      user: CentraDB.getUser(),
+      isAuthenticated: false,
+      isGuest: false,
+      isLockedByPin: false,
+      authView: 'loading',
+    };
+  }
+
+  // 3. Check for cached Supabase session in localStorage
+  let cachedUserId: string | null = null;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed?.user?.id) {
+                cachedUserId = parsed.user.id;
+                break;
+              }
+            } catch {}
+          }
+        }
+      }
+    }
+  } catch {}
+
+  // Also check CentraDB user if no supabase token key was parsed
+  if (!cachedUserId) {
+    const active = CentraDB.getUser();
+    if (active?.id && !isGuestUser(active.id)) {
+      cachedUserId = active.id;
+    }
+  }
+
+  if (cachedUserId) {
+    // Check if user has completed onboarding or has cached data
+    const userProfile = CentraDB.getUser();
+    const hasCache = CentraDB.hasCachedData(cachedUserId);
+    const isOnboarded = userProfile.id === cachedUserId && userProfile.onboardingCompleted;
+
+    if (isOnboarded || hasCache) {
+      CentraDB.setActiveUser(cachedUserId);
+      const user = CentraDB.getUser();
+      const settings = CentraDB.getSettings();
+      const pinLocked = !!(settings.security?.pinLockEnabled && hasDevicePin(cachedUserId));
+
+      return {
+        user: user.id ? user : {
+          id: cachedUserId,
+          name: 'User',
+          email: '',
+          isPro: false,
+          onboardingCompleted: true,
+          createdAt: new Date().toISOString(),
+        },
+        isAuthenticated: true,
+        isGuest: false,
+        isLockedByPin: pinLocked,
+        authView: pinLocked ? 'locked' : 'app',
+      };
+    }
+  }
+
+  // 4. No cached session and no OAuth callback -> Go straight to signedOut
+  return {
+    user: CentraDB.getUser(),
+    isAuthenticated: false,
+    isGuest: false,
+    isLockedByPin: false,
+    authView: 'signedOut',
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile>(() => CentraDB.getUser());
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isGuest, setIsGuest] = useState<boolean>(false);
-  const [isLockedByPin, setIsLockedByPin] = useState<boolean>(false);
+  const [initialState] = useState(getInitialAuthState);
+  const [user, setUser] = useState<UserProfile>(initialState.user);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(initialState.isAuthenticated);
+  const [isGuest, setIsGuest] = useState<boolean>(initialState.isGuest);
+  const [isLockedByPin, setIsLockedByPin] = useState<boolean>(initialState.isLockedByPin);
   const isLockedByPinRef = useRef<boolean>(isLockedByPin);
   useLayoutEffect(() => {
     isLockedByPinRef.current = isLockedByPin;
@@ -104,7 +218,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAppCovered, setIsAppCovered] = useState<boolean>(false);
   const [pendingEmail, setPendingEmail] = useState<string>('');
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
-  const [authView, setAuthView] = useState<AuthState>('loading');
+  const [authView, setAuthView] = useState<AuthState>(initialState.authView);
   const authViewRef = useRef<AuthState>(authView);
   useLayoutEffect(() => {
     authViewRef.current = authView;
@@ -137,6 +251,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       '';
 
     lastUserIdRef.current = userId;
+
+    // Offline short-circuit: immediately use cached state without network calls
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (CentraDB.hasCachedData(userId) || CentraDB.getUser()?.id === userId || CentraDB.getAccounts().length > 0) {
+        CentraDB.setActiveUser(userId);
+        const currentUser = CentraDB.getUser();
+        setUser(currentUser.id ? currentUser : {
+          id: userId,
+          name: userName || 'User',
+          email: userEmail || '',
+          isPro: false,
+          onboardingCompleted: true,
+          createdAt: new Date().toISOString(),
+        });
+        setIsAuthenticated(true);
+        setIsGuest(false);
+        CentraDB.setSyncStatus('offline');
+        const settings = CentraDB.getSettings();
+        if (settings.security.pinLockEnabled && hasDevicePin(userId)) {
+          lockApp();
+        } else {
+          setAuthView('app');
+        }
+        return;
+      }
+    }
 
     // Read and clear stored OAuth intent if present
     const storedIntent = localStorage.getItem(INTENT_STORAGE_KEY) as AuthMode | null;
@@ -383,12 +523,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           await handleSession(session);
-        } else {
+        } else if (authViewRef.current !== 'app' && authViewRef.current !== 'locked') {
           setAuthView('signedOut');
         }
       } catch (err) {
         logger.warn('Cold start getSession error:', err);
-        setAuthView('signedOut');
+        if (authViewRef.current !== 'app' && authViewRef.current !== 'locked') {
+          setAuthView('signedOut');
+        }
       }
     };
 
