@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check, Paperclip, X, ChevronDown } from 'lucide-react';
+import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check, Paperclip, X, ChevronDown, User } from 'lucide-react';
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { CategoryIcon } from '../ui/CategoryIcon';
-import { formatCurrency, formatFullDate, formatTime } from '../../utils/formatters';
+import { formatCurrency, formatFullDate, formatTime, getTransactionDisplay } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
 import { sanitizeText } from '../../utils/sanitize';
 import { validateLabel, validateNote } from '../../utils/validators';
@@ -57,10 +57,11 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   // Reset form when transaction opens
   React.useEffect(() => {
     if (transaction) {
+      const disp = getTransactionDisplay(transaction);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- Form state must synchronize when active transaction prop changes
-      setMerchant(transaction.merchant || transaction.categoryName);
+      setMerchant(disp.hasCustomMerchant ? disp.rawMerchant : '');
       setMerchantError(null);
-      setNote(transaction.note || '');
+      setNote(disp.cleanNote);
       setNoteError(null);
       setCategoryId(transaction.categoryId);
       setIsEditing(false);
@@ -68,6 +69,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   }, [transaction]);
 
   if (!transaction) return null;
+
+  const display = getTransactionDisplay(transaction);
 
   const handleSaveEdit = () => {
     if (merchant.trim()) {
@@ -87,8 +90,10 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
     const chosenCategory = categories.find(c => c.id === categoryId);
     updateTransaction(transaction.id, {
-      merchant: merchant.trim() ? sanitizeText(merchant, 60) : transaction.categoryName,
-      note: note.trim() ? sanitizeText(note, 500) : '',
+      merchant: merchant.trim() ? sanitizeText(merchant, 60) : '',
+      note: note.trim()
+        ? sanitizeText(note, 500) + (transaction.receiptUrl && !note.includes('[Attached:') ? ` [Attached: Receipt]` : '')
+        : (transaction.receiptUrl ? `[Attached: Receipt]` : ''),
       categoryId,
       categoryName: chosenCategory ? chosenCategory.name : transaction.categoryName,
       categoryIcon: chosenCategory ? chosenCategory.icon : transaction.categoryIcon,
@@ -142,15 +147,20 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               {formatCurrency(transaction.amount, transaction.currency, settings.privacyMode)}
             </div>
 
-            <p className="text-sm font-semibold text-[#18212F] dark:text-white mt-1">
-              {transaction.merchant || transaction.categoryName}
-            </p>
+            <h2 className="text-base sm:text-lg font-bold text-[#18212F] dark:text-white mt-1.5 truncate max-w-full px-2">
+              {display.title}
+            </h2>
 
-            {transaction.isRecurring && (
-              <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/5 dark:bg-white/10 text-gray-700 dark:text-gray-300">
-                Recurring ({transaction.recurringInterval})
+            <div className="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-black/5 dark:bg-white/10 text-gray-700 dark:text-gray-300">
+                {transaction.categoryName}
               </span>
-            )}
+              {transaction.isRecurring && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/5 dark:bg-white/10 text-gray-700 dark:text-gray-300">
+                  Recurring ({transaction.recurringInterval})
+                </span>
+              )}
+            </div>
           </div>
 
           {/* View Mode */}
@@ -186,14 +196,26 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 </span>
               </div>
 
-              {transaction.note && (
+              {display.hasCustomMerchant && (
+                <div className="flex items-center justify-between py-2.5 border-b border-black/[0.04] dark:border-white/[0.05]">
+                  <div className="flex items-center space-x-2 text-[#667085] dark:text-[#9CA3AF] font-bold uppercase tracking-widest text-[10px]">
+                    <User className="w-3.5 h-3.5" />
+                    <span>{isIncome ? 'Received From' : 'Paid To'}</span>
+                  </div>
+                  <span className="font-semibold text-[#18212F] dark:text-white">
+                    {display.rawMerchant}
+                  </span>
+                </div>
+              )}
+
+              {display.cleanNote && (
                 <div className="py-2.5 border-b border-black/[0.04] dark:border-white/[0.05]">
                   <div className="flex items-center space-x-2 text-[#667085] dark:text-[#9CA3AF] font-bold uppercase tracking-widest text-[10px] mb-1.5">
                     <FileText className="w-3.5 h-3.5" />
                     <span>Note</span>
                   </div>
                   <p className="text-[#18212F] dark:text-white bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] p-3 rounded-2xl text-xs leading-relaxed">
-                    {transaction.note}
+                    {display.cleanNote}
                   </p>
                 </div>
               )}
@@ -280,10 +302,11 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1">
-                  Merchant / Description
+                  {transaction.type === 'income' ? 'Received From' : 'Paid To'}
                 </label>
                 <input
                   type="text"
+                  placeholder={transaction.type === 'income' ? 'e.g. Employer, Client' : 'e.g. Supermarket, Landlord'}
                   value={merchant}
                   onChange={e => handleMerchantChange(e.target.value)}
                   className={`w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${

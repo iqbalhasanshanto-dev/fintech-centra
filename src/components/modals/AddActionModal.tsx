@@ -595,7 +595,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         categoryColor: selectedCat.color,
         accountId: activeAcc.id,
         accountName: activeAcc.name || 'Primary Account',
-        merchant: sanitizeText(merchant, 100) || (selectedCat?.name || (type === 'income' ? 'Income' : 'Expense')),
+        merchant: sanitizeText(merchant, 100).trim(),
         date: getTransactionTimestamp(txDate),
         note: sanitizeText(note, 300) + (receiptName ? ` [Attached: ${sanitizeText(receiptName, 100)}]` : ''),
         receiptUrl: receiptDataUrl || undefined,

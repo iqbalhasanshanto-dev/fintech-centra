@@ -144,6 +144,123 @@ export function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+/**
+ * Strips any trailing ` [Attached: ...]` tag and trims whitespace.
+ */
+export function cleanTransactionNote(note?: string): string {
+  if (!note) return '';
+  return note.replace(/\s*\[Attached:\s*[^\]]+\]\s*$/i, '').trim();
+}
+
+/**
+ * Format transaction date with smart relative labels:
+ * - diffDays === 0: "Today • 9:00 PM"
+ * - diffDays === 1: "Yesterday • 3:40 AM"
+ * - diffDays >= 2 && diffDays <= 6: "N days ago" (e.g. "2 days ago")
+ * - diffDays === 7: "1 week ago"
+ * - diffDays > 7 (or future dates): "Oct 31" or "Oct 31, 2025" if different year
+ */
+export function formatSmartTxDate(isoDate: string): string {
+  const d = new Date(isoDate);
+  if (isNaN(d.getTime())) return isoDate;
+
+  const now = new Date();
+  const dMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const diffDays = Math.round((nowMidnight - dMidnight) / (1000 * 60 * 60 * 24));
+
+  const timeStr = formatTime(isoDate);
+
+  if (diffDays === 0) {
+    return `Today • ${timeStr}`;
+  }
+  if (diffDays === 1) {
+    return `Yesterday • ${timeStr}`;
+  }
+  if (diffDays >= 2 && diffDays <= 6) {
+    return `${diffDays} days ago`;
+  }
+  if (diffDays === 7) {
+    return '1 week ago';
+  }
+
+  if (d.getFullYear() !== now.getFullYear()) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+export interface TransactionDisplayInput {
+  merchant?: string;
+  categoryName?: string;
+  note?: string;
+  date: string;
+  type?: string;
+  accountName?: string;
+}
+
+export interface TransactionDisplay {
+  title: string;
+  subtitle: string;
+  cleanNote: string;
+  hasCustomMerchant: boolean;
+  rawMerchant: string;
+  categoryName: string;
+  smartDate: string;
+}
+
+/**
+ * Generates smart display title and subtitle for a transaction:
+ * - Prioritizes note > custom merchant > category name for the title.
+ * - Prevents repeating category name over category name in subtitle.
+ */
+export function getTransactionDisplay(tx: TransactionDisplayInput): TransactionDisplay {
+  const cleanNote = cleanTransactionNote(tx.note);
+  const rawMerchant = (tx.merchant || '').trim();
+  const catName = (tx.categoryName || (tx.type === 'income' ? 'Income' : 'Expense')).trim();
+
+  // Determine if rawMerchant is a real user-entered merchant/source
+  const hasCustomMerchant =
+    rawMerchant.length > 0 &&
+    rawMerchant.toLowerCase() !== catName.toLowerCase() &&
+    !['income', 'expense', 'other'].includes(rawMerchant.toLowerCase());
+
+  // Primary title: Priority 1 (cleanNote) > Priority 2 (rawMerchant if custom) > Priority 3 (catName)
+  let title = catName;
+  if (cleanNote) {
+    title = cleanNote;
+  } else if (hasCustomMerchant) {
+    title = rawMerchant;
+  }
+
+  // Secondary subtitle
+  const smartDate = formatSmartTxDate(tx.date);
+  let subtitle: string;
+
+  if (title.toLowerCase() === catName.toLowerCase()) {
+    // Both Note and custom Merchant were blank, so top title is already Category Name (e.g. "Groceries")
+    // Do NOT repeat category name!
+    subtitle = tx.accountName ? `${tx.accountName} • ${smartDate}` : smartDate;
+  } else {
+    // Title is Note or Merchant (e.g. "Chanachur")
+    if (cleanNote && hasCustomMerchant && cleanNote.toLowerCase() !== rawMerchant.toLowerCase()) {
+      subtitle = `${catName} (${rawMerchant}) • ${smartDate}`;
+    } else {
+      subtitle = `${catName} • ${smartDate}`;
+    }
+  }
+
+  return {
+    title,
+    subtitle,
+    cleanNote,
+    hasCustomMerchant,
+    rawMerchant,
+    categoryName: catName,
+    smartDate,
+  };
+}
+
 export interface GoalPaceResult {
   percentComplete: number;
   expectedPercent: number;

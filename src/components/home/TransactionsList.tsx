@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
-import { formatCurrency, formatTime } from '../../utils/formatters';
+import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 
 interface TransactionsListProps {
   onSelectTransaction: (tx: Transaction) => void;
@@ -21,20 +21,6 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
   }, [transactions]);
-
-  const formatSubtitle = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday = d.toDateString() === yesterday.toDateString();
-
-    const timePart = formatTime(dateStr);
-    if (isToday) return `Today • ${timePart}`;
-    if (isYesterday) return `Yesterday • ${timePart}`;
-    return `${d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} • ${timePart}`;
-  };
 
   const getIconTint = (type: Transaction['type']) => {
     switch (type) {
@@ -77,6 +63,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
             {recentTransactions.map(tx => {
               const isIncome = tx.type === 'income';
               const isExpense = tx.type === 'expense';
+              const display = getTransactionDisplay(tx);
 
               return (
                 <div
@@ -96,10 +83,10 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
 
                     <div className="min-w-0">
                       <p className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white truncate leading-tight">
-                        {tx.merchant || tx.categoryName}
+                        {display.title}
                       </p>
                       <p className="text-xs text-[#667085] dark:text-white/40 truncate mt-1">
-                        {tx.categoryName} • {formatSubtitle(tx.date)}
+                        {display.subtitle}
                       </p>
                     </div>
                   </div>

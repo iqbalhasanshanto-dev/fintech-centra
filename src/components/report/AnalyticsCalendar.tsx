@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
-import { formatCurrency, formatTime } from '../../utils/formatters';
+import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 import { todayLocalDateKey, toLocalDateKey } from '../../utils/dates';
 
 interface AnalyticsCalendarProps {
@@ -365,6 +365,7 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
               {selectedDayTransactions.map(tx => {
                 const isIncome = tx.type === 'income';
                 const isExpense = tx.type === 'expense';
+                const display = getTransactionDisplay(tx);
 
                 return (
                   <div
@@ -378,10 +379,10 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-[#18212F] dark:text-white truncate">
-                          {tx.merchant || tx.categoryName}
+                          {display.title}
                         </p>
                         <p className="text-xs text-[#667085] dark:text-gray-400 mt-0.5">
-                          {tx.categoryName} • {formatTime(tx.date)}
+                          {display.subtitle}
                         </p>
                       </div>
                     </div>

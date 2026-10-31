@@ -18,8 +18,14 @@ Centra `v3.1.3` locks all top headers securely in place across Home, Analytics, 
 - **File Size**: `6,542,541 bytes` (6.24 MB)
 - **SHA-256 Checksum**:
   ```
-  ed609ba447ec1b5cad0b0b4553d2b82b11f52c66b29ef7515671a38184feee59
+  54b3ef348989bcac50ee0ae5f12e38fedf26352422936823ae1c29549d012e4c
   ```
+
+#### 💡 Smart Transaction Display & Relative Dates
+- **Smart Primary Titles**: Displays the user's `Note` first (e.g. `"Chanachur"`), then `Paid To / Received From` (e.g. `"Shwapno"`, `"Abbu"`), falling back to the category name only when both are blank.
+- **Eliminated Duplicate Category Names**: When both Note and Merchant are empty, the subtitle shows the account name and smart date (`Cash • Today • 9:00 PM`) instead of repeating the category name (`Groceries • Groceries`).
+- **Contextual Merchant Subtitles**: When both a custom note and merchant exist, automatically renders `${Category} (${Merchant}) • ${SmartDate}` (e.g., `Groceries (Shwapno) • Today • 9:00 PM`).
+- **Smart Relative Calendar Dates**: Formats transaction timestamps as `Today • HH:MM`, `Yesterday • HH:MM`, `N days ago`, `1 week ago`, or concise short month/day across all transaction lists and the analytics calendar.
 
 #### 🎨 Visual Identity & Android Launcher Icon
 - **Black App Launcher Icon Background**: Set the adaptive launcher icon background to pure black (`#000000` in `android/app/src/main/res/values/ic_launcher_background.xml` and legacy mipmap icon assets), matching the AMOLED dark UI and OLED system launcher aesthetic.

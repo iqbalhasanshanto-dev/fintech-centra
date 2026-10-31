@@ -4,7 +4,7 @@ import { Search, Download, ChevronLeft, X, ChevronDown, Check } from 'lucide-rea
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
-import { formatCurrency, formatTime } from '../../utils/formatters';
+import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 import { CentraDB } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
 import { downloadOrShareCSV } from '../../utils/csvExport';
@@ -93,20 +93,6 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
       setToastMessage('No transactions to export yet');
     }
     setTimeout(() => setToastMessage(null), 3000);
-  };
-
-  const formatSubtitle = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday = d.toDateString() === yesterday.toDateString();
-
-    const timePart = formatTime(dateStr);
-    if (isToday) return `Today • ${timePart}`;
-    if (isYesterday) return `Yesterday • ${timePart}`;
-    return `${d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} • ${timePart}`;
   };
 
   if (!isOpen) return null;
@@ -307,6 +293,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                 const isIncome = tx.type === 'income';
                 const isExpense = tx.type === 'expense';
                 const isTransfer = tx.type === 'transfer';
+                const display = getTransactionDisplay(tx);
 
                 return (
                   <div
@@ -328,10 +315,10 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-[#18212F] dark:text-white truncate">
-                          {tx.merchant || tx.categoryName}
+                          {display.title}
                         </p>
                         <p className="text-xs text-[#667085] dark:text-[#9CA3AF] truncate mt-0.5">
-                          {formatSubtitle(tx.date)}
+                          {display.subtitle}
                         </p>
                       </div>
                     </div>
