@@ -453,3 +453,17 @@ html:not(.dark) .text-danger {
 .animate-error-shake {
   animation: errorShake 380ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
+
+/* 5-Second Undo Toast Progress Bar */
+@keyframes undoProgress {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+.animate-undo-progress {
+  animation: undoProgress 5000ms linear forwards;
+}

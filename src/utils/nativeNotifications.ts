@@ -60,6 +60,19 @@ export async function triggerSystemNotification(
     tag,
   };
 
+  // 0. Try CentraAndroid JavascriptInterface on Android native WebView
+  if (typeof (window as unknown as { CentraAndroid?: { showNotification: (t: string, b: string, id: number) => void } }).CentraAndroid?.showNotification === 'function') {
+    try {
+      const numericId = Math.abs(
+        tag.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0) % 100000
+      ) || (Date.now() % 100000);
+      (window as unknown as { CentraAndroid: { showNotification: (t: string, b: string, id: number) => void } }).CentraAndroid.showNotification(title, body, numericId);
+      return true;
+    } catch (err) {
+      logger.warn('CentraAndroid showNotification failed:', err);
+    }
+  }
+
   // 1. Try Capacitor native LocalNotifications if available
   const cap = (window as unknown as {
     Capacitor?: {

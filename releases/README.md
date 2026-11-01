@@ -8,8 +8,9 @@ This directory houses curated and verified Android APK builds for Centra. Every 
 
 | Version | Channel | One-Click Direct Download | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v4.0.0`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.0.0-debug.apk) | 5.98 MB | Spring motion UI animations, swipe-to-delete rows, sliding tab pills, 2-month rolling retention, native phone notifications, immediate PIN lock |
-| **`v3.3.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.3.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.3.0-debug.apk) | 5.97 MB | Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover |
+| **`v4.1.0`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.0-debug.apk) | 6.00 MB | 5-second Undo Delete, standalone Savings Goals with per-goal History log, native Android Downloads CSV & notifications, back-stack navigation, bottom nav alignment |
+| **`v4.0.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.0.0-debug.apk) | 5.98 MB | Spring motion UI animations, swipe-to-delete rows, sliding tab pills, 2-month rolling retention, native phone notifications, immediate PIN lock |
+| **`v3.3.0`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.3.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.3.0-debug.apk) | 5.97 MB | Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover |
 | **`v3.2.0`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.2.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.2.0-debug.apk) | 5.94 MB | Interactive glowing/dimmed calendar Today button, pinned transactions stick to top with badges across all activity lists |
 | **`v3.1.4`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.4-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.4-debug.apk) | 5.94 MB | Android safe-area zero top gap, non-wrapping header titles, word-break fix on goal cards, locked main scroll |
 | **`v3.1.3`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk) | 6.24 MB | Smart transaction titles & dates, locked sticky top headers, black app icon, 60fps theme toggle |
@@ -23,6 +24,7 @@ This directory houses curated and verified Android APK builds for Centra. Every 
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
+- **v4.1.0 (`Centra-v4.1.0-debug.apk`)**: `5e59a20f2eab4cfb0f68f9f742120d53de090ceb235a6b7eb152a345b737b329`
 - **v4.0.0 (`Centra-v4.0.0-debug.apk`)**: `0bfd170ccefabcd4c15cdb60a01e8b42ccfc4b12240ff500c1a0d8a1f351cd54`
 - **v3.3.0 (`Centra-v3.3.0-debug.apk`)**: `f226a8942698e67177d6075d6d2d3c11a068fc6fe603416579d274a9ab844ee5`
 - **v3.2.0 (`Centra-v3.2.0-debug.apk`)**: `c977cdc4787747597795e2e35e13dccd6bf78be6d08fe99077a533b826095b3e`
@@ -34,7 +36,7 @@ This directory houses curated and verified Android APK builds for Centra. Every 
 - **v3.0.0 (`Centra-v3.0.0-debug.apk`)**: `2bf9447eac3aeb1ce7c08fff62f2a41d12a2b1108d2955ab6ccf4887390f71a2`
 - **v2.0.0 (`Centra-v2.0.0-debug.apk`)**: `74c75d1314b7b45158045f5158595c3ce54726baab1f8822e8b034cdc9820196`
 
-Verify on macOS/Linux (`shasum -a 256 releases/Centra-v4.0.0-debug.apk`) or Windows (`CertUtil -hashfile releases\Centra-v4.0.0-debug.apk SHA256`).
+Verify on macOS/Linux (`shasum -a 256 releases/Centra-v4.1.0-debug.apk`) or Windows (`CertUtil -hashfile releases\Centra-v4.1.0-debug.apk SHA256`).
 </details>
 
 ---
@@ -45,12 +47,12 @@ Verify the integrity of downloaded APK binaries using the standard SHA-256 crypt
 
 ### macOS / Linux:
 ```bash
-shasum -a 256 releases/Centra-v4.0.0-debug.apk
+shasum -a 256 releases/Centra-v4.1.0-debug.apk
 ```
 
 ### Windows (PowerShell / Command Prompt):
 ```powershell
-CertUtil -hashfile releases\Centra-v4.0.0-debug.apk SHA256
+CertUtil -hashfile releases\Centra-v4.1.0-debug.apk SHA256
 ```
 
 ---

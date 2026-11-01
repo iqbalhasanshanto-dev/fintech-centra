@@ -244,6 +244,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
   // Form State: Common
   const [amount, setAmount] = useState('');
+  const [isAmountFocused, setIsAmountFocused] = useState(false);
   const [amountError, setAmountError] = useState<string | null>(null);
   const [amountShakeKey, setAmountShakeKey] = useState(0);
   const [isConfirmTapping, setIsConfirmTapping] = useState(false);
@@ -703,9 +704,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         return false;
       }
 
-      const payAccId = accountId || accounts.find(a => a.isPrimary)?.id || accounts[0]?.id || effectiveAccounts[0]?.id;
       try {
-        await contributeToGoal(targetGoalId, parsedContrib, payAccId);
+        await contributeToGoal(targetGoalId, parsedContrib, goalNote);
       } catch (err: unknown) {
         setErrorMessage(err instanceof Error ? err.message : 'Failed to contribute to goal.');
         return false;
@@ -760,41 +760,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       currentAmount: deposit,
       startDate: txDate,
       targetDate: goalTargetDate,
-      linkedAccountId: accountId || undefined,
     });
-
-    if (deposit > 0 && accountId) {
-      const selectedDepositAcc = accounts.find(a => a.id === accountId);
-      let goalContribCat = categories.find(c => c.systemKey === 'goal_contribution');
-      if (!goalContribCat) {
-        const refreshed = await CentraDB.ensureSystemCategories();
-        goalContribCat = refreshed.find(c => c.systemKey === 'goal_contribution');
-      }
-      if (!goalContribCat) {
-        setErrorMessage('Missing system category for goal contribution.');
-        return false;
-      }
-
-      try {
-        await addTransaction({
-          type: 'expense',
-          amount: deposit,
-          currency: settings.baseCurrency || selectedDepositAcc?.currency || 'USD',
-          categoryId: goalContribCat.id,
-          categoryName: goalContribCat.name || 'Goal Funding',
-          categoryIcon: goalContribCat.icon || 'Target',
-          categoryColor: goalContribCat.color || '#6366f1',
-          accountId: accountId,
-          accountName: selectedDepositAcc?.name || 'Primary Account',
-          merchant: `Goal: ${cleanGoalName}`,
-          date: getTransactionTimestamp(txDate),
-          note: `Initial deposit for goal: ${cleanGoalName}`,
-          tags: ['Goal', 'Savings'],
-        });
-      } catch (err: unknown) {
-        console.error('Error recording initial deposit for goal:', err);
-      }
-    }
 
     if (keepOpen) {
       setAmount('');
@@ -1079,27 +1045,36 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               }`}>
                 {activeCurrencyInfo.symbol}
               </span>
-              <input
-                type="text"
-                inputMode="decimal"
-                required
-                autoFocus
-                placeholder="0.00"
-                value={amount}
-                onChange={e => {
-                  const val = e.target.value.replace(',', '.');
-                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                    setAmount(val);
-                    if (val) {
-                      const res = validateAmount(val, activeCurrencyInfo.code);
-                      setAmountError(res.ok ? null : res.error || null);
-                    } else {
-                      setAmountError(null);
+              <div className="relative flex-1 flex items-center">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  required
+                  placeholder="0.00"
+                  value={amount}
+                  onFocus={() => setIsAmountFocused(true)}
+                  onBlur={() => setIsAmountFocused(false)}
+                  onChange={e => {
+                    const val = e.target.value.replace(',', '.');
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setAmount(val);
+                      if (val) {
+                        const res = validateAmount(val, activeCurrencyInfo.code);
+                        setAmountError(res.ok ? null : res.error || null);
+                      } else {
+                        setAmountError(null);
+                      }
                     }
-                  }
-                }}
-                className="w-full bg-transparent text-3xl font-bold text-gray-900 dark:text-white border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent shadow-none appearance-none placeholder-gray-400 tabular-nums"
-              />
+                  }}
+                  className="w-full bg-transparent text-3xl font-bold text-gray-900 dark:text-white border-0 outline-none focus:outline-none focus:ring-0 focus:border-transparent shadow-none appearance-none placeholder-gray-400 tabular-nums"
+                />
+                {!isAmountFocused && !amount && (
+                  <span
+                    className="absolute left-[4.6rem] w-0.5 h-6 bg-gray-400 dark:bg-white/40 animate-pulse pointer-events-none"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
               <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 shrink-0 ml-2 font-mono">
                 {activeCurrencyInfo.code}
               </span>
@@ -1339,21 +1314,6 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                       aria-hidden="true"
                     />
 
-                    {accounts.length > 0 && (
-                      <FigmaPickerField
-                        id="goal-account-select"
-                        label="PAYMENT METHOD"
-                        contextOverline="GOAL CONTRIBUTION"
-                        title="Payment Method"
-                        options={accountOptions}
-                        selectedId={accountId || accounts[0]?.id || ''}
-                        onSelect={id => setAccountId(id)}
-                        isOpen={openPicker === 'account'}
-                        onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
-                        placeholder="Select payment method"
-                      />
-                    )}
-
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
                         Note (Optional)
@@ -1448,21 +1408,6 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                         />
                       </div>
                     </div>
-
-                    {accounts.length > 0 && (
-                      <FigmaPickerField
-                        id="goal-account-select"
-                        label="Fund From Account (Optional)"
-                        contextOverline="Goals"
-                        title="Payment method"
-                        options={accountOptions}
-                        selectedId={accountId}
-                        onSelect={id => setAccountId(id)}
-                        isOpen={openPicker === 'account'}
-                        onToggle={() => setOpenPicker(openPicker === 'account' ? null : 'account')}
-                        placeholder="Select account"
-                      />
-                    )}
 
                     {goals.length > 0 && (
                       <div className="pt-1 text-center">

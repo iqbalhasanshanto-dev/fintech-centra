@@ -8,7 +8,7 @@ import { SwipeableRow } from '../ui/SwipeableRow';
 import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 import { CentraDB } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
-import { downloadOrShareCSV } from '../../utils/csvExport';
+import { exportTransactionsToCSV } from '../../utils/csvExport';
 
 interface TransactionDrawerProps {
   isOpen: boolean;
@@ -31,7 +31,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
 }) => {
   useBackHandler(isOpen, onClose);
 
-  const { transactions, categories, settings, deleteTransaction } = useFinance();
+  const { transactions, categories, accounts, settings, deleteTransaction } = useFinance();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -145,11 +145,9 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
   }, [filteredTransactions]);
 
   const handleExportCSV = async () => {
-    const csvContent = CentraDB.exportTransactionsCSV();
-    const filename = `centra_transactions_${new Date().toISOString().split('T')[0]}.csv`;
-    const success = await downloadOrShareCSV(csvContent, filename);
-    if (success) {
-      setToastMessage('✓ Exported transactions to CSV');
+    const res = await exportTransactionsToCSV(transactions, categories, accounts);
+    if (res.success) {
+      setToastMessage(res.savedToDownloads ? `✓ Saved ${res.filename} to Downloads folder` : '✓ Exported transactions to CSV');
     } else {
       setToastMessage('No transactions to export yet');
     }

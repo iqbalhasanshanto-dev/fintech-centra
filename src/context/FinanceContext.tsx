@@ -4,6 +4,7 @@ import {
   Transaction,
   Category,
   Goal,
+  GoalHistoryEntry,
   Budget,
   NotificationItem,
   AppSettings,
@@ -11,6 +12,12 @@ import {
   CurrencyCode,
   SyncStatus,
 } from '../types';
+import {
+  getGoalHistory,
+  appendGoalHistory,
+  saveGoalHistory,
+  deleteGoalHistory,
+} from '../utils/goalHistory';
 import { CentraDB, isGuestUser } from '../db/storage';
 import { convertCurrency, formatCurrency } from '../utils/formatters';
 import { getPeriodDateRange } from '../utils/dates';
@@ -103,6 +110,11 @@ interface FinanceContextType {
   deleteNotification: (id: string) => void;
   clearNotifications: () => void;
 
+  // 5-Second Undo Delete
+  pendingUndo: { id: string; type: 'transaction' | 'goal'; label: string } | null;
+  undoLastDelete: () => Promise<void>;
+  dismissUndo: () => void;
+
   updateSettings: (updates: Partial<AppSettings>) => void;
   resetAllData: () => Promise<{ ok: boolean; error?: unknown }>;
 }
@@ -127,7 +139,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   const [accounts, setAccounts] = useState<Account[]>(() => CentraDB.getAccounts());
   const [transactions, setTransactions] = useState<Transaction[]>(() => CentraDB.getTransactions());
   const [categories, setCategories] = useState<Category[]>(() => CentraDB.getCategories());
-  const [goals, setGoals] = useState<Goal[]>(() => CentraDB.getGoals());
+  const [goals, setGoals] = useState<Goal[]>(() =>
+    CentraDB.getGoals().map(g => ({ ...g, history: getGoalHistory(g.id) }))
+  );
   const [budgets, setBudgets] = useState<Budget[]>(() => CentraDB.getBudgets());
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => CentraDB.getNotifications());
   const [settings, setSettings] = useState<AppSettings>(() => CentraDB.getSettings());
@@ -138,7 +152,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     accounts: CentraDB.getAccounts(),
     transactions: CentraDB.getTransactions(),
     categories: CentraDB.getCategories(),
-    goals: CentraDB.getGoals(),
+    goals: CentraDB.getGoals().map(g => ({ ...g, history: getGoalHistory(g.id) })),
     budgets: CentraDB.getBudgets(),
     notifications: CentraDB.getNotifications(),
     settings: CentraDB.getSettings(),
@@ -149,7 +163,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     const accs = CentraDB.getAccounts();
     const txs = CentraDB.getTransactions();
     const cats = CentraDB.getCategories();
-    const gs = CentraDB.getGoals();
+    const gs = CentraDB.getGoals().map(g => ({ ...g, history: getGoalHistory(g.id) }));
     const buds = CentraDB.getBudgets();
     const notifs = CentraDB.getNotifications();
     const sets = CentraDB.getSettings();
@@ -467,16 +481,22 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
 
   // Category breakdown for expenses
   const categoryBreakdown = useMemo(() => {
+    const isLegacyGoalCategory = (c: { systemKey?: string; name?: string }) =>
+      c.systemKey === 'goal_contribution' ||
+      c.systemKey === 'goal_withdrawal' ||
+      (c.name && c.name.toLowerCase().includes('goal contribution')) ||
+      (c.name && c.name.toLowerCase().includes('goal withdrawal'));
+
     const map: Record<string, { total: number; count: number; category: Category }> = {};
 
     categories
-      .filter(c => c.type === 'expense')
+      .filter(c => c.type === 'expense' && !isLegacyGoalCategory(c))
       .forEach(c => {
         map[c.id] = { total: 0, count: 0, category: c };
       });
 
     filteredTransactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === 'expense' && !isLegacyGoalCategory({ systemKey: t.categoryId, name: t.categoryName }))
       .forEach(tx => {
         const amountInBase = convertCurrency(tx.amount, tx.currency, baseCurrency);
         if (map[tx.categoryId]) {
@@ -495,7 +515,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       });
 
     const items: CategoryBreakdownItem[] = Object.values(map)
-      .filter(item => item.total > 0 || item.count > 0)
+      .filter(item => (item.total > 0 || item.count > 0) && !isLegacyGoalCategory(item.category))
       .map(item => ({
         category: item.category,
         total: item.total,
@@ -650,6 +670,38 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     return result;
   }, []);
 
+  // 5-Second Undo Delete pending state
+  const pendingDeleteRef = useRef<{
+    id: string;
+    type: 'transaction' | 'goal';
+    timer: NodeJS.Timeout;
+    executeCommit: () => Promise<void>;
+    undo: () => Promise<void>;
+  } | null>(null);
+
+  const [pendingUndo, setPendingUndo] = useState<{ id: string; type: 'transaction' | 'goal'; label: string } | null>(null);
+
+  const undoLastDelete = useCallback(async (): Promise<void> => {
+    if (pendingDeleteRef.current) {
+      await pendingDeleteRef.current.undo();
+    }
+  }, []);
+
+  const dismissUndo = useCallback((): void => {
+    if (pendingDeleteRef.current) {
+      pendingDeleteRef.current.executeCommit();
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pendingDeleteRef.current) {
+        clearTimeout(pendingDeleteRef.current.timer);
+        pendingDeleteRef.current.executeCommit();
+      }
+    };
+  }, []);
+
   // Request notification permission automatically when an authenticated user enters the app
   useEffect(() => {
     if (!isGuest && userId) {
@@ -763,7 +815,76 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   };
 
   const deleteTransaction = async (id: string): Promise<void> => {
-    await executeOperation(state => applyDeleteTransaction(state, id));
+    if (pendingDeleteRef.current) {
+      await pendingDeleteRef.current.executeCommit();
+    }
+
+    const tx = latestStateRef.current.transactions.find(t => t.id === id);
+    if (!tx) return;
+
+    const txIndex = latestStateRef.current.transactions.findIndex(t => t.id === id);
+    const preAccounts = latestStateRef.current.accounts;
+
+    // Apply deletion locally and reverse account balances
+    const res = applyDeleteTransaction(latestStateRef.current, id);
+    if (!res.ok) return;
+
+    latestStateRef.current = res.nextState;
+    setTransactions(res.nextState.transactions);
+    setAccounts(res.nextState.accounts);
+    CentraDB.setCachedTransactions(res.nextState.transactions);
+    CentraDB.setCachedAccounts(res.nextState.accounts);
+
+    const executeCommit = async () => {
+      try {
+        await CentraDB.deleteTransaction(id);
+      } catch (err) {
+        logger.warn('Failed to permanently delete transaction in Supabase:', err);
+      }
+      if (pendingDeleteRef.current?.id === id) {
+        pendingDeleteRef.current = null;
+        setPendingUndo(null);
+      }
+    };
+
+    const undo = async () => {
+      if (pendingDeleteRef.current?.timer) {
+        clearTimeout(pendingDeleteRef.current.timer);
+      }
+      const currentTxs = latestStateRef.current.transactions;
+      const restored = [...currentTxs];
+      restored.splice(Math.min(txIndex, restored.length), 0, tx);
+
+      latestStateRef.current = {
+        ...latestStateRef.current,
+        transactions: restored,
+        accounts: preAccounts,
+      };
+      setTransactions(restored);
+      setAccounts(preAccounts);
+      CentraDB.setCachedTransactions(restored);
+      CentraDB.setCachedAccounts(preAccounts);
+      pendingDeleteRef.current = null;
+      setPendingUndo(null);
+    };
+
+    const timer = setTimeout(() => {
+      executeCommit();
+    }, 5000);
+
+    pendingDeleteRef.current = {
+      id,
+      type: 'transaction',
+      timer,
+      executeCommit,
+      undo,
+    };
+
+    setPendingUndo({
+      id,
+      type: 'transaction',
+      label: 'Transaction deleted',
+    });
   };
 
   const togglePinTransaction = (id: string) => {
@@ -840,10 +961,31 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   };
 
   const addGoal = (goalData: Omit<Goal, 'id'>) => {
+    const goalId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `goal_${Date.now()}`;
+    const initialDeposit = goalData.currentAmount || 0;
+    const historyEntries: GoalHistoryEntry[] = [];
+
+    if (initialDeposit > 0) {
+      const initialEntry: GoalHistoryEntry = {
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `gh_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        goalId,
+        type: 'initial',
+        amount: initialDeposit,
+        date: new Date().toISOString(),
+        note: 'Initial deposit',
+        balanceAfter: initialDeposit,
+      };
+      appendGoalHistory(initialEntry);
+      historyEntries.push(initialEntry);
+    }
+
     const newGoal: Goal = {
       ...goalData,
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `goal_${Date.now()}`,
+      id: goalId,
+      currentAmount: initialDeposit,
+      history: historyEntries,
     };
+
     const notif: NotificationItem = {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif_${Date.now()}`,
       type: 'goal',
@@ -853,6 +995,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       isRead: false,
       severity: 'info',
     };
+
     executeOperation(state => ({
       ok: true,
       nextState: {
@@ -883,48 +1026,150 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   };
 
   const deleteGoal = (id: string) => {
-    executeOperation(state => ({
+    if (pendingDeleteRef.current) {
+      pendingDeleteRef.current.executeCommit();
+    }
+
+    const goal = latestStateRef.current.goals.find(g => g.id === id);
+    if (!goal) return;
+
+    const goalIndex = latestStateRef.current.goals.findIndex(g => g.id === id);
+    const historySnapshot = getGoalHistory(id);
+
+    const nextGoals = latestStateRef.current.goals.filter(g => g.id !== id);
+    latestStateRef.current = {
+      ...latestStateRef.current,
+      goals: nextGoals,
+    };
+    setGoals(nextGoals);
+    CentraDB.setCachedGoals(nextGoals);
+
+    const executeCommit = async () => {
+      try {
+        await CentraDB.deleteGoal(id);
+        deleteGoalHistory(id);
+      } catch (err) {
+        logger.warn('Failed to permanently delete goal in Supabase:', err);
+      }
+      if (pendingDeleteRef.current?.id === id) {
+        pendingDeleteRef.current = null;
+        setPendingUndo(null);
+      }
+    };
+
+    const undo = async () => {
+      if (pendingDeleteRef.current?.timer) {
+        clearTimeout(pendingDeleteRef.current.timer);
+      }
+      const currentGoals = latestStateRef.current.goals;
+      const restored = [...currentGoals];
+      restored.splice(Math.min(goalIndex, restored.length), 0, {
+        ...goal,
+        history: historySnapshot,
+      });
+
+      latestStateRef.current = {
+        ...latestStateRef.current,
+        goals: restored,
+      };
+      setGoals(restored);
+      saveGoalHistory(id, historySnapshot);
+      CentraDB.setCachedGoals(restored);
+      pendingDeleteRef.current = null;
+      setPendingUndo(null);
+    };
+
+    const timer = setTimeout(() => {
+      executeCommit();
+    }, 5000);
+
+    pendingDeleteRef.current = {
+      id,
+      type: 'goal',
+      timer,
+      executeCommit,
+      undo,
+    };
+
+    setPendingUndo({
+      id,
+      type: 'goal',
+      label: 'Goal deleted',
+    });
+  };
+
+  const contributeToGoal = async (goalId: string, amount: number, noteOrAccountId?: string): Promise<void> => {
+    const goal = latestStateRef.current.goals.find(g => g.id === goalId);
+    if (!goal) throw new Error('Goal not found');
+
+    const newAmount = goal.currentAmount + amount;
+    const cleanNote = typeof noteOrAccountId === 'string' && !noteOrAccountId.startsWith('acc_') ? noteOrAccountId : undefined;
+    const entry: GoalHistoryEntry = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `gh_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      goalId,
+      type: 'add',
+      amount,
+      date: new Date().toISOString(),
+      note: cleanNote,
+      balanceAfter: newAmount,
+    };
+    appendGoalHistory(entry);
+
+    const updatedGoal: Goal = {
+      ...goal,
+      currentAmount: newAmount,
+      isCompleted: newAmount >= goal.targetAmount,
+      history: [entry, ...(goal.history || getGoalHistory(goalId))],
+    };
+
+    await executeOperation(state => ({
       ok: true,
-      nextState: { ...state, goals: state.goals.filter(g => g.id !== id) },
-      mutated: { goalsToDelete: [id] },
+      nextState: {
+        ...state,
+        goals: state.goals.map(g => g.id === goalId ? updatedGoal : g),
+      },
+      mutated: {
+        goalsToUpsert: [updatedGoal],
+      },
       notificationsToEmit: [],
     }));
   };
 
-  const contributeToGoal = async (goalId: string, amount: number, accountId?: string): Promise<void> => {
-    const accId = accountId || latestStateRef.current.accounts.find(a => a.isPrimary)?.id || latestStateRef.current.accounts[0]?.id;
-    if (!accId) throw new Error('No account available for goal contribution');
+  const withdrawFromGoal = async (goalId: string, amount: number, noteOrAccountId?: string): Promise<void> => {
+    const goal = latestStateRef.current.goals.find(g => g.id === goalId);
+    if (!goal) throw new Error('Goal not found');
 
-    let goalCat = latestStateRef.current.categories.find(c => c.systemKey === 'goal_contribution');
-    if (!goalCat) {
-      const refreshed = await CentraDB.ensureSystemCategories(userId);
-      setCategories(refreshed);
-      latestStateRef.current = { ...latestStateRef.current, categories: refreshed };
-      goalCat = refreshed.find(c => c.systemKey === 'goal_contribution');
-    }
-    if (!goalCat) {
-      throw new Error('Missing system category for goal contribution');
-    }
+    const newAmount = Math.max(0, goal.currentAmount - amount);
+    const cleanNote = typeof noteOrAccountId === 'string' && !noteOrAccountId.startsWith('acc_') ? noteOrAccountId : undefined;
+    const entry: GoalHistoryEntry = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `gh_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      goalId,
+      type: 'withdraw',
+      amount,
+      date: new Date().toISOString(),
+      note: cleanNote,
+      balanceAfter: newAmount,
+    };
+    appendGoalHistory(entry);
 
-    await executeOperation(state => applyContributeToGoal(state, { goalId, amount, accountId: accId }));
-  };
+    const updatedGoal: Goal = {
+      ...goal,
+      currentAmount: newAmount,
+      isCompleted: false,
+      history: [entry, ...(goal.history || getGoalHistory(goalId))],
+    };
 
-  const withdrawFromGoal = async (goalId: string, amount: number, accountId?: string): Promise<void> => {
-    const accId = accountId || latestStateRef.current.accounts.find(a => a.isPrimary)?.id || latestStateRef.current.accounts[0]?.id;
-    if (!accId) throw new Error('No account available for goal withdrawal');
-
-    let goalCat = latestStateRef.current.categories.find(c => c.systemKey === 'goal_withdrawal' || c.systemKey === 'goal_contribution');
-    if (!goalCat) {
-      const refreshed = await CentraDB.ensureSystemCategories(userId);
-      setCategories(refreshed);
-      latestStateRef.current = { ...latestStateRef.current, categories: refreshed };
-      goalCat = refreshed.find(c => c.systemKey === 'goal_withdrawal' || c.systemKey === 'goal_contribution');
-    }
-    if (!goalCat) {
-      throw new Error('Missing system category for goal withdrawal');
-    }
-
-    await executeOperation(state => applyWithdrawFromGoal(state, { goalId, amount, accountId: accId }));
+    await executeOperation(state => ({
+      ok: true,
+      nextState: {
+        ...state,
+        goals: state.goals.map(g => g.id === goalId ? updatedGoal : g),
+      },
+      mutated: {
+        goalsToUpsert: [updatedGoal],
+      },
+      notificationsToEmit: [],
+    }));
   };
 
   const addBudget = (budgetData: Omit<Budget, 'id'>) => {
@@ -999,10 +1244,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   };
 
   const clearNotifications = () => {
-    const notifIds = latestStateRef.current.notifications.map(n => n.id);
+    const isRetention = (n: NotificationItem) =>
+      n.id.startsWith('retention-reminder:') || n.title.includes('2-Month Data Retention Reminder');
+    const retentionNotif = latestStateRef.current.notifications.find(isRetention);
+    const notifIds = latestStateRef.current.notifications
+      .filter(n => !isRetention(n))
+      .map(n => n.id);
+
     executeOperation(state => ({
       ok: true,
-      nextState: { ...state, notifications: [] },
+      nextState: { ...state, notifications: retentionNotif ? [retentionNotif] : [] },
       mutated: { notificationsToDelete: notifIds },
       notificationsToEmit: [],
     }));
@@ -1081,6 +1332,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
         markAllNotificationsAsRead,
         deleteNotification,
         clearNotifications,
+        pendingUndo,
+        undoLastDelete,
+        dismissUndo,
         updateSettings,
         resetAllData,
       }}

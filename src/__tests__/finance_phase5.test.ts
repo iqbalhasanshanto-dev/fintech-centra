@@ -777,18 +777,17 @@ describe('Phase 5: Financial Logic & Correctness', () => {
       expect(transferTx).toBeDefined();
       expect(transferTx?.categoryId).toBe(transferCat!.id);
 
-      // 2. Goal contribution when goal_contribution system category does not exist -> auto ensures system category
-      await financeContextRef.contributeToGoal('goal_p5_1', 150, 'acc_p5_1');
+      // 2. Goal contribution (standalone savings tracker decoupled from transactions)
+      await financeContextRef.contributeToGoal('goal_p5_1', 150);
 
-      const categoriesAfterGoal = CentraDB.getCategories();
-      const goalCat = categoriesAfterGoal.find(c => c.systemKey === 'goal_contribution');
-      expect(goalCat).toBeDefined();
-      expect(goalCat?.id).toBeTruthy();
-      expect(goalCat?.id).not.toBe('goal_contribution');
+      const goalsAfter = CentraDB.getGoals();
+      const updatedGoal = goalsAfter.find(g => g.id === 'goal_p5_1');
+      expect(updatedGoal).toBeDefined();
+      expect(updatedGoal?.currentAmount).toBe(150);
 
+      // Verify no transaction was created for the decoupled goal
       const goalTx = CentraDB.getTransactions().find(t => t.goalId === 'goal_p5_1');
-      expect(goalTx).toBeDefined();
-      expect(goalTx?.categoryId).toBe(goalCat!.id);
+      expect(goalTx).toBeUndefined();
     });
   });
 });

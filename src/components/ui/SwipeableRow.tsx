@@ -103,20 +103,26 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
       } ${className}`}
     >
       {/* Background action row (revealed when swiped left) */}
-      <div
-        className="absolute inset-y-0 right-0 flex items-center justify-end pr-1 z-0 select-none"
-        style={{ width: `${Math.abs(MAX_SWIPE_OFFSET) + 12}px` }}
-      >
-        <button
-          type="button"
-          onClick={handleDeleteTrigger}
-          aria-label={deleteLabel}
-          className="w-16 h-[calc(100%-8px)] my-1 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold flex flex-col items-center justify-center gap-1 shadow-md transition-transform active:scale-90 cursor-pointer"
+      {translateX < -2 && (
+        <div
+          className="absolute inset-y-0 right-0 flex items-center justify-end pr-1 z-0 select-none"
+          style={{ width: `${Math.abs(MAX_SWIPE_OFFSET) + 12}px` }}
         >
-          <Trash2 className="w-4 h-4 stroke-[2.5]" />
-          <span className="text-[10px] tracking-tight font-bold uppercase">{deleteLabel}</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={handleDeleteTrigger}
+            aria-label={deleteLabel}
+            style={{
+              opacity: translateX < -4 ? Math.min(1, Math.abs(translateX) / 40) : 0,
+              pointerEvents: translateX <= -40 ? 'auto' : 'none',
+            }}
+            className="w-16 h-[calc(100%-8px)] my-1 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold flex flex-col items-center justify-center gap-1 shadow-md transition-transform active:scale-90 cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4 stroke-[2.5]" />
+            <span className="text-[10px] tracking-tight font-bold uppercase">{deleteLabel}</span>
+          </button>
+        </div>
+      )}
 
       {/* Foreground Swipeable Content */}
       <div

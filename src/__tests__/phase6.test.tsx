@@ -667,23 +667,18 @@ describe('Phase 6 — Guest vs Real Account UI, System Categories & Control Audi
       expect(financeContextRef).not.toBeNull();
     });
 
-    // Contribute to goal
+    // Contribute to goal (standalone savings tracker)
     await act(async () => {
-      await financeContextRef.contributeToGoal('goal_test_1', 100, 'acc_goal_donor');
+      await financeContextRef.contributeToGoal('goal_test_1', 100);
     });
 
-    // Verify system category was created
-    const categoriesAfter = CentraDB.getCategories();
-    const goalCat = categoriesAfter.find(c => c.systemKey === 'goal_contribution');
-    expect(goalCat).toBeDefined();
-    expect(goalCat?.id).not.toBe('goal_contribution');
-    expect(goalCat?.id).toBeTruthy();
+    // Verify goal balance updated and history logged without creating transactions
+    const goalsAfter = CentraDB.getGoals();
+    const updatedGoal = goalsAfter.find(g => g.id === 'goal_test_1');
+    expect(updatedGoal?.currentAmount).toBe(100);
 
-    // Verify transaction uses that exact UUID
     const txs = CentraDB.getTransactions();
-    expect(txs.length).toBe(1);
-    expect(txs[0].categoryId).toBe(goalCat!.id);
-    expect(txs[0].categoryId).not.toBe('goal_contribution');
+    expect(txs.length).toBe(0);
   });
 
   it('11. Every currency in SUPPORTED_CURRENCIES has an exchange rate and only supported currencies can be selected in onboarding, Add Account, and Settings', () => {

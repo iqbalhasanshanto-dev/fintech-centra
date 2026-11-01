@@ -673,6 +673,20 @@ export const CentraDB = {
   getNotifications: (): NotificationItem[] => cache.notifications,
   getSettings: (): AppSettings => cache.settings,
 
+  // In-memory & local cache setters
+  setCachedTransactions: (txs: Transaction[]) => {
+    cache.transactions = txs;
+    safeSet(getUserStorageKey(currentActiveUserId, 'transactions'), cache.transactions);
+  },
+  setCachedAccounts: (accs: Account[]) => {
+    cache.accounts = accs;
+    safeSet(getUserStorageKey(currentActiveUserId, 'accounts'), cache.accounts);
+  },
+  setCachedGoals: (goals: Goal[]) => {
+    cache.goals = goals;
+    safeSet(getUserStorageKey(currentActiveUserId, 'goals'), cache.goals);
+  },
+
   /**
    * Prunes transactions strictly older than 2 calendar months (Current Month + Previous Month).
    * Their net balance remains preserved in the user's account balances.

@@ -50,7 +50,8 @@ import { AUTOLOCK_OPTIONS, getAutoLockTimeout, setAutoLockTimeout } from '../../
 import { validateName, validateEmail } from '../../utils/validators';
 import { validateImageFile } from '../../utils/imageValidation';
 import { APP_VERSION } from '../../utils/version';
-import { downloadOrShareCSV } from '../../utils/csvExport';
+import { exportAllDataToCSV } from '../../utils/csvExport';
+import { getAllGoalHistory } from '../../utils/goalHistory';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -58,6 +59,11 @@ interface SettingsScreenProps {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const {
+    accounts,
+    transactions,
+    categories,
+    goals,
+    budgets,
     settings,
     updateSettings,
     resetAllData
@@ -217,13 +223,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   };
 
   const handleExportData = async () => {
-    const csvContent = CentraDB.exportTransactionsCSV();
-    const filename = `centra_transactions_${new Date().toISOString().split('T')[0]}.csv`;
-    const success = await downloadOrShareCSV(csvContent, filename);
-    if (success) {
-      setStatusToast('✓ Exported transactions to CSV');
+    const res = await exportAllDataToCSV({
+      accounts,
+      transactions,
+      categories,
+      goals,
+      goalHistory: getAllGoalHistory(),
+      budgets,
+      userProfile: user,
+    });
+    if (res.success) {
+      setStatusToast(res.savedToDownloads ? `✓ Saved ${res.filename} to Downloads folder` : '✓ Exported all data to CSV');
     } else {
-      setStatusToast('No transactions to export yet');
+      setStatusToast('No data to export yet');
     }
     setTimeout(() => setStatusToast(null), 3500);
   };
@@ -1141,7 +1153,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={logout}
         title="Log out of Centra?"
-        message="Are you sure you want to log out of your Centra account? Your synced financial records remain safely stored in your account."
+        message="Are you sure you want to log out from Centra?"
         type="danger"
         confirmText="Log Out"
       />

@@ -6,6 +6,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v4.1.0] — 2026-11-01
+
+### 🚀 Release: 5-Second Undo Delete, Standalone Savings Goals with Per-Goal History, Native Android Downloads & Status-Bar Notifications
+
+Centra `v4.1.0` introduces a 5-second Undo Delete safety system with delayed server deletion, standalone Savings Goal accounting with a dedicated chronological History modal log, native Android MediaStore Downloads folder CSV integration, real-time Android system notification tray alerts, comprehensive All-Data CSV backup, bottom navbar sliding pill alignment and inactive Settings state, smooth 45-degree `+` to `×` rotation, tab back-history navigation, and red swipe bleed elimination.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v4.1.0-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0-debug.apk) (Fallback: [`releases/Centra-v4.1.0-debug.apk?raw=true`](releases/Centra-v4.1.0-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.0-debug.apk)
+- **File Size**: `6,275,302 bytes` (6.00 MB)
+- **SHA-256 Checksum**:
+  ```
+  5e59a20f2eab4cfb0f68f9f742120d53de090ceb235a6b7eb152a345b737b329
+  ```
+
+#### ↩️ 5-Second "Undo Delete" System with Deferred Remote Deletion
+- **Immediate Local UI Deletion with Delayed Commit**: Deleting transactions or goals immediately reverses account balances and updates the UI while deferring Supabase and outbox deletion for 5000ms.
+- **Floating Undo Toast Bar**: Displays a dark charcoal pill above the bottom navbar with a 5-second shrinking neon-lime progress line (`animate-undo-progress`). Tapping **UNDO** immediately cancels the timer, restores the deleted item, accounts, and goal history, and cancels server deletion.
+
+#### 🎯 Standalone Savings Goals & Dedicated History Log
+- **Decoupled Financial Tracking**: Savings Goals now act as independent savings trackers decoupled from regular bank accounts and transaction feeds.
+- **Dedicated History Modal**: Tapping **History** in the streamlined 2-item (`History`, `Delete`) goal menu opens a full-screen history modal displaying target progress and a chronological log of all initial deposits, contributions, and withdrawals with timestamps and notes.
+- **Per-Goal History Persistence**: All actions are logged as `GoalHistoryEntry` records and persisted in local storage (`centra_goal_history`).
+
+#### 📥 Native Android Downloads Folder Bridge & Status-Bar Notifications
+- **Direct Downloads Folder Saving**: Built a native Android `CentraNativeBridge` connecting Capacitor WebView to `MediaStore.Downloads` on Android 10+ (`Build.VERSION.SDK_INT >= 29`) and public download directory on older versions. CSV exports are immediately saved to the phone's physical **Downloads** folder.
+- **Native Status-Bar Notifications**: Automatically posts an Android system notification (`NotificationCompat.Builder` on channel `centra_alerts`) upon download completion (`"Download Complete" — "Saved <filename> to Downloads"`) and for all in-app financial alerts.
+- **Runtime Notification Permissions**: Automatically requests `android.permission.POST_NOTIFICATIONS` at runtime on Android 13+ (`SDK 33+`).
+
+#### 📊 Distinct CSV Exports: Recent Activities vs All-Data Backup
+- **Recent Activities Transaction CSV**: Generates `centra_transactions_YYYY-MM-DD.csv` containing date, payee/merchant, category, account, amount, and notes.
+- **Comprehensive All-Data CSV**: In Settings -> "Download your data", generates `centra_all_data_YYYY-MM-DD.csv` containing metadata, account details, financial summaries, full transactions, active savings goals, per-goal history logs, and monthly budgets.
+
+#### 🧭 Navigation, Navbar Polish & UI Refinements
+- **Bottom Navbar Alignment & Inactive Settings State**: The sliding active pill hides completely when viewing Settings (`activeTab === 'settings'`), keeping all 3 tabs muted. Capsule dock uses CSS grid for exact horizontal centering.
+- **Smooth `+` to `×` Rotation**: The floating action button rotates 45° into an exact diagonal `×` close icon with a 280ms spring transition.
+- **Tab Back-Navigation Stack**: Android hardware Back button pops through previously visited tabs (`tabHistoryRef`) before showing the centered dark exit toast on the root Home screen.
+- **Eliminated Red Delete Bleed-Through**: In `<SwipeableRow />`, the red delete background is hidden until the user swipes left (`translateX < -2`), preventing red bleed-through behind translucent cards.
+- **Pinned Data Retention Policy Reminder**: The 2-Month Data Retention Reminder is permanently pinned at the top of Notifications with a visible pin badge and is protected against "Clear All".
+- **Refined Form Focus & Keyboard Stability**: Removed `autoFocus` from Add Quick Action amounts to eliminate mobile jitter, displaying a subtle pulsing caret until explicitly tapped.
+
+---
+
 ## [v4.0.0] — 2026-11-01
 
 ### 🚀 Major Release: Interactive Motion System, Micro-Interactions, 2-Month Rolling Retention & Native Notifications

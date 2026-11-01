@@ -143,6 +143,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   const mainTabs = tabs.slice(0, 3); // Home, Analytics, Budgets
+  const activeIndex = mainTabs.findIndex(t => t.id === activeTab);
 
   return (
     <>
@@ -182,34 +183,37 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           aria-label="Main Navigation Bar"
         >
           {/* Floating Capsule Dock: Home, Analytics, Budgets */}
-          <div className="relative flex-1 flex items-center justify-between bg-white/95 dark:bg-[#1D1D1D]/95 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10 p-1.5 shadow-xl">
-            {/* Sliding Active Tab Pill Indicator */}
-            <div
-              className="absolute top-1.5 bottom-1.5 w-[calc(33.333%-4px)] rounded-full bg-[#18212F] dark:bg-[#C6FF3D] transition-transform duration-300 ease-[cubic-bezier(0.34,1.3,0.64,1)] shadow-xs pointer-events-none"
-              style={{
-                transform: `translateX(calc(${Math.max(0, mainTabs.findIndex(t => t.id === activeTab)) * 100}% + ${Math.max(0, mainTabs.findIndex(t => t.id === activeTab)) * 6}px))`,
-                left: '6px',
-              }}
-            />
-            {mainTabs.map(tab => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => onSelectTab(tab.id)}
-                  className={`relative z-10 flex-1 min-h-[44px] px-2 py-1.5 rounded-full flex flex-col items-center justify-center transition-colors duration-200 cursor-pointer ${
-                    isActive
-                      ? 'text-white dark:text-[#0A0E1A] font-bold'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                  aria-label={tab.label}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-[10px] mt-0.5 tracking-tight font-semibold">{tab.label}</span>
-                </button>
-              );
-            })}
+          <div className="relative flex-1 bg-white/95 dark:bg-[#1D1D1D]/95 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10 p-1.5 shadow-xl">
+            <div className="relative grid grid-cols-3 w-full items-center">
+              {/* Sliding Active Tab Pill Indicator */}
+              <div
+                className={`absolute inset-y-0 left-0 w-1/3 rounded-full bg-[#18212F] dark:bg-[#C6FF3D] transition-transform transition-all duration-300 ease-[cubic-bezier(0.34,1.3,0.64,1)] shadow-xs pointer-events-none ${
+                  activeIndex >= 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+                }`}
+                style={{
+                  transform: `translateX(${Math.max(0, activeIndex) * 100}%)`,
+                }}
+              />
+              {mainTabs.map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => onSelectTab(tab.id)}
+                    className={`relative z-10 w-full min-h-[44px] px-2 py-1.5 rounded-full flex flex-col items-center justify-center transition-colors duration-200 cursor-pointer ${
+                      isActive
+                        ? 'text-white dark:text-[#0A0E1A] font-bold'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium'
+                    }`}
+                    aria-label={tab.label}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-[10px] mt-0.5 tracking-tight font-semibold">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Floating '+' Action Button with Quick Action Menu */}
@@ -302,9 +306,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               }`}
               aria-label="New Transaction, Transfer or Budget"
             >
-              <div className={`transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isMenuOpen ? 'rotate-135' : 'rotate-0'}`}>
-                <Plus className="w-6 h-6 stroke-[2.5]" />
-              </div>
+              <Plus
+                className={`w-6 h-6 stroke-[2.5] ${isMenuOpen ? 'rotate-45' : 'rotate-0'}`}
+                style={{
+                  transform: isMenuOpen ? 'rotate(45deg)' : 'rotate(0deg)',
+                  transition: 'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+              />
             </button>
           </div>
         </nav>

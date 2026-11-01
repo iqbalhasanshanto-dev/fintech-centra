@@ -9,13 +9,13 @@ import {
   CreditCard, 
   Info, 
   Trash2, 
-  ChevronRight 
+  ChevronRight,
+  Pin
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { NotificationType, NotificationItem } from '../../types';
 import { useBackHandler } from '../../utils/backButton';
-import { SwipeableRow } from '../ui/SwipeableRow';
 
 interface NotificationsModalProps {
   isOpen: boolean;
@@ -62,14 +62,22 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     return uniqueNotifications.filter(n => !n.isRead).length;
   }, [uniqueNotifications]);
 
-  // Group notifications into Today and Earlier
-  const { todayList, earlierList } = useMemo(() => {
+  const isRetentionReminder = (n: NotificationItem) =>
+    n.id.startsWith('retention-reminder:') || n.title.includes('2-Month Data Retention Reminder');
+
+  // Group notifications into Pinned Reminder, Today, and Earlier
+  const { pinnedReminder, todayList, earlierList } = useMemo(() => {
+    let reminder: NotificationItem | null = null;
     const today: NotificationItem[] = [];
     const earlier: NotificationItem[] = [];
     const now = new Date();
     const todayStr = now.toDateString();
 
     uniqueNotifications.forEach(n => {
+      if (isRetentionReminder(n)) {
+        if (!reminder) reminder = n;
+        return;
+      }
       const d = new Date(n.timestamp);
       if (d.toDateString() === todayStr) {
         today.push(n);
@@ -78,7 +86,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       }
     });
 
-    return { todayList: today, earlierList: earlier };
+    return { pinnedReminder: reminder, todayList: today, earlierList: earlier };
   }, [uniqueNotifications]);
 
   const isWelcomeNotification = (item: NotificationItem) => {
@@ -178,75 +186,88 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   if (!isOpen) return null;
 
-  const renderNotificationCard = (item: NotificationItem) => {
+  const renderNotificationCard = (item: NotificationItem, isPinned: boolean = false) => {
     const isUnread = !item.isRead;
     const categoryLabel = getCategoryLabel(item.type);
     const actionLabel = getActionLabel(item);
 
     return (
-      <SwipeableRow key={item.id} onDelete={() => deleteNotification(item.id)}>
-        <div
-          onClick={() => handleNotificationClick(item)}
-          className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 shadow-sm transition-all cursor-pointer hover:border-black/[0.12] dark:hover:border-white/[0.25] space-y-3.5"
-        >
-          {/* Card Header Row: Icon + Overline + Title + Unread Dot */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3 min-w-0">
-              <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                  isUnread
-                    ? 'bg-[#C6FF3D]/15 text-[#4D6E18] dark:text-[#C6FF3D]'
-                    : 'bg-[#F1F2F4] text-[#667085] dark:bg-[#262626] dark:text-[#9CA3AF]'
-                }`}
-              >
-                {getIcon(item.type)}
-              </div>
-
-              <div className="min-w-0">
-                <span className="text-[11px] font-medium text-[#667085] dark:text-white/60 block">
-                  {categoryLabel}
-                  {!isUnread && ' • Read'}
-                </span>
-                <h4 className="text-base font-medium text-[#18212F] dark:text-white truncate mt-0.5">
-                  {item.title}
-                </h4>
-              </div>
+      <div
+        key={item.id}
+        onClick={() => handleNotificationClick(item)}
+        className={`rounded-[28px] bg-white dark:bg-white/[0.08] border p-5 shadow-sm transition-all cursor-pointer space-y-3.5 ${
+          isPinned
+            ? 'border-[#C6FF3D]/40 dark:border-[#C6FF3D]/30 bg-gradient-to-br from-[#C6FF3D]/5 to-transparent'
+            : 'border-black/[0.06] dark:border-white/[0.15] hover:border-black/[0.12] dark:hover:border-white/[0.25]'
+        }`}
+      >
+        {/* Card Header Row: Icon + Overline + Title + Unread Dot */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                isPinned
+                  ? 'bg-[#C6FF3D]/20 text-[#4D6E18] dark:text-[#C6FF3D]'
+                  : isUnread
+                  ? 'bg-[#C6FF3D]/15 text-[#4D6E18] dark:text-[#C6FF3D]'
+                  : 'bg-[#F1F2F4] text-[#667085] dark:bg-[#262626] dark:text-[#9CA3AF]'
+              }`}
+            >
+              {isPinned ? <Pin className="w-4 h-4 text-[#4D6E18] dark:text-[#C6FF3D]" /> : getIcon(item.type)}
             </div>
 
-            {isUnread && (
-              <span
-                className="w-2 h-2 rounded-full bg-[#C6FF3D] shrink-0 mt-2 shadow-[0_0_8px_rgba(198,255,61,0.6)]"
-                aria-label="Unread"
-              />
-            )}
-          </div>
-
-          {/* Message Body */}
-          <p className="text-sm text-[#667085] dark:text-white/70 leading-relaxed">
-            {item.message}
-          </p>
-
-          {/* Footer Row: Timestamp + Action Link */}
-          <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.07]">
-            <span className="text-[11px] text-[#667085] dark:text-white/40">
-              {formatItemTime(item.timestamp)}
-            </span>
-
-            {actionLabel && (
-              <span 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNotificationClick(item);
-                }}
-                className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer"
-              >
-                <span>{actionLabel}</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+            <div className="min-w-0">
+              <span className="text-[11px] font-medium text-[#667085] dark:text-white/60 flex items-center gap-1.5">
+                {isPinned ? (
+                  <span className="inline-flex items-center gap-1 text-[#4D6E18] dark:text-[#C6FF3D] font-bold">
+                    <Pin className="w-3 h-3" /> Pinned • Monthly Policy
+                  </span>
+                ) : (
+                  <>
+                    {categoryLabel}
+                    {!isUnread && ' • Read'}
+                  </>
+                )}
               </span>
-            )}
+              <h4 className="text-base font-medium text-[#18212F] dark:text-white truncate mt-0.5">
+                {item.title}
+              </h4>
+            </div>
           </div>
+
+          {isUnread && (
+            <span
+              className="w-2 h-2 rounded-full bg-[#C6FF3D] shrink-0 mt-2 shadow-[0_0_8px_rgba(198,255,61,0.6)]"
+              aria-label="Unread"
+            />
+          )}
         </div>
-      </SwipeableRow>
+
+        {/* Message Body */}
+        <p className="text-sm text-[#667085] dark:text-white/70 leading-relaxed">
+          {item.message}
+        </p>
+
+        {/* Footer Row: Timestamp + Action Link */}
+        <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.07]">
+          <span className="text-[11px] text-[#667085] dark:text-white/40">
+            {formatItemTime(item.timestamp)}
+          </span>
+
+          {actionLabel && (
+            <span 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNotificationClick(item);
+              }}
+              className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer"
+            >
+              <span>{actionLabel}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </span>
+          )}
+        </div>
+      </div>
     );
   };
 
@@ -341,6 +362,21 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </div>
           ) : (
             <>
+              {/* Pinned 2-Month Data Retention Policy Reminder */}
+              {pinnedReminder && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-[#667085] dark:text-white/60 px-1 font-medium">
+                    <span className="font-semibold text-xs text-[#4D6E18] dark:text-[#C6FF3D] flex items-center gap-1.5 uppercase tracking-wider">
+                      <Pin className="w-3.5 h-3.5" />
+                      Pinned Policy
+                    </span>
+                  </div>
+                  <div>
+                    {renderNotificationCard(pinnedReminder, true)}
+                  </div>
+                </div>
+              )}
+
               {/* Today Group */}
               {todayList.length > 0 && (
                 <div className="space-y-3">
@@ -349,7 +385,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     <span className="text-[11px] text-gray-400 dark:text-white/40">{todayDateString}</span>
                   </div>
                   <div className="space-y-3">
-                    {todayList.map(renderNotificationCard)}
+                    {todayList.map(item => renderNotificationCard(item, false))}
                   </div>
                 </div>
               )}
@@ -364,7 +400,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     )}
                   </div>
                   <div className="space-y-3">
-                    {earlierList.map(renderNotificationCard)}
+                    {earlierList.map(item => renderNotificationCard(item, false))}
                   </div>
                 </div>
               )}

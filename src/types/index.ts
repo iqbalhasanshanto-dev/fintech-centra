@@ -65,6 +65,16 @@ export interface Category {
   hidden?: boolean;
 }
 
+export interface GoalHistoryEntry {
+  id: string;
+  goalId: string;
+  type: 'initial' | 'add' | 'withdraw';
+  amount: number;
+  date: string; // ISO timestamp
+  note?: string;
+  balanceAfter: number;
+}
+
 export interface Goal {
   id: string;
   name: string;
@@ -77,6 +87,7 @@ export interface Goal {
   linkedAccountId?: string;
   isCompleted?: boolean;
   monthlyContribution?: number;
+  history?: GoalHistoryEntry[];
 }
 
 export interface Budget {

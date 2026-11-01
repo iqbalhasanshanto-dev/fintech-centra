@@ -7,12 +7,14 @@ import {
   Calendar, 
   Trash2, 
   Wallet,
-  ArrowDownRight
+  ArrowDownRight,
+  History
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { logger } from '../../utils/logger';
 import { useFinance } from '../../context/FinanceContext';
 import { Goal } from '../../types';
+import { getGoalHistory } from '../../utils/goalHistory';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { CircularProgress } from '../ui/CircularProgress';
 import { Modal } from '../ui/Modal';
@@ -27,16 +29,16 @@ interface PlanScreenProps {
 export const PlanScreen: React.FC<PlanScreenProps> = ({
   onOpenAddGoal,
 }) => {
-  const { goals, budgets, settings, contributeToGoal, withdrawFromGoal, deleteGoal, accounts } = useFinance();
+  const { goals, budgets, settings, contributeToGoal, withdrawFromGoal, deleteGoal } = useFinance();
   
   const [selectedGoalForFunds, setSelectedGoalForFunds] = useState<Goal | null>(null);
   const [fundMode, setFundMode] = useState<'deposit' | 'withdraw'>('deposit');
   const [fundAmount, setFundAmount] = useState('');
-  const [fundSourceAccountId, setFundSourceAccountId] = useState(accounts[0]?.id || '');
   const [fundError, setFundError] = useState<string | null>(null);
   const [fundShakeKey, setFundShakeKey] = useState(0);
   const [activeGoalMenuId, setActiveGoalMenuId] = useState<string | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
+  const [goalForHistory, setGoalForHistory] = useState<Goal | null>(null);
 
   const handleFundSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,14 +52,6 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       return;
     }
 
-    const targetAccount = accounts.find(a => a.id === fundSourceAccountId) || accounts[0];
-    const targetAccId = targetAccount?.id;
-    if (!targetAccId) {
-      setFundError('Please select an account');
-      setFundShakeKey(k => k + 1);
-      return;
-    }
-
     if (fundMode === 'withdraw') {
       if (amount > selectedGoalForFunds.currentAmount) {
         setFundError('Withdrawal amount cannot exceed current saved goal balance');
@@ -66,7 +60,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       }
 
       try {
-        await withdrawFromGoal(selectedGoalForFunds.id, amount, targetAccId);
+        await withdrawFromGoal(selectedGoalForFunds.id, amount);
         setFundAmount('');
         setFundError(null);
         setSelectedGoalForFunds(null);
@@ -76,7 +70,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       }
     } else {
       try {
-        await contributeToGoal(selectedGoalForFunds.id, amount, targetAccId);
+        await contributeToGoal(selectedGoalForFunds.id, amount);
 
         if (selectedGoalForFunds.currentAmount + amount >= selectedGoalForFunds.targetAmount) {
           try {
@@ -250,16 +244,13 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                         <div className="absolute right-0 top-11 w-36 bg-white dark:bg-[#262626] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.1] py-1 z-30 origin-top-right-spring text-xs">
                           <button
                             onClick={() => {
-                              setSelectedGoalForFunds(goal);
-                              setFundMode('withdraw');
-                              setFundAmount('');
-                              setFundError(null);
+                              setGoalForHistory(goal);
                               setActiveGoalMenuId(null);
                             }}
                             className="w-full px-3.5 py-2.5 text-left text-gray-700 dark:text-gray-200 hover:bg-[#F1F2F4] dark:hover:bg-white/[0.06] flex items-center space-x-2 font-medium cursor-pointer rounded-xl"
                           >
-                            <ArrowDownRight className="w-4 h-4 text-amber-500 shrink-0" />
-                            <span>Withdraw Funds</span>
+                            <History className="w-4 h-4 text-[#4D6E18] dark:text-[#C6FF3D] shrink-0" />
+                            <span>History</span>
                           </button>
                           <button
                             onClick={() => {
@@ -504,41 +495,142 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
-                {fundMode === 'deposit' ? 'Deduct from Account' : 'Deposit into Account'}
-              </label>
-              {accounts.length === 0 ? (
-                <p className="text-xs text-rose-500 py-2">
-                  No connected accounts available. Please add an account first.
-                </p>
-              ) : (
-                <select
-                  value={fundSourceAccountId}
-                  onChange={e => setFundSourceAccountId(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm focus:outline-none focus:border-[#C6FF3D]"
-                >
-                  {accounts.map(a => (
-                    <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
-                      {a.name} — Available: {formatCurrency(a.balance, a.currency)}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
             <Button
               type="submit"
               variant="primary"
               size="lg"
               fullWidth
-              disabled={accounts.length === 0}
               icon={<Wallet className="w-4 h-4" />}
             >
               {fundMode === 'deposit' ? 'Confirm Deposit' : 'Confirm Withdrawal'}
             </Button>
           </form>
         </div>
+      </Modal>
+
+      {/* Dedicated Per-Goal History Modal */}
+      <Modal
+        isOpen={!!goalForHistory}
+        onClose={() => setGoalForHistory(null)}
+        title={goalForHistory ? `${goalForHistory.name} History` : 'Goal History'}
+        subtitle="Chronological log of deposits and withdrawals"
+      >
+        {goalForHistory && (() => {
+          const liveGoal = goals.find(g => g.id === goalForHistory.id) || goalForHistory;
+          const historyList = liveGoal.history || getGoalHistory(liveGoal.id);
+          const percent = liveGoal.targetAmount > 0 ? (liveGoal.currentAmount / liveGoal.targetAmount) * 100 : 0;
+
+          return (
+            <div className="space-y-4">
+              {/* Goal Balance Progress Card */}
+              <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08] space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] flex items-center justify-center shrink-0">
+                      <CategoryIcon name={liveGoal.icon} className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900 dark:text-white">{liveGoal.name}</h4>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                        Target: {formatCurrency(liveGoal.targetAmount, settings.baseCurrency, settings.privacyMode)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#16A34A]/10 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E]">
+                      {percent.toFixed(0)}%
+                    </span>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white tabular-nums mt-0.5">
+                      {formatCurrency(liveGoal.currentAmount, settings.baseCurrency, settings.privacyMode)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full h-1.5 rounded-full bg-[#E5E7EB] dark:bg-white/[0.07] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[#16A34A] dark:bg-[#22C55E] transition-all duration-500"
+                    style={{ width: `${Math.min(100, percent)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* History Entries List */}
+              <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                {historyList.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-gray-500 dark:text-gray-400 space-y-2">
+                    <History className="w-8 h-8 mx-auto text-gray-400 dark:text-gray-500 opacity-60" />
+                    <p className="font-semibold text-gray-800 dark:text-gray-200">No activity logged yet</p>
+                    <p>Deposits and withdrawals for this goal will be recorded here.</p>
+                  </div>
+                ) : (
+                  historyList.map(entry => {
+                    const isWithdraw = entry.type === 'withdraw';
+                    const isInitial = entry.type === 'initial';
+                    const dateFormatted = new Date(entry.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                    });
+
+                    return (
+                      <div
+                        key={entry.id}
+                        className="p-3 rounded-2xl bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between gap-3 shadow-xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                              isInitial
+                                ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                                : isWithdraw
+                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                : 'bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E]'
+                            }`}
+                          >
+                            {isInitial ? (
+                              <CheckCircle2 className="w-4 h-4" />
+                            ) : isWithdraw ? (
+                              <ArrowDownRight className="w-4 h-4" />
+                            ) : (
+                              <Plus className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <h5 className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                              {isInitial ? 'Initial Deposit' : isWithdraw ? 'Withdrawn Funds' : 'Added Funds'}
+                            </h5>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                              {dateFormatted}
+                              {entry.note ? ` • ${entry.note}` : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span
+                            className={`text-xs font-bold tabular-nums block ${
+                              isWithdraw
+                                ? 'text-amber-600 dark:text-amber-400'
+                                : 'text-[#16A34A] dark:text-[#22C55E]'
+                            }`}
+                          >
+                            {isWithdraw ? '-' : '+'}{formatCurrency(entry.amount, settings.baseCurrency, settings.privacyMode)}
+                          </span>
+                          <span className="text-[10px] text-gray-400 dark:text-white/40 tabular-nums">
+                            Bal: {formatCurrency(entry.balanceAfter, settings.baseCurrency, settings.privacyMode)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
 
       <ConfirmModal

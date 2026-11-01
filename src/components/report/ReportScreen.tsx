@@ -40,15 +40,23 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
 
   // Donut Chart Data: Expenses by Category with Figma lime/olive palette
   const expenseDonutData = useMemo(() => {
+    const isLegacyGoal = (c: { systemKey?: string; name?: string }) =>
+      c.systemKey === 'goal_contribution' ||
+      c.systemKey === 'goal_withdrawal' ||
+      (c.name && c.name.toLowerCase().includes('goal contribution')) ||
+      (c.name && c.name.toLowerCase().includes('goal withdrawal'));
+
     const limePalette = isDark ? FIGMA_LIME_PALETTE_DARK : FIGMA_LIME_PALETTE_LIGHT;
-    return categoryBreakdown.map((item, idx) => ({
-      name: item.category.name,
-      value: Math.round(item.total * 100) / 100,
-      color: limePalette[idx % limePalette.length],
-      percentage: item.percentage,
-      count: item.transactionCount,
-      categoryId: item.category.id,
-    }));
+    return categoryBreakdown
+      .filter(item => !isLegacyGoal(item.category))
+      .map((item, idx) => ({
+        name: item.category.name,
+        value: Math.round(item.total * 100) / 100,
+        color: limePalette[idx % limePalette.length],
+        percentage: item.percentage,
+        count: item.transactionCount,
+        categoryId: item.category.id,
+      }));
   }, [categoryBreakdown, isDark]);
 
   const handleTxSelect = (tx: Transaction) => {

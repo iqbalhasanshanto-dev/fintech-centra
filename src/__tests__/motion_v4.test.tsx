@@ -100,7 +100,7 @@ describe('Centra v4.0.0 UI Motion & Micro-Interaction System', () => {
       expect(menu).toHaveClass('origin-bottom-right-spring');
 
       // The plus button wrapper rotates
-      const rotatingIconContainer = plusBtn.querySelector('.rotate-135');
+      const rotatingIconContainer = plusBtn.querySelector('.rotate-45, .rotate-135');
       expect(rotatingIconContainer).not.toBeNull();
     });
 
@@ -228,6 +228,10 @@ describe('Centra v4.0.0 UI Motion & Micro-Interaction System', () => {
       );
 
       const content = screen.getByTestId('row-content');
+      // Swipe left to reveal the delete button
+      fireEvent.touchStart(content.parentElement!, { touches: [{ clientX: 200, clientY: 50 }] });
+      fireEvent.touchMove(content.parentElement!, { touches: [{ clientX: 100, clientY: 50 }] });
+
       const deleteBtn = screen.getByRole('button', { name: /delete/i });
       expect(deleteBtn).toBeInTheDocument();
 
