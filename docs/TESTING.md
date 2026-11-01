@@ -1,4 +1,4 @@
-# Phase 7 Testing & Platform Verification Guide
+# Testing & Platform Verification Guide
 
 This document details the configuration, build commands, debugging workflows, and manual QA test matrices for Centra across its supported platforms: **Web**, **Android (Capacitor 8)**, **iOS (Capacitor 8)**, and **Desktop (Tauri 2)**.
 
@@ -9,7 +9,7 @@ This document details the configuration, build commands, debugging workflows, an
 ### 1.1 Prerequisites & Toolchain
 - **Java Development Kit**: JDK 21 is strictly required by Android Gradle Plugin (AGP) 8.13.0 and Gradle 8.14.3.
   ```bash
-  export JAVA_HOME="/Users/shanto/Library/Java/JavaVirtualMachines/jbr-21.0.11/Contents/Home"
+  export JAVA_HOME="$(/usr/libexec/java_home -v 21 2>/dev/null || echo '/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home')"
   export PATH="$JAVA_HOME/bin:$PATH"
   java -version # Must report openjdk version "21.x.x"
   ```
