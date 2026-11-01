@@ -44,6 +44,70 @@ function getAllReleases(releasesDir) {
   return releases;
 }
 
+function syncReleasesTable(content, newVersion, newDirectUrl, newRawUrl, newSizeMB, defaultHighlights) {
+  const tableHeader = '| Version | Channel | One-Click Direct Download | Size | Highlights |\n|:---|:---|:---|:---|:---|';
+  if (!content.includes(tableHeader)) return content;
+
+  const [beforeTable, afterHeader] = content.split(tableHeader + '\n');
+  const lines = afterHeader.split('\n');
+  const tableRows = [];
+  let remainderIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('| **`v')) {
+      tableRows.push(lines[i]);
+    } else {
+      remainderIndex = i;
+      break;
+    }
+  }
+
+  const remainder = remainderIndex !== -1 ? lines.slice(remainderIndex).join('\n') : '';
+  const existingIdx = tableRows.findIndex(r => r.includes(`| **\`v${newVersion}\`** |`));
+
+  let finalRows = [];
+  if (existingIdx !== -1) {
+    // Current version already exists - normalize channel statuses and labels across all rows
+    finalRows = tableRows.map((r, idx) => {
+      if (idx === existingIdx) {
+        let row = r.replace(/\| (🟢 Latest|⚪ Previous|📦 Archive) \|/, '| 🟢 Latest |');
+        row = row.replace(/\|\s*[0-9.]+\s*MB\s*\|/, `| ${newSizeMB} MB |`);
+        row = row.replace(/\[\*\*📦 Download APK\*\*\]/, '[**📲 Download APK**]');
+        return row;
+      }
+      const prevIdx = existingIdx === 0 ? 1 : 0;
+      if (idx === prevIdx) {
+        let row = r.replace(/\| (🟢 Latest|⚪ Previous|📦 Archive) \|/, '| ⚪ Previous |');
+        row = row.replace(/\[\*\*📲 Download APK\*\*\]/, '[**📦 Download APK**]');
+        return row;
+      } else {
+        let row = r.replace(/\| (🟢 Latest|⚪ Previous|📦 Archive) \|/, '| 📦 Archive |');
+        row = row.replace(/\[\*\*📲 Download APK\*\*\]/, '[**📦 Download APK**]');
+        return row;
+      }
+    });
+  } else {
+    // 1. First convert all existing "| ⚪ Previous |" rows to "| 📦 Archive |"
+    let updated = tableRows.map(r => r.replace('| ⚪ Previous |', '| 📦 Archive |'));
+
+    // 2. Then convert the old "| 🟢 Latest |" row to "| ⚪ Previous |" and change its download label from "📲 Download APK" to "📦 Download APK"
+    updated = updated.map(r => {
+      if (r.includes('| 🟢 Latest |')) {
+        return r
+          .replace('| 🟢 Latest |', '| ⚪ Previous |')
+          .replace('[**📲 Download APK**]', '[**📦 Download APK**]');
+      }
+      return r;
+    });
+
+    // 3. Finally insert the new v${version} row at the top as "| 🟢 Latest |" with "📲 Download APK"
+    const newRow = `| **\`v${newVersion}\`** | 🟢 Latest | [**📲 Download APK**](${newDirectUrl}) · [Mirror](${newRawUrl}) | ${newSizeMB} MB | ${defaultHighlights} |`;
+    finalRows = [newRow, ...updated];
+  }
+
+  return beforeTable + tableHeader + '\n' + finalRows.join('\n') + '\n' + remainder;
+}
+
 // 1. Read / Update package.json version
 const pkgPath = path.join(rootDir, 'package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
@@ -204,22 +268,26 @@ if (fs.existsSync(readmePath)) {
   content = content.replace(treeBlockRegex, `$1${treeEntries}$3`);
 
   // Releases Table
-  const tableHeader = '| Version | Channel | One-Click Direct Download | Size | Highlights |\n|:---|:---|:---|:---|:---|';
-  if (content.includes(tableHeader)) {
-    const versionRowRegex = new RegExp(`\\|\\s*\\*\\*\\\`v${version}\\\`\\*\\*\\s*\\|[\\s\\S]*?\\n`);
-    if (versionRowRegex.test(content)) {
-      content = content.replace(versionRowRegex, (match) => {
-        let row = match;
-        row = row.replace(/\| (🟢 Latest|⚪ Previous|📦 Archive) \|/, '| 🟢 Latest |');
-        row = row.replace(/\|\s*[0-9.]+\s*MB\s*\|/, `| ${fileSizeMB} MB |`);
-        return row;
-      });
-    } else {
-      content = content.replace('| 🟢 Latest |', '| ⚪ Previous |');
-      const newRow = `| **\`v${version}\`** | 🟢 Latest | [**📲 Download APK**](${directDownloadUrl}) · [Mirror](${rawUrl}) | ${fileSizeMB} MB | Release highlights here |\n`;
-      content = content.replace(tableHeader + '\n', tableHeader + '\n' + newRow);
-    }
-  }
+  content = syncReleasesTable(
+    content,
+    version,
+    directDownloadUrl,
+    rawUrl,
+    fileSizeMB,
+    'Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover'
+  );
+
+  // Release naming convention example
+  content = content.replace(
+    /- Example: Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk,\s*Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk/,
+    `- Example: Centra-v${prev.version}-debug.apk, Centra-v${version}-debug.apk`
+  );
+
+  // Maintainer guide package.json example
+  content = content.replace(
+    /1\.\s+\*\*Bump Version\*\*:\s+Update\s+"version"\s+in\s+\[`package\.json`\]\(\.\.\/package\.json\)\s+\(e\.g\.\s*"version":\s*"[0-9.]+"\)\./,
+    `1. **Bump Version**: Update \`"version"\` in [\`package.json\`](../package.json) (e.g. \`"version": "${version}"\`).`
+  );
 
   // Checksum <details> block
   const detailsHeader = '<summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>\n\n';
@@ -246,22 +314,26 @@ if (fs.existsSync(releasesReadmePath)) {
   let content = fs.readFileSync(releasesReadmePath, 'utf8');
 
   // Releases Table
-  const tableHeader = '| Version | Channel | One-Click Direct Download | Size | Highlights |\n|:---|:---|:---|:---|:---|';
-  if (content.includes(tableHeader)) {
-    const versionRowRegex = new RegExp(`\\|\\s*\\*\\*\\\`v${version}\\\`\\*\\*\\s*\\|[\\s\\S]*?\\n`);
-    if (versionRowRegex.test(content)) {
-      content = content.replace(versionRowRegex, (match) => {
-        let row = match;
-        row = row.replace(/\| (🟢 Latest|⚪ Previous|📦 Archive) \|/, '| 🟢 Latest |');
-        row = row.replace(/\|\s*[0-9.]+\s*MB\s*\|/, `| ${fileSizeMB} MB |`);
-        return row;
-      });
-    } else {
-      content = content.replace('| 🟢 Latest |', '| ⚪ Previous |');
-      const newRow = `| **\`v${version}\`** | 🟢 Latest | [**📲 Download APK**](${directDownloadUrl}) · [Mirror](${rawUrl}) | ${fileSizeMB} MB | Release highlights here |\n`;
-      content = content.replace(tableHeader + '\n', tableHeader + '\n' + newRow);
-    }
-  }
+  content = syncReleasesTable(
+    content,
+    version,
+    directDownloadUrl,
+    rawUrl,
+    fileSizeMB,
+    'Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover'
+  );
+
+  // Release naming convention example
+  content = content.replace(
+    /- Example: Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk,\s*Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk/,
+    `- Example: Centra-v${prev.version}-debug.apk, Centra-v${version}-debug.apk`
+  );
+
+  // Maintainer guide package.json example
+  content = content.replace(
+    /1\.\s+\*\*Bump Version\*\*:\s+Update\s+"version"\s+in\s+\[`package\.json`\]\(\.\.\/package\.json\)\s+\(e\.g\.\s*"version":\s*"[0-9.]+"\)\./,
+    `1. **Bump Version**: Update \`"version"\` in [\`package.json\`](../package.json) (e.g. \`"version": "${version}"\`).`
+  );
 
   // Checksum entry in <details>
   const detailsHeader = '<summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>\n\n';

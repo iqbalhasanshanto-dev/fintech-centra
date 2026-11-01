@@ -10,7 +10,7 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](LICENSE)
 [![Latest Release v3.3.0](https://img.shields.io/badge/Release-v3.3.0-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](#-releases--version-history-table-download-any-version)
-[![292 Passing Tests](https://img.shields.io/badge/Tests-292%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
+[![309 Passing Tests](https://img.shields.io/badge/Tests-309%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
 [![Android SDK 36](https://img.shields.io/badge/Android-SDK%2036-3DDC84.svg?style=flat-square&logo=android&logoColor=white&labelColor=000000)](android/)
 [![Capacitor 8.5](https://img.shields.io/badge/Capacitor-8.5-119EFF.svg?style=flat-square&logo=capacitor&logoColor=white&labelColor=000000)](https://capacitorjs.com/)
 [![Supabase RLS](https://img.shields.io/badge/Supabase-RLS%20Enforced-3ECF8E.svg?style=flat-square&logo=supabase&logoColor=white&labelColor=000000)](supabase/)
@@ -63,10 +63,10 @@ Download standalone Android application packages directly from GitHub. Every APK
 | Version | Channel | One-Click Direct Download | Size | Highlights |
 |:---|:---|:---|:---|:---|
 | **`v3.3.0`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.3.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.3.0-debug.apk) | 5.97 MB | Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover |
-| **`v3.2.0`** | ⚪ Previous | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.2.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.2.0-debug.apk) | 5.94 MB | Interactive glowing/dimmed calendar Today button, pinned transactions stick to top with badges across all activity lists |
-| **`v3.1.4`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.4-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.4-debug.apk) | 5.94 MB | Android safe-area zero top gap, non-wrapping header titles, word-break fix on goal cards, locked main scroll |
-| **`v3.1.3`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk) | 6.24 MB | Smart transaction titles & dates, locked sticky top headers, black app icon, 60fps theme toggle |
-| **`v3.1.2`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.2-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.2-debug.apk) | 5.94 MB | System theme auto-detect, custom currency modal, fixed avatar zoom, Android CSV export, double-back exit |
+| **`v3.2.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.2.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.2.0-debug.apk) | 5.94 MB | Interactive glowing/dimmed calendar Today button, pinned transactions stick to top with badges across all activity lists |
+| **`v3.1.4`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.4-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.4-debug.apk) | 5.94 MB | Android safe-area zero top gap, non-wrapping header titles, word-break fix on goal cards, locked main scroll |
+| **`v3.1.3`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.3-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.3-debug.apk) | 6.24 MB | Smart transaction titles & dates, locked sticky top headers, black app icon, 60fps theme toggle |
+| **`v3.1.2`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.2-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.2-debug.apk) | 5.94 MB | System theme auto-detect, custom currency modal, fixed avatar zoom, Android CSV export, double-back exit |
 | **`v3.1.1`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.1-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.1-debug.apk) | 5.94 MB | Instant startup, auto offline background sync, OAuth avatar fix, compact ConfirmModal, 60fps dark toggle |
 | **`v3.1.0`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.1.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.1.0-debug.apk) | 5.76 MB | Zero-delay offline launch, unified avatar initials, brand logos & white launcher, legal modal, modal touch pull |
 | **`v3.0.0`** | 📦 Archive | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.0.0-debug.apk) | 5.74 MB | Figma UI redesign, OLED Dark/Light themes, Analytics calendar, OAuth & OTP fixes |
@@ -90,11 +90,11 @@ Verify on macOS/Linux (`shasum -a 256 releases/Centra-v3.3.0-debug.apk`) or Wind
 </details>
 
 <details>
-<summary><b>🛠️ Maintainer Guide: How to Publish a New Release (<code>v3.2.0</code>, <code>v4.0.0</code>, etc.)</b></summary>
+<summary><b>🛠️ Maintainer Guide: How to Publish a New Release (<code>v3.3.0</code>, <code>v4.0.0</code>, etc.)</b></summary>
 
 Publishing a new Android release with one-click direct download links takes 3 automated steps:
 
-1. **Bump Version**: Update `"version"` in [`package.json`](package.json) (e.g. `"version": "3.1.0"`).
+1. **Bump Version**: Update `"version"` in [`package.json`](package.json) (e.g. `"version": "3.3.0"`).
 2. **Compile the APK**:
    ```bash
    npm run build && npx cap sync android && cd android && ./gradlew assembleDebug && cd ..
@@ -211,7 +211,7 @@ For a comprehensive technical review of storage topology, physical device access
 | **Database & Auth** | Supabase (PostgreSQL 15) | Row-Level Security (RLS), PKCE OAuth, 6-digit passwordless Email OTP |
 | **Offline Engine** | CentraDB | Client repository with transactional outbox queue and automatic sync on reconnect |
 | **Visualizations & Charts** | Recharts, Lucide Icons | Responsive SVG spending donut charts, category distribution, custom spending calendar |
-| **Testing Suite** | Vitest, Testing Library, jsdom | Comprehensive unit and integration test suite with **292 passing tests** |
+| **Testing Suite** | Vitest, Testing Library, jsdom | Comprehensive unit and integration test suite with **309 passing tests** |
 
 ### Repository Architecture Tree
 
@@ -245,7 +245,7 @@ fintech-centra/
 │   └── prepare-release.mjs  # One-command release packager and SHA-256 calculator
 ├── src-tauri/               # Tauri 2 desktop application source and Cargo manifest
 ├── src/
-│   ├── __tests__/           # Comprehensive test suite (33 test suites, 292 passing tests)
+│   ├── __tests__/           # Comprehensive test suite (35 test suites, 309 passing tests)
 │   ├── assets/              # Brand icons, logo images, and vector artwork
 │   ├── components/
 │   │   ├── auth/            # Sign-in, sign-up, 6-digit OTP verification, PIN lock screens
@@ -313,7 +313,7 @@ npm run typecheck
 # Verify ESLint rules (0 errors, 0 warnings)
 npm run lint
 
-# Run full test suite (292 unit & integration tests)
+# Run full test suite (309 unit & integration tests)
 npm test
 ```
 
