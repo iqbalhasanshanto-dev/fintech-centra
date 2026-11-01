@@ -42,7 +42,7 @@ export const AppShell: React.FC = () => {
   // Synchronously ensure Demo Mode never renders settings screen
   const effectiveTab: TabType = (isGuest && activeTab === 'settings') ? 'home' : activeTab;
 
-  // Hardware back button root handler: pops tab history stack, and only prompts exit when at root 'home'
+  // Hardware back button root handler: pops tab history stack, and immediately minimizes/exits when at root 'home'
   useEffect(() => {
     const unregister = BackButtonManager.registerRootHandler(() => {
       // If we have back history across tabs, pop and navigate back
@@ -60,26 +60,8 @@ export const AppShell: React.FC = () => {
         return;
       }
 
-      // Only at root tab (home with no prior tab history): trigger double-back exit check
-      const now = Date.now();
-      if (now - lastBackPressRef.current < 2000) {
-        if (exitToastTimerRef.current) {
-          clearTimeout(exitToastTimerRef.current);
-          exitToastTimerRef.current = null;
-        }
-        setShowExitToast(false);
-        setShowExitConfirm(true);
-      } else {
-        lastBackPressRef.current = now;
-        setShowExitToast(true);
-        if (exitToastTimerRef.current) {
-          clearTimeout(exitToastTimerRef.current);
-        }
-        exitToastTimerRef.current = setTimeout(() => {
-          setShowExitToast(false);
-          exitToastTimerRef.current = null;
-        }, 2000);
-      }
+      // Only at root tab (home with no prior tab history): immediately minimize/exit to phone home screen
+      exitNativeApp();
     });
     return unregister;
   }, [effectiveTab]);
@@ -235,33 +217,37 @@ export const AppShell: React.FC = () => {
 
       {/* 5-Second Undo Delete Toast Bar (Above Bottom Nav) */}
       {pendingUndo && (
-        <div className="fixed bottom-24 lg:bottom-10 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-2rem)] max-w-sm rounded-2xl bg-[#1D1D1D]/95 text-white border border-white/15 shadow-2xl backdrop-blur-md overflow-hidden animate-fade-in flex flex-col">
-          <div className="px-4 py-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-              <span className="text-xs font-semibold text-white truncate">
-                {pendingUndo.label}
-              </span>
+        <div className="fixed bottom-24 lg:bottom-10 inset-x-4 z-[150] flex justify-center pointer-events-none">
+          <div className="w-full max-w-sm rounded-2xl bg-[#1D1D1D]/95 text-white border border-white/15 shadow-2xl backdrop-blur-md overflow-hidden animate-fade-in flex flex-col pointer-events-auto">
+            <div className="px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                <span className="text-xs font-semibold text-white truncate">
+                  {pendingUndo.label}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={undoLastDelete}
+                className="px-3.5 py-1.5 rounded-full bg-[#C6FF3D] hover:bg-[#b8f52e] active:scale-95 text-[#0A0E1A] text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0"
+              >
+                UNDO
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={undoLastDelete}
-              className="px-3.5 py-1.5 rounded-full bg-[#C6FF3D] hover:bg-[#b8f52e] active:scale-95 text-[#0A0E1A] text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0"
-            >
-              UNDO
-            </button>
-          </div>
-          {/* 5-second shrinking progress bar */}
-          <div className="w-full h-1 bg-white/10 overflow-hidden">
-            <div className="h-full bg-[#C6FF3D] animate-undo-progress" />
+            {/* 5-second shrinking progress bar */}
+            <div className="w-full h-1 bg-white/10 overflow-hidden">
+              <div className="h-full bg-[#C6FF3D] animate-undo-progress" />
+            </div>
           </div>
         </div>
       )}
 
       {/* Floating Exit Toast Pill */}
       {showExitToast && (
-        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-full bg-[#1D1D1D]/95 text-white border border-white/15 shadow-2xl backdrop-blur-md text-xs font-semibold animate-fade-in pointer-events-none select-none flex items-center gap-2">
-          <span>Swipe back again to exit</span>
+        <div className="fixed bottom-28 inset-x-4 z-[200] flex justify-center pointer-events-none">
+          <div className="px-4 py-2 rounded-full bg-[#1D1D1D]/95 text-white border border-white/15 shadow-2xl backdrop-blur-md text-xs font-semibold animate-fade-in pointer-events-none select-none flex items-center gap-2">
+            <span>Swipe back again to exit</span>
+          </div>
         </div>
       )}
 

@@ -18,7 +18,7 @@ Centra `v4.1.0` introduces a 5-second Undo Delete safety system with delayed ser
 - **File Size**: `6,275,302 bytes` (6.00 MB)
 - **SHA-256 Checksum**:
   ```
-  5e59a20f2eab4cfb0f68f9f742120d53de090ceb235a6b7eb152a345b737b329
+  466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13
   ```
 
 #### ↩️ 5-Second "Undo Delete" System with Deferred Remote Deletion

@@ -117,9 +117,17 @@ export function useBackHandler(isOpen: boolean, onClose: () => void, priority = 
 }
 
 /**
- * Exits the native app (Capacitor App.exitApp)
+ * Minimizes or exits the native app (Capacitor App.minimizeApp with fallback to exitApp)
  */
 export const exitNativeApp = async (): Promise<void> => {
+  try {
+    if (typeof CapApp.minimizeApp === 'function') {
+      await CapApp.minimizeApp();
+      return;
+    }
+  } catch {
+    // fallback to exitApp
+  }
   try {
     await CapApp.exitApp();
   } catch {

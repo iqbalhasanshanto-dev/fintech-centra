@@ -215,9 +215,9 @@ describe('UI & Functional Fixes Suite', () => {
       expect(depositLabel).toHaveClass('whitespace-nowrap', 'truncate');
       expect(targetDateLabel).toHaveClass('whitespace-nowrap', 'truncate');
 
-      // Check parent grid has items-end
+      // Check parent grid has items-start
       const gridContainer = depositLabel.closest('.grid');
-      expect(gridContainer).toHaveClass('grid-cols-2', 'gap-3', 'items-end');
+      expect(gridContainer).toHaveClass('grid-cols-2', 'gap-3', 'items-start');
 
       // Check input has h-[52px]
       const depositInput = depositLabel.parentElement?.querySelector('input');
@@ -496,13 +496,12 @@ describe('UI & Functional Fixes Suite', () => {
         expect(screen.getByText('Vacation')).toBeInTheDocument();
       });
 
-      // + Add should be present for both
+      // + Add and - Withdraw should be present for both (always visible)
       const addButtons = screen.getAllByRole('button', { name: /\+ Add/i });
       expect(addButtons.length).toBe(2);
 
-      // - Withdraw should only be present for fundedGoal
       const withdrawButtons = screen.getAllByRole('button', { name: /- Withdraw/i });
-      expect(withdrawButtons.length).toBe(1);
+      expect(withdrawButtons.length).toBe(2);
 
       // Clicking + Add opens deposit modal
       fireEvent.click(addButtons[0]);

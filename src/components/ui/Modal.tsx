@@ -29,6 +29,33 @@ export const Modal: React.FC<ModalProps> = ({
   const touchDeltaY = useRef<number>(0);
   const [translateY, setTranslateY] = useState(0);
 
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isClosing, setIsClosing] = useState(false);
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      setShouldRender(true);
+      setIsClosing(false);
+    } else if (shouldRender) {
+      setIsClosing(true);
+      closeTimerRef.current = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+        closeTimerRef.current = null;
+      }, 220);
+    }
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, [isOpen]);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
     touchDeltaY.current = 0;
@@ -56,7 +83,7 @@ export const Modal: React.FC<ModalProps> = ({
         onClose();
       }
     };
-    if (isOpen) {
+    if (shouldRender) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     }
@@ -67,23 +94,27 @@ export const Modal: React.FC<ModalProps> = ({
         document.body.style.overflow = '';
       }
     };
-  }, [isOpen, onClose]);
+  }, [shouldRender, isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const modalNode = (
-    <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className={`fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4 ${isClosing ? 'pointer-events-none' : ''}`}>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md transition-opacity animate-fade-in z-[110]"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md transition-opacity duration-200 z-[110] ${
+          isClosing ? 'opacity-0' : 'opacity-100 animate-fade-in'
+        }`}
+        onClick={isClosing ? undefined : onClose}
         aria-hidden="true"
       />
 
       {/* Sheet / Dialog Container */}
       <div
         className={`relative z-[111] w-full ${maxWidth} bg-white dark:bg-[#1D1D1D] rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-black/5 dark:border-white/10 text-gray-900 dark:text-white transition-colors ${
-          isBottomSheet ? 'animate-slide-up sm:animate-fade-in' : 'animate-fade-in'
+          isClosing
+            ? (isBottomSheet ? 'animate-sheet-down sm:opacity-0 sm:transition-opacity sm:duration-200' : 'opacity-0 transition-opacity duration-200')
+            : (isBottomSheet ? 'animate-sheet-up sm:animate-fade-in' : 'animate-fade-in')
         }`}
         style={{
           transform: translateY > 0 ? `translateY(${translateY}px)` : undefined,

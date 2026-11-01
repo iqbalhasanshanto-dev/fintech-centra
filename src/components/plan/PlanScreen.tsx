@@ -218,19 +218,19 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                         + Add
                       </button>
 
-                      {goal.currentAmount > 0 && (
-                        <button
-                          onClick={() => {
-                            setSelectedGoalForFunds(goal);
-                            setFundMode('withdraw');
-                            setFundAmount('');
-                            setFundError(null);
-                          }}
-                          className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 dark:hover:bg-amber-500/25 text-[11px] font-bold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                        >
-                          - Withdraw
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedGoalForFunds(goal);
+                          setFundMode('withdraw');
+                          setFundAmount('');
+                          setFundError(null);
+                        }}
+                        className={`px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 dark:hover:bg-amber-500/25 text-[11px] font-bold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                          goal.currentAmount <= 0 ? 'opacity-50' : ''
+                        }`}
+                      >
+                        - Withdraw
+                      </button>
 
                       <button
                         onClick={() => setActiveGoalMenuId(activeGoalMenuId === goal.id ? null : goal.id)}
@@ -241,28 +241,34 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                       </button>
 
                       {activeGoalMenuId === goal.id && (
-                        <div className="absolute right-0 top-11 w-36 bg-white dark:bg-[#262626] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.1] py-1 z-30 origin-top-right-spring text-xs">
-                          <button
-                            onClick={() => {
-                              setGoalForHistory(goal);
-                              setActiveGoalMenuId(null);
-                            }}
-                            className="w-full px-3.5 py-2.5 text-left text-gray-700 dark:text-gray-200 hover:bg-[#F1F2F4] dark:hover:bg-white/[0.06] flex items-center space-x-2 font-medium cursor-pointer rounded-xl"
-                          >
-                            <History className="w-4 h-4 text-[#4D6E18] dark:text-[#C6FF3D] shrink-0" />
-                            <span>History</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              setGoalToDelete(goal);
-                              setActiveGoalMenuId(null);
-                            }}
-                            className="w-full px-3.5 py-2.5 text-left text-rose-600 dark:text-rose-400 hover:bg-[#F1F2F4] dark:hover:bg-white/[0.06] flex items-center space-x-2 font-semibold cursor-pointer rounded-xl"
-                          >
-                            <Trash2 className="w-4 h-4 shrink-0" />
-                            <span>Delete</span>
-                          </button>
-                        </div>
+                        <>
+                          <div
+                            className="fixed inset-0 z-20"
+                            onClick={() => setActiveGoalMenuId(null)}
+                          />
+                          <div className="absolute right-0 top-11 w-36 bg-white dark:bg-[#262626] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.1] py-1 z-30 origin-top-right-spring text-xs">
+                            <button
+                              onClick={() => {
+                                setGoalForHistory(goal);
+                                setActiveGoalMenuId(null);
+                              }}
+                              className="w-full px-3.5 py-2.5 text-left text-gray-700 dark:text-gray-200 hover:bg-[#F1F2F4] dark:hover:bg-white/[0.06] flex items-center space-x-2 font-medium cursor-pointer rounded-xl"
+                            >
+                              <History className="w-4 h-4 text-[#4D6E18] dark:text-[#C6FF3D] shrink-0" />
+                              <span>History</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setGoalToDelete(goal);
+                                setActiveGoalMenuId(null);
+                              }}
+                              className="w-full px-3.5 py-2.5 text-left text-rose-600 dark:text-rose-400 hover:bg-[#F1F2F4] dark:hover:bg-white/[0.06] flex items-center space-x-2 font-semibold cursor-pointer rounded-xl"
+                            >
+                              <Trash2 className="w-4 h-4 shrink-0" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>

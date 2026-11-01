@@ -417,7 +417,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 'notif_02',
     type: 'goal',
-    title: 'Goal Milestone on Track! 🚀',
+    title: 'Goal Milestone on Track',
     message: 'Emergency Shield is now at 94.7% of its $20,000 target.',
     timestamp: `${yesterdayISO}T16:45:00.000Z`,
     isRead: false,

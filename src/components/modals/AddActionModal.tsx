@@ -1366,9 +1366,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 items-end">
+                    <div className="grid grid-cols-2 gap-3 items-start">
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1 whitespace-nowrap truncate">
+                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1.5 whitespace-nowrap truncate">
                           INITIAL DEPOSIT
                         </label>
                         <input
@@ -1387,9 +1387,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                               }
                             }
                           }}
-                          className={`w-full h-[52px] px-3.5 py-2.5 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                          className={`w-full h-[52px] px-3.5 py-0 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border ${
                             goalInitialDepositError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
-                          } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 tabular-nums`}
+                          } text-gray-900 dark:text-white text-xs focus:outline-hidden focus:border-brand-500 tabular-nums leading-none`}
                         />
                         {goalInitialDepositError && (
                           <p className="mt-1 text-[11px] text-rose-500 font-medium">{goalInitialDepositError}</p>
@@ -1397,14 +1397,14 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1 whitespace-nowrap truncate">
+                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1.5 whitespace-nowrap truncate">
                           TARGET DATE
                         </label>
                         <DatePicker
                           value={goalTargetDate}
                           onChange={setGoalTargetDate}
                           minDate={new Date().toISOString().split('T')[0]}
-                          buttonClassName="h-[52px] w-full rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs px-3.5"
+                          buttonClassName="h-[52px] w-full px-3.5 py-0 rounded-xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xs flex items-center justify-between leading-none"
                         />
                       </div>
                     </div>

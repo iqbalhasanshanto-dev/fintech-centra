@@ -598,7 +598,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
 
     if (savingsRate >= 30) {
       return {
-        title: 'Outstanding Savings Rate! 🌟',
+        title: 'Outstanding Savings Rate',
         description: `You saved ${savingsRate.toFixed(0)}% of your earnings this cycle. Consider parking surplus in a high-yield goal.`,
         type: 'saving',
         actionText: 'Contribute to Goal',
@@ -727,7 +727,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
 
     const alreadyReminded = latestStateRef.current.notifications.some(n => n.id === reminderId);
     if (!alreadyReminded) {
-      const reminderTitle = '2-Month Data Retention Reminder 🗓️';
+      const reminderTitle = '2-Month Data Retention Reminder';
       const reminderMsg =
         'Centra keeps your transaction history for the Current Month and Previous Month (2 months total). Export a CSV backup anytime from Settings before older months roll over.';
 
@@ -989,7 +989,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     const notif: NotificationItem = {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif_${Date.now()}`,
       type: 'goal',
-      title: 'New Savings Target Created! 🎯',
+      title: 'New Savings Target Created',
       message: `Started "${newGoal.name}" with target of ${formatCurrency(newGoal.targetAmount, settings.baseCurrency)}.`,
       timestamp: new Date().toISOString(),
       isRead: false,

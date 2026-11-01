@@ -24,7 +24,7 @@ This directory houses curated and verified Android APK builds for Centra. Every 
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
-- **v4.1.0 (`Centra-v4.1.0-debug.apk`)**: `5e59a20f2eab4cfb0f68f9f742120d53de090ceb235a6b7eb152a345b737b329`
+- **v4.1.0 (`Centra-v4.1.0-debug.apk`)**: `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13`
 - **v4.0.0 (`Centra-v4.0.0-debug.apk`)**: `0bfd170ccefabcd4c15cdb60a01e8b42ccfc4b12240ff500c1a0d8a1f351cd54`
 
 Verify on macOS/Linux (`shasum -a 256 releases/Centra-v4.1.0-debug.apk`) or Windows (`CertUtil -hashfile releases\Centra-v4.1.0-debug.apk SHA256`).

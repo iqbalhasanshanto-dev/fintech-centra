@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PieChart, Plus, X, Target, SlidersHorizontal, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
 
@@ -69,13 +69,57 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const [viewportBottom, setViewportBottom] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuClosing, setIsMenuClosing] = useState(false);
+  const menuCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const closeMenuSmooth = (callback?: () => void) => {
+    if (menuCloseTimerRef.current) {
+      clearTimeout(menuCloseTimerRef.current);
+    }
+    setIsMenuClosing(true);
+    callback?.();
+    menuCloseTimerRef.current = setTimeout(() => {
+      setIsMenuOpen(false);
+      setIsMenuClosing(false);
+      menuCloseTimerRef.current = null;
+    }, 180);
+  };
+
+  const handleToggleMenu = () => {
+    if (isMenuOpen && !isMenuClosing) {
+      closeMenuSmooth();
+    } else {
+      if (menuCloseTimerRef.current) {
+        clearTimeout(menuCloseTimerRef.current);
+        menuCloseTimerRef.current = null;
+      }
+      setIsMenuClosing(false);
+      setIsMenuOpen(true);
+    }
+  };
+
+  const handleQuickAction = (action: 'income' | 'spend' | 'goal' | 'budget' | 'transfer') => {
+    closeMenuSmooth(() => {
+      onOpenAddAction(action);
+    });
+  };
 
   // Close floating menu on Android hardware back
-  useBackHandler(isMenuOpen, () => setIsMenuOpen(false));
+  useBackHandler(isMenuOpen && !isMenuClosing, () => {
+    closeMenuSmooth();
+  });
+
+  useEffect(() => {
+    return () => {
+      if (menuCloseTimerRef.current) {
+        clearTimeout(menuCloseTimerRef.current);
+      }
+    };
+  }, []);
 
   // Lock background scrolling when quick action menu is open
   useEffect(() => {
-    if (!isMenuOpen) return;
+    if (!isMenuOpen || isMenuClosing) return;
     const prevBodyOverflow = document.body.style.overflow;
     const prevDocOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -84,7 +128,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       document.body.style.overflow = prevBodyOverflow;
       document.documentElement.style.overflow = prevDocOverflow;
     };
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isMenuClosing]);
 
   useEffect(() => {
     const isFormField = (el: Element | null) => {
@@ -150,9 +194,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* Full-screen blurred backdrop when Floating '+' Quick Action Menu is open */}
       {isMenuOpen && (
         <div
-          onClick={() => setIsMenuOpen(false)}
+          onClick={() => closeMenuSmooth()}
           onTouchMove={e => e.preventDefault()}
-          className="fixed inset-0 backdrop-blur-md bg-black/50 z-40 animate-fade-in pointer-events-auto select-none touch-none"
+          className={`fixed inset-0 backdrop-blur-md bg-black/50 z-40 transition-opacity duration-180 select-none touch-none ${
+            isMenuClosing ? 'opacity-0 pointer-events-none' : 'opacity-100 animate-fade-in pointer-events-auto'
+          }`}
           aria-hidden="true"
         />
       )}
@@ -221,15 +267,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             {/* Quick-Action Menu Popup (11-home-add-menu.png) */}
             {isMenuOpen && (
               <div
-                className="absolute bottom-16 right-0 mb-2 w-64 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.08] dark:border-white/[0.12] p-3 shadow-2xl z-50 flex flex-col gap-1 pointer-events-auto origin-bottom-right-spring"
+                className={`absolute bottom-16 right-0 mb-2 w-64 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.08] dark:border-white/[0.12] p-3 shadow-2xl z-50 flex flex-col gap-1 ${
+                  isMenuClosing
+                    ? 'transition-all duration-180 ease-out opacity-0 scale-90 translate-y-4 pointer-events-none'
+                    : 'pointer-events-auto origin-bottom-right-spring'
+                }`}
                 role="menu"
                 aria-label="Quick Actions"
               >
                 <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onOpenAddAction('income');
-                  }}
+                  onClick={() => handleQuickAction('income')}
                   className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
                   role="menuitem"
                 >
@@ -240,10 +287,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 </button>
 
                 <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onOpenAddAction('spend');
-                  }}
+                  onClick={() => handleQuickAction('spend')}
                   className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
                   role="menuitem"
                 >
@@ -254,10 +298,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 </button>
 
                 <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onOpenAddAction('goal');
-                  }}
+                  onClick={() => handleQuickAction('goal')}
                   className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
                   role="menuitem"
                 >
@@ -268,10 +309,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 </button>
 
                 <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onOpenAddAction('budget');
-                  }}
+                  onClick={() => handleQuickAction('budget')}
                   className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
                   role="menuitem"
                 >
@@ -282,10 +320,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 </button>
 
                 <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onOpenAddAction('transfer');
-                  }}
+                  onClick={() => handleQuickAction('transfer')}
                   className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
                   role="menuitem"
                 >
@@ -298,18 +333,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             )}
 
             <button
-              onClick={() => setIsMenuOpen(prev => !prev)}
+              onClick={handleToggleMenu}
               className={`shrink-0 w-13 h-13 min-w-[52px] min-h-[52px] rounded-full font-bold shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all focus:outline-none cursor-pointer ${
-                isMenuOpen
+                isMenuOpen && !isMenuClosing
                   ? 'bg-white/90 dark:bg-[#262626] text-[#18212F] dark:text-white border border-black/10 dark:border-white/15'
                   : 'bg-[#C6FF3D] text-[#0A0E1A]'
               }`}
               aria-label="New Transaction, Transfer or Budget"
             >
               <Plus
-                className={`w-6 h-6 stroke-[2.5] ${isMenuOpen ? 'rotate-45' : 'rotate-0'}`}
+                className={`w-6 h-6 stroke-[2.5] ${isMenuOpen && !isMenuClosing ? 'rotate-45' : 'rotate-0'}`}
                 style={{
-                  transform: isMenuOpen ? 'rotate(45deg)' : 'rotate(0deg)',
+                  transform: isMenuOpen && !isMenuClosing ? 'rotate(45deg)' : 'rotate(0deg)',
                   transition: 'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1)',
                 }}
               />

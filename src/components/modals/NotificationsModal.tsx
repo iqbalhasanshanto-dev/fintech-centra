@@ -230,7 +230,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 )}
               </span>
               <h4 className="text-base font-medium text-[#18212F] dark:text-white truncate mt-0.5">
-                {item.title}
+                {(item.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim()}
               </h4>
             </div>
           </div>

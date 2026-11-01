@@ -52,9 +52,12 @@ export async function triggerSystemNotification(
 ): Promise<boolean> {
   if (typeof window === 'undefined') return false;
 
+  const cleanTitle = (title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim();
+  const cleanBody = (body || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim();
+
   const tag = id || `notif_${Date.now()}`;
   const options: NotificationOptions = {
-    body,
+    body: cleanBody,
     icon: '/logo.png',
     badge: '/logo.png',
     tag,
@@ -66,7 +69,7 @@ export async function triggerSystemNotification(
       const numericId = Math.abs(
         tag.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0) % 100000
       ) || (Date.now() % 100000);
-      (window as unknown as { CentraAndroid: { showNotification: (t: string, b: string, id: number) => void } }).CentraAndroid.showNotification(title, body, numericId);
+      (window as unknown as { CentraAndroid: { showNotification: (t: string, b: string, id: number) => void } }).CentraAndroid.showNotification(cleanTitle, cleanBody, numericId);
       return true;
     } catch (err) {
       logger.warn('CentraAndroid showNotification failed:', err);
@@ -100,8 +103,8 @@ export async function triggerSystemNotification(
       await cap.Plugins.LocalNotifications.schedule({
         notifications: [
           {
-            title,
-            body,
+            title: cleanTitle,
+            body: cleanBody,
             id: numericId,
             extra: { tag },
           },
@@ -118,7 +121,7 @@ export async function triggerSystemNotification(
     try {
       const reg = await navigator.serviceWorker.getRegistration();
       if (reg && 'showNotification' in reg) {
-        await reg.showNotification(title, options);
+        await reg.showNotification(cleanTitle, options);
         return true;
       }
     } catch (err) {
@@ -129,7 +132,7 @@ export async function triggerSystemNotification(
   // 3. Try standard Web Notification API
   if ('Notification' in window && Notification.permission === 'granted') {
     try {
-      new Notification(title, options);
+      new Notification(cleanTitle, options);
       return true;
     } catch (err) {
       logger.warn('Web Notification constructor failed:', err);

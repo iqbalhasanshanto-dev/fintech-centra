@@ -785,7 +785,7 @@ export function applyContributeToGoal(
     notificationsToEmit.push({
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif_${Date.now()}`,
       type: 'goal',
-      title: 'Goal Achieved! 🎉',
+      title: 'Goal Achieved',
       message: `Congratulations! You reached your ${formatCurrency(goal.targetAmount, baseCurrency)} target for "${goal.name}".`,
       timestamp: new Date().toISOString(),
       isRead: false,
