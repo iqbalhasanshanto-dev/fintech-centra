@@ -15,6 +15,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { NotificationType, NotificationItem } from '../../types';
 import { useBackHandler } from '../../utils/backButton';
+import { SwipeableRow } from '../ui/SwipeableRow';
 
 interface NotificationsModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     notifications, 
     markNotificationAsRead, 
     markAllNotificationsAsRead, 
+    deleteNotification,
     clearNotifications 
   } = useFinance();
   const { isGuest } = useAuth();
@@ -182,68 +184,69 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     const actionLabel = getActionLabel(item);
 
     return (
-      <div
-        key={item.id}
-        onClick={() => handleNotificationClick(item)}
-        className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 shadow-sm transition-all cursor-pointer hover:border-black/[0.12] dark:hover:border-white/[0.25] space-y-3.5"
-      >
-        {/* Card Header Row: Icon + Overline + Title + Unread Dot */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0">
-            <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                isUnread
-                  ? 'bg-[#C6FF3D]/15 text-[#4D6E18] dark:text-[#C6FF3D]'
-                  : 'bg-[#F1F2F4] text-[#667085] dark:bg-[#262626] dark:text-[#9CA3AF]'
-              }`}
-            >
-              {getIcon(item.type)}
+      <SwipeableRow key={item.id} onDelete={() => deleteNotification(item.id)}>
+        <div
+          onClick={() => handleNotificationClick(item)}
+          className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 shadow-sm transition-all cursor-pointer hover:border-black/[0.12] dark:hover:border-white/[0.25] space-y-3.5"
+        >
+          {/* Card Header Row: Icon + Overline + Title + Unread Dot */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                  isUnread
+                    ? 'bg-[#C6FF3D]/15 text-[#4D6E18] dark:text-[#C6FF3D]'
+                    : 'bg-[#F1F2F4] text-[#667085] dark:bg-[#262626] dark:text-[#9CA3AF]'
+                }`}
+              >
+                {getIcon(item.type)}
+              </div>
+
+              <div className="min-w-0">
+                <span className="text-[11px] font-medium text-[#667085] dark:text-white/60 block">
+                  {categoryLabel}
+                  {!isUnread && ' • Read'}
+                </span>
+                <h4 className="text-base font-medium text-[#18212F] dark:text-white truncate mt-0.5">
+                  {item.title}
+                </h4>
+              </div>
             </div>
 
-            <div className="min-w-0">
-              <span className="text-[11px] font-medium text-[#667085] dark:text-white/60 block">
-                {categoryLabel}
-                {!isUnread && ' • Read'}
-              </span>
-              <h4 className="text-base font-medium text-[#18212F] dark:text-white truncate mt-0.5">
-                {item.title}
-              </h4>
-            </div>
+            {isUnread && (
+              <span
+                className="w-2 h-2 rounded-full bg-[#C6FF3D] shrink-0 mt-2 shadow-[0_0_8px_rgba(198,255,61,0.6)]"
+                aria-label="Unread"
+              />
+            )}
           </div>
 
-          {isUnread && (
-            <span
-              className="w-2 h-2 rounded-full bg-[#C6FF3D] shrink-0 mt-2 shadow-[0_0_8px_rgba(198,255,61,0.6)]"
-              aria-label="Unread"
-            />
-          )}
-        </div>
+          {/* Message Body */}
+          <p className="text-sm text-[#667085] dark:text-white/70 leading-relaxed">
+            {item.message}
+          </p>
 
-        {/* Message Body */}
-        <p className="text-sm text-[#667085] dark:text-white/70 leading-relaxed">
-          {item.message}
-        </p>
-
-        {/* Footer Row: Timestamp + Action Link */}
-        <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.07]">
-          <span className="text-[11px] text-[#667085] dark:text-white/40">
-            {formatItemTime(item.timestamp)}
-          </span>
-
-          {actionLabel && (
-            <span 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleNotificationClick(item);
-              }}
-              className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer"
-            >
-              <span>{actionLabel}</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+          {/* Footer Row: Timestamp + Action Link */}
+          <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.07]">
+            <span className="text-[11px] text-[#667085] dark:text-white/40">
+              {formatItemTime(item.timestamp)}
             </span>
-          )}
+
+            {actionLabel && (
+              <span 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNotificationClick(item);
+                }}
+                className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline flex items-center gap-0.5 cursor-pointer"
+              >
+                <span>{actionLabel}</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      </SwipeableRow>
     );
   };
 

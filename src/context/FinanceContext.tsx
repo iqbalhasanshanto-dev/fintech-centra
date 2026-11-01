@@ -14,6 +14,7 @@ import {
 import { CentraDB, isGuestUser } from '../db/storage';
 import { convertCurrency, formatCurrency } from '../utils/formatters';
 import { getPeriodDateRange } from '../utils/dates';
+import { requestNotificationPermission, triggerSystemNotification } from '../utils/nativeNotifications';
 import {
   FinanceState,
   OperationResult,
@@ -99,6 +100,7 @@ interface FinanceContextType {
   addNotification: (item: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead'>) => void;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
+  deleteNotification: (id: string) => void;
   clearNotifications: () => void;
 
   updateSettings: (updates: Partial<AppSettings>) => void;
@@ -633,6 +635,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     }
     if (result.mutated.notificationsToUpsert || result.mutated.notificationsToDelete) {
       setNotifications(result.nextState.notifications);
+      if (result.mutated.notificationsToUpsert) {
+        for (const notif of result.mutated.notificationsToUpsert) {
+          triggerSystemNotification(notif.title, notif.message, notif.id).catch(err => {
+            logger.warn('Failed to dispatch system notification:', err);
+          });
+        }
+      }
     }
 
     // Persist mutated records as a group
@@ -640,6 +649,65 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
 
     return result;
   }, []);
+
+  // Request notification permission automatically when an authenticated user enters the app
+  useEffect(() => {
+    if (!isGuest && userId) {
+      requestNotificationPermission().catch(err => {
+        logger.warn('Failed to request notification permission:', err);
+      });
+    }
+  }, [isGuest, userId]);
+
+  // 2-Month Rolling Data Retention & Monthly Notification Reminder
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    // Prune transactions older than Current Month + Previous Month
+    CentraDB.pruneExpiredTransactions(userId).catch(err => {
+      logger.warn('Failed to prune expired transactions:', err);
+    });
+
+    // Monthly Retention Reminder Notification (Deterministic ID: retention-reminder:${YYYY-MM})
+    const now = new Date();
+    const yyyyMm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const reminderId = `retention-reminder:${yyyyMm}`;
+
+    const alreadyReminded = latestStateRef.current.notifications.some(n => n.id === reminderId);
+    if (!alreadyReminded) {
+      const reminderTitle = '2-Month Data Retention Reminder 🗓️';
+      const reminderMsg =
+        'Centra keeps your transaction history for the Current Month and Previous Month (2 months total). Export a CSV backup anytime from Settings before older months roll over.';
+
+      const reminderItem: NotificationItem = {
+        id: reminderId,
+        title: reminderTitle,
+        message: reminderMsg,
+        type: 'system',
+        timestamp: new Date().toISOString(),
+        isRead: false,
+      };
+
+      executeOperation(state => {
+        if (state.notifications.some(n => n.id === reminderId)) {
+          return { ok: true, nextState: state, mutated: {}, notificationsToEmit: [] };
+        }
+        return {
+          ok: true,
+          nextState: {
+            ...state,
+            notifications: [reminderItem, ...state.notifications],
+          },
+          mutated: {
+            notificationsToUpsert: [reminderItem],
+          },
+          notificationsToEmit: [reminderItem],
+        };
+      }).catch(err => {
+        logger.warn('Failed to create monthly retention reminder notification:', err);
+      });
+    }
+  }, [isHydrated, userId, executeOperation]);
 
   // Notification Trigger Helper
   const addNotification = (item: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead'>) => {
@@ -649,6 +717,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       timestamp: new Date().toISOString(),
       isRead: false,
     };
+    triggerSystemNotification(newNotif.title, newNotif.message, newNotif.id).catch(err => {
+      logger.warn('Failed to dispatch system notification:', err);
+    });
     executeOperation(state => ({
       ok: true,
       nextState: {
@@ -918,6 +989,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     });
   };
 
+  const deleteNotification = (id: string) => {
+    executeOperation(state => ({
+      ok: true,
+      nextState: { ...state, notifications: state.notifications.filter(n => n.id !== id) },
+      mutated: { notificationsToDelete: [id] },
+      notificationsToEmit: [],
+    }));
+  };
+
   const clearNotifications = () => {
     const notifIds = latestStateRef.current.notifications.map(n => n.id);
     executeOperation(state => ({
@@ -999,6 +1079,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
         addNotification,
         markNotificationAsRead,
         markAllNotificationsAsRead,
+        deleteNotification,
         clearNotifications,
         updateSettings,
         resetAllData,

@@ -9,7 +9,8 @@ import {
   Tooltip as RechartsTooltip,
 } from 'recharts';
 import { useFinance } from '../../context/FinanceContext';
-import { formatCurrency } from '../../utils/formatters';
+import { convertCurrency, formatCurrency } from '../../utils/formatters';
+import { getPeriodDateRange } from '../../utils/dates';
 import { getThemePalette } from '../../utils/themeColors';
 
 interface CustomTooltipProps {
@@ -54,7 +55,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 };
 
 export const IncomeExpenseLineChart: React.FC = () => {
-  const { transactions, settings } = useFinance();
+  const { transactions, settings, periodFilter } = useFinance();
 
   const isDark =
     settings.theme === 'dark' ||
@@ -65,43 +66,92 @@ export const IncomeExpenseLineChart: React.FC = () => {
 
   const palette = getThemePalette(isDark);
 
-  // Group transactions by date over time
+  // Group transactions by date over time with running cumulative income & expenses
   const chartData = useMemo(() => {
     if (!transactions || transactions.length === 0) return [];
 
-    const dateMap: Record<string, { income: number; expense: number; rawDate: Date }> = {};
+    const baseCurrency = settings.baseCurrency || 'USD';
+    const effectivePeriod = periodFilter || 'this_month';
+    const { start, end } = getPeriodDateRange(effectivePeriod);
 
-    transactions.forEach(tx => {
+    // Compute prior net balance carried over from prior months
+    let priorNetBalance = 0;
+    if (effectivePeriod !== 'all') {
+      let priorIncome = 0;
+      let priorExpenses = 0;
+      transactions.forEach(tx => {
+        const txDate = new Date(tx.date);
+        if (txDate < start) {
+          const amountInBase = convertCurrency(tx.amount, tx.currency, baseCurrency);
+          if (tx.type === 'income') {
+            priorIncome += amountInBase;
+          } else if (tx.type === 'expense') {
+            priorExpenses += amountInBase;
+          }
+        }
+      });
+      priorNetBalance = Math.max(0, priorIncome - priorExpenses);
+    }
+
+    // Filter transactions belonging to current period
+    const periodTransactions = transactions.filter(tx => {
+      if (effectivePeriod === 'all') return true;
+      const txDate = new Date(tx.date);
+      return txDate >= start && txDate <= end;
+    });
+
+    if (periodTransactions.length === 0 && priorNetBalance === 0) {
+      return [];
+    }
+
+    const dateMap: Record<string, { income: number; expense: number }> = {};
+
+    // If there is prior carried-over balance, ensure Day 1 of the month is established as baseline
+    if (effectivePeriod !== 'all' && priorNetBalance > 0) {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const day1Key = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-01`;
+      dateMap[day1Key] = { income: 0, expense: 0 };
+    }
+
+    periodTransactions.forEach(tx => {
       const dateStr = tx.date.split('T')[0];
       if (!dateMap[dateStr]) {
         dateMap[dateStr] = {
           income: 0,
           expense: 0,
-          rawDate: new Date(dateStr),
         };
       }
+      const amountInBase = convertCurrency(tx.amount, tx.currency, baseCurrency);
       if (tx.type === 'income') {
-        dateMap[dateStr].income += tx.amount;
+        dateMap[dateStr].income += amountInBase;
       } else if (tx.type === 'expense') {
-        dateMap[dateStr].expense += tx.amount;
+        dateMap[dateStr].expense += amountInBase;
       }
     });
 
-    const sortedEntries = Object.entries(dateMap).sort(
-      ([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime()
+    const sortedDates = Object.keys(dateMap).sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
     );
 
-    return sortedEntries.map(([dateKey, val]) => {
-      const d = new Date(dateKey);
+    let runningIncome = priorNetBalance;
+    let runningExpense = 0;
+
+    return sortedDates.map(dateKey => {
+      const val = dateMap[dateKey];
+      runningIncome += val.income;
+      runningExpense += val.expense;
+
+      const d = new Date(dateKey + 'T00:00:00');
       const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
       return {
         dateKey,
         formattedDate,
-        income: Math.round(val.income * 100) / 100,
-        expense: Math.round(val.expense * 100) / 100,
+        income: Math.round(runningIncome * 100) / 100,
+        expense: Math.round(runningExpense * 100) / 100,
       };
     });
-  }, [transactions]);
+  }, [transactions, periodFilter, settings.baseCurrency]);
 
   return (
     <section id="cashflow-line-chart" className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all w-full">
@@ -176,7 +226,7 @@ export const IncomeExpenseLineChart: React.FC = () => {
                 stroke={palette.positive}
                 strokeWidth={2}
                 fill="url(#incomeAreaGradient)"
-                dot={false}
+                dot={chartData.length === 1 ? { r: 4, fill: palette.positive } : false}
                 activeDot={{ r: 5, fill: palette.positive, stroke: isDark ? '#1D1D1D' : '#FFFFFF', strokeWidth: 2 }}
               />
               <Area
@@ -186,7 +236,7 @@ export const IncomeExpenseLineChart: React.FC = () => {
                 stroke={palette.negative}
                 strokeWidth={2}
                 fill="url(#expenseAreaGradient)"
-                dot={false}
+                dot={chartData.length === 1 ? { r: 4, fill: palette.negative } : false}
                 activeDot={{ r: 5, fill: palette.negative, stroke: isDark ? '#1D1D1D' : '#FFFFFF', strokeWidth: 2 }}
               />
             </AreaChart>

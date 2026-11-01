@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
@@ -19,6 +19,7 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
     updateSettings,
   } = useFinance();
 
+  const [isEyeTapping, setIsEyeTapping] = useState(false);
   const displayBalance = totalBalance ?? (periodIncome - periodExpenses);
 
   return (
@@ -51,8 +52,14 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
 
           <button
             type="button"
-            onClick={() => updateSettings?.({ privacyMode: !settings?.privacyMode })}
-            className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-xl bg-[#F1F2F4] dark:bg-[#262626] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+            onClick={() => {
+              setIsEyeTapping(true);
+              setTimeout(() => setIsEyeTapping(false), 360);
+              updateSettings?.({ privacyMode: !settings?.privacyMode });
+            }}
+            className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-xl bg-[#F1F2F4] dark:bg-[#262626] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+              isEyeTapping ? 'animate-pop-tap animate-radial-burst' : ''
+            }`}
             aria-label={settings?.privacyMode ? 'Show balances' : 'Hide balances'}
           >
             {settings?.privacyMode ? (

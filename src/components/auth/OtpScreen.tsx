@@ -28,6 +28,7 @@ export const OtpScreen: React.FC = () => {
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [shakeKey, setShakeKey] = useState(0);
   const [resendCooldown, setResendCooldown] = useState(60);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
@@ -107,11 +108,13 @@ export const OtpScreen: React.FC = () => {
   const triggerVerification = async (codeToVerify: string) => {
     if (codeToVerify.length !== OTP_LENGTH) {
       setErrorMessage(`Please enter the complete ${OTP_LENGTH}-digit code.`);
+      setShakeKey(k => k + 1);
       return;
     }
 
     if (!(await isNetworkConnected())) {
       setErrorMessage(NO_INTERNET_ERROR_MESSAGE);
+      setShakeKey(k => k + 1);
       return;
     }
 
@@ -121,10 +124,12 @@ export const OtpScreen: React.FC = () => {
       const result = await verifyOtp(pendingEmail, codeToVerify);
       if (!result.ok) {
         setErrorMessage(result.error || 'Invalid or expired code. Please try again.');
+        setShakeKey(k => k + 1);
       }
     } catch (err: unknown) {
       const msg = getFriendlyAuthErrorMessage(err, 'Verification failed. Please try again.');
       setErrorMessage(msg);
+      setShakeKey(k => k + 1);
     } finally {
       setIsLoading(false);
     }
@@ -267,7 +272,7 @@ export const OtpScreen: React.FC = () => {
 
           {/* OTP Code Input Slots (Circular / Rounded-2xl matching 04-verify-code.png) */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex justify-between items-center gap-2 sm:gap-3" onPaste={handlePaste}>
+            <div key={shakeKey} className={`flex justify-between items-center gap-2 sm:gap-3 ${errorMessage ? 'animate-error-shake' : ''}`} onPaste={handlePaste}>
               {digits.map((digit, idx) => (
                 <input
                   key={idx}

@@ -142,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="fixed inset-0 z-40"
                   onClick={() => setShowPeriodDropdown(false)}
                 />
-                <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-[#1D1D1D] rounded-xl shadow-2xl border border-black/[0.06] dark:border-white/[0.08] py-1.5 z-50 animate-fade-in">
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-[#1D1D1D] rounded-xl shadow-2xl border border-black/[0.06] dark:border-white/[0.08] py-1.5 z-50 origin-top-right-spring">
                   <div className="px-3 py-1 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                     Select Period
                   </div>

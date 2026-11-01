@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Pin } from 'lucide
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { SwipeableRow } from '../ui/SwipeableRow';
 import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 import { todayLocalDateKey, toLocalDateKey } from '../../utils/dates';
 
@@ -13,7 +14,7 @@ interface AnalyticsCalendarProps {
 export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
   onSelectTransaction,
 }) => {
-  const { transactions, settings } = useFinance();
+  const { transactions, settings, deleteTransaction } = useFinance();
 
   // Current viewed month/year in calendar
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -218,7 +219,7 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
               aria-label="Jump to Today in calendar"
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl transition-all ${
                 !isOnToday
-                  ? 'bg-[#C6FF3D] text-[#0A0E1A] border border-[#C6FF3D] font-bold shadow-[0_0_14px_rgba(198,255,61,0.55)] hover:brightness-105 active:scale-95 cursor-pointer'
+                  ? 'bg-[#C6FF3D] text-[#0A0E1A] font-bold border border-[#C6FF3D] shadow-xs hover:brightness-105 active:scale-95 cursor-pointer'
                   : 'bg-[#F1F2F4]/60 dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.05] text-gray-400 dark:text-white/30 font-semibold opacity-60 cursor-default shadow-none'
               }`}
             >
@@ -269,7 +270,7 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
                 onClick={() => setSelectedDate(item.dateKey)}
                 className={`relative flex flex-col items-center justify-center h-11 sm:h-12 rounded-2xl text-xs font-semibold transition-all cursor-pointer select-none ${
                   isSelected
-                    ? 'bg-[#C6FF3D] text-[#0A0E1A] font-bold shadow-[0_0_12px_rgba(198,255,61,0.35)] ring-2 ring-offset-2 ring-[#C6FF3D] dark:ring-offset-[#0A0A0A]'
+                    ? 'bg-[#C6FF3D] text-[#0A0E1A] font-bold border border-[#C6FF3D] shadow-xs'
                     : item.isCurrentMonth
                     ? 'text-[#18212F] dark:text-white hover:bg-[#F1F2F4] dark:hover:bg-white/10'
                     : 'text-gray-400/40 dark:text-gray-600 hover:bg-[#F1F2F4]/50 dark:hover:bg-white/5'
@@ -384,47 +385,48 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
                 const display = getTransactionDisplay(tx);
 
                 return (
-                  <div
-                    key={tx.id}
-                    onClick={() => onSelectTransaction?.(tx)}
-                    className={`p-3 rounded-2xl border flex items-center justify-between text-xs cursor-pointer transition-all group shadow-xs ${
-                      tx.isPinned
-                        ? 'bg-[#C6FF3D]/[0.06] dark:bg-[#C6FF3D]/[0.05] border-[#C6FF3D]/30 dark:border-[#C6FF3D]/25'
-                        : 'bg-[#F1F2F4] dark:bg-[#262626] border-black/[0.06] dark:border-white/[0.08] hover:border-[#C6FF3D] dark:hover:border-[#C6FF3D]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 pr-2">
-                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform ${getTxBadgeStyle(tx.type)}`}>
-                        <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <p className="font-semibold text-[#18212F] dark:text-white truncate">
-                            {display.title}
-                          </p>
-                          {tx.isPinned && (
-                            <Pin className="w-3.5 h-3.5 text-[#659300] dark:text-[#C6FF3D] fill-current shrink-0 rotate-45" />
-                          )}
-                        </div>
-                        <p className="text-xs text-[#667085] dark:text-gray-400 mt-0.5">
-                          {display.subtitle}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span
-                      className={`font-bold tabular-nums shrink-0 text-sm ${
-                        isIncome
-                          ? 'text-[#16A34A] dark:text-[#22C55E]'
-                          : isExpense
-                          ? 'text-[#E11D48] dark:text-[#FB7185]'
-                          : 'text-[#0284C7] dark:text-[#38BDF8]'
+                  <SwipeableRow key={tx.id} onDelete={() => deleteTransaction(tx.id)}>
+                    <div
+                      onClick={() => onSelectTransaction?.(tx)}
+                      className={`p-3 rounded-2xl border flex items-center justify-between text-xs cursor-pointer transition-all group shadow-xs ${
+                        tx.isPinned
+                          ? 'bg-[#C6FF3D]/[0.06] dark:bg-[#C6FF3D]/[0.05] border-[#C6FF3D]/30 dark:border-[#C6FF3D]/25'
+                          : 'bg-[#F1F2F4] dark:bg-[#262626] border-black/[0.06] dark:border-white/[0.08] hover:border-[#C6FF3D] dark:hover:border-[#C6FF3D]'
                       }`}
                     >
-                      {isIncome ? '+' : isExpense ? '-' : ''}
-                      {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
-                    </span>
-                  </div>
+                      <div className="flex items-center space-x-3 min-w-0 pr-2">
+                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform ${getTxBadgeStyle(tx.type)}`}>
+                          <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="font-semibold text-[#18212F] dark:text-white truncate">
+                              {display.title}
+                            </p>
+                            {tx.isPinned && (
+                              <Pin className="w-3.5 h-3.5 text-[#659300] dark:text-[#C6FF3D] fill-current shrink-0 rotate-45" />
+                            )}
+                          </div>
+                          <p className="text-xs text-[#667085] dark:text-gray-400 mt-0.5">
+                            {display.subtitle}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`font-bold tabular-nums shrink-0 text-sm ${
+                          isIncome
+                            ? 'text-[#16A34A] dark:text-[#22C55E]'
+                            : isExpense
+                            ? 'text-[#E11D48] dark:text-[#FB7185]'
+                            : 'text-[#0284C7] dark:text-[#38BDF8]'
+                        }`}
+                      >
+                        {isIncome ? '+' : isExpense ? '-' : ''}
+                        {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
+                      </span>
+                    </div>
+                  </SwipeableRow>
                 );
               })}
             </div>

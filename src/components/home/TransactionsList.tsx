@@ -3,6 +3,7 @@ import { Pin } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { SwipeableRow } from '../ui/SwipeableRow';
 import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 
 interface TransactionsListProps {
@@ -14,7 +15,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
   onSelectTransaction,
   onOpenSeeAll,
 }) => {
-  const { transactions, settings } = useFinance();
+  const { transactions, settings, deleteTransaction } = useFinance();
 
   // Show the latest 5 transactions in the Recent Activity card (pinned stick to top)
   const recentTransactions = useMemo(() => {
@@ -70,56 +71,57 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
               const display = getTransactionDisplay(tx);
 
               return (
-                <div
-                  key={tx.id}
-                  onClick={() => onSelectTransaction(tx)}
-                  className={`flex items-center justify-between py-3 px-2.5 transition-colors cursor-pointer select-none rounded-2xl -mx-1 my-0.5 border ${
-                    tx.isPinned
-                      ? 'bg-[#C6FF3D]/[0.06] dark:bg-[#C6FF3D]/[0.05] border-[#C6FF3D]/30 dark:border-[#C6FF3D]/25'
-                      : 'border-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.03]'
-                  }`}
-                >
-                  {/* Left: Category Icon + Merchant / Category Title + Timestamp Subtitle */}
-                  <div className="flex items-center gap-3.5 min-w-0 pr-3">
-                    <div
-                      className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors shadow-xs ${getIconTint(
-                        tx.type
-                      )}`}
-                    >
-                      <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
+                <SwipeableRow key={tx.id} onDelete={() => deleteTransaction(tx.id)}>
+                  <div
+                    onClick={() => onSelectTransaction(tx)}
+                    className={`flex items-center justify-between py-3 px-2.5 transition-colors cursor-pointer select-none rounded-2xl -mx-1 my-0.5 border ${
+                      tx.isPinned
+                        ? 'bg-[#C6FF3D]/[0.06] dark:bg-[#C6FF3D]/[0.05] border-[#C6FF3D]/30 dark:border-[#C6FF3D]/25'
+                        : 'border-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.03]'
+                    }`}
+                  >
+                    {/* Left: Category Icon + Merchant / Category Title + Timestamp Subtitle */}
+                    <div className="flex items-center gap-3.5 min-w-0 pr-3">
+                      <div
+                        className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-colors shadow-xs ${getIconTint(
+                          tx.type
+                        )}`}
+                      >
+                        <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <p className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white truncate leading-tight">
+                            {display.title}
+                          </p>
+                          {tx.isPinned && (
+                            <Pin className="w-3.5 h-3.5 text-[#659300] dark:text-[#C6FF3D] fill-current shrink-0 rotate-45" />
+                          )}
+                        </div>
+                        <p className="text-xs text-[#667085] dark:text-white/40 truncate mt-1">
+                          {display.subtitle}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <p className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white truncate leading-tight">
-                          {display.title}
-                        </p>
-                        {tx.isPinned && (
-                          <Pin className="w-3.5 h-3.5 text-[#659300] dark:text-[#C6FF3D] fill-current shrink-0 rotate-45" />
-                        )}
-                      </div>
-                      <p className="text-xs text-[#667085] dark:text-white/40 truncate mt-1">
-                        {display.subtitle}
+                    {/* Right: Signed Amount */}
+                    <div className="text-right shrink-0">
+                      <p
+                        className={`text-sm sm:text-base font-medium tabular-nums currency-amount whitespace-nowrap ${
+                          isIncome
+                            ? 'text-[#16A34A] dark:text-[#22C55E]'
+                            : isExpense
+                            ? 'text-[#E11D48] dark:text-[#FB7185]'
+                            : 'text-[#0284C7] dark:text-[#38BDF8]'
+                        }`}
+                      >
+                        {isIncome ? '+' : isExpense ? '-' : ''}
+                        {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
                       </p>
                     </div>
                   </div>
-
-                  {/* Right: Signed Amount */}
-                  <div className="text-right shrink-0">
-                    <p
-                      className={`text-sm sm:text-base font-medium tabular-nums currency-amount whitespace-nowrap ${
-                        isIncome
-                          ? 'text-[#16A34A] dark:text-[#22C55E]'
-                          : isExpense
-                          ? 'text-[#E11D48] dark:text-[#FB7185]'
-                          : 'text-[#0284C7] dark:text-[#38BDF8]'
-                      }`}
-                    >
-                      {isIncome ? '+' : isExpense ? '-' : ''}
-                      {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
-                    </p>
-                  </div>
-                </div>
+                </SwipeableRow>
               );
             })}
           </div>

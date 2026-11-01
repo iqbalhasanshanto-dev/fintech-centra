@@ -107,6 +107,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const [confirmPin, setConfirmPin] = useState('');
   const [currentPin, setCurrentPin] = useState('');
   const [pinModalError, setPinModalError] = useState<string | null>(null);
+  const [pinModalShakeKey, setPinModalShakeKey] = useState(0);
   const [autoLockTimeout, setAutoLockTimeoutState] = useState<number>(() => getAutoLockTimeout());
 
   // Hardware back button handlers for all settings sub-modals
@@ -262,10 +263,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
     setPinModalError(null);
     if (!newPin || newPin.length < 4 || newPin.length > 8) {
       setPinModalError('PIN must be between 4 and 8 digits.');
+      setPinModalShakeKey(k => k + 1);
       return;
     }
     if (newPin !== confirmPin) {
       setPinModalError('PIN confirmation does not match.');
+      setPinModalShakeKey(k => k + 1);
       return;
     }
     try {
@@ -276,6 +279,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       setConfirmPin('');
     } catch (err: unknown) {
       setPinModalError(err instanceof Error ? err.message : 'Failed to save PIN.');
+      setPinModalShakeKey(k => k + 1);
     }
   };
 
@@ -283,11 +287,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
     setPinModalError(null);
     if (!currentPin) {
       setPinModalError('Enter your current PIN to disable PIN lock.');
+      setPinModalShakeKey(k => k + 1);
       return;
     }
     const res = await verifyDevicePin(user.id || GUEST_USER_ID, currentPin);
     if (!res.ok) {
       setPinModalError(res.error || 'Incorrect PIN.');
+      setPinModalShakeKey(k => k + 1);
       return;
     }
     clearDevicePin(user.id || GUEST_USER_ID);
@@ -613,14 +619,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                 e.stopPropagation();
                 handleToggleTheme();
               }}
-              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 border focus:outline-hidden ${
+              className={`group relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 border focus:outline-hidden ${
                 isDarkActive
                   ? 'bg-[#C6FF3D] border-[#C6FF3D]'
                   : 'bg-[#E5E7EB] border-[#D1D5DB] dark:bg-[#262626] dark:border-white/[0.12]'
               }`}
             >
               <span
-                className={`pointer-events-none flex items-center justify-center h-6 w-6 rounded-full shadow-xs transition-transform duration-150 ease-out ${
+                className={`pointer-events-none flex items-center justify-center h-6 w-6 rounded-full shadow-xs spring-switch-thumb ${
                   isDarkActive
                     ? 'translate-x-5 bg-[#0A0E1A] text-[#C6FF3D]'
                     : 'translate-x-0 bg-white text-amber-500'
@@ -986,7 +992,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         }}
         title="Set App PIN"
       >
-        <div className="space-y-4 text-xs">
+        <div key={pinModalShakeKey} className={`space-y-4 text-xs ${pinModalError ? 'animate-error-shake' : ''}`}>
           <p className="text-gray-600 dark:text-gray-300">
             Choose a 4 to 8 digit PIN to protect your Centra app. Your PIN is hashed securely on this device and is never uploaded.
           </p>
@@ -999,9 +1005,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
               inputMode="numeric"
               maxLength={8}
               value={newPin}
-              onChange={e => setNewPin(e.target.value)}
+              onChange={e => {
+                setNewPin(e.target.value);
+                if (pinModalError) setPinModalError(null);
+              }}
               placeholder="Enter 4-8 digits"
-              className="w-full px-4 py-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none focus:border-[#C6FF3D]"
+              className={`w-full px-4 py-3 rounded-2xl border bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none ${
+                pinModalError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-black/[0.06] dark:border-white/[0.08] focus:border-[#C6FF3D]'
+              }`}
             />
           </div>
           <div>
@@ -1013,9 +1024,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
               inputMode="numeric"
               maxLength={8}
               value={confirmPin}
-              onChange={e => setConfirmPin(e.target.value)}
+              onChange={e => {
+                setConfirmPin(e.target.value);
+                if (pinModalError) setPinModalError(null);
+              }}
               placeholder="Confirm 4-8 digits"
-              className="w-full px-4 py-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none focus:border-[#C6FF3D]"
+              className={`w-full px-4 py-3 rounded-2xl border bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none ${
+                pinModalError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-black/[0.06] dark:border-white/[0.08] focus:border-[#C6FF3D]'
+              }`}
             />
           </div>
           {pinModalError && (
@@ -1055,7 +1071,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         }}
         title="Disable App PIN"
       >
-        <div className="space-y-4 text-xs">
+        <div key={pinModalShakeKey} className={`space-y-4 text-xs ${pinModalError ? 'animate-error-shake' : ''}`}>
           <p className="text-gray-600 dark:text-gray-300">
             Please enter your current PIN to turn off PIN lock on this device.
           </p>
@@ -1068,9 +1084,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
               inputMode="numeric"
               maxLength={8}
               value={currentPin}
-              onChange={e => setCurrentPin(e.target.value)}
+              onChange={e => {
+                setCurrentPin(e.target.value);
+                if (pinModalError) setPinModalError(null);
+              }}
               placeholder="Enter your current PIN"
-              className="w-full px-4 py-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none focus:border-[#C6FF3D]"
+              className={`w-full px-4 py-3 rounded-2xl border bg-[#F1F2F4] dark:bg-[#262626] text-gray-900 dark:text-white tracking-widest text-base focus:outline-none ${
+                pinModalError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-black/[0.06] dark:border-white/[0.08] focus:border-[#C6FF3D]'
+              }`}
             />
           </div>
           {pinModalError && (

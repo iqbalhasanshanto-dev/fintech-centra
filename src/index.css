@@ -355,3 +355,101 @@ html:not(.dark) .text-danger {
 .animate-bounce-subtle {
   animation: bounceSubtle 2.5s ease-in-out infinite;
 }
+
+/* =========================================================================
+   Centra v4.0.0 UI Motion & Micro-Interaction System
+   ========================================================================= */
+
+/* Animation 1: Spring Stretch & Overshoot Toggle */
+.spring-switch-thumb {
+  transition: transform 340ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              width 180ms ease,
+              background-color 200ms ease,
+              box-shadow 200ms ease;
+  transform-origin: center center;
+}
+.spring-switch-thumb:active,
+.group:active .spring-switch-thumb {
+  transform: scaleX(1.28);
+}
+.group:active .spring-switch-thumb.translate-x-5 {
+  transform: translateX(1.25rem) scaleX(1.28);
+}
+.group:active .spring-switch-thumb.translate-x-0 {
+  transform: translateX(0) scaleX(1.28);
+}
+
+/* Animation 2: Elastic Pop + Radial Burst */
+@keyframes popBurst {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.82); }
+  65% { transform: scale(1.24); }
+  100% { transform: scale(1); }
+}
+
+@keyframes radialRingPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(198, 255, 61, 0.65);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(198, 255, 61, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(198, 255, 61, 0);
+  }
+}
+
+.animate-pop-tap {
+  animation: popBurst 340ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-radial-burst {
+  animation: radialRingPulse 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Animation 3: Spatial Origin Menu Expansion */
+@keyframes menuExpandBottomRight {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes menuExpandTopRight {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.origin-bottom-right-spring {
+  transform-origin: bottom right;
+  animation: menuExpandBottomRight 260ms cubic-bezier(0.34, 1.35, 0.64, 1) forwards;
+}
+
+.origin-top-right-spring {
+  transform-origin: top right;
+  animation: menuExpandTopRight 260ms cubic-bezier(0.34, 1.35, 0.64, 1) forwards;
+}
+
+/* Animation 4: Horizontal Error Shake */
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-8px); }
+  36% { transform: translateX(8px); }
+  54% { transform: translateX(-6px); }
+  72% { transform: translateX(6px); }
+  90% { transform: translateX(-3px); }
+}
+
+.animate-error-shake {
+  animation: errorShake 380ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}

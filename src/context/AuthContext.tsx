@@ -938,6 +938,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hiddenTimestamp = Date.now();
           }
           setIsAppCovered(true);
+          if (getAutoLockTimeout() === 0) {
+            lockAppRef.current();
+          }
         }
       }
     };

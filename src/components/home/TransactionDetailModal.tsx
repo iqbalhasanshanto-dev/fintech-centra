@@ -34,6 +34,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   const [categoryId, setCategoryId] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [isPinTapping, setIsPinTapping] = useState(false);
 
   const handleMerchantChange = (val: string) => {
     setMerchant(val);
@@ -258,8 +259,14 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               <div className="pt-3 grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => togglePinTransaction(currentTx.id)}
+                  onClick={() => {
+                    setIsPinTapping(true);
+                    setTimeout(() => setIsPinTapping(false), 360);
+                    togglePinTransaction(currentTx.id);
+                  }}
                   className={`py-2.5 px-3 rounded-full text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    isPinTapping ? 'animate-pop-tap animate-radial-burst' : ''
+                  } ${
                     currentTx.isPinned
                       ? 'bg-[#C6FF3D] text-black shadow-xs'
                       : 'bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white hover:bg-black/5 dark:hover:bg-white/5'

@@ -100,7 +100,7 @@ describe('Smart Transactions & Formatting Helpers', () => {
 
       expect(res.title).toBe('Abbu');
       expect(res.hasCustomMerchant).toBe(true);
-      expect(res.subtitle).toMatch(/^Gifts \/ Allowance • Eid Salami • Today •/);
+      expect(res.subtitle).toMatch(/^Gifts \/ Allowance • Today •/);
     });
 
     it('Priority 1 without note: Subtitle shows category and smart date', () => {
@@ -181,7 +181,7 @@ describe('Smart Transactions & Formatting Helpers', () => {
       });
 
       expect(res.title).toBe('Starbucks');
-      expect(res.subtitle).toBe('Dining • Latte & Croissant • 2 days ago');
+      expect(res.subtitle).toBe('Dining • 2 days ago');
     });
   });
 

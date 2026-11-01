@@ -4,6 +4,7 @@ import { Search, Download, ChevronLeft, X, ChevronDown, Check, Pin } from 'lucid
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { SwipeableRow } from '../ui/SwipeableRow';
 import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 import { CentraDB } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
@@ -30,7 +31,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
 }) => {
   useBackHandler(isOpen, onClose);
 
-  const { transactions, categories, settings } = useFinance();
+  const { transactions, categories, settings, deleteTransaction } = useFinance();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -85,6 +86,63 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
         return matchesSearch && matchesCategory && matchesType && matchesAccount;
       });
   }, [transactions, searchQuery, selectedCategory, selectedType, selectedAccount]);
+
+  // Group transactions into Current Month, Previous Month, and Earlier
+  const groupedSections = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const prevDate = new Date(currentYear, currentMonth - 1, 1);
+    const prevYear = prevDate.getFullYear();
+    const prevMonth = prevDate.getMonth();
+
+    const currentMonthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const prevMonthName = prevDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    const currentList: Transaction[] = [];
+    const prevList: Transaction[] = [];
+    const earlierList: Transaction[] = [];
+
+    filteredTransactions.forEach(tx => {
+      const d = new Date(tx.date);
+      const y = d.getFullYear();
+      const m = d.getMonth();
+
+      if (y === currentYear && m === currentMonth) {
+        currentList.push(tx);
+      } else if (y === prevYear && m === prevMonth) {
+        prevList.push(tx);
+      } else {
+        earlierList.push(tx);
+      }
+    });
+
+    const sections: Array<{ title: string; items: Transaction[] }> = [];
+
+    if (currentList.length > 0) {
+      sections.push({
+        title: `Current Month • ${currentMonthName}`,
+        items: currentList,
+      });
+    }
+
+    if (prevList.length > 0) {
+      sections.push({
+        title: `Previous Month • ${prevMonthName}`,
+        items: prevList,
+      });
+    }
+
+    if (earlierList.length > 0) {
+      sections.push({
+        title: 'Earlier',
+        items: earlierList,
+      });
+    }
+
+    return sections;
+  }, [filteredTransactions]);
 
   const handleExportCSV = async () => {
     const csvContent = CentraDB.exportTransactionsCSV();
@@ -179,8 +237,15 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
           )}
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+        {/* Filter Pills with Sliding Active Indicator */}
+        <div className="relative flex items-center p-1 rounded-full bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.04] dark:border-white/[0.06] text-xs font-semibold overflow-x-auto no-scrollbar">
+          <div
+            className="absolute top-1 bottom-1 w-[calc(25%-2px)] rounded-full bg-black dark:bg-[#C6FF3D] shadow-xs transition-transform duration-300 ease-[cubic-bezier(0.34,1.3,0.64,1)] pointer-events-none"
+            style={{
+              transform: `translateX(calc(${Math.max(0, ['all', 'expense', 'income', 'transfer'].indexOf(selectedType)) * 100}% + ${Math.max(0, ['all', 'expense', 'income', 'transfer'].indexOf(selectedType)) * 2.5}px))`,
+              left: '4px',
+            }}
+          />
           {(['all', 'expense', 'income', 'transfer'] as const).map(type => {
             const isSelected = selectedType === type;
             const label =
@@ -197,10 +262,10 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                 key={type}
                 type="button"
                 onClick={() => setSelectedType(type)}
-                className={`px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`relative z-10 flex-1 py-1.5 px-2 rounded-full text-center whitespace-nowrap transition-colors cursor-pointer ${
                   isSelected
-                    ? 'bg-black dark:bg-[#C6FF3D] text-white dark:text-[#0A0E1A] shadow-xs'
-                    : 'bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white'
+                    ? 'text-white dark:text-[#0A0E1A] font-bold'
+                    : 'text-[#667085] dark:text-[#9CA3AF] hover:text-[#18212F] dark:hover:text-white'
                 }`}
               >
                 {label}
@@ -285,73 +350,89 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
         </div>
 
         {/* Transactions Card */}
-        <div className="rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.15] p-5 shadow-xs">
+        <div className="rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.15] p-4 sm:p-5 shadow-xs">
           {filteredTransactions.length === 0 ? (
             <div className="text-center py-16 text-xs font-medium text-[#667085] dark:text-[#9CA3AF]">
               No matching transactions found.
             </div>
           ) : (
-            <div className="divide-y divide-black/[0.04] dark:divide-white/[0.05]">
-              {filteredTransactions.map(tx => {
-                const isIncome = tx.type === 'income';
-                const isExpense = tx.type === 'expense';
-                const isTransfer = tx.type === 'transfer';
-                const display = getTransactionDisplay(tx);
-
-                return (
-                  <div
-                    key={tx.id}
-                    onClick={() => onSelectTransaction(tx)}
-                    className={`py-3 px-2 flex items-center justify-between cursor-pointer rounded-2xl transition-colors select-none border my-1 ${
-                      tx.isPinned
-                        ? 'bg-[#C6FF3D]/[0.06] dark:bg-[#C6FF3D]/[0.05] border-[#C6FF3D]/30 dark:border-[#C6FF3D]/25'
-                        : 'border-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.02]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0 pr-3">
-                      <div
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
-                          isIncome
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                            : isTransfer
-                            ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
-                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                        }`}
-                      >
-                        <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <p className="text-sm font-semibold text-[#18212F] dark:text-white truncate">
-                            {display.title}
-                          </p>
-                          {tx.isPinned && (
-                            <Pin className="w-3.5 h-3.5 text-[#659300] dark:text-[#C6FF3D] fill-current shrink-0 rotate-45" />
-                          )}
-                        </div>
-                        <p className="text-xs text-[#667085] dark:text-[#9CA3AF] truncate mt-0.5">
-                          {display.subtitle}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span
-                        className={`text-sm font-bold tabular-nums ${
-                          isIncome
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : isExpense
-                            ? 'text-rose-600 dark:text-rose-400'
-                            : 'text-sky-600 dark:text-sky-400'
-                        }`}
-                      >
-                        {isIncome ? '+' : isExpense ? '-' : ''}
-                        {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
-                      </span>
-                    </div>
+            <div className="space-y-6">
+              {groupedSections.map(section => (
+                <div key={section.title} className="space-y-2">
+                  {/* Sticky Section Header */}
+                  <div className="sticky top-0 z-10 py-1.5 px-2 bg-white/95 dark:bg-[#1D1D1D]/95 backdrop-blur-xs flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-black/[0.06] dark:border-white/[0.08]">
+                    <span>{section.title}</span>
+                    <span className="text-[10px] opacity-70 tabular-nums">
+                      {section.items.length} {section.items.length === 1 ? 'transaction' : 'transactions'}
+                    </span>
                   </div>
-                );
-              })}
+
+                  {/* Transaction Rows with Unified Consistent Borders */}
+                  <div className="space-y-1.5 pt-1">
+                    {section.items.map(tx => {
+                      const isIncome = tx.type === 'income';
+                      const isExpense = tx.type === 'expense';
+                      const isTransfer = tx.type === 'transfer';
+                      const display = getTransactionDisplay(tx);
+
+                      return (
+                        <SwipeableRow key={tx.id} onDelete={() => deleteTransaction(tx.id)}>
+                          <div
+                            onClick={() => onSelectTransaction(tx)}
+                            className={`py-3 px-3 flex items-center justify-between cursor-pointer rounded-2xl transition-colors select-none border ${
+                              tx.isPinned
+                                ? 'bg-[#C6FF3D]/[0.06] dark:bg-[#C6FF3D]/[0.05] border-[#C6FF3D]/35 dark:border-[#C6FF3D]/30'
+                                : 'bg-white dark:bg-[#1D1D1D] border-black/[0.06] dark:border-white/[0.08] hover:bg-black/[0.02] dark:hover:bg-white/[0.03]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3.5 min-w-0 pr-3">
+                              <div
+                                className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+                                  isIncome
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                    : isTransfer
+                                    ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
+                                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                }`}
+                              >
+                                <CategoryIcon name={tx.categoryIcon} className="w-5 h-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <p className="text-sm font-semibold text-[#18212F] dark:text-white truncate">
+                                    {display.title}
+                                  </p>
+                                  {tx.isPinned && (
+                                    <Pin className="w-3.5 h-3.5 text-[#659300] dark:text-[#C6FF3D] fill-current shrink-0 rotate-45" />
+                                  )}
+                                </div>
+                                <p className="text-xs text-[#667085] dark:text-[#9CA3AF] truncate mt-0.5">
+                                  {display.subtitle}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span
+                                className={`text-sm font-bold tabular-nums ${
+                                  isIncome
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : isExpense
+                                    ? 'text-rose-600 dark:text-rose-400'
+                                    : 'text-sky-600 dark:text-sky-400'
+                                }`}
+                              >
+                                {isIncome ? '+' : isExpense ? '-' : ''}
+                                {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
+                              </span>
+                            </div>
+                          </div>
+                        </SwipeableRow>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

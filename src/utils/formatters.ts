@@ -233,7 +233,7 @@ export function getTransactionDisplay(tx: TransactionDisplayInput): TransactionD
     title = cleanNote;
   }
 
-  // Secondary subtitle
+  // Secondary subtitle: Never append cleanNote into subtitle to avoid truncating smartDate
   const smartDate = formatSmartTxDate(tx.date);
   let subtitle: string;
 
@@ -241,11 +241,8 @@ export function getTransactionDisplay(tx: TransactionDisplayInput): TransactionD
     // Both custom merchant and note were blank (or matched category name)
     // Do NOT repeat category name!
     subtitle = tx.accountName ? `${tx.accountName} • ${smartDate}` : smartDate;
-  } else if (hasCustomMerchant && cleanNote && cleanNote.toLowerCase() !== rawMerchant.toLowerCase()) {
-    // Title is rawMerchant and cleanNote is present and different
-    subtitle = `${catName} • ${cleanNote} • ${smartDate}`;
   } else {
-    // Title is rawMerchant (no note) or cleanNote (no custom merchant)
+    // Otherwise, ALWAYS return `${catName} • ${smartDate}`
     subtitle = `${catName} • ${smartDate}`;
   }
 

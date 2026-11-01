@@ -6,6 +6,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v4.0.0] — 2026-11-01
+
+### 🚀 Major Release: Interactive Motion System, Micro-Interactions, 2-Month Rolling Retention & Native Notifications
+
+Centra `v4.0.0` introduces a fluid, physics-based motion system featuring spring stretch toggle switches, elastic pop-burst tap feedback, spatial origin speed-dial expansion, horizontal error shake validation, sliding active navigation pills, touch swipe-to-delete with smooth height collapse, 2-month rolling data retention with sticky monthly headers, direct +Add and -Withdraw goal management, native Android status-bar notification tray alerts, and immediate PIN lock on app minimize with Centra branding.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v4.0.0-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.0.0-debug.apk) (Fallback: [`releases/Centra-v4.0.0-debug.apk?raw=true`](releases/Centra-v4.0.0-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.0.0-debug.apk)
+- **File Size**: `6,268,158 bytes` (5.98 MB)
+- **SHA-256 Checksum**:
+  ```
+  0bfd170ccefabcd4c15cdb60a01e8b42ccfc4b12240ff500c1a0d8a1f351cd54
+  ```
+
+#### 🎭 Physics-Based UI Motion & Micro-Interactions
+- **Spring Stretch & Overshoot Toggle Switches**: Added physical spring mechanics (`transition: transform 340ms cubic-bezier(0.34, 1.56, 0.64, 1)`) with horizontal thumb elongation (`scaleX(1.28)`) on toggle drag/tap across `<Switch />` components and the Dark/Light Appearance setting.
+- **Elastic Pop & Radial Burst Tap Feedback**: Micro-interaction feedback (`@keyframes popBurst` and `@keyframes radialRingPulse`) triggering an expanding tactile radial ring on Privacy Mode (Eye toggle), Pinned Transaction toggles, Payment/Category selections, and Modal Confirm actions.
+- **Spatial Origin Menu Expansion**: Floating Quick Action speed-dial (`+` menu) expands from `origin-bottom-right` while rotating the `+` icon 135°, and Goal card actions (`⋮` menu) expand dynamically from `origin-top-right` with elastic overshoot.
+- **Horizontal Error Shake Validation**: Visual error feedback (`@keyframes errorShake`) vibrating inputs horizontally upon invalid PIN entry, OTP verification failure, empty/zero amounts in Quick Actions, and over-withdrawal attempts in Savings Goals.
+- **Sliding Active Pill Continuity**: Fluid sliding background indicator (`cubic-bezier(0.34, 1.3, 0.64, 1)`) tracking active tabs across the 3-tab Bottom Nav dock, 5-tab Quick Action modal, 2-tab Goal Funds switcher, and 4-tab Transaction Drawer filters.
+- **Swipe-Left to Delete with Smooth Height Collapse**: Touch swipeable row architecture (`<SwipeableRow />`) revealing a red trash action with haptic feedback, followed by an animated 280ms height collapse (`max-height: 0px; opacity: 0; transform: scale(0.96)`) prior to state deletion in Recent Activities, Full Transaction Drawer, Calendar Day views, and Notifications.
+
+#### 🗓️ 2-Month Rolling Retention & Sticky Month Headers
+- **Rolling 2-Month Lifecycle**: Retains transactions exclusively for the Current Month and Previous Month (from the 1st of the previous calendar month). Older transactions are automatically pruned from local storage and Supabase while preserving net balance in the user's account totals.
+- **Monthly Retention Notification Reminder**: Automatically emits an in-app and system notification once per calendar month reminding users of the 2-month retention window with CSV backup guidance.
+- **Sticky Month Grouping Headers**: View All Activities drawer organizes transactions under sticky month headers (`Current Month • [Month Year]` and `Previous Month • [Month Year]`) with unified row border dividers.
+
+#### 🔔 Native Android Status-Bar Notifications
+- **System Notification Tray Alerts**: Added `POST_NOTIFICATIONS` permission in `AndroidManifest.xml` and native dispatch utility (`triggerSystemNotification`) pushing budget overrun warnings and rollover reminders directly to the Android notification shade and lock screen.
+- **Single Notification Dismissal**: Added touch swipe-to-dismiss and height collapse for individual notification items in the notifications tray.
+
+#### 🔒 Immediate PIN Lock on App Minimize & Brand Logo
+- **Instant Background Locking**: Transitioning the app to the background (via Capacitor App state listener and document visibility change) immediately triggers the PBKDF2 PIN lock screen without delay or window timeouts.
+- **Centra Brand Identity**: Added the official high-resolution Centra brand logo above the PIN lock input field for a clean, secure lock screen experience.
+
+#### 🎯 Goal Ergonomics & Form Polish
+- **Dual Direct Goal Action Buttons**: Exposed both `+ Add` and `- Withdraw` action chips directly on Savings Goal cards in `PlanScreen.tsx` for one-tap fund adjustments.
+- **Aligned Modal Inputs & Category Merging**: Standardized 52px input heights and grid alignments in the Goals create form, unified Category picker overlines (`SPEND` vs `BUDGET`), and merged default categories across expense and income tabs.
+- **Clean Transaction Subtitles**: Streamlined subtitle format to `${categoryName} • ${smartDate}` to prevent text truncation in dense feeds.
+- **Refined Calendar Highlights**: Replaced neon glow filters with clean, flat solid `#C6FF3D` styling on selected day cells.
+
+---
+
 ## [v3.3.0] — 2026-11-01
 
 ### 🌟 Latest Release: Custom Payee Transaction Titles, Goal Withdrawals & Onboarding Persistence

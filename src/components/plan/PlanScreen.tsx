@@ -34,6 +34,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
   const [fundAmount, setFundAmount] = useState('');
   const [fundSourceAccountId, setFundSourceAccountId] = useState(accounts[0]?.id || '');
   const [fundError, setFundError] = useState<string | null>(null);
+  const [fundShakeKey, setFundShakeKey] = useState(0);
   const [activeGoalMenuId, setActiveGoalMenuId] = useState<string | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
@@ -45,6 +46,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
     const amount = parseFloat(fundAmount);
     if (!amount || amount <= 0) {
       setFundError('Please enter a valid amount');
+      setFundShakeKey(k => k + 1);
       return;
     }
 
@@ -52,12 +54,14 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
     const targetAccId = targetAccount?.id;
     if (!targetAccId) {
       setFundError('Please select an account');
+      setFundShakeKey(k => k + 1);
       return;
     }
 
     if (fundMode === 'withdraw') {
       if (amount > selectedGoalForFunds.currentAmount) {
         setFundError('Withdrawal amount cannot exceed current saved goal balance');
+        setFundShakeKey(k => k + 1);
         return;
       }
 
@@ -206,7 +210,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                       </div>
                     </div>
 
-                    {/* Add Funds & Menu */}
+                    {/* Add & Withdraw Actions & Menu */}
                     <div className="flex items-center space-x-1.5 sm:space-x-2 relative shrink-0">
                       <button
                         onClick={() => {
@@ -215,10 +219,24 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                           setFundAmount('');
                           setFundError(null);
                         }}
-                        className="px-2.5 py-1 rounded-full border border-black/[0.12] dark:border-white/[0.14] bg-[#F1F2F4] dark:bg-[#262626] text-[#16A34A] dark:text-[#22C55E] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] text-[11px] font-semibold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                        className="px-2.5 py-1 rounded-full bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] hover:bg-[#16A34A]/25 dark:hover:bg-[#22C55E]/25 text-[11px] font-bold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0"
                       >
-                        + Add Funds
+                        + Add
                       </button>
+
+                      {goal.currentAmount > 0 && (
+                        <button
+                          onClick={() => {
+                            setSelectedGoalForFunds(goal);
+                            setFundMode('withdraw');
+                            setFundAmount('');
+                            setFundError(null);
+                          }}
+                          className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 dark:hover:bg-amber-500/25 text-[11px] font-bold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                        >
+                          - Withdraw
+                        </button>
+                      )}
 
                       <button
                         onClick={() => setActiveGoalMenuId(activeGoalMenuId === goal.id ? null : goal.id)}
@@ -229,7 +247,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                       </button>
 
                       {activeGoalMenuId === goal.id && (
-                        <div className="absolute right-0 top-11 w-36 bg-white dark:bg-[#262626] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.1] py-1 z-30 animate-fade-in text-xs">
+                        <div className="absolute right-0 top-11 w-36 bg-white dark:bg-[#262626] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.1] py-1 z-30 origin-top-right-spring text-xs">
                           <button
                             onClick={() => {
                               setSelectedGoalForFunds(goal);
@@ -412,16 +430,23 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       >
         <div className="space-y-4">
           {/* Segmented Switcher */}
-          <div className="flex rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] p-1 border border-black/[0.06] dark:border-white/[0.08]">
+          <div className="relative flex rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] p-1 border border-black/[0.06] dark:border-white/[0.08]">
+            <div
+              className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl bg-white dark:bg-[#1D1D1D] shadow-xs transition-transform duration-300 ease-[cubic-bezier(0.34,1.3,0.64,1)] pointer-events-none"
+              style={{
+                transform: `translateX(${fundMode === 'deposit' ? '0%' : '100%'})`,
+                left: '4px',
+              }}
+            />
             <button
               type="button"
               onClick={() => {
                 setFundMode('deposit');
                 setFundError(null);
               }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`relative z-10 flex-1 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
                 fundMode === 'deposit'
-                  ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white shadow-xs'
+                  ? 'text-gray-900 dark:text-white'
                   : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -433,9 +458,9 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                 setFundMode('withdraw');
                 setFundError(null);
               }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`relative z-10 flex-1 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
                 fundMode === 'withdraw'
-                  ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white shadow-xs'
+                  ? 'text-gray-900 dark:text-white'
                   : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -459,7 +484,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
           )}
 
           <form onSubmit={handleFundSubmit} className="space-y-4">
-            <div>
+            <div key={fundShakeKey} className={fundError ? 'animate-error-shake' : ''}>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
                 {fundMode === 'deposit' ? 'Deposit Amount' : 'Withdrawal Amount'} ({settings.baseCurrency || 'USD'})
               </label>
@@ -473,7 +498,9 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                   setFundAmount(e.target.value);
                   if (fundError) setFundError(null);
                 }}
-                className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xl font-bold tabular-nums focus:outline-none focus:border-[#C6FF3D]"
+                className={`w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border text-gray-900 dark:text-white text-xl font-bold tabular-nums focus:outline-none ${
+                  fundError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-black/[0.06] dark:border-white/[0.08] focus:border-[#C6FF3D]'
+                }`}
               />
             </div>
 

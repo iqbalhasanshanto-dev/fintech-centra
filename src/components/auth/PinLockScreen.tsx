@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Shield, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import logoOnDark from '../../assets/brand/logo-on-dark.svg';
+import logoOnLight from '../../assets/brand/logo-on-light.svg';
 
 export const PinLockScreen: React.FC = () => {
   const { unlockPin, logout } = useAuth();
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [shakeKey, setShakeKey] = useState(0);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -14,12 +17,14 @@ export const PinLockScreen: React.FC = () => {
     setErrorMsg('');
     if (!pin) {
       setErrorMsg('Please enter your PIN.');
+      setShakeKey(k => k + 1);
       return;
     }
     const res = await unlockPin(pin);
     if (!res.ok) {
       setErrorMsg(res.error || 'Incorrect PIN. Please try again.');
       setPin('');
+      setShakeKey(k => k + 1);
     }
   };
 
@@ -37,8 +42,19 @@ export const PinLockScreen: React.FC = () => {
 
         {/* Brand header */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-full bg-[#C6FF3D] text-black mx-auto flex items-center justify-center mb-3 shadow-md">
-            <Shield className="w-6 h-6 stroke-[2.5]" />
+          <div className="w-14 h-14 rounded-2xl bg-[#F1F2F4] dark:bg-[#141414] border border-black/[0.08] dark:border-white/[0.12] p-2.5 mx-auto flex items-center justify-center mb-3 shadow-lg">
+            <img
+              src={logoOnLight}
+              alt="Centra"
+              className="w-9 h-9 object-contain select-none rounded-xl dark:hidden"
+              draggable={false}
+            />
+            <img
+              src={logoOnDark}
+              alt="Centra"
+              className="w-9 h-9 object-contain select-none rounded-xl hidden dark:block"
+              draggable={false}
+            />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
             App Locked
@@ -51,19 +67,26 @@ export const PinLockScreen: React.FC = () => {
         {/* PIN form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
+            <label htmlFor="pin-lock-input" className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
               PIN
             </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <div key={shakeKey} className={`relative ${errorMsg ? 'animate-error-shake' : ''}`}>
+              <Lock className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${errorMsg ? 'text-rose-500' : 'text-gray-400 dark:text-gray-500'}`} />
               <input
+                id="pin-lock-input"
+                aria-label="PIN"
                 type="password"
                 inputMode="numeric"
                 maxLength={8}
                 autoFocus
                 value={pin}
-                onChange={e => setPin(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#2A2A2A] border border-black/5 dark:border-white/10 text-gray-900 dark:text-white text-sm tracking-widest focus:border-[#18212F] dark:focus:border-[#C6FF3D] focus:outline-none"
+                onChange={e => {
+                  setPin(e.target.value);
+                  if (errorMsg) setErrorMsg('');
+                }}
+                className={`w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#F1F2F4] dark:bg-[#2A2A2A] border text-gray-900 dark:text-white text-sm tracking-widest focus:outline-none ${
+                  errorMsg ? 'border-rose-500 ring-1 ring-rose-500' : 'border-black/5 dark:border-white/10 focus:border-[#18212F] dark:focus:border-[#C6FF3D]'
+                }`}
               />
             </div>
           </div>

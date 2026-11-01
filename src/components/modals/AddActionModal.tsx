@@ -138,7 +138,7 @@ const FigmaPickerField: React.FC<FigmaPickerFieldProps> = ({
 
                   <div className="shrink-0 ml-2">
                     {isSelected ? (
-                      <div className="w-5 h-5 rounded-full bg-[#C6FF3D] text-[#0A0E1A] flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-full bg-[#C6FF3D] text-[#0A0E1A] flex items-center justify-center animate-pop-tap animate-radial-burst">
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                     ) : (
@@ -245,6 +245,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   // Form State: Common
   const [amount, setAmount] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
+  const [amountShakeKey, setAmountShakeKey] = useState(0);
+  const [isConfirmTapping, setIsConfirmTapping] = useState(false);
   const [txDate, setTxDate] = useState<string>(() => todayLocalDateKey());
   const [merchant, setMerchant] = useState('');
   const [merchantError, setMerchantError] = useState<string | null>(null);
@@ -311,18 +313,18 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       if (isHiddenSystem) return false;
       return isIncome ? c.type === 'income' : c.type === 'expense';
     });
-    if (isIncome) {
-      const defaultIncome = FIGMA_DEFAULT_CATEGORIES.filter(c => c.type === 'income');
-      const merged = [...filtered];
-      for (const def of defaultIncome) {
-        if (!merged.some(m => m.name.toLowerCase() === def.name.toLowerCase() || m.id === def.id)) {
-          merged.push(def);
-        }
+    const defaults = FIGMA_DEFAULT_CATEGORIES.filter(c => {
+      const isHiddenSystem = ['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || '') || c.hidden;
+      if (isHiddenSystem) return false;
+      return isIncome ? c.type === 'income' : c.type === 'expense';
+    });
+    const merged = [...filtered];
+    for (const def of defaults) {
+      if (!merged.some(m => m.name.toLowerCase() === def.name.toLowerCase() || m.id === def.id)) {
+        merged.push(def);
       }
-      return merged;
     }
-    if (filtered.length > 0) return filtered;
-    return FIGMA_DEFAULT_CATEGORIES.filter(c => c.type === 'expense');
+    return merged;
   }, [categories, activeTab]);
 
   // Expense categories specifically for Budgets
@@ -331,8 +333,17 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       const isHiddenSystem = ['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || '') || c.hidden;
       return c.type === 'expense' && !isHiddenSystem;
     });
-    if (filtered.length > 0) return filtered;
-    return FIGMA_DEFAULT_CATEGORIES.filter(c => c.type === 'expense');
+    const defaultExpense = FIGMA_DEFAULT_CATEGORIES.filter(c => {
+      const isHiddenSystem = ['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || '') || c.hidden;
+      return c.type === 'expense' && !isHiddenSystem;
+    });
+    const merged = [...filtered];
+    for (const def of defaultExpense) {
+      if (!merged.some(m => m.name.toLowerCase() === def.name.toLowerCase() || m.id === def.id)) {
+        merged.push(def);
+      }
+    }
+    return merged;
   }, [categories]);
 
   const categoryOptions = useMemo(() => {
@@ -866,6 +877,11 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   };
 
   const handleSave = (keepOpen: boolean = false) => {
+    if (!amount || !!amountError) {
+      if (!amount) setAmountError('Please enter an amount');
+      setAmountShakeKey(k => k + 1);
+      return;
+    }
     if (activeTab === 'spend' || activeTab === 'income') {
       executeSaveTransaction(keepOpen);
     } else if (activeTab === 'transfer') {
@@ -903,9 +919,15 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
 
       <button
         type="button"
-        onClick={() => handleSave(false)}
+        onClick={() => {
+          setIsConfirmTapping(true);
+          setTimeout(() => setIsConfirmTapping(false), 360);
+          handleSave(false);
+        }}
         disabled={isSaveDisabled}
-        className="flex-1 h-12 rounded-full bg-[#C6FF3D] text-[#0A0E1A] font-bold hover:bg-[#b5f524] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm"
+        className={`flex-1 h-12 rounded-full bg-[#C6FF3D] text-[#0A0E1A] font-bold hover:bg-[#b5f524] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm ${
+          isConfirmTapping ? 'animate-pop-tap animate-radial-burst' : ''
+        }`}
       >
         <Check className="w-4 h-4 stroke-[2.5]" />
         <span>Confirm</span>
@@ -923,14 +945,21 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
         footer={modalFooter}
       >
         <div className="space-y-4">
-          {/* Top Segmented Control */}
-          <div className="flex items-center gap-1 p-1 bg-[#F1F2F4] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-full text-xs font-semibold overflow-x-auto no-scrollbar">
+          {/* Top Segmented Control with Sliding Active Pill */}
+          <div className="relative flex items-center p-1 bg-[#F1F2F4] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-full text-xs font-semibold overflow-x-auto no-scrollbar">
+            <div
+              className="absolute top-1 bottom-1 w-[calc(20%-2px)] rounded-full bg-white dark:bg-[#1D1D1D] shadow-xs transition-transform duration-300 ease-[cubic-bezier(0.34,1.3,0.64,1)] pointer-events-none"
+              style={{
+                transform: `translateX(calc(${Math.max(0, ['income', 'spend', 'goal', 'budget', 'transfer'].indexOf(activeTab)) * 100}% + ${Math.max(0, ['income', 'spend', 'goal', 'budget', 'transfer'].indexOf(activeTab)) * 2.5}px))`,
+                left: '4px',
+              }}
+            />
             <button
               type="button"
               onClick={() => handleTabSwitch('income')}
-              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
+              className={`relative z-10 flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-colors cursor-pointer ${
                 activeTab === 'income'
-                  ? 'bg-white dark:bg-[#1D1D1D] text-[#16A34A] dark:text-[#22C55E] shadow-xs font-bold'
+                  ? 'text-[#16A34A] dark:text-[#22C55E] font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -939,9 +968,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             <button
               type="button"
               onClick={() => handleTabSwitch('spend')}
-              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
+              className={`relative z-10 flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-colors cursor-pointer ${
                 activeTab === 'spend'
-                  ? 'bg-white dark:bg-[#1D1D1D] text-[#E11D48] dark:text-[#F43F5E] shadow-xs font-bold'
+                  ? 'text-[#E11D48] dark:text-[#F43F5E] font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -950,9 +979,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             <button
               type="button"
               onClick={() => handleTabSwitch('goal')}
-              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
+              className={`relative z-10 flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-colors cursor-pointer ${
                 activeTab === 'goal'
-                  ? 'bg-white dark:bg-[#1D1D1D] text-[#EA580C] dark:text-[#FB923C] shadow-xs font-bold'
+                  ? 'text-[#EA580C] dark:text-[#FB923C] font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -961,9 +990,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             <button
               type="button"
               onClick={() => handleTabSwitch('budget')}
-              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
+              className={`relative z-10 flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-colors cursor-pointer ${
                 activeTab === 'budget'
-                  ? 'bg-white dark:bg-[#1D1D1D] text-[#0891B2] dark:text-[#22D3EE] shadow-xs font-bold'
+                  ? 'text-[#0891B2] dark:text-[#22D3EE] font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -972,9 +1001,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
             <button
               type="button"
               onClick={() => handleTabSwitch('transfer')}
-              className={`flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-all cursor-pointer ${
+              className={`relative z-10 flex-1 min-w-[58px] py-2 px-2.5 rounded-full text-center transition-colors cursor-pointer ${
                 activeTab === 'transfer'
-                  ? 'bg-white dark:bg-[#1D1D1D] text-[#0284C7] dark:text-[#38BDF8] shadow-xs font-bold'
+                  ? 'text-[#0284C7] dark:text-[#38BDF8] font-bold'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -998,7 +1027,14 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
           )}
 
           {/* Amount Input Card */}
-          <div className="p-5 rounded-2xl bg-[#F1F2F4] dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08]">
+          <div
+            key={amountShakeKey}
+            className={`p-5 rounded-2xl bg-[#F1F2F4] dark:bg-[#1D1D1D] border transition-colors ${
+              amountError
+                ? 'border-rose-500 animate-error-shake'
+                : 'border-black/[0.06] dark:border-white/[0.08]'
+            }`}
+          >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                 {activeTab === 'spend'
@@ -1080,11 +1116,11 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
               <>
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                    {activeTab === 'spend' ? 'Paid To (Merchant / Payee)' : 'Received From (Source / Client)'}
+                    {activeTab === 'spend' ? 'SPENT ON / PAID TO' : 'RECEIVED FROM / SOURCE'}
                   </label>
                   <input
                     type="text"
-                    placeholder={activeTab === 'spend' ? 'e.g. Uber Ride, Whole Foods Market' : 'e.g. Salary Deposit, Client Wire'}
+                    placeholder={activeTab === 'spend' ? 'e.g. Nasta, Uber Ride, Shwapno' : 'e.g. Salary, Abbu, Client Project'}
                     value={merchant}
                     onChange={e => {
                       const val = e.target.value;
@@ -1108,7 +1144,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                 <FigmaPickerField
                   id="category-select"
                   label="Category"
-                  contextOverline={activeTab === 'income' ? 'Income' : 'Spend & Budget'}
+                  contextOverline={activeTab === 'income' ? 'INCOME' : 'SPEND'}
                   title="Category"
                   options={categoryOptions}
                   selectedId={categoryId}
@@ -1370,10 +1406,10 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 items-end">
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                          Initial Deposit (Optional)
+                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1 whitespace-nowrap truncate">
+                          INITIAL DEPOSIT
                         </label>
                         <input
                           type="text"
@@ -1401,8 +1437,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">
-                          Target Date
+                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1 whitespace-nowrap truncate">
+                          TARGET DATE
                         </label>
                         <DatePicker
                           value={goalTargetDate}
@@ -1450,7 +1486,7 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
                 <FigmaPickerField
                   id="budget-category-select"
                   label="Budget Category"
-                  contextOverline="Spend & Budget"
+                  contextOverline="BUDGET"
                   title="Category"
                   options={budgetCategoryOptions}
                   selectedId={budgetCategoryId}

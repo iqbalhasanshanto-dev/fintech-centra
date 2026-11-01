@@ -89,6 +89,15 @@ export function getUserStorageKey(userId: string | null | undefined, entity: str
   return `centra:${uid}:${entity}`;
 }
 
+/**
+ * Returns the cutoff timestamp for 2-month rolling data retention:
+ * The start of the previous calendar month (1st of previous month at 00:00:00.000).
+ * Any transactions strictly older than this cutoff (txDate < cutoff) are eligible for pruning.
+ */
+export function getTwoMonthRetentionCutoff(referenceDate: Date = new Date()): Date {
+  return new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, 1, 0, 0, 0, 0);
+}
+
 // Sync status state machine
 let currentSyncStatus: SyncStatus = 'synced';
 const syncStatusListeners = new Set<(status: SyncStatus) => void>();
@@ -285,7 +294,13 @@ function reloadCacheForUser(userId: string | null): void {
     }
     cache.categories = safeGet<Category[]>(getUserStorageKey(userId, 'categories'), []);
     const rawTransactions = safeGet<Transaction[]>(getUserStorageKey(userId, 'transactions'), []);
-    cache.transactions = !isTest ? rawTransactions.filter(t => !DEMO_TX_IDS.has(t.id)) : rawTransactions;
+    const nonDemo = !isTest ? rawTransactions.filter(t => !DEMO_TX_IDS.has(t.id)) : rawTransactions;
+    const cutoff = getTwoMonthRetentionCutoff();
+    cache.transactions = nonDemo.filter(t => {
+      if (!t.date) return true;
+      const d = new Date(t.date);
+      return isNaN(d.getTime()) || d >= cutoff;
+    });
     const rawGoals = safeGet<Goal[]>(getUserStorageKey(userId, 'goals'), []);
     cache.goals = !isTest ? rawGoals.filter(g => !DEMO_GOAL_IDS.has(g.id)) : rawGoals;
     const rawBudgets = safeGet<Budget[]>(getUserStorageKey(userId, 'budgets'), []);
@@ -657,6 +672,51 @@ export const CentraDB = {
   getBudgets: (): Budget[] => cache.budgets,
   getNotifications: (): NotificationItem[] => cache.notifications,
   getSettings: (): AppSettings => cache.settings,
+
+  /**
+   * Prunes transactions strictly older than 2 calendar months (Current Month + Previous Month).
+   * Their net balance remains preserved in the user's account balances.
+   * Removes expired records from local memory/storage and remotely from Supabase.
+   */
+  pruneExpiredTransactions: async (userId?: string | null): Promise<{ prunedCount: number }> => {
+    const uid = userId !== undefined ? userId : (currentActiveUserId || cache.user?.id);
+    const cutoff = getTwoMonthRetentionCutoff();
+
+    const allTxs = cache.transactions;
+    const activeTxs = allTxs.filter(tx => {
+      if (!tx.date) return true;
+      const d = new Date(tx.date);
+      return isNaN(d.getTime()) || d >= cutoff;
+    });
+    const expiredTxs = allTxs.filter(tx => {
+      if (!tx.date) return false;
+      const d = new Date(tx.date);
+      return !isNaN(d.getTime()) && d < cutoff;
+    });
+
+    if (expiredTxs.length === 0) {
+      return { prunedCount: 0 };
+    }
+
+    cache.transactions = activeTxs;
+    safeSet(getUserStorageKey(uid, 'transactions'), activeTxs);
+
+    if (uid && !isGuestUser(uid) && isSupabaseConfigured() && typeof navigator !== 'undefined' && navigator.onLine) {
+      try {
+        const expiredIds = expiredTxs.map(t => t.id);
+        await supabase
+          .from('transactions')
+          .delete()
+          .eq('user_id', uid)
+          .in('id', expiredIds);
+      } catch (err) {
+        logger.warn('Remote pruning of expired transactions encountered error:', err);
+      }
+    }
+
+    notifyDataChanged();
+    return { prunedCount: expiredTxs.length };
+  },
 
   // ---------------------------------------------------------------------------
   // PER-RECORD REPOSITORY MUTATIONS (Optimistic Local + Supabase + Outbox)
@@ -1496,7 +1556,13 @@ export const CentraDB = {
         if (!transactionsError && transactionsData) {
           const remote = transactionsData.map(mapTransactionFromDb);
           const pendingTransactions = OutboxQueue.getPending(userId);
-          cache.transactions = mergeEntityWithOutbox('transactions', remote, cache.transactions, pendingTransactions);
+          const merged = mergeEntityWithOutbox('transactions', remote, cache.transactions, pendingTransactions);
+          const cutoff = getTwoMonthRetentionCutoff();
+          cache.transactions = merged.filter(tx => {
+            if (!tx.date) return true;
+            const d = new Date(tx.date);
+            return isNaN(d.getTime()) || d >= cutoff;
+          });
           safeSet(getUserStorageKey(userId, 'transactions'), cache.transactions);
         } else if (transactionsError) {
           logger.warn('Failed to fetch transactions:', transactionsError);

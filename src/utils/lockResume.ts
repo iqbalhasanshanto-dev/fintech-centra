@@ -1,5 +1,5 @@
 export const AUTOLOCK_STORAGE_KEY = 'centra_autolock_timeout';
-export const DEFAULT_AUTOLOCK_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+export const DEFAULT_AUTOLOCK_TIMEOUT_MS = 0; // Immediately
 
 export type AutoLockTimeoutOption = 0 | 60000 | 300000 | 900000;
 
@@ -9,9 +9,9 @@ export interface AutoLockOptionDescriptor {
 }
 
 export const AUTOLOCK_OPTIONS: AutoLockOptionDescriptor[] = [
-  { label: 'Immediately', value: 0 },
+  { label: 'Immediately (default)', value: 0 },
   { label: '1 minute', value: 60000 },
-  { label: '5 minutes (default)', value: 300000 },
+  { label: '5 minutes', value: 300000 },
   { label: '15 minutes', value: 900000 },
 ];
 

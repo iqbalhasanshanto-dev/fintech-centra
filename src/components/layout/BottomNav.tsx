@@ -182,7 +182,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           aria-label="Main Navigation Bar"
         >
           {/* Floating Capsule Dock: Home, Analytics, Budgets */}
-          <div className="flex-1 flex items-center justify-between bg-white/95 dark:bg-[#1D1D1D]/95 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10 p-1.5 shadow-xl">
+          <div className="relative flex-1 flex items-center justify-between bg-white/95 dark:bg-[#1D1D1D]/95 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10 p-1.5 shadow-xl">
+            {/* Sliding Active Tab Pill Indicator */}
+            <div
+              className="absolute top-1.5 bottom-1.5 w-[calc(33.333%-4px)] rounded-full bg-[#18212F] dark:bg-[#C6FF3D] transition-transform duration-300 ease-[cubic-bezier(0.34,1.3,0.64,1)] shadow-xs pointer-events-none"
+              style={{
+                transform: `translateX(calc(${Math.max(0, mainTabs.findIndex(t => t.id === activeTab)) * 100}% + ${Math.max(0, mainTabs.findIndex(t => t.id === activeTab)) * 6}px))`,
+                left: '6px',
+              }}
+            />
             {mainTabs.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -190,10 +198,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => onSelectTab(tab.id)}
-                  className={`flex-1 min-h-[44px] px-2 py-1.5 rounded-full flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
+                  className={`relative z-10 flex-1 min-h-[44px] px-2 py-1.5 rounded-full flex flex-col items-center justify-center transition-colors duration-200 cursor-pointer ${
                     isActive
-                      ? 'bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#0A0E1A] font-bold shadow-xs'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'text-white dark:text-[#0A0E1A] font-bold'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                   aria-label={tab.label}
                 >
@@ -209,7 +217,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             {/* Quick-Action Menu Popup (11-home-add-menu.png) */}
             {isMenuOpen && (
               <div
-                className="absolute bottom-16 right-0 mb-2 w-64 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.08] dark:border-white/[0.12] p-3 shadow-2xl z-50 flex flex-col gap-1 pointer-events-auto animate-scale-in"
+                className="absolute bottom-16 right-0 mb-2 w-64 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.08] dark:border-white/[0.12] p-3 shadow-2xl z-50 flex flex-col gap-1 pointer-events-auto origin-bottom-right-spring"
                 role="menu"
                 aria-label="Quick Actions"
               >
@@ -294,11 +302,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               }`}
               aria-label="New Transaction, Transfer or Budget"
             >
-              {isMenuOpen ? (
-                <X className="w-6 h-6 stroke-[2.5]" />
-              ) : (
+              <div className={`transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isMenuOpen ? 'rotate-135' : 'rotate-0'}`}>
                 <Plus className="w-6 h-6 stroke-[2.5]" />
-              )}
+              </div>
             </button>
           </div>
         </nav>
