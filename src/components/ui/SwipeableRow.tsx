@@ -140,3 +140,4 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
     </div>
   );
 };
+
