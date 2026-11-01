@@ -634,6 +634,10 @@ export const CentraDB = {
   // First-Sync Gating Check (per-user lastSyncedAt marker)
   hasCachedData: (userId?: string | null): boolean => {
     const uid = userId !== undefined ? userId : (currentActiveUserId || cache.user?.id);
+    const storedUser = uid ? safeGet<UserProfile | null>(getUserStorageKey(uid, 'user'), null) : cache.user;
+    if (storedUser && storedUser.onboardingCompleted === false) {
+      return false;
+    }
     if (isGuestUser(uid)) return true;
     const lastSynced = safeGet<string | null>(getUserStorageKey(uid, 'last_synced_at'), null);
     return !!lastSynced;
@@ -1947,7 +1951,7 @@ export const CentraDB = {
     safeSet(getUserStorageKey(userId, 'budgets'), cache.budgets);
     safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);
     safeSet(getUserStorageKey(userId, 'settings'), cache.settings);
-    safeSet(getUserStorageKey(userId, 'last_synced_at'), new Date().toISOString());
+    // Note: Do NOT set last_synced_at before onboarding finishes, so hasCachedData(userId) correctly reflects onboarding state.
     notifyDataChanged();
 
     if (isSupabaseConfigured() && !isGuestUser(userId)) {

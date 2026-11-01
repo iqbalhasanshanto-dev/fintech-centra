@@ -8,31 +8,41 @@ import { CornerGlow } from '../ui/CornerGlow';
 type ThemeMode = 'system' | 'light' | 'dark';
 
 interface ThemeSelectionScreenProps {
+  initialTheme?: 'dark' | 'light';
+  onDraftChange?: (patch: { theme: 'dark' | 'light' }) => void;
   onBack: () => void;
   onContinue: (theme: 'dark' | 'light') => void;
 }
 
 export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
+  initialTheme,
+  onDraftChange,
   onBack,
   onContinue,
 }) => {
   const { user, saveOnboardingProfile } = useAuth();
-  const [selectedMode, setSelectedMode] = useState<ThemeMode>('dark');
+  const [selectedMode, setSelectedMode] = useState<ThemeMode>(initialTheme || 'dark');
 
   const handleSelectMode = (mode: ThemeMode) => {
     setSelectedMode(mode);
+    let resolvedTheme: 'dark' | 'light' = 'dark';
     if (mode === 'system') {
       const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (isSystemDark) {
         document.documentElement.classList.add('dark');
+        resolvedTheme = 'dark';
       } else {
         document.documentElement.classList.remove('dark');
+        resolvedTheme = 'light';
       }
     } else if (mode === 'dark') {
       document.documentElement.classList.add('dark');
+      resolvedTheme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
+      resolvedTheme = 'light';
     }
+    onDraftChange?.({ theme: resolvedTheme });
   };
 
   const handleProceed = async () => {

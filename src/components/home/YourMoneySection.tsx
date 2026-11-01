@@ -1,11 +1,7 @@
-import React, { useMemo } from 'react';
-import { ChevronRight, ArrowUpRight, ArrowDownRight, Eye, EyeOff } from 'lucide-react';
+import React from 'react';
+import { ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
-import {
-  computePreviousPeriodTotals,
-  calculatePercentageChange,
-} from '../../utils/money';
 
 interface YourMoneySectionProps {
   onNavigateToReport: () => void;
@@ -19,38 +15,9 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
     periodIncome,
     periodExpenses,
     settings,
-    transactions,
-    periodFilter,
     totalBalance,
     updateSettings,
   } = useFinance();
-
-  const { incomeBadge, expensesBadge } = useMemo(() => {
-    const baseCurrency = settings?.baseCurrency || 'USD';
-    const {
-      previousIncome,
-      previousExpenses,
-      previousIncomeCount,
-      previousExpenseCount,
-      hasPreviousPeriod,
-    } = computePreviousPeriodTotals(transactions || [], periodFilter, baseCurrency);
-
-    if (!hasPreviousPeriod) {
-      return { incomeBadge: null, expensesBadge: null };
-    }
-
-    const incomeBadge =
-      previousIncomeCount > 0 && previousIncome > 0
-        ? calculatePercentageChange(periodIncome, previousIncome, 'income')
-        : null;
-
-    const expensesBadge =
-      previousExpenseCount > 0 && previousExpenses > 0
-        ? calculatePercentageChange(periodExpenses, previousExpenses, 'expense')
-        : null;
-
-    return { incomeBadge, expensesBadge };
-  }, [transactions, periodFilter, periodIncome, periodExpenses, settings?.baseCurrency]);
 
   const displayBalance = totalBalance ?? (periodIncome - periodExpenses);
 
@@ -110,23 +77,6 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
               <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white whitespace-nowrap">
                 {formatCurrency(periodIncome, settings?.baseCurrency, settings?.privacyMode)}
               </span>
-              {incomeBadge && (
-                <span
-                  data-testid="income-change-badge"
-                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold rounded-full tracking-wide shrink-0 ${
-                    incomeBadge.isGood
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                  }`}
-                >
-                  {incomeBadge.trend === 'down' ? (
-                    <ArrowDownRight className="w-3.5 h-3.5" />
-                  ) : (
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  )}
-                  {incomeBadge.formatted}
-                </span>
-              )}
             </div>
           </div>
 
@@ -142,23 +92,6 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
               <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white whitespace-nowrap">
                 {formatCurrency(periodExpenses, settings?.baseCurrency, settings?.privacyMode)}
               </span>
-              {expensesBadge && (
-                <span
-                  data-testid="expenses-change-badge"
-                  className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold rounded-full tracking-wide shrink-0 ${
-                    expensesBadge.isGood
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                  }`}
-                >
-                  {expensesBadge.trend === 'down' ? (
-                    <ArrowDownRight className="w-3.5 h-3.5" />
-                  ) : (
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  )}
-                  {expensesBadge.formatted}
-                </span>
-              )}
             </div>
           </div>
         </div>

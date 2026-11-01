@@ -360,7 +360,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     latestStateRef.current.accounts = synchronizedAccounts;
   }, [synchronizedAccounts]);
 
-  // Compute Period Income and Expenses
+  // Compute Period Income and Expenses (with leftover prior balance carryover)
   const { periodIncome, periodExpenses } = useMemo(() => {
     let income = 0;
     let expenses = 0;
@@ -374,8 +374,30 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       }
     });
 
-    return { periodIncome: income, periodExpenses: expenses };
-  }, [filteredTransactions, baseCurrency]);
+    let priorNetBalance = 0;
+    if (periodFilter !== 'all') {
+      const { start } = getPeriodDateRange(periodFilter);
+      let priorIncome = 0;
+      let priorExpenses = 0;
+      transactions.forEach(tx => {
+        const txDate = new Date(tx.date);
+        if (txDate < start) {
+          const amountInBase = convertCurrency(tx.amount, tx.currency, baseCurrency);
+          if (tx.type === 'income') {
+            priorIncome += amountInBase;
+          } else if (tx.type === 'expense') {
+            priorExpenses += amountInBase;
+          }
+        }
+      });
+      priorNetBalance = Math.max(0, priorIncome - priorExpenses);
+    }
+
+    return {
+      periodIncome: income + priorNetBalance,
+      periodExpenses: expenses,
+    };
+  }, [filteredTransactions, transactions, periodFilter, baseCurrency]);
 
   const netSavings = periodIncome - periodExpenses;
   const savingsRate = periodIncome > 0

@@ -6,6 +6,8 @@ import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
 
 interface SpendingCategoriesScreenProps {
+  initialCategories?: string[];
+  onDraftChange?: (patch: { selectedCategories: string[] }) => void;
   onBack: () => void;
   onFinish: (selectedCategories: string[]) => void;
 }
@@ -23,16 +25,20 @@ const AVAILABLE_CATEGORIES = [
 ];
 
 export const SpendingCategoriesScreen: React.FC<SpendingCategoriesScreenProps> = ({
+  initialCategories,
+  onDraftChange,
   onBack,
   onFinish,
 }) => {
   const { user, saveOnboardingProfile } = useAuth();
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(initialCategories || []);
 
   const toggleCategory = (cat: string) => {
-    setSelected(prev =>
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    );
+    setSelected(prev => {
+      const next = prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat];
+      onDraftChange?.({ selectedCategories: next });
+      return next;
+    });
   };
 
   const handleFinish = async () => {

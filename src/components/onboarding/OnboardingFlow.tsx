@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { ProfileInfoScreen, ProfileDraftData } from './ProfileInfoScreen';
+import { ProfileInfoScreen } from './ProfileInfoScreen';
 import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { SpendingCategoriesScreen } from './SpendingCategoriesScreen';
 import { ConfirmModal } from '../ui/ConfirmModal';
@@ -17,66 +17,113 @@ const STEP_ORDER: OnboardingStep[] = [
   'categories',
 ];
 
-const ONBOARDING_STEP_STORAGE_KEY = 'centra_onboarding_step';
-const ONBOARDING_DRAFT_STORAGE_KEY = 'centra_onboarding_draft';
+export interface OnboardingDraftState {
+  step: OnboardingStep;
+  name?: string;
+  fullName?: string;
+  dob?: string;
+  country?: string;
+  address?: string;
+  avatarUrl?: string;
+  currency?: string;
+  theme?: 'dark' | 'light';
+  selectedCategories?: string[];
+}
+
+export const getOnboardingDraftKey = (userId?: string | null): string => {
+  return `centra:onboarding_draft:${userId || 'pending'}`;
+};
 
 export const OnboardingFlow: React.FC = () => {
-  const { logout, completeOnboarding, setAuthView } = useAuth();
+  const { user, logout, completeOnboarding } = useAuth();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  const [draft, setDraft] = useState<ProfileDraftData>(() => {
+  const storageKey = getOnboardingDraftKey(user?.id);
+
+  // Load initial draft from localStorage (checking user-specific key first, then pending fallback)
+  const [draft, setDraft] = useState<OnboardingDraftState>(() => {
     try {
-      const saved = sessionStorage.getItem(ONBOARDING_DRAFT_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // Ignore storage errors
-    }
-    return {};
+      if (typeof localStorage !== 'undefined') {
+        const key = getOnboardingDraftKey(user?.id);
+        const saved = localStorage.getItem(key) || localStorage.getItem('centra:onboarding_draft:pending');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return {
+            step: STEP_ORDER.includes(parsed?.step) ? parsed.step : 'profile',
+            ...parsed,
+          };
+        }
+      }
+    } catch {}
+    return { step: 'profile' };
   });
 
-  const updateDraft = (patch: Partial<ProfileDraftData>) => {
-    setDraft(prev => {
-      const next = { ...prev, ...patch };
-      try {
-        sessionStorage.setItem(ONBOARDING_DRAFT_STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // Ignore storage errors
-      }
-      return next;
-    });
-  };
-
-  // When app is minimized or backgrounded during unfinished onboarding, reset draft and show accountIncomplete
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
-        try {
-          sessionStorage.removeItem(ONBOARDING_DRAFT_STORAGE_KEY);
-        } catch {}
-        setAuthView('accountIncomplete');
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [setAuthView]);
-
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(() => {
-    const savedStep = localStorage.getItem(ONBOARDING_STEP_STORAGE_KEY);
-    if (savedStep && STEP_ORDER.includes(savedStep as OnboardingStep)) {
-      return savedStep as OnboardingStep;
-    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const key = getOnboardingDraftKey(user?.id);
+        const saved = localStorage.getItem(key) || localStorage.getItem('centra:onboarding_draft:pending');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed?.step && STEP_ORDER.includes(parsed.step)) {
+            return parsed.step;
+          }
+        }
+      }
+    } catch {}
     return 'profile';
   });
 
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward');
 
+  const currentStepRef = useRef<OnboardingStep>(currentStep);
+  currentStepRef.current = currentStep;
+
+  const userIdRef = useRef<string | undefined>(user?.id);
+  userIdRef.current = user?.id;
+
+  const isFinishedRef = useRef(false);
+
+  const updateDraft = React.useCallback((patch: Partial<OnboardingDraftState>) => {
+    if (isFinishedRef.current) return;
+    setDraft(prev => {
+      const next: OnboardingDraftState = {
+        ...prev,
+        ...patch,
+        step: patch.step || prev.step || currentStepRef.current,
+      };
+      try {
+        if (typeof localStorage !== 'undefined' && !isFinishedRef.current) {
+          const key = getOnboardingDraftKey(userIdRef.current);
+          localStorage.setItem(key, JSON.stringify(next));
+          if (userIdRef.current) {
+            localStorage.setItem(`centra:onboarding_draft:${userIdRef.current}`, JSON.stringify(next));
+          }
+        }
+      } catch {
+        // Ignore storage errors
+      }
+      return next;
+    });
+  }, []);
+
+  // Sync draft when user.id becomes available
+  useEffect(() => {
+    if (user?.id && typeof localStorage !== 'undefined') {
+      try {
+        const pending = localStorage.getItem('centra:onboarding_draft:pending');
+        const userSpecific = localStorage.getItem(`centra:onboarding_draft:${user.id}`);
+        if (!userSpecific && pending) {
+          localStorage.setItem(`centra:onboarding_draft:${user.id}`, pending);
+        }
+      } catch {}
+    }
+  }, [user?.id]);
+
   const goToStep = (step: OnboardingStep, direction: 'forward' | 'backward' = 'forward') => {
     setTransitionDirection(direction);
     setCurrentStep(step);
-    localStorage.setItem(ONBOARDING_STEP_STORAGE_KEY, step);
+    updateDraft({ step });
   };
 
   // Handle hardware back button during onboarding
@@ -92,10 +139,20 @@ export const OnboardingFlow: React.FC = () => {
   });
 
   const handleFinishOnboarding = async () => {
+    isFinishedRef.current = true;
     try {
-      sessionStorage.removeItem(ONBOARDING_DRAFT_STORAGE_KEY);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(storageKey);
+        if (user?.id) {
+          localStorage.removeItem(`centra:onboarding_draft:${user.id}`);
+        }
+        localStorage.removeItem('centra:onboarding_draft:pending');
+        localStorage.removeItem('centra_onboarding_step');
+      }
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem('centra_onboarding_draft');
+      }
     } catch {}
-    localStorage.removeItem(ONBOARDING_STEP_STORAGE_KEY);
     await completeOnboarding();
   };
 
@@ -112,9 +169,10 @@ export const OnboardingFlow: React.FC = () => {
         {currentStep === 'profile' && (
           <ProfileInfoScreen
             initialData={draft}
+            onDraftChange={(profileData) => updateDraft(profileData)}
             onBack={() => setShowExitConfirm(true)}
             onContinue={(profileData) => {
-              updateDraft(profileData);
+              updateDraft({ ...profileData, step: 'theme' });
               goToStep('theme', 'forward');
             }}
           />
@@ -122,15 +180,24 @@ export const OnboardingFlow: React.FC = () => {
 
         {currentStep === 'theme' && (
           <ThemeSelectionScreen
+            initialTheme={draft.theme}
+            onDraftChange={(themeData) => updateDraft(themeData)}
             onBack={() => goToStep('profile', 'backward')}
-            onContinue={() => goToStep('categories', 'forward')}
+            onContinue={(theme) => {
+              updateDraft({ theme, step: 'categories' });
+              goToStep('categories', 'forward');
+            }}
           />
         )}
 
         {currentStep === 'categories' && (
           <SpendingCategoriesScreen
+            initialCategories={draft.selectedCategories}
+            onDraftChange={(catData) => updateDraft(catData)}
             onBack={() => goToStep('theme', 'backward')}
-            onFinish={handleFinishOnboarding}
+            onFinish={() => {
+              handleFinishOnboarding();
+            }}
           />
         )}
       </div>

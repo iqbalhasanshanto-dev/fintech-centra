@@ -47,6 +47,7 @@ export interface ProfileDraftData {
 interface ProfileInfoScreenProps {
   initialName?: string;
   initialData?: ProfileDraftData;
+  onDraftChange?: (data: Partial<ProfileDraftData>) => void;
   onBack: () => void;
   onContinue: (profileData: {
     name: string;
@@ -61,6 +62,7 @@ interface ProfileInfoScreenProps {
 export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
   initialName = '',
   initialData,
+  onDraftChange,
   onBack,
   onContinue,
 }) => {
@@ -113,6 +115,29 @@ export const ProfileInfoScreen: React.FC<ProfileInfoScreenProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only sync when user prop updates to avoid overwriting active user edits
   }, [user.name, user.avatarUrl]);
+
+  // Persist live profile changes to onboarding draft
+  const onDraftChangeRef = useRef(onDraftChange);
+  useEffect(() => {
+    onDraftChangeRef.current = onDraftChange;
+  }, [onDraftChange]);
+
+  const isFirstMountRef = useRef(true);
+  useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      return;
+    }
+    onDraftChangeRef.current?.({
+      name: fullName,
+      fullName,
+      dob,
+      country,
+      address,
+      avatarUrl,
+      currency,
+    });
+  }, [fullName, dob, country, address, avatarUrl, currency]);
 
   // Dropdown UI states
   const [isCountryOpen, setIsCountryOpen] = useState(false);

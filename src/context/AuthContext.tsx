@@ -162,13 +162,24 @@ function getInitialAuthState(): {
   }
 
   if (cachedUserId) {
-    // Check if user has completed onboarding or has cached data
+    CentraDB.setActiveUser(cachedUserId);
     const userProfile = CentraDB.getUser();
+
+    // If cachedUserId exists and user has onboardingCompleted === false, resume onboarding directly
+    if (userProfile.id === cachedUserId && userProfile.onboardingCompleted === false) {
+      return {
+        user: userProfile,
+        isAuthenticated: true,
+        isGuest: false,
+        isLockedByPin: false,
+        authView: 'onboarding',
+      };
+    }
+
     const hasCache = CentraDB.hasCachedData(cachedUserId);
     const isOnboarded = userProfile.id === cachedUserId && userProfile.onboardingCompleted;
 
     if (isOnboarded || hasCache) {
-      CentraDB.setActiveUser(cachedUserId);
       const user = CentraDB.getUser();
       const settings = CentraDB.getSettings();
       const pinLocked = !!(settings.security?.pinLockEnabled && hasDevicePin(cachedUserId));
@@ -252,15 +263,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     lastUserIdRef.current = userId;
 
+    const isExplicitlyOnboarding =
+      authViewRef.current === 'onboarding' ||
+      (CentraDB.getUser()?.id === userId && CentraDB.getUser()?.onboardingCompleted === false);
+
     const alreadyInApp =
-      authViewRef.current === 'app' ||
-      authViewRef.current === 'locked' ||
-      (CentraDB.getUser()?.id === userId && CentraDB.getUser()?.onboardingCompleted === true) ||
-      CentraDB.hasCachedData(userId);
+      !isExplicitlyOnboarding &&
+      (
+        authViewRef.current === 'app' ||
+        authViewRef.current === 'locked' ||
+        (CentraDB.getUser()?.id === userId && CentraDB.getUser()?.onboardingCompleted === true) ||
+        CentraDB.hasCachedData(userId)
+      );
 
     // Offline short-circuit: immediately use cached state without network calls
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      if (CentraDB.hasCachedData(userId) || CentraDB.getUser()?.id === userId || CentraDB.getAccounts().length > 0) {
+      if (!isExplicitlyOnboarding && (CentraDB.hasCachedData(userId) || (CentraDB.getUser()?.id === userId && CentraDB.getUser()?.onboardingCompleted === true))) {
         CentraDB.setActiveUser(userId);
         const currentUser = CentraDB.getUser();
         setUser(currentUser.id ? currentUser : {
@@ -396,8 +414,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, { onConflict: 'user_id' });
       }
 
+      // If user is explicitly in onboarding, or remote profile and local DB say onboarding is not completed, never treat as already in app
+      const isPendingOnboarding =
+        authViewRef.current === 'onboarding' ||
+        (profile?.onboarding_completed === false && CentraDB.getUser()?.onboardingCompleted !== true);
+
       // If user is already in the app, or has completed onboarding:
-      if ((!isNewUser && profile?.onboarding_completed) || alreadyInApp) {
+      if (!isPendingOnboarding && ((!isNewUser && profile?.onboarding_completed) || alreadyInApp)) {
         if (profile && !profile.onboarding_completed) {
           CentraDB.markOnboardingCompleted(userId).catch(() => {});
         }
@@ -568,7 +591,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setTimeout(() => {
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session?.user) {
-          if (lastUserIdRef.current === session.user.id && (authViewRef.current === 'app' || authViewRef.current === 'guest')) {
+          if (
+            lastUserIdRef.current === session.user.id &&
+            (authViewRef.current === 'app' || authViewRef.current === 'guest' || authViewRef.current === 'onboarding')
+          ) {
             return;
           }
           handleSessionRef.current(session);
