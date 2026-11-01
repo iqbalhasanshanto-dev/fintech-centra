@@ -23,6 +23,7 @@ import {
   applyDeleteTransaction,
   applyTransferFunds,
   applyContributeToGoal,
+  applyWithdrawFromGoal,
   applyDeleteAccount,
 } from '../utils/financeOperations';
 import { SyncRetryScreen } from '../components/auth/SyncRetryScreen';
@@ -89,6 +90,7 @@ interface FinanceContextType {
   updateGoal: (id: string, updates: Partial<Goal>) => void;
   deleteGoal: (id: string) => void;
   contributeToGoal: (goalId: string, amount: number, accountId?: string) => Promise<void>;
+  withdrawFromGoal: (goalId: string, amount: number, accountId?: string) => Promise<void>;
 
   addBudget: (budget: Omit<Budget, 'id'>) => void;
   updateBudget: (id: string, updates: Partial<Budget>) => void;
@@ -836,6 +838,24 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     await executeOperation(state => applyContributeToGoal(state, { goalId, amount, accountId: accId }));
   };
 
+  const withdrawFromGoal = async (goalId: string, amount: number, accountId?: string): Promise<void> => {
+    const accId = accountId || latestStateRef.current.accounts.find(a => a.isPrimary)?.id || latestStateRef.current.accounts[0]?.id;
+    if (!accId) throw new Error('No account available for goal withdrawal');
+
+    let goalCat = latestStateRef.current.categories.find(c => c.systemKey === 'goal_withdrawal' || c.systemKey === 'goal_contribution');
+    if (!goalCat) {
+      const refreshed = await CentraDB.ensureSystemCategories(userId);
+      setCategories(refreshed);
+      latestStateRef.current = { ...latestStateRef.current, categories: refreshed };
+      goalCat = refreshed.find(c => c.systemKey === 'goal_withdrawal' || c.systemKey === 'goal_contribution');
+    }
+    if (!goalCat) {
+      throw new Error('Missing system category for goal withdrawal');
+    }
+
+    await executeOperation(state => applyWithdrawFromGoal(state, { goalId, amount, accountId: accId }));
+  };
+
   const addBudget = (budgetData: Omit<Budget, 'id'>) => {
     const newBudget: Budget = {
       ...budgetData,
@@ -972,6 +992,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
         updateGoal,
         deleteGoal,
         contributeToGoal,
+        withdrawFromGoal,
         addBudget,
         updateBudget,
         deleteBudget,

@@ -89,7 +89,34 @@ describe('Smart Transactions & Formatting Helpers', () => {
       vi.useRealTimers();
     });
 
-    it('Priority 1: Uses note as title when note is provided', () => {
+    it('Priority 1: Uses custom merchant (Paid To / Received From) as title when provided', () => {
+      const res = getTransactionDisplay({
+        categoryName: 'Gifts / Allowance',
+        merchant: 'Abbu',
+        note: 'Eid Salami',
+        date: new Date(2026, 9, 31, 21, 0, 0).toISOString(),
+        accountName: 'Cash',
+      });
+
+      expect(res.title).toBe('Abbu');
+      expect(res.hasCustomMerchant).toBe(true);
+      expect(res.subtitle).toMatch(/^Gifts \/ Allowance • Eid Salami • Today •/);
+    });
+
+    it('Priority 1 without note: Subtitle shows category and smart date', () => {
+      const res = getTransactionDisplay({
+        categoryName: 'Groceries',
+        merchant: 'Shwapno',
+        note: '',
+        date: new Date(2026, 9, 31, 21, 0, 0).toISOString(),
+      });
+
+      expect(res.title).toBe('Shwapno');
+      expect(res.hasCustomMerchant).toBe(true);
+      expect(res.subtitle).toMatch(/^Groceries • Today •/);
+    });
+
+    it('Priority 2: Uses note as title when custom merchant is empty', () => {
       const res = getTransactionDisplay({
         categoryName: 'Groceries',
         note: 'Chanachur',
@@ -99,31 +126,7 @@ describe('Smart Transactions & Formatting Helpers', () => {
       });
 
       expect(res.title).toBe('Chanachur');
-      expect(res.subtitle).toMatch(/^Groceries • Today •/);
-    });
-
-    it('Includes merchant in subtitle when both note and custom merchant exist', () => {
-      const res = getTransactionDisplay({
-        categoryName: 'Groceries',
-        note: 'Chanachur',
-        merchant: 'Shwapno',
-        date: new Date(2026, 9, 31, 21, 0, 0).toISOString(),
-      });
-
-      expect(res.title).toBe('Chanachur');
-      expect(res.hasCustomMerchant).toBe(true);
-      expect(res.subtitle).toMatch(/^Groceries \(Shwapno\) • Today •/);
-    });
-
-    it('Priority 2: Uses custom merchant as title when note is empty', () => {
-      const res = getTransactionDisplay({
-        categoryName: 'Groceries',
-        note: '',
-        merchant: 'Shwapno',
-        date: new Date(2026, 9, 31, 21, 0, 0).toISOString(),
-      });
-
-      expect(res.title).toBe('Shwapno');
+      expect(res.hasCustomMerchant).toBe(false);
       expect(res.subtitle).toMatch(/^Groceries • Today •/);
     });
 
@@ -177,8 +180,8 @@ describe('Smart Transactions & Formatting Helpers', () => {
         date: new Date(2026, 9, 29, 14, 0, 0).toISOString(),
       });
 
-      expect(res.title).toBe('Latte & Croissant');
-      expect(res.subtitle).toBe('Dining (Starbucks) • 2 days ago');
+      expect(res.title).toBe('Starbucks');
+      expect(res.subtitle).toBe('Dining • Latte & Croissant • 2 days ago');
     });
   });
 

@@ -6,7 +6,8 @@ import {
   MoreVertical, 
   Calendar, 
   Trash2, 
-  Wallet 
+  Wallet,
+  ArrowDownRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { logger } from '../../utils/logger';
@@ -26,37 +27,74 @@ interface PlanScreenProps {
 export const PlanScreen: React.FC<PlanScreenProps> = ({
   onOpenAddGoal,
 }) => {
-  const { goals, budgets, settings, contributeToGoal, deleteGoal, accounts } = useFinance();
+  const { goals, budgets, settings, contributeToGoal, withdrawFromGoal, deleteGoal, accounts } = useFinance();
   
   const [selectedGoalForFunds, setSelectedGoalForFunds] = useState<Goal | null>(null);
+  const [fundMode, setFundMode] = useState<'deposit' | 'withdraw'>('deposit');
   const [fundAmount, setFundAmount] = useState('');
   const [fundSourceAccountId, setFundSourceAccountId] = useState(accounts[0]?.id || '');
+  const [fundError, setFundError] = useState<string | null>(null);
   const [activeGoalMenuId, setActiveGoalMenuId] = useState<string | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
-  const handleContribute = (e: React.FormEvent) => {
+  const handleFundSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGoalForFunds) return;
+    setFundError(null);
+
     const amount = parseFloat(fundAmount);
-    if (!amount || amount <= 0) return;
-
-    contributeToGoal(selectedGoalForFunds.id, amount, fundSourceAccountId);
-
-    if (selectedGoalForFunds.currentAmount + amount >= selectedGoalForFunds.targetAmount) {
-      try {
-        confetti({
-          particleCount: 120,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#6366F1', '#10B981', '#818CF8', '#F59E0B'],
-        });
-      } catch (err) {
-        logger.warn('Confetti animation failed:', err);
-      }
+    if (!amount || amount <= 0) {
+      setFundError('Please enter a valid amount');
+      return;
     }
 
-    setFundAmount('');
-    setSelectedGoalForFunds(null);
+    const targetAccount = accounts.find(a => a.id === fundSourceAccountId) || accounts[0];
+    const targetAccId = targetAccount?.id;
+    if (!targetAccId) {
+      setFundError('Please select an account');
+      return;
+    }
+
+    if (fundMode === 'withdraw') {
+      if (amount > selectedGoalForFunds.currentAmount) {
+        setFundError('Withdrawal amount cannot exceed current saved goal balance');
+        return;
+      }
+
+      try {
+        await withdrawFromGoal(selectedGoalForFunds.id, amount, targetAccId);
+        setFundAmount('');
+        setFundError(null);
+        setSelectedGoalForFunds(null);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setFundError(msg);
+      }
+    } else {
+      try {
+        await contributeToGoal(selectedGoalForFunds.id, amount, targetAccId);
+
+        if (selectedGoalForFunds.currentAmount + amount >= selectedGoalForFunds.targetAmount) {
+          try {
+            confetti({
+              particleCount: 120,
+              spread: 70,
+              origin: { y: 0.6 },
+              colors: ['#6366F1', '#10B981', '#818CF8', '#F59E0B'],
+            });
+          } catch (err) {
+            logger.warn('Confetti animation failed:', err);
+          }
+        }
+
+        setFundAmount('');
+        setFundError(null);
+        setSelectedGoalForFunds(null);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setFundError(msg);
+      }
+    }
   };
 
   const totalGoalsTarget = goals.reduce((acc, g) => acc + g.targetAmount, 0);
@@ -171,7 +209,12 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                     {/* Add Funds & Menu */}
                     <div className="flex items-center space-x-1.5 sm:space-x-2 relative shrink-0">
                       <button
-                        onClick={() => setSelectedGoalForFunds(goal)}
+                        onClick={() => {
+                          setSelectedGoalForFunds(goal);
+                          setFundMode('deposit');
+                          setFundAmount('');
+                          setFundError(null);
+                        }}
                         className="px-2.5 py-1 rounded-full border border-black/[0.12] dark:border-white/[0.14] bg-[#F1F2F4] dark:bg-[#262626] text-[#16A34A] dark:text-[#22C55E] hover:bg-[#E5E7EB] dark:hover:bg-[#333333] text-[11px] font-semibold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0"
                       >
                         + Add Funds
@@ -186,7 +229,20 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                       </button>
 
                       {activeGoalMenuId === goal.id && (
-                        <div className="absolute right-0 top-11 w-32 bg-white dark:bg-[#262626] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.1] py-1 z-30 animate-fade-in text-xs">
+                        <div className="absolute right-0 top-11 w-36 bg-white dark:bg-[#262626] rounded-2xl shadow-xl border border-black/[0.08] dark:border-white/[0.1] py-1 z-30 animate-fade-in text-xs">
+                          <button
+                            onClick={() => {
+                              setSelectedGoalForFunds(goal);
+                              setFundMode('withdraw');
+                              setFundAmount('');
+                              setFundError(null);
+                              setActiveGoalMenuId(null);
+                            }}
+                            className="w-full px-3.5 py-2.5 text-left text-gray-700 dark:text-gray-200 hover:bg-[#F1F2F4] dark:hover:bg-white/[0.06] flex items-center space-x-2 font-medium cursor-pointer rounded-xl"
+                          >
+                            <ArrowDownRight className="w-4 h-4 text-amber-500 shrink-0" />
+                            <span>Withdraw Funds</span>
+                          </button>
                           <button
                             onClick={() => {
                               setGoalToDelete(goal);
@@ -194,7 +250,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                             }}
                             className="w-full px-3.5 py-2.5 text-left text-rose-600 dark:text-rose-400 hover:bg-[#F1F2F4] dark:hover:bg-white/[0.06] flex items-center space-x-2 font-semibold cursor-pointer rounded-xl"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4 shrink-0" />
                             <span>Delete</span>
                           </button>
                         </div>
@@ -336,63 +392,126 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
         </div>
       </div>
 
-      {/* Add Funds Modal */}
+      {/* Add / Withdraw Funds Modal */}
       <Modal
         isOpen={!!selectedGoalForFunds}
-        onClose={() => setSelectedGoalForFunds(null)}
-        title={`Add Funds to ${selectedGoalForFunds?.name}`}
-        subtitle="Deposit money toward your target"
+        onClose={() => {
+          setSelectedGoalForFunds(null);
+          setFundError(null);
+        }}
+        title={
+          fundMode === 'deposit'
+            ? `Add Funds to ${selectedGoalForFunds?.name}`
+            : `Withdraw Funds from ${selectedGoalForFunds?.name}`
+        }
+        subtitle={
+          fundMode === 'deposit'
+            ? 'Deposit money toward your target'
+            : 'Withdraw money back into an account'
+        }
       >
-        <form onSubmit={handleContribute} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
-              Deposit Amount ({settings.baseCurrency || 'USD'})
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              required
-              placeholder="500.00"
-              value={fundAmount}
-              onChange={e => setFundAmount(e.target.value)}
-              className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xl font-bold tabular-nums focus:outline-none focus:border-[#C6FF3D]"
-            />
+        <div className="space-y-4">
+          {/* Segmented Switcher */}
+          <div className="flex rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] p-1 border border-black/[0.06] dark:border-white/[0.08]">
+            <button
+              type="button"
+              onClick={() => {
+                setFundMode('deposit');
+                setFundError(null);
+              }}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                fundMode === 'deposit'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              + Add Funds
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFundMode('withdraw');
+                setFundError(null);
+              }}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                fundMode === 'withdraw'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              - Withdraw Funds
+            </button>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
-              Deduct from Account
-            </label>
-            {accounts.length === 0 ? (
-              <p className="text-xs text-rose-500 py-2">
-                No connected accounts available. Please add an account first.
-              </p>
-            ) : (
-              <select
-                value={fundSourceAccountId}
-                onChange={e => setFundSourceAccountId(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm focus:outline-none focus:border-[#C6FF3D]"
-              >
-                {accounts.map(a => (
-                  <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
-                    {a.name} — Available: {formatCurrency(a.balance, a.currency)}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+          {selectedGoalForFunds && (
+            <div className="p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between text-xs">
+              <span className="text-gray-500 dark:text-gray-400 font-medium">Saved Goal Balance</span>
+              <span className="font-bold text-gray-900 dark:text-white tabular-nums">
+                {formatCurrency(selectedGoalForFunds.currentAmount, settings.baseCurrency, settings.privacyMode)}
+              </span>
+            </div>
+          )}
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            disabled={accounts.length === 0}
-            icon={<Wallet className="w-4 h-4" />}
-          >
-            Confirm Deposit
-          </Button>
-        </form>
+          {fundError && (
+            <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium">
+              {fundError}
+            </div>
+          )}
+
+          <form onSubmit={handleFundSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+                {fundMode === 'deposit' ? 'Deposit Amount' : 'Withdrawal Amount'} ({settings.baseCurrency || 'USD'})
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                placeholder="500.00"
+                value={fundAmount}
+                onChange={e => {
+                  setFundAmount(e.target.value);
+                  if (fundError) setFundError(null);
+                }}
+                className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-xl font-bold tabular-nums focus:outline-none focus:border-[#C6FF3D]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+                {fundMode === 'deposit' ? 'Deduct from Account' : 'Deposit into Account'}
+              </label>
+              {accounts.length === 0 ? (
+                <p className="text-xs text-rose-500 py-2">
+                  No connected accounts available. Please add an account first.
+                </p>
+              ) : (
+                <select
+                  value={fundSourceAccountId}
+                  onChange={e => setFundSourceAccountId(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm focus:outline-none focus:border-[#C6FF3D]"
+                >
+                  {accounts.map(a => (
+                    <option key={a.id} value={a.id} className="bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-white">
+                      {a.name} — Available: {formatCurrency(a.balance, a.currency)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              disabled={accounts.length === 0}
+              icon={<Wallet className="w-4 h-4" />}
+            >
+              {fundMode === 'deposit' ? 'Confirm Deposit' : 'Confirm Withdrawal'}
+            </Button>
+          </form>
+        </div>
       </Modal>
 
       <ConfirmModal

@@ -211,7 +211,7 @@ export interface TransactionDisplay {
 
 /**
  * Generates smart display title and subtitle for a transaction:
- * - Prioritizes note > custom merchant > category name for the title.
+ * - Prioritizes custom merchant (Paid To / Received From) > note > category name for the title.
  * - Prevents repeating category name over category name in subtitle.
  */
 export function getTransactionDisplay(tx: TransactionDisplayInput): TransactionDisplay {
@@ -225,12 +225,12 @@ export function getTransactionDisplay(tx: TransactionDisplayInput): TransactionD
     rawMerchant.toLowerCase() !== catName.toLowerCase() &&
     !['income', 'expense', 'other'].includes(rawMerchant.toLowerCase());
 
-  // Primary title: Priority 1 (cleanNote) > Priority 2 (rawMerchant if custom) > Priority 3 (catName)
+  // Primary title: Priority 1 (rawMerchant if custom) > Priority 2 (cleanNote) > Priority 3 (catName)
   let title = catName;
-  if (cleanNote) {
-    title = cleanNote;
-  } else if (hasCustomMerchant) {
+  if (hasCustomMerchant) {
     title = rawMerchant;
+  } else if (cleanNote) {
+    title = cleanNote;
   }
 
   // Secondary subtitle
@@ -238,16 +238,15 @@ export function getTransactionDisplay(tx: TransactionDisplayInput): TransactionD
   let subtitle: string;
 
   if (title.toLowerCase() === catName.toLowerCase()) {
-    // Both Note and custom Merchant were blank, so top title is already Category Name (e.g. "Groceries")
+    // Both custom merchant and note were blank (or matched category name)
     // Do NOT repeat category name!
     subtitle = tx.accountName ? `${tx.accountName} • ${smartDate}` : smartDate;
+  } else if (hasCustomMerchant && cleanNote && cleanNote.toLowerCase() !== rawMerchant.toLowerCase()) {
+    // Title is rawMerchant and cleanNote is present and different
+    subtitle = `${catName} • ${cleanNote} • ${smartDate}`;
   } else {
-    // Title is Note or Merchant (e.g. "Chanachur")
-    if (cleanNote && hasCustomMerchant && cleanNote.toLowerCase() !== rawMerchant.toLowerCase()) {
-      subtitle = `${catName} (${rawMerchant}) • ${smartDate}`;
-    } else {
-      subtitle = `${catName} • ${smartDate}`;
-    }
+    // Title is rawMerchant (no note) or cleanNote (no custom merchant)
+    subtitle = `${catName} • ${smartDate}`;
   }
 
   return {

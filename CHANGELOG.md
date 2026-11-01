@@ -6,9 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v3.3.0] — 2026-11-01
+
+### 🌟 Latest Release: Custom Payee Transaction Titles, Goal Withdrawals & Onboarding Persistence
+
+Centra `v3.3.0` elevates custom payees ("Received From" / "Paid To") to primary transaction titles, adds the ability to withdraw funds from Savings Goals back into connected accounts with balance auditing, persists in-progress onboarding state across app minimizes and backgrounding, carries over net month-end balances into new periods, and updates Android launcher icons to a pure 100% black background.
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v3.3.0-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v3.3.0-debug.apk) (Fallback: [`releases/Centra-v3.3.0-debug.apk?raw=true`](releases/Centra-v3.3.0-debug.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v3.3.0-debug.apk)
+- **File Size**: `6,262,918 bytes` (5.97 MB)
+- **SHA-256 Checksum**:
+  ```
+  f226a8942698e67177d6075d6d2d3c11a068fc6fe603416579d274a9ab844ee5
+  ```
+
+#### 🏷️ Primary Transaction Title & Subtitle Formatting
+- **Payee / Source Priority**: Updated `getTransactionDisplay` in `formatters.ts` so custom merchants (`Paid To` for expenses and `Received From` for income) take Priority 1 as the primary bold title.
+- **Smart Note & Category Fallback**: Clean notes take Priority 2 when merchant is absent, followed by Category Name as Priority 3.
+- **Deduplicated Subtitle Hierarchy**: Subtitles display `${categoryName} • ${cleanNote} • ${smartDate}` when both custom merchant and note are provided, `${categoryName} • ${smartDate}` when only one is present, and `${accountName} • ${smartDate}` when falling back to category name, eliminating redundant category text.
+
+#### 🎯 Savings Goal Withdrawals & Fund Management
+- **Withdraw Funds Action**: Added `applyWithdrawFromGoal` in `financeOperations.ts` and exposed `withdrawFromGoal` through `FinanceContext`. Users can withdraw or deduct money from active savings goals directly back into any connected account.
+- **Goal Funds Segmented Switcher**: Implemented a 2-tab segmented control (`+ Add Funds` | `- Withdraw Funds`) in the Goal Funds modal on `PlanScreen.tsx` with live saved balance display and validation ensuring withdrawals cannot exceed the saved goal balance.
+- **Context Menu Integration**: Added a dedicated "Withdraw Funds" option in each goal card's `⋮` dropdown menu to launch the modal directly in withdrawal mode.
+- **Transaction & Balance Reversals**: Goal withdrawals generate linked income transactions (`Goal Withdrawal`), and deleting a withdrawal transaction cleanly restores goal progress and accounts.
+
+#### 🔄 Onboarding State Persistence & Month-End Balance Carryover
+- **Onboarding Minimize Resilience**: Resolved premature onboarding completion on app minimize by gating `CentraDB.hasCachedData` and `AuthContext` on `onboarding_completed: true`, and auto-saving in-progress onboarding drafts to `localStorage`.
+- **Month-End Balance Carryover**: When filtering by period (e.g. this month), leftover net savings from strictly prior transactions carry forward into starting period income so new months reflect the accurate remaining balance.
+- **Pure Black Android Adaptive Icons**: Regenerated all Android launcher and adaptive icon densities (`mipmap-*`) with transparent foregrounds and 100% pure black backgrounds (`#000000`).
+
+---
+
 ## [v3.2.0] — 2026-10-31
 
-### 🌟 Latest Release: Glowing Calendar "Today" Navigation & Pinned Transactions
+### ⚪ Previous Release: Glowing Calendar "Today" Navigation & Pinned Transactions
 
 Centra `v3.2.0` introduces an interactive, glowing "Today" quick-jump action in the Spending Calendar that auto-dims when already viewing today, ensures pinned transactions stick to the top with rotating pin badges across all transaction lists (Recent Activity, View All Drawer, and Calendar Day view), enables immediate pin-state toggling inside Transaction Details without reopening the modal, and bumps the application version to `3.2.0`.
 

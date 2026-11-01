@@ -480,15 +480,18 @@ export function applyDeleteTransaction(
       touchedAccounts.push(restoredTo);
     }
   } else if (tx.goalId) {
-    // Linked goal contribution reversal
+    // Linked goal contribution / withdrawal reversal
     const acc = nextAccounts.find(a => a.id === tx.accountId);
     if (acc) {
       const amountInAcc = (tx.currency && tx.currency !== acc.currency)
         ? convertCurrency(tx.amount, tx.currency, acc.currency)
         : tx.amount;
+      const restoredBal = tx.type === 'income'
+        ? subMoney(acc.balance, amountInAcc, acc.currency)
+        : addMoney(acc.balance, amountInAcc, acc.currency);
       const restoredAcc = {
         ...acc,
-        balance: addMoney(acc.balance, amountInAcc, acc.currency),
+        balance: restoredBal,
       };
       nextAccounts = nextAccounts.map(a => a.id === acc.id ? restoredAcc : a);
       touchedAccounts.push(restoredAcc);
@@ -496,8 +499,10 @@ export function applyDeleteTransaction(
 
     const goal = nextGoals.find(g => g.id === tx.goalId);
     if (goal) {
-      const goalDeduction = tx.convertedAmount !== undefined ? tx.convertedAmount : tx.amount;
-      const newAmount = Math.max(0, subMoney(goal.currentAmount, goalDeduction));
+      const goalAmountDelta = tx.convertedAmount !== undefined ? tx.convertedAmount : tx.amount;
+      const newAmount = tx.type === 'income'
+        ? addMoney(goal.currentAmount, goalAmountDelta)
+        : Math.max(0, subMoney(goal.currentAmount, goalAmountDelta));
       const restoredGoal = {
         ...goal,
         currentAmount: newAmount,
@@ -804,6 +809,130 @@ export function applyContributeToGoal(
       notificationsToUpsert: notificationsToEmit,
     },
     notificationsToEmit,
+    createdTransaction: goalTx,
+  };
+}
+
+/**
+ * Pure Operation: Apply Withdraw From Goal.
+ * Validates that goal exists, withdrawal amount > 0, and amount <= current goal balance.
+ * Deducts convertedAmount from goal.currentAmount and adds safeAmount back to target account balance.
+ * Creates an income transaction linked to the goal.
+ */
+export function applyWithdrawFromGoal(
+  state: FinanceState,
+  payload: { goalId: string; amount: number; accountId: string }
+): OperationResult {
+  const baseCurrency = state.settings.baseCurrency || 'USD';
+  const { goalId, amount, accountId } = payload;
+
+  const goal = state.goals.find(g => g.id === goalId);
+  if (!goal) {
+    return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Goal not found' };
+  }
+
+  let acc = state.accounts.find(a => a.id === accountId);
+  if (!acc) {
+    acc = state.accounts.find(a => a.isPrimary) || state.accounts[0];
+  }
+  if (!acc) {
+    return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Target account not found' };
+  }
+
+  const safeAmount = roundMoney(amount, acc.currency);
+  if (safeAmount <= 0) {
+    return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Withdrawal amount must be greater than zero' };
+  }
+
+  // Convert to base currency to compare against goal balance
+  let convertedAmount = safeAmount;
+  let exchangeRate = 1.0;
+  if (acc.currency !== baseCurrency) {
+    try {
+      const res = convertCurrencyWithRate(safeAmount, acc.currency, baseCurrency);
+      convertedAmount = res.convertedAmount;
+      exchangeRate = res.rate;
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: errorMsg };
+    }
+  }
+
+  if (convertedAmount > goal.currentAmount) {
+    return {
+      ok: false,
+      nextState: state,
+      mutated: {},
+      notificationsToEmit: [],
+      error: 'Withdrawal amount cannot exceed current saved goal balance',
+    };
+  }
+
+  const newGoalAmount = Math.max(0, subMoney(goal.currentAmount, convertedAmount));
+  const isCompleted = newGoalAmount >= goal.targetAmount;
+  const updatedGoal: Goal = {
+    ...goal,
+    currentAmount: newGoalAmount,
+    isCompleted,
+  };
+
+  const newAccBalance = addMoney(acc.balance, safeAmount, acc.currency);
+  const updatedAccount: Account = { ...acc, balance: newAccBalance };
+
+  const txId = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `tx_goal_withdraw_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+  const goalCat = state.categories.find(c => c.systemKey === 'goal_withdrawal') ||
+                  state.categories.find(c => c.systemKey === 'goal_contribution') ||
+                  state.categories.find(c => c.name.toLowerCase().includes('goal')) ||
+                  state.categories[0];
+
+  if (!goalCat) {
+    return { ok: false, nextState: state, mutated: {}, notificationsToEmit: [], error: 'Missing category for goal withdrawal' };
+  }
+
+  const goalTx: Transaction = {
+    id: txId,
+    type: 'income',
+    amount: safeAmount,
+    currency: acc.currency,
+    categoryId: goalCat.id,
+    categoryName: 'Goal Withdrawal',
+    categoryIcon: goalCat.icon || 'Target',
+    categoryColor: goal.color || goalCat.color || '#10B981',
+    accountId: acc.id,
+    accountName: acc.name,
+    goalId: goal.id,
+    merchant: goal.name,
+    recipient: goal.name,
+    convertedAmount,
+    exchangeRate,
+    date: new Date().toISOString(),
+    note: 'Withdrawn from ' + goal.name,
+    tags: ['Savings Goal', 'Withdrawal'],
+    resultingBalance: newAccBalance,
+  };
+
+  const nextAccounts = state.accounts.map(a => a.id === updatedAccount.id ? updatedAccount : a);
+  const nextGoals = state.goals.map(g => g.id === goal.id ? updatedGoal : g);
+  const nextTransactions = [goalTx, ...state.transactions];
+
+  return {
+    ok: true,
+    nextState: {
+      ...state,
+      accounts: nextAccounts,
+      goals: nextGoals,
+      transactions: nextTransactions,
+    },
+    mutated: {
+      accountsToUpsert: [updatedAccount],
+      goalsToUpsert: [updatedGoal],
+      transactionsToUpsert: [goalTx],
+      notificationsToUpsert: [],
+    },
+    notificationsToEmit: [],
     createdTransaction: goalTx,
   };
 }
