@@ -223,10 +223,6 @@ For a comprehensive technical review of storage topology, physical device access
 ```text
 fintech-centra/
 ├── android/                 # Capacitor 8 Android native project (compileSdk 36, AGP 8.13.0)
-├── design/                  # Figma design tokens, screen inventory, and layout frames
-│   ├── frames/              # Master design export frames (Dark & Light)
-│   ├── tokens.md            # Color palette, spacing, and typography tokens
-│   └── FRAMES.md            # Complete UI frame documentation
 ├── docs/                    # Curated open-source documentation
 │   ├── DATA_PROTECTION.md   # Storage topology, client caching, and privacy guarantees
 │   ├── INPUT_RULES.md       # Input validation inventory, Unicode normalization, and length caps
