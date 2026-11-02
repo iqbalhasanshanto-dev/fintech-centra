@@ -14,7 +14,7 @@ describe('Version Utils (src/utils/version.ts)', () => {
 
   it('exposes correct platform versions in VERSIONS config', () => {
     expect(VERSIONS.android).toBe('4.1.1');
-    expect(VERSIONS.ios).toBe('1.0.0');
+    expect(VERSIONS.ios).toBe('1.0.1');
     expect(VERSIONS.web).toBe('1.0.0');
   });
 
@@ -25,7 +25,7 @@ describe('Version Utils (src/utils/version.ts)', () => {
 
   it('returns ios version when on ios native platform', () => {
     vi.spyOn(platformModule, 'getNativePlatform').mockReturnValue('ios');
-    expect(getAppVersion()).toBe('1.0.0');
+    expect(getAppVersion()).toBe('1.0.1');
   });
 
   it('returns web version by default on web', () => {
@@ -40,7 +40,7 @@ describe('Version Utils (src/utils/version.ts)', () => {
 
   it('honors ?platform=ios query param override', () => {
     window.history.replaceState({}, '', '?platform=ios');
-    expect(getAppVersion()).toBe('1.0.0');
+    expect(getAppVersion()).toBe('1.0.1');
   });
 
   it('honors ?platform=web query param override', () => {

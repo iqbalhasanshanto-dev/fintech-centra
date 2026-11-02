@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PieChart, Plus, Target, SlidersHorizontal, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
+import { getNativePlatform } from '../../utils/platform';
 
 export type TabType = 'home' | 'report' | 'plan' | 'settings';
 
@@ -71,6 +72,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMenuClosing, setIsMenuClosing] = useState(false);
   const menuCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isIOS =
+    getNativePlatform() === 'ios' ||
+    (typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent)) ||
+    (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('platform') === 'ios');
 
   const closeMenuSmooth = (callback?: () => void) => {
     if (menuCloseTimerRef.current) {
@@ -215,7 +221,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         className={`fixed left-0 right-0 z-40 w-full px-4 select-none md:hidden pointer-events-none ${isInputFocused ? 'hidden' : ''}`}
         style={{
           bottom: `${isInputFocused ? 0 : viewportBottom}px`,
-          paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
+          paddingBottom: isIOS
+            ? 'max(0.35rem, calc(env(safe-area-inset-bottom, 0px) * 0.35))'
+            : 'calc(0.75rem + env(safe-area-inset-bottom, var(--safe-area-inset-bottom, 0px)))',
           paddingLeft: 'max(1rem, env(safe-area-inset-left, var(--safe-area-inset-left, 0px)))',
           paddingRight: 'max(1rem, env(safe-area-inset-right, var(--safe-area-inset-right, 0px)))',
           transform: 'translate3d(0, 0, 0)',

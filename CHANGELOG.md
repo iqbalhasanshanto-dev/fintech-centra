@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [iOS 1.0.1] - 2026-04-12
+
+### 📱 iOS Bug Fixes & Layout Optimization
+- **Bottom Navigation Bar Safe-Area Gap**: Resolved excessive 46px bottom gap on iPhones (`env(safe-area-inset-bottom)`) by scaling dock padding dynamically to `max(0.35rem, calc(env(safe-area-inset-bottom, 0px) * 0.35))` exclusively on iOS devices and Simulators.
+- **Edge-to-Edge WKWebView Layout**: Configured `ios: { contentInset: 'never', backgroundColor: '#000000' }` in `capacitor.config.ts` to prevent iOS WKWebView scroll-view insetting.
+- **Version Tracking**: Bumped iOS release track to `v1.0.1` (`CURRENT_PROJECT_VERSION = 2`) while keeping Android at `v4.1.1` and Web at `v1.0.0`.
+
+---
+
 ## [v4.1.1] — 2026-11-02
 
 ### 🚀 Release: Multi-Platform Release Tracks (Android v4.1.1, iOS v1.0.0, Web & Desktop v1.0.0)

@@ -7,7 +7,13 @@ export interface PlatformVersions {
   web: string;
 }
 
-export const VERSIONS: PlatformVersions = versionsData as PlatformVersions;
+export const PLATFORM_VERSIONS: PlatformVersions = {
+  android: '4.1.1',
+  ios: '1.0.1',
+  web: '1.0.0',
+};
+
+export const VERSIONS: PlatformVersions = (versionsData || PLATFORM_VERSIONS) as PlatformVersions;
 
 /**
  * Returns true if running as a standalone PWA on iOS (Safari Add-to-Home-Screen).

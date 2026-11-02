@@ -95,7 +95,7 @@ describe('PWA Install Utilities & Component', () => {
         configurable: true,
       });
 
-      render(<InstallAppModal isOpen={true} onClose={() => {}} />);
+      render(<InstallAppModal isOpen={true} onClose={() => { }} />);
       expect(screen.getByText('Safari on macOS (1-Step Install)')).toBeInTheDocument();
       expect(screen.getByText('Add to Dock...')).toBeInTheDocument();
 
