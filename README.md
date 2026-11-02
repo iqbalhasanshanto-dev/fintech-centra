@@ -10,7 +10,7 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](LICENSE)
 [![Latest Release v4.1.1](https://img.shields.io/badge/Release-v4.1.1-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](#-releases--version-history-table-download-any-version)
-[![337 Passing Tests](https://img.shields.io/badge/Tests-337%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
+[![341 Passing Tests](https://img.shields.io/badge/Tests-341%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
 [![Android SDK 36](https://img.shields.io/badge/Android-SDK%2036-3DDC84.svg?style=flat-square&logo=android&logoColor=white&labelColor=000000)](android/)
 [![Capacitor 8.5](https://img.shields.io/badge/Capacitor-8.5-119EFF.svg?style=flat-square&logo=capacitor&logoColor=white&labelColor=000000)](https://capacitorjs.com/)
 [![Supabase RLS](https://img.shields.io/badge/Supabase-RLS%20Enforced-3ECF8E.svg?style=flat-square&logo=supabase&logoColor=white&labelColor=000000)](supabase/)
@@ -24,7 +24,7 @@
       <b>⚡ Instant Direct Downloads (No App Store / Sign-Up Required)</b>
       <br /><br />
       <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk">
-        <img src="https://img.shields.io/badge/📲_Download_Android_APK-v4.1.1_(Latest_Stable,_5.99_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v4.1.1 Android APK" />
+        <img src="https://img.shields.io/badge/📲_Download_Android_APK-v4.1.1_(Latest_Stable,_6.00_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v4.1.1 Android APK" />
       </a>
       &nbsp;
       <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk">
@@ -35,7 +35,7 @@
         <img src="https://img.shields.io/badge/💻_Desktop_&_Mobile-Installation_Guide-white?style=for-the-badge&logo=desktop&logoColor=000000&labelColor=121212" alt="Build / Run on Desktop" />
       </a>
       <br /><br />
-      <b>👉 Direct One-Click APK Download (Android & Desktop):</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk">Download Centra v4.1.1 APK (5.99 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk">Download Centra v4.1.0 APK (6.00 MB)</a>
+      <b>👉 Direct One-Click APK Download (Android & Desktop):</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk">Download Centra v4.1.1 APK (6.00 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk">Download Centra v4.1.0 APK (6.00 MB)</a>
     </td>
   </tr>
 </table>
@@ -62,7 +62,7 @@ Download standalone Android application packages directly from GitHub. Every APK
 
 | Version | Channel | Download / Release Record | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v4.1.1`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.1.apk) | 5.99 MB | Edit transaction date & Figma category picker, 52px input alignment, once-per-month retention notifications, centered toasts, all-categories activity filter, instant home back exit |
+| **`v4.1.1`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.1.apk) | 6.00 MB | Edit transaction date & Figma category picker, 52px input alignment, once-per-month retention notifications, centered toasts, all-categories activity filter, instant home back exit |
 | **`v4.1.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.0.apk) | 6.00 MB | 5-second Undo Delete, standalone Savings Goals with per-goal History log, native Android Downloads CSV & notifications, back-stack navigation, bottom nav alignment |
 | **`v4.0.0`** | 📦 Archive | [**🏷️ Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v4.0.0) · [Notes](CHANGELOG.md) | 5.98 MB | Spring motion UI animations, swipe-to-delete rows, sliding tab pills, 2-month rolling retention, native phone notifications, immediate PIN lock |
 | **`v3.3.0`** | 📦 Archive | [**🏷️ Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v3.3.0) · [Notes](CHANGELOG.md) | 5.97 MB | Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover |
@@ -79,7 +79,7 @@ Download standalone Android application packages directly from GitHub. Every APK
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
-- **v4.1.1 (`Centra-v4.1.1.apk`)**: `5dc92a7b373f843064d1d33ab2db7861faf1d24d4d951368023f9a0e4afad700`
+- **v4.1.1 (`Centra-v4.1.1.apk`)**: `03cbad9a8fb32593f5c05f76fb6e057eaaec2a92b56b6a3f8eb4ca8d60d6ab80`
 - **v4.1.0 (`Centra-v4.1.0.apk`)**: `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13`
 
 Verify on macOS/Linux (`shasum -a 256 releases/Centra-v4.1.1.apk`) or Windows (`CertUtil -hashfile releases\Centra-v4.1.1.apk SHA256`).
@@ -159,7 +159,7 @@ Verify that your downloaded APK is 100% authentic and matches the source code:
 
 **Expected SHA-256 Hash for v4.1.1**:
 ```text
-5dc92a7b373f843064d1d33ab2db7861faf1d24d4d951368023f9a0e4afad700
+03cbad9a8fb32593f5c05f76fb6e057eaaec2a92b56b6a3f8eb4ca8d60d6ab80
 ```
 
 ---
@@ -231,7 +231,7 @@ fintech-centra/
 │   └── prepare-release.mjs  # One-command release packager and SHA-256 calculator
 ├── src-tauri/               # Tauri 2 desktop application source and Cargo manifest
 ├── src/
-│   ├── __tests__/           # Comprehensive test suite (37 test suites, 337 passing tests)
+│   ├── __tests__/           # Comprehensive test suite (38 test suites, 341 passing tests)
 │   ├── assets/              # Brand icons, logo images, and vector artwork
 │   ├── components/
 │   │   ├── auth/            # Sign-in, sign-up, 6-digit OTP verification, PIN lock screens
@@ -299,7 +299,7 @@ npm run typecheck
 # Verify ESLint rules (0 errors, 0 warnings)
 npm run lint
 
-# Run full test suite (337 unit & integration tests)
+# Run full test suite (341 unit & integration tests)
 npm test
 ```
 

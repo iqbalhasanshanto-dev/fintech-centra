@@ -48,6 +48,46 @@ export function appendGoalHistory(entry: GoalHistoryEntry): GoalHistoryEntry[] {
 }
 
 /**
+ * Removes a specific history entry from a goal's history log,
+ * recalculates `balanceAfter` chronologically (from oldest to newest) for remaining entries,
+ * persists the updated list, and returns both the removed entry and updated newest-first history.
+ */
+export function removeGoalHistoryEntry(
+  goalId: string,
+  entryId: string
+): { removed?: GoalHistoryEntry; updatedHistory: GoalHistoryEntry[] } {
+  const current = getGoalHistory(goalId);
+  const removed = current.find(e => e.id === entryId);
+  if (!removed) {
+    return { updatedHistory: current };
+  }
+
+  const remaining = current.filter(e => e.id !== entryId);
+
+  // Recalculate balanceAfter chronologically (oldest to newest)
+  const chronological = [...remaining].reverse();
+  chronological.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  let runningBalance = 0;
+  const recalculated = chronological.map(entry => {
+    if (entry.type === 'initial' || entry.type === 'add') {
+      runningBalance = Math.max(0, runningBalance + entry.amount);
+    } else if (entry.type === 'withdraw') {
+      runningBalance = Math.max(0, runningBalance - entry.amount);
+    }
+    return {
+      ...entry,
+      balanceAfter: runningBalance,
+    };
+  });
+
+  // Re-sort newest-first (latest date first)
+  const updatedHistory = recalculated.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  saveGoalHistory(goalId, updatedHistory);
+  return { removed, updatedHistory };
+}
+
+/**
  * Permanently removes a goal's history log from localStorage.
  */
 export function deleteGoalHistory(goalId: string): void {

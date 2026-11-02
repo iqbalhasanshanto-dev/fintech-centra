@@ -15,11 +15,16 @@ Centra `v4.1.1` delivers a major upgrade to transaction editing with date editin
 #### 📥 Direct Downloads & Verification
 - **Android APK (One-Click Direct Download)**: [**Centra-v4.1.1.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk) (Fallback: [`releases/Centra-v4.1.1.apk?raw=true`](releases/Centra-v4.1.1.apk?raw=true))
 - **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.1.apk)
-- **File Size**: `6,277,474 bytes` (5.99 MB)
+- **File Size**: `6,295,065 bytes` (6.00 MB)
 - **SHA-256 Checksum**:
   ```
-  5dc92a7b373f843064d1d33ab2db7861faf1d24d4d951368023f9a0e4afad700
+  03cbad9a8fb32593f5c05f76fb6e057eaaec2a92b56b6a3f8eb4ca8d60d6ab80
   ```
+
+#### ↔️ Swipe-to-Delete & 5-Second Undo on Goals, History & Budgets
+- **Per-Goal History Deletion & Rebalance**: Wrapped chronological Goal History entries in `<SwipeableRow>` with automatic balance reversal and chronological recalculation of `balanceAfter` across all remaining entries.
+- **Milestone Goals & Budgets Swiping**: Wrapped all Savings Goal milestone cards and Category Budget cards in `<SwipeableRow>` with 5-second deferred deletion and instantaneous in-memory reversal upon tapping **UNDO**.
+- **Undo Toast Layering**: Elevated Undo Toast container to `z-[220]` above modal overlays (`z-[110]`), ensuring the floating Undo bar is clearly visible and actionable directly within the Goal History modal.
 
 #### ✏️ Edit Transaction Modal Overhaul
 - **Full Date Editing**: Integrated custom interactive `DatePicker` modal allowing users to adjust transaction dates seamlessly.

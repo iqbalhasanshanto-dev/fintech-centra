@@ -20,6 +20,7 @@ import { CircularProgress } from '../ui/CircularProgress';
 import { Modal } from '../ui/Modal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
+import { SwipeableRow } from '../ui/SwipeableRow';
 import { formatCurrency, calculateGoalPace } from '../../utils/formatters';
 
 interface PlanScreenProps {
@@ -29,7 +30,7 @@ interface PlanScreenProps {
 export const PlanScreen: React.FC<PlanScreenProps> = ({
   onOpenAddGoal,
 }) => {
-  const { goals, budgets, settings, contributeToGoal, withdrawFromGoal, deleteGoal } = useFinance();
+  const { goals, budgets, settings, contributeToGoal, withdrawFromGoal, deleteGoal, deleteBudget, deleteGoalHistoryEntry } = useFinance();
   
   const [selectedGoalForFunds, setSelectedGoalForFunds] = useState<Goal | null>(null);
   const [fundMode, setFundMode] = useState<'deposit' | 'withdraw'>('deposit');
@@ -190,10 +191,14 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               const progressBarColor = pace.isBehind ? '#F59E0B' : (goal.color || '#C6FF3D');
 
               return (
-                <div
+                <SwipeableRow
                   key={goal.id}
-                  className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors space-y-3.5 shadow-sm"
+                  onDelete={() => deleteGoal(goal.id)}
+                  deleteLabel="Delete"
                 >
+                  <div
+                    className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors space-y-3.5 shadow-sm"
+                  >
                   {/* Top Row: Icon, Title, Actions */}
                   <div className="flex items-start justify-between gap-2.5 sm:gap-3">
                     <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
@@ -321,8 +326,9 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                     </div>
                   )}
                 </div>
-              );
-            })
+              </SwipeableRow>
+            );
+          })
           )}
         </div>
       </div>
@@ -355,53 +361,58 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               const isOver = percentSpent >= 100;
 
               return (
-                <div
+                <SwipeableRow
                   key={budget.id}
-                  className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors flex items-center justify-between gap-2.5 sm:gap-4 shadow-sm"
+                  onDelete={() => deleteBudget(budget.id)}
+                  deleteLabel="Delete"
                 >
-                  {/* Left: Icon & Info */}
-                  <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1 pr-2">
-                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 flex items-center justify-center shrink-0">
-                      <CategoryIcon name={budget.categoryIcon} className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                          {budget.categoryName}
-                        </h4>
-                        {isOver && (
-                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-semibold uppercase tracking-wider shrink-0">
-                            Over Limit
-                          </span>
-                        )}
+                  <div
+                    className="p-5 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.2] transition-colors flex items-center justify-between gap-2.5 sm:gap-4 shadow-sm"
+                  >
+                    {/* Left: Icon & Info */}
+                    <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1 pr-2">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-gray-700 dark:text-gray-300 flex items-center justify-center shrink-0">
+                        <CategoryIcon name={budget.categoryIcon} className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
 
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 tabular-nums truncate whitespace-nowrap">
-                        {formatCurrency(budget.spentAmount, settings.baseCurrency, settings.privacyMode)} of{' '}
-                        {formatCurrency(budget.limitAmount, settings.baseCurrency, settings.privacyMode)}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                            {budget.categoryName}
+                          </h4>
+                          {isOver && (
+                            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-semibold uppercase tracking-wider shrink-0">
+                              Over Limit
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 tabular-nums truncate whitespace-nowrap">
+                          {formatCurrency(budget.spentAmount, settings.baseCurrency, settings.privacyMode)} of{' '}
+                          {formatCurrency(budget.limitAmount, settings.baseCurrency, settings.privacyMode)}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Right: Circular Progress Ring + Column-aligned Remaining Values */}
-                  <div className="shrink-0 flex items-center gap-2.5 sm:gap-4">
-                    <div className="text-right whitespace-nowrap font-mono tabular-nums text-xs">
-                      <span className={`font-semibold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                        {isOver
-                          ? `${formatCurrency(Math.abs(remaining), settings.baseCurrency, settings.privacyMode)} over`
-                          : `${formatCurrency(remaining, settings.baseCurrency, settings.privacyMode)} left`}
-                      </span>
+                    {/* Right: Circular Progress Ring + Column-aligned Remaining Values */}
+                    <div className="shrink-0 flex items-center gap-2.5 sm:gap-4">
+                      <div className="text-right whitespace-nowrap font-mono tabular-nums text-xs">
+                        <span className={`font-semibold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                          {isOver
+                            ? `${formatCurrency(Math.abs(remaining), settings.baseCurrency, settings.privacyMode)} over`
+                            : `${formatCurrency(remaining, settings.baseCurrency, settings.privacyMode)} left`}
+                        </span>
+                      </div>
+
+                      <CircularProgress
+                        percentage={percentSpent}
+                        size={40}
+                        strokeWidth={4}
+                        showText={true}
+                      />
                     </div>
-
-                    <CircularProgress
-                      percentage={percentSpent}
-                      size={40}
-                      strokeWidth={4}
-                      showText={true}
-                    />
                   </div>
-                </div>
+                </SwipeableRow>
               );
             })
           )}
@@ -583,54 +594,59 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                     });
 
                     return (
-                      <div
+                      <SwipeableRow
                         key={entry.id}
-                        className="p-3 rounded-2xl bg-white dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between gap-3 shadow-xs"
+                        onDelete={() => deleteGoalHistoryEntry(liveGoal.id, entry.id)}
+                        deleteLabel="Delete"
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
-                            className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                              isInitial
-                                ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
-                                : isWithdraw
-                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                                : 'bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E]'
-                            }`}
-                          >
-                            {isInitial ? (
-                              <CheckCircle2 className="w-4 h-4" />
-                            ) : isWithdraw ? (
-                              <ArrowDownRight className="w-4 h-4" />
-                            ) : (
-                              <Plus className="w-4 h-4" />
-                            )}
+                        <div
+                          className="p-3 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between gap-3 shadow-xs"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                isInitial
+                                  ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                                  : isWithdraw
+                                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                  : 'bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E]'
+                              }`}
+                            >
+                              {isInitial ? (
+                                <CheckCircle2 className="w-4 h-4" />
+                              ) : isWithdraw ? (
+                                <ArrowDownRight className="w-4 h-4" />
+                              ) : (
+                                <Plus className="w-4 h-4" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h5 className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                                {isInitial ? 'Initial Deposit' : isWithdraw ? 'Withdrawn Funds' : 'Added Funds'}
+                              </h5>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                                {dateFormatted}
+                                {entry.note ? ` • ${entry.note}` : ''}
+                              </p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <h5 className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                              {isInitial ? 'Initial Deposit' : isWithdraw ? 'Withdrawn Funds' : 'Added Funds'}
-                            </h5>
-                            <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                              {dateFormatted}
-                              {entry.note ? ` • ${entry.note}` : ''}
-                            </p>
-                          </div>
-                        </div>
 
-                        <div className="text-right shrink-0">
-                          <span
-                            className={`text-xs font-bold tabular-nums block ${
-                              isWithdraw
-                                ? 'text-amber-600 dark:text-amber-400'
-                                : 'text-[#16A34A] dark:text-[#22C55E]'
-                            }`}
-                          >
-                            {isWithdraw ? '-' : '+'}{formatCurrency(entry.amount, settings.baseCurrency, settings.privacyMode)}
-                          </span>
-                          <span className="text-[10px] text-gray-400 dark:text-white/40 tabular-nums">
-                            Bal: {formatCurrency(entry.balanceAfter, settings.baseCurrency, settings.privacyMode)}
-                          </span>
+                          <div className="text-right shrink-0">
+                            <span
+                              className={`text-xs font-bold tabular-nums block ${
+                                isWithdraw
+                                  ? 'text-amber-600 dark:text-amber-400'
+                                  : 'text-[#16A34A] dark:text-[#22C55E]'
+                              }`}
+                            >
+                              {isWithdraw ? '-' : '+'}{formatCurrency(entry.amount, settings.baseCurrency, settings.privacyMode)}
+                            </span>
+                            <span className="text-[10px] text-gray-400 dark:text-white/40 tabular-nums">
+                              Bal: {formatCurrency(entry.balanceAfter, settings.baseCurrency, settings.privacyMode)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      </SwipeableRow>
                     );
                   })
                 )}

@@ -686,6 +686,10 @@ export const CentraDB = {
     cache.goals = goals;
     safeSet(getUserStorageKey(currentActiveUserId, 'goals'), cache.goals);
   },
+  setCachedBudgets: (budgets: Budget[]) => {
+    cache.budgets = budgets;
+    safeSet(getUserStorageKey(currentActiveUserId, 'budgets'), cache.budgets);
+  },
 
   /**
    * Prunes transactions strictly older than 2 calendar months (Current Month + Previous Month).

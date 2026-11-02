@@ -205,9 +205,9 @@ export const AppShell: React.FC = () => {
         onClose={() => setLegalDoc(null)}
       />
 
-      {/* 5-Second Undo Delete Toast Bar (Above Bottom Nav) */}
+      {/* 5-Second Undo Delete Toast Bar (Above Bottom Nav & Modals) */}
       {pendingUndo && (
-        <div className="fixed bottom-24 lg:bottom-10 inset-x-4 z-[150] flex justify-center pointer-events-none">
+        <div className="fixed bottom-24 lg:bottom-10 inset-x-4 z-[220] flex justify-center pointer-events-none">
           <div className="w-full max-w-sm rounded-2xl bg-[#1D1D1D]/95 text-white border border-white/15 shadow-2xl backdrop-blur-md overflow-hidden animate-fade-in flex flex-col pointer-events-auto">
             <div className="px-4 py-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">

@@ -15,6 +15,7 @@ import {
 import {
   getGoalHistory,
   appendGoalHistory,
+  removeGoalHistoryEntry,
   saveGoalHistory,
   deleteGoalHistory,
 } from '../utils/goalHistory';
@@ -109,9 +110,10 @@ interface FinanceContextType {
   clearNotifications: () => void;
 
   // 5-Second Undo Delete
-  pendingUndo: { id: string; type: 'transaction' | 'goal'; label: string } | null;
+  pendingUndo: { id: string; type: 'transaction' | 'goal' | 'goal-history' | 'budget'; label: string } | null;
   undoLastDelete: () => Promise<void>;
   dismissUndo: () => void;
+  deleteGoalHistoryEntry: (goalId: string, entryId: string) => Promise<void>;
 
   updateSettings: (updates: Partial<AppSettings>) => void;
   resetAllData: () => Promise<{ ok: boolean; error?: unknown }>;
@@ -671,13 +673,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   // 5-Second Undo Delete pending state
   const pendingDeleteRef = useRef<{
     id: string;
-    type: 'transaction' | 'goal';
+    type: 'transaction' | 'goal' | 'goal-history' | 'budget';
     timer: NodeJS.Timeout;
     executeCommit: () => Promise<void>;
     undo: () => Promise<void>;
   } | null>(null);
 
-  const [pendingUndo, setPendingUndo] = useState<{ id: string; type: 'transaction' | 'goal'; label: string } | null>(null);
+  const [pendingUndo, setPendingUndo] = useState<{ id: string; type: 'transaction' | 'goal' | 'goal-history' | 'budget'; label: string } | null>(null);
 
   const undoLastDelete = useCallback(async (): Promise<void> => {
     if (pendingDeleteRef.current) {
@@ -1216,12 +1218,157 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   };
 
   const deleteBudget = (id: string) => {
-    executeOperation(state => ({
-      ok: true,
-      nextState: { ...state, budgets: state.budgets.filter(b => b.id !== id) },
-      mutated: { budgetsToDelete: [id] },
-      notificationsToEmit: [],
-    }));
+    if (pendingDeleteRef.current) {
+      pendingDeleteRef.current.executeCommit();
+    }
+
+    const budget = latestStateRef.current.budgets.find(b => b.id === id);
+    if (!budget) return;
+
+    const budgetIndex = latestStateRef.current.budgets.findIndex(b => b.id === id);
+
+    const nextBudgets = latestStateRef.current.budgets.filter(b => b.id !== id);
+    latestStateRef.current = {
+      ...latestStateRef.current,
+      budgets: nextBudgets,
+    };
+    setBudgets(nextBudgets);
+    CentraDB.setCachedBudgets(nextBudgets);
+
+    const executeCommit = async () => {
+      try {
+        await CentraDB.deleteBudget(id);
+      } catch (err) {
+        logger.warn('Failed to permanently delete budget in Supabase:', err);
+      }
+      if (pendingDeleteRef.current?.id === id) {
+        pendingDeleteRef.current = null;
+        setPendingUndo(null);
+      }
+    };
+
+    const undo = async () => {
+      if (pendingDeleteRef.current?.timer) {
+        clearTimeout(pendingDeleteRef.current.timer);
+      }
+      const currentBudgets = latestStateRef.current.budgets;
+      const restored = [...currentBudgets];
+      restored.splice(Math.min(budgetIndex, restored.length), 0, budget);
+
+      latestStateRef.current = {
+        ...latestStateRef.current,
+        budgets: restored,
+      };
+      setBudgets(restored);
+      CentraDB.setCachedBudgets(restored);
+      pendingDeleteRef.current = null;
+      setPendingUndo(null);
+    };
+
+    const timer = setTimeout(() => {
+      executeCommit();
+    }, 5000);
+
+    pendingDeleteRef.current = {
+      id,
+      type: 'budget',
+      timer,
+      executeCommit,
+      undo,
+    };
+
+    setPendingUndo({
+      id,
+      type: 'budget',
+      label: 'Budget deleted',
+    });
+  };
+
+  const deleteGoalHistoryEntry = async (goalId: string, entryId: string): Promise<void> => {
+    if (pendingDeleteRef.current) {
+      pendingDeleteRef.current.executeCommit();
+    }
+
+    const goal = latestStateRef.current.goals.find(g => g.id === goalId);
+    if (!goal) return;
+
+    const previousHistory = getGoalHistory(goalId);
+    const entry = previousHistory.find(e => e.id === entryId);
+    if (!entry) return;
+
+    const previousGoal = { ...goal };
+    const historySnapshot = [...previousHistory];
+
+    let newAmount = goal.currentAmount;
+    if (entry.type === 'add' || entry.type === 'initial') {
+      newAmount = Math.max(0, goal.currentAmount - entry.amount);
+    } else if (entry.type === 'withdraw') {
+      newAmount = goal.currentAmount + entry.amount;
+    }
+
+    const { updatedHistory } = removeGoalHistoryEntry(goalId, entryId);
+
+    const updatedGoal: Goal = {
+      ...goal,
+      currentAmount: newAmount,
+      isCompleted: newAmount >= goal.targetAmount,
+      history: updatedHistory,
+    };
+
+    const nextGoals = latestStateRef.current.goals.map(g => (g.id === goalId ? updatedGoal : g));
+    latestStateRef.current = {
+      ...latestStateRef.current,
+      goals: nextGoals,
+    };
+    setGoals(nextGoals);
+    CentraDB.setCachedGoals(nextGoals);
+
+    const executeCommit = async () => {
+      try {
+        await CentraDB.upsertGoal(updatedGoal);
+      } catch (err) {
+        logger.warn('Failed to commit goal balance update after history entry deletion:', err);
+      }
+      if (pendingDeleteRef.current?.id === entryId) {
+        pendingDeleteRef.current = null;
+        setPendingUndo(null);
+      }
+    };
+
+    const undo = async () => {
+      if (pendingDeleteRef.current?.timer) {
+        clearTimeout(pendingDeleteRef.current.timer);
+      }
+      const restoredGoals = latestStateRef.current.goals.map(g => (g.id === goalId ? previousGoal : g));
+      latestStateRef.current = {
+        ...latestStateRef.current,
+        goals: restoredGoals,
+      };
+      setGoals(restoredGoals);
+      saveGoalHistory(goalId, historySnapshot);
+      CentraDB.setCachedGoals(restoredGoals);
+
+      pendingDeleteRef.current = null;
+      setPendingUndo(null);
+    };
+
+    const timer = setTimeout(() => {
+      executeCommit();
+    }, 5000);
+
+    pendingDeleteRef.current = {
+      id: entryId,
+      type: 'goal-history',
+      timer,
+      executeCommit,
+      undo,
+    };
+
+    setPendingUndo({
+      id: entryId,
+      type: 'goal-history',
+      label: 'Goal entry deleted',
+    });
   };
 
   const markNotificationAsRead = (id: string) => {
@@ -1342,6 +1489,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
         addBudget,
         updateBudget,
         deleteBudget,
+        deleteGoalHistoryEntry,
         addNotification,
         markNotificationAsRead,
         markAllNotificationsAsRead,
