@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Shield,
   Bell,
@@ -49,9 +49,15 @@ import { setDevicePin, clearDevicePin, verifyDevicePin } from '../../utils/pinLo
 import { AUTOLOCK_OPTIONS, getAutoLockTimeout, setAutoLockTimeout } from '../../utils/lockResume';
 import { validateName, validateEmail } from '../../utils/validators';
 import { validateImageFile } from '../../utils/imageValidation';
-import { APP_VERSION } from '../../utils/version';
+import { getAppVersion } from '../../utils/version';
 import { exportAllDataToCSV } from '../../utils/csvExport';
 import { getAllGoalHistory } from '../../utils/goalHistory';
+import { isNative } from '../../utils/platform';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -116,9 +122,49 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const [pinModalShakeKey, setPinModalShakeKey] = useState(0);
   const [autoLockTimeout, setAutoLockTimeoutState] = useState<number>(() => getAutoLockTimeout());
 
+  // PWA Installation state
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [isStandalone] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+      (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches)
+    );
+  });
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (installPrompt && typeof installPrompt.prompt === 'function') {
+      try {
+        await installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          setInstallPrompt(null);
+        }
+      } catch {
+        setShowInstallModal(true);
+      }
+    } else {
+      setShowInstallModal(true);
+    }
+  };
+
   // Hardware back button handlers for all settings sub-modals
   useBackHandler(showEditProfile, () => setShowEditProfile(false));
   useBackHandler(showHelpModal, () => setShowHelpModal(false));
+  useBackHandler(showInstallModal, () => setShowInstallModal(false));
   useBackHandler(showCurrencyModal, () => setShowCurrencyModal(false));
   useBackHandler(showPrivacyModal, () => setShowPrivacyModal(false));
   useBackHandler(showTermsModal, () => setShowTermsModal(false));
@@ -790,6 +836,28 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
+
+          {/* Install Centra App (Web, Desktop PWA & iOS Safari) */}
+          {!isNative() && !isStandalone && (
+            <button
+              type="button"
+              onClick={handleInstallClick}
+              className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group border-t border-black/[0.06] dark:border-white/[0.08]"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <Download className="w-4 h-4 text-[#56791E] dark:text-[#C6FF3D] shrink-0" />
+                <div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white block">
+                    Install Centra App
+                  </span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 block">
+                    Add to desktop dock or mobile home screen
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
+            </button>
+          )}
         </div>
 
         {/* Demo Data Reset / Delete All Data Actions */}
@@ -839,7 +907,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         )}
 
         <div className="text-center pb-2">
-          <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Version {APP_VERSION}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Version {getAppVersion()}</p>
         </div>
       </div>
 
@@ -1240,6 +1308,51 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         onClose={() => setIsCropOpen(false)}
         onCropComplete={(url) => setProfileAvatar(url)}
       />
+
+      {/* PWA Install Guide Modal */}
+      <Modal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} title="Install Centra App">
+        <div className="space-y-4 text-xs text-gray-600 dark:text-gray-300">
+          <p className="leading-relaxed">
+            Centra is an installable, offline-first application that runs natively on your desktop (macOS, Windows, Linux) or mobile device (iOS, Android).
+          </p>
+
+          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] space-y-1.5">
+            <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>💻 Desktop (Chrome, Edge, Safari, Brave)</span>
+            </h4>
+            <p className="text-gray-500 dark:text-gray-400 leading-normal">
+              1. Click the <strong>Install</strong> icon in the address bar (top right) or open browser menu (&ldquo;⋮&rdquo;) &gt; <strong>Install Centra</strong>.<br />
+              2. Centra will run in its own dedicated, borderless window with full offline access.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] space-y-1.5">
+            <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>📱 iOS (iPhone &amp; iPad - Safari)</span>
+            </h4>
+            <p className="text-gray-500 dark:text-gray-400 leading-normal">
+              1. Tap the <strong>Share</strong> button (square with arrow up) at the bottom of Safari.<br />
+              2. Scroll down and tap <strong>Add to Home Screen</strong> (&ldquo;+&rdquo;).<br />
+              3. Tap <strong>Add</strong>. Centra will appear on your Home Screen as a native full-screen app.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] space-y-1.5">
+            <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>🤖 Android (Chrome &amp; Web Browsers)</span>
+            </h4>
+            <p className="text-gray-500 dark:text-gray-400 leading-normal">
+              Tap browser menu (&ldquo;⋮&rdquo;) &gt; <strong>Install app</strong> or <strong>Add to Home screen</strong>. You can also download the standalone Android APK directly.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <Button variant="primary" size="lg" className="w-full" onClick={() => setShowInstallModal(false)}>
+              Got it
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
     </div>
   );

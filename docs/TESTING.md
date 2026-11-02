@@ -69,36 +69,34 @@ adb shell pm clear com.centra.app
 
 ---
 
-## 2. Desktop (Tauri 2)
+## 2. Web & Desktop (Installable PWA - macOS, Windows, Linux)
 
 ### 2.1 Prerequisites & Toolchain
-- **Rust & Cargo**: Rust 1.78+ (`rustup default stable`).
-- **Tauri CLI**: `@tauri-apps/cli@^2.11.4` (installed in devDependencies).
-- **System WebViews**: WebKit on macOS/Linux, WebView2 runtime on Windows.
+- **Node.js**: v18+ with npm.
+- **Modern Browser / PWA Engine**: Chrome, Edge, Safari, Brave, or Firefox.
+- **Production Packager**: `npm run release:web` builds `dist/` and archives `Centra-Web-v1.0.0.zip`.
 
 ### 2.2 Dev & Build Commands
 ```bash
-# Run desktop app in development mode with live HMR
-npm run tauri:dev
+# Run web & desktop app in development mode with live HMR
+npm run dev
 
-# Build standalone production desktop binaries
-npm run tauri:build
+# Build standalone production web & PWA distribution bundle
+npm run build
 
-# Platform-specific production targets
-npm run tauri:build:mac    # macOS .dmg / .app bundle
-npm run tauri:build:win    # Windows .msi / .exe installer
-npm run tauri:build:linux  # Linux .deb / .AppImage
+# Package official Web release archive with SHA-256
+npm run release:web
 ```
 
-### 2.3 Window Sizing & Constraints
-- Configured in `src-tauri/tauri.conf.json`:
-  - **Default Size**: 1200 x 800
-  - **Minimum Size**: 420 x 650 (enforced so users cannot shrink the window smaller than standard mobile viewport limits)
-  - **Responsive Layout**: Scales automatically from compact mobile view to multi-column desktop layout with sticky sidebar navigation.
+### 2.3 Window Sizing & Responsive Constraints
+- Centra features full responsive layout adaptability:
+  - **Mobile Viewport**: Bottom navigation bar, swipeable cards, full-width headers.
+  - **Desktop Viewport (1024px+)**: Left persistent sidebar, multi-column dashboard grid, keyboard shortcuts.
+  - **Standalone Windowing**: When installed as a PWA, launches in a dedicated window without browser address bars.
 
 ### 2.4 Authentication Flow Differences
-- On Desktop, native OAuth custom URI scheme handlers (`com.centra.app://`) have operating system restrictions across various Linux window managers and Windows security policies.
-- Therefore, Desktop users authenticate via **Email OTP (One-Time Password)** for both Sign In and Account Creation.
+- On Web & Desktop browsers, users can authenticate via **Email OTP (One-Time Password)** or Google OAuth redirect flows.
+- Offline CentraDB IndexedDB cache guarantees full application access even when network disconnects.
 
 ---
 

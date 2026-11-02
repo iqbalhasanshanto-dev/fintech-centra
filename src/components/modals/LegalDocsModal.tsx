@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Shield, FileText, LifeBuoy, Code2, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
-import { APP_VERSION } from '../../utils/version';
+import { getAppVersion } from '../../utils/version';
 
 export type LegalDocType = 'privacy' | 'terms' | 'support' | 'api';
 
@@ -72,7 +72,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                 {activeTab === 'api' && 'Developer & Supabase API'}
               </h2>
               <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                Centra Financial OS • Version {APP_VERSION}
+                Centra Financial OS • Version {getAppVersion()}
               </p>
             </div>
           </div>

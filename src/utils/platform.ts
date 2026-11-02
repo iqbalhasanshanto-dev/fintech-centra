@@ -22,11 +22,11 @@ export const getNativePlatform = (): NativePlatform => {
 };
 
 /**
- * Returns true if running inside the Tauri desktop runtime.
+ * Legacy stub for desktop runtime check.
+ * Centra desktop is delivered via installable PWA (macOS/Windows/Linux).
  */
 export const isTauri = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return '__TAURI_INTERNALS__' in window || '__TAURI__' in window;
+  return false;
 };
 
 /**
@@ -36,9 +36,6 @@ export const getAppPlatform = (): AppPlatform => {
   if (isNative()) {
     const native = getNativePlatform();
     return native === 'android' || native === 'ios' ? native : 'web';
-  }
-  if (isTauri()) {
-    return 'desktop';
   }
   return 'web';
 };

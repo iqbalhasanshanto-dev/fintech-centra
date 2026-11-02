@@ -8,18 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [v4.1.1] — 2026-11-02
 
-### 🚀 Release: Edit Transaction Date & Figma Category Selector, Monthly Retention Notifications, Centered Toasts & Back Navigation Polish
+### 🚀 Release: Multi-Platform Release Tracks (Android v4.1.1, iOS v1.0.0, Web & Desktop v1.0.0)
 
-Centra `v4.1.1` delivers a major upgrade to transaction editing with date editing and an interactive Figma-style category picker, resolves monthly data retention reminder notifications, fixes goal modal titles during dismissal, centers all application toast bars, expands the Recent Activities category filter, improves Android back-button exit responsiveness on the Home screen, and transitions release artifacts to clean, non-debug filenames (`Centra-v4.1.1.apk`).
+Centra transitions to independent multi-platform version tracking and separate release directories:
+- **Android (`v4.1.1`)**: Standalone APK distribution with full Swipe-to-Delete Undo on Goals and History, Figma category picker, and Android Downloads CSV integration.
+- **iOS (`v1.0.0`)**: Initial official iOS release with Capacitor 8 Swift SPM project, pure-black OLED launcher icons & 2732px splash screens, standalone Safari PWA support, local PBKDF2 PIN lock, and offline CentraDB.
+- **Web & Desktop (`v1.0.0`)**: Modern installable Progressive Web Application (PWA) with dedicated desktop windowing (macOS, Windows, Linux), offline Service Worker (`public/sw.js`), Web App Manifest, and removal of Tauri dependency bloat.
 
-#### 📥 Direct Downloads & Verification
-- **Android APK (One-Click Direct Download)**: [**Centra-v4.1.1.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk) (Fallback: [`releases/Centra-v4.1.1.apk?raw=true`](releases/Centra-v4.1.1.apk?raw=true))
-- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.1.apk)
-- **File Size**: `6,295,065 bytes` (6.00 MB)
-- **SHA-256 Checksum**:
-  ```
-  03cbad9a8fb32593f5c05f76fb6e057eaaec2a92b56b6a3f8eb4ca8d60d6ab80
-  ```
+#### 📥 Multi-Platform Direct Downloads & Verification
+- **Android APK**: [**Centra-v4.1.1.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.1.apk) (6.00 MB)
+  - SHA-256: `03cbad9a8fb32593f5c05f76fb6e057eaaec2a92b56b6a3f8eb4ca8d60d6ab80`
+- **iOS Package**: [**Centra-iOS-v1.0.0.zip**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-iOS-v1.0.0.zip) (2.40 MB)
+  - SHA-256: `8a8d489104aa62f050a440e09910d5220b75fc46539b800a4ea46b8854a9b61f`
+- **Web & Desktop PWA Bundle**: [**Centra-Web-v1.0.0.zip**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/web/Centra-Web-v1.0.0.zip) (1.20 MB)
+  - SHA-256: `b2f6aadaa72a73138c478ceb652144242d8893449a00c3a9763df176b39b58ee`
 
 #### ↔️ Swipe-to-Delete & 5-Second Undo on Goals, History & Budgets
 - **Per-Goal History Deletion & Rebalance**: Wrapped chronological Goal History entries in `<SwipeableRow>` with automatic balance reversal and chronological recalculation of `balanceAfter` across all remaining entries.
@@ -57,8 +59,8 @@ Centra `v4.1.1` delivers a major upgrade to transaction editing with date editin
 Centra `v4.1.0` introduces a 5-second Undo Delete safety system with delayed server deletion, standalone Savings Goal accounting with a dedicated chronological History modal log, native Android MediaStore Downloads folder CSV integration, real-time Android system notification tray alerts, comprehensive All-Data CSV backup, bottom navbar sliding pill alignment and inactive Settings state, smooth 45-degree `+` to `×` rotation, tab back-history navigation, and red swipe bleed elimination.
 
 #### 📥 Direct Downloads & Verification
-- **Android APK (One-Click Direct Download)**: [**Centra-v4.1.0.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk) (Fallback: [`releases/Centra-v4.1.0.apk?raw=true`](releases/Centra-v4.1.0.apk?raw=true))
-- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.0.apk)
+- **Android APK (One-Click Direct Download)**: [**Centra-v4.1.0.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.0.apk) (Fallback: [`releases/android/Centra-v4.1.0.apk?raw=true`](releases/android/Centra-v4.1.0.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.0.apk)
 - **File Size**: `6,275,302 bytes` (6.00 MB)
 - **SHA-256 Checksum**:
   ```

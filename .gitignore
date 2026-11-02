@@ -51,9 +51,6 @@ android/*.iml
 android/app/*.iml
 .cxx/
 
-# Tauri Desktop build outputs
-src-tauri/target/
-
 # Editor & IDE settings
 .vscode/
 .idea/

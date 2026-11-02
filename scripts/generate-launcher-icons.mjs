@@ -311,4 +311,44 @@ for (const si of splashIcons) {
   console.log(`Generated splash_icon for ${si.dir}/splash_icon.png (${si.size}x${si.size})`);
 }
 
-console.log('✅ All Android launcher icons and splash screens successfully updated with dark logo on #000000!');
+// 4. iOS App Icons & Splash Screens (Assets.xcassets)
+const iosAppIconDir = path.join(rootDir, 'ios/App/App/Assets.xcassets/AppIcon.appiconset');
+if (fs.existsSync(iosAppIconDir)) {
+  const iosIconSize = 1024;
+  const iosLogoSize = Math.round(iosIconSize * 0.72);
+  const tempIosLogo = `/tmp/centra_ios_logo_${iosLogoSize}.png`;
+  execSync(`sips -z ${iosLogoSize} ${iosLogoSize} "${sourceLogo}" --out "${tempIosLogo}"`);
+  execSync(`sips -p ${iosIconSize} ${iosIconSize} --padColor 000000 "${tempIosLogo}" --out "${path.join(iosAppIconDir, 'AppIcon-512@2x.png')}"`);
+  console.log('Generated iOS AppIcon (1024x1024) on #000000');
+}
+
+const iosSplashDir = path.join(rootDir, 'ios/App/App/Assets.xcassets/Splash.imageset');
+if (fs.existsSync(iosSplashDir)) {
+  const splashSize = 2732;
+  const logoSize = Math.round(splashSize * 0.48);
+  const tempIosSplash = `/tmp/centra_ios_splash_${logoSize}.png`;
+  execSync(`sips -z ${logoSize} ${logoSize} "${sourceLogo}" --out "${tempIosSplash}"`);
+  const splashFiles = ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png'];
+  for (const sf of splashFiles) {
+    execSync(`sips -p ${splashSize} ${splashSize} --padColor 000000 "${tempIosSplash}" --out "${path.join(iosSplashDir, sf)}"`);
+    console.log(`Generated iOS Splash: ${sf} (2732x2732)`);
+  }
+}
+
+// 5. Web PWA Icons & Apple Touch Icon (public/)
+const webIcons = [
+  { file: 'pwa-192x192.png', size: 192, ratio: 0.72 },
+  { file: 'pwa-512x512.png', size: 512, ratio: 0.72 },
+  { file: 'apple-touch-icon.png', size: 180, ratio: 0.72 },
+];
+
+const publicDir = path.join(rootDir, 'public');
+for (const wi of webIcons) {
+  const logoSize = Math.round(wi.size * wi.ratio);
+  const tempWebLogo = `/tmp/centra_web_logo_${wi.size}.png`;
+  execSync(`sips -z ${logoSize} ${logoSize} "${sourceLogo}" --out "${tempWebLogo}"`);
+  execSync(`sips -p ${wi.size} ${wi.size} --padColor 000000 "${tempWebLogo}" --out "${path.join(publicDir, wi.file)}"`);
+  console.log(`Generated Web PWA icon: ${wi.file} (${wi.size}x${wi.size})`);
+}
+
+console.log('✅ All Android, iOS, and Web PWA icons and splash screens successfully updated with dark logo on #000000!');

@@ -68,10 +68,9 @@ Because Centra is built on an offline-first client-side architecture (React 18 +
 - **Direct Supabase BaaS Architecture**: All communication routes through PostgREST HTTPS endpoints (`/rest/v1/*`) and GoTrue Auth (`/auth/v1/*`).
 - **Recommended Supabase Dashboard CORS Configuration**:
   - In Supabase Dashboard > **Project Settings > API > Additional Allowed Origins (CORS)**, configure:
-    - Web domain: `https://your-production-domain.com`
+    - Web / PWA domain: `https://your-production-domain.com`
     - Native mobile (Capacitor Android): `https://com.centra.app` (or `http://localhost`)
     - Native mobile (Capacitor iOS): `capacitor://localhost`
-    - Desktop (Tauri 2): `tauri://localhost` (or `http://ipc.localhost`)
 
 ### 7. Security Headers & Content Security Policy (CSP)
 - **HTML Meta Security Headers (`index.html`)**:
@@ -83,7 +82,7 @@ Because Centra is built on an offline-first client-side architecture (React 18 +
     - `X-Frame-Options: DENY` (Anti-clickjacking)
     - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` (HSTS)
     - Full `Content-Security-Policy` restricting script, style, font, connect, and image sources.
-- **Desktop CSP**: `src-tauri/tauri.conf.json` defines strict CSP policies for Tauri production and development builds.
+- **PWA Offline Storage**: Offline Service Worker (`public/sw.js`) and IndexedDB caches isolate user financial records securely within the browser origin sandbox.
 
 ### 8. Debug Mode & Production Hardening
 - **Logger Silencing (`src/utils/logger.ts`)**:
@@ -103,7 +102,7 @@ Because Centra is built on an offline-first client-side architecture (React 18 +
 
 ### 10. Exposed Files & Repository Hygiene
 - **Git Tracking Cleanliness**: Verified with `git ls-files` that zero `.env`, credentials, keystores, or build artifacts are tracked.
-- **Ignored Patterns (`.gitignore`)**: Enforces comprehensive exclusions for `.env*`, `dist/`, `node_modules/`, `*.tsbuildinfo`, `.DS_Store`, `android/.gradle/`, `android/build/`, `ios/App/build/`, and `src-tauri/target/`.
+- **Ignored Patterns (`.gitignore`)**: Enforces comprehensive exclusions for `.env*`, `dist/`, `node_modules/`, `*.tsbuildinfo`, `.DS_Store`, `android/.gradle/`, `android/build/`, and `ios/App/build/`.
 - Local `.DS_Store` files cleared.
 
 ### 11. Database Hardening & Schema Integrity

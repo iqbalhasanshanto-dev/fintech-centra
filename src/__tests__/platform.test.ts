@@ -57,25 +57,12 @@ describe('Platform Helper (src/utils/platform.ts)', () => {
     expect(getAppPlatform()).toBe('ios');
   });
 
-  it('detects tauri desktop via __TAURI_INTERNALS__', () => {
+  it('returns false for isTauri stub and resolves web as app platform', () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
     vi.mocked(Capacitor.getPlatform).mockReturnValue('web');
 
-    (globalThis.window as unknown as { __TAURI_INTERNALS__: Record<string, unknown> }).__TAURI_INTERNALS__ = {};
-
     expect(isNative()).toBe(false);
-    expect(isTauri()).toBe(true);
-    expect(getAppPlatform()).toBe('desktop');
-  });
-
-  it('detects tauri desktop via __TAURI__', () => {
-    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
-    vi.mocked(Capacitor.getPlatform).mockReturnValue('web');
-
-    (globalThis.window as unknown as { __TAURI__: Record<string, unknown> }).__TAURI__ = {};
-
-    expect(isNative()).toBe(false);
-    expect(isTauri()).toBe(true);
-    expect(getAppPlatform()).toBe('desktop');
+    expect(isTauri()).toBe(false);
+    expect(getAppPlatform()).toBe('web');
   });
 });
