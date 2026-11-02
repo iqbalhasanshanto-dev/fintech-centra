@@ -3,18 +3,13 @@ import { getAppVersion, VERSIONS } from '../utils/version';
 import * as platformModule from '../utils/platform';
 
 describe('Version Utils (src/utils/version.ts)', () => {
-  const originalLocation = window.location;
-
   beforeEach(() => {
     vi.restoreAllMocks();
+    window.history.replaceState({}, '', '/');
   });
 
   afterEach(() => {
-    // Restore location
-    Object.defineProperty(window, 'location', {
-      value: originalLocation,
-      writable: true,
-    });
+    window.history.replaceState({}, '', '/');
   });
 
   it('exposes correct platform versions in VERSIONS config', () => {
@@ -39,23 +34,18 @@ describe('Version Utils (src/utils/version.ts)', () => {
   });
 
   it('honors ?platform=android query param override', () => {
-    delete (window as unknown as { location?: unknown }).location;
-    window.location = new URL('https://centra.local?platform=android') as unknown as Location;
-
+    window.history.replaceState({}, '', '?platform=android');
     expect(getAppVersion()).toBe('4.1.1');
   });
 
   it('honors ?platform=ios query param override', () => {
-    delete (window as unknown as { location?: unknown }).location;
-    window.location = new URL('https://centra.local?platform=ios') as unknown as Location;
-
+    window.history.replaceState({}, '', '?platform=ios');
     expect(getAppVersion()).toBe('1.0.0');
   });
 
   it('honors ?platform=web query param override', () => {
-    delete (window as unknown as { location?: unknown }).location;
-    window.location = new URL('https://centra.local?platform=web') as unknown as Location;
-
+    window.history.replaceState({}, '', '?platform=web');
     expect(getAppVersion()).toBe('1.0.0');
   });
 });
+
