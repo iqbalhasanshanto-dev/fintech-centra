@@ -38,7 +38,6 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     notifications, 
     markNotificationAsRead, 
     markAllNotificationsAsRead, 
-    deleteNotification,
     clearNotifications 
   } = useFinance();
   const { isGuest } = useAuth();
@@ -129,6 +128,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   };
 
   const getActionLabel = (item: NotificationItem): string | null => {
+    if (isRetentionReminder(item)) {
+      return null;
+    }
     if (isWelcomeNotification(item)) {
       return 'Add transaction';
     }
@@ -146,6 +148,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   const handleNotificationClick = (item: NotificationItem) => {
     markNotificationAsRead(item.id);
+    if (isRetentionReminder(item)) {
+      return;
+    }
     onClose();
     if (item.type === 'security') {
       if (isGuest) return;
@@ -230,7 +235,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 )}
               </span>
               <h4 className="text-base font-medium text-[#18212F] dark:text-white truncate mt-0.5">
-                {(item.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim()}
+                {(item.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').replace(/\u{FE0F}/gu, '').trim()}
               </h4>
             </div>
           </div>

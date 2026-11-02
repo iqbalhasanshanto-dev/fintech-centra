@@ -25,7 +25,7 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
 
   const handleSelectMode = (mode: ThemeMode) => {
     setSelectedMode(mode);
-    let resolvedTheme: 'dark' | 'light' = 'dark';
+    let resolvedTheme: 'dark' | 'light';
     if (mode === 'system') {
       const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (isSystemDark) {

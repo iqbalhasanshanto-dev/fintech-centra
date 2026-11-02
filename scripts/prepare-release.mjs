@@ -7,6 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
+const githubUser = 'iqbalhasanshanto-dev';
+const repoName = 'fintech-centra';
+const branch = 'main';
+
 // --- Helper Functions for Semver ---
 function parseSemver(v) {
   const [core] = v.split('-');
@@ -27,7 +31,7 @@ function getAllReleases(releasesDir) {
   const files = fs.readdirSync(releasesDir);
   const releases = [];
   for (const file of files) {
-    const match = file.match(/^Centra-v(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?)-debug\.apk$/);
+    const match = file.match(/^Centra-v(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?)(?:-debug)?\.apk$/);
     if (match) {
       const v = match[1];
       const filePath = path.join(releasesDir, file);
@@ -45,7 +49,10 @@ function getAllReleases(releasesDir) {
 }
 
 function syncReleasesTable(content, newVersion, newDirectUrl, newRawUrl, newSizeMB, defaultHighlights) {
-  const tableHeader = '| Version | Channel | One-Click Direct Download | Size | Highlights |\n|:---|:---|:---|:---|:---|';
+  let tableHeader = '| Version | Channel | Download / Release Record | Size | Highlights |\n|:---|:---|:---|:---|:---|';
+  if (!content.includes(tableHeader)) {
+    tableHeader = '| Version | Channel | One-Click Direct Download | Size | Highlights |\n|:---|:---|:---|:---|:---|';
+  }
   if (!content.includes(tableHeader)) return content;
 
   const [beforeTable, afterHeader] = content.split(tableHeader + '\n');
@@ -88,14 +95,30 @@ function syncReleasesTable(content, newVersion, newDirectUrl, newRawUrl, newSize
     });
   } else {
     // 1. First convert all existing "| ⚪ Previous |" rows to "| 📦 Archive |"
-    let updated = tableRows.map(r => r.replace('| ⚪ Previous |', '| 📦 Archive |'));
+    let updated = tableRows.map(r => {
+      if (r.includes('| ⚪ Previous |')) {
+        let row = r.replace('| ⚪ Previous |', '| 📦 Archive |');
+        const vMatch = r.match(/\| \*\*`v([^`]+)`\*\* \|/);
+        if (vMatch) {
+          const v = vMatch[1];
+          row = row.replace(
+            /\[\*\*📦 Download APK\*\*\]\([^)]+\) · \[Mirror\]\([^)]+\)/,
+            `[**🏷️ Source Tag**](https://github.com/${githubUser}/${repoName}/tree/v${v}) · [Notes](CHANGELOG.md)`
+          );
+        }
+        return row;
+      }
+      return r;
+    });
 
     // 2. Then convert the old "| 🟢 Latest |" row to "| ⚪ Previous |" and change its download label from "📲 Download APK" to "📦 Download APK"
     updated = updated.map(r => {
       if (r.includes('| 🟢 Latest |')) {
-        return r
+        let row = r
           .replace('| 🟢 Latest |', '| ⚪ Previous |')
           .replace('[**📲 Download APK**]', '[**📦 Download APK**]');
+        row = row.replace(/-debug\.apk/g, '.apk');
+        return row;
       }
       return r;
     });
@@ -141,8 +164,8 @@ if (!fs.existsSync(releasesDir)) {
   fs.mkdirSync(releasesDir, { recursive: true });
 }
 
-// 4. Target release path & copy APK
-const targetFileName = `Centra-v${version}-debug.apk`;
+// 4. Target release path & copy APK (non-debug clean filename)
+const targetFileName = `Centra-v${version}.apk`;
 const targetPath = path.join(releasesDir, targetFileName);
 fs.copyFileSync(apkSource, targetPath);
 
@@ -152,9 +175,6 @@ const fileSize = fileBuffer.length;
 const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
 const sha256 = crypto.createHash('sha256').update(fileBuffer).digest('hex');
 
-const githubUser = 'iqbalhasanshanto-dev';
-const repoName = 'fintech-centra';
-const branch = 'main';
 const rawUrl = `https://raw.githubusercontent.com/${githubUser}/${repoName}/${branch}/releases/${targetFileName}`;
 const directDownloadUrl = `https://github.com/${githubUser}/${repoName}/raw/${branch}/releases/${targetFileName}`;
 
@@ -194,6 +214,9 @@ if (fs.existsSync(gradlePath)) {
 // 7. Discover all releases
 const allReleases = getAllReleases(releasesDir);
 const prev = allReleases.find(r => r.version !== version) || allReleases[1] || { version, fileName: targetFileName, sizeMB: fileSizeMB };
+
+// Default release highlights
+const defaultReleaseHighlights = 'Edit transaction date & Figma category picker, 52px input alignment, once-per-month retention notifications, centered toasts, all-categories activity filter, instant home back exit';
 
 // 8. Update README.md
 const readmePath = path.join(rootDir, 'README.md');
@@ -240,21 +263,21 @@ if (fs.existsSync(readmePath)) {
 
   // Desktop ADB commands
   content = content.replace(
-    /adb install -r Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk/g,
+    /adb install -r Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk/g,
     `adb install -r ${targetFileName}`
   );
   content = content.replace(
-    /adb connect 127\.0\.0\.1:58526 && adb install Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk/g,
+    /adb connect 127\.0\.0\.1:58526 && adb install Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk/g,
     `adb connect 127.0.0.1:58526 && adb install ${targetFileName}`
   );
 
   // SHA-256 Checksum Verification section
   content = content.replace(
-    /shasum -a 256 releases\/Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk/g,
+    /shasum -a 256 releases\/Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk/g,
     `shasum -a 256 releases/${targetFileName}`
   );
   content = content.replace(
-    /CertUtil -hashfile releases\\Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk SHA256/g,
+    /CertUtil -hashfile releases\\Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk SHA256/g,
     `CertUtil -hashfile releases\\${targetFileName} SHA256`
   );
   content = content.replace(
@@ -263,7 +286,7 @@ if (fs.existsSync(readmePath)) {
   );
 
   // Releases tree in Repository Architecture Tree
-  const treeBlockRegex = /(├── releases\/\s*# Versioned Android APK releases with SHA-256 verification\n)([\s\S]*?)(│\s*└── README\.md)/;
+  const treeBlockRegex = /(├── releases\/[^\n]*\n)([\s\S]*?)(│\s*└── README\.md)/;
   const treeEntries = allReleases.map(r => `│   ├── ${r.fileName}`).join('\n') + '\n';
   content = content.replace(treeBlockRegex, `$1${treeEntries}$3`);
 
@@ -274,13 +297,13 @@ if (fs.existsSync(readmePath)) {
     directDownloadUrl,
     rawUrl,
     fileSizeMB,
-    'Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover'
+    defaultReleaseHighlights
   );
 
   // Release naming convention example
   content = content.replace(
-    /- Example: Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk,\s*Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk/,
-    `- Example: Centra-v${prev.version}-debug.apk, Centra-v${version}-debug.apk`
+    /- Example: Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk,\s*Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk/,
+    `- Example: Centra-v${prev.version}.apk, Centra-v${version}.apk`
   );
 
   // Maintainer guide package.json example
@@ -320,13 +343,13 @@ if (fs.existsSync(releasesReadmePath)) {
     directDownloadUrl,
     rawUrl,
     fileSizeMB,
-    'Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover'
+    defaultReleaseHighlights
   );
 
   // Release naming convention example
   content = content.replace(
-    /- Example: Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk,\s*Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk/,
-    `- Example: Centra-v${prev.version}-debug.apk, Centra-v${version}-debug.apk`
+    /- Example: Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk,\s*Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk/,
+    `- Example: Centra-v${prev.version}.apk, Centra-v${version}.apk`
   );
 
   // Maintainer guide package.json example
@@ -352,11 +375,11 @@ if (fs.existsSync(releasesReadmePath)) {
 
   // Verification instructions section
   content = content.replace(
-    /shasum -a 256 releases\/Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk/g,
+    /shasum -a 256 releases\/Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk/g,
     `shasum -a 256 releases/${targetFileName}`
   );
   content = content.replace(
-    /CertUtil -hashfile releases\\Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?-debug\.apk SHA256/g,
+    /CertUtil -hashfile releases\\Centra-v[0-9.]+(-[a-zA-Z0-9.]+)?(-debug)?\.apk SHA256/g,
     `CertUtil -hashfile releases\\${targetFileName} SHA256`
   );
 
@@ -374,7 +397,7 @@ console.log(`🔑 SHA-256:      ${sha256}`);
 console.log(`🔗 Raw URL:      ${rawUrl}`);
 console.log('='.repeat(70));
 console.log('\n📋 Markdown row in inventory tables:\n');
-console.log(`| **\`v${version}\`** | 🟢 Latest | [**📲 Download APK**](${directDownloadUrl}) · [Mirror](${rawUrl}) | ${fileSizeMB} MB | Release highlights here |`);
+console.log(`| **\`v${version}\`** | 🟢 Latest | [**📲 Download APK**](${directDownloadUrl}) · [Mirror](${rawUrl}) | ${fileSizeMB} MB | ${defaultReleaseHighlights} |`);
 console.log('\n📋 Checksum block entry:\n');
 console.log(`- **v${version} (\`${targetFileName}\`)**: \`${sha256}\``);
 console.log('\n' + '='.repeat(70));

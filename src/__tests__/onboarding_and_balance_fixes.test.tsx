@@ -12,7 +12,7 @@ import { FinanceProvider, useFinance } from '../context/FinanceContext';
 const mockCompleteOnboarding = vi.fn();
 const mockLogout = vi.fn();
 
-let mockCurrentUser = {
+const mockCurrentUser = {
   id: 'test_user_onboarding',
   name: '',
   email: 'test@example.com',

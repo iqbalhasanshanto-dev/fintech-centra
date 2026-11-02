@@ -30,8 +30,6 @@ import {
   applyUpdateTransaction,
   applyDeleteTransaction,
   applyTransferFunds,
-  applyContributeToGoal,
-  applyWithdrawFromGoal,
   applyDeleteAccount,
 } from '../utils/financeOperations';
 import { SyncRetryScreen } from '../components/auth/SyncRetryScreen';
@@ -655,12 +653,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     }
     if (result.mutated.notificationsToUpsert || result.mutated.notificationsToDelete) {
       setNotifications(result.nextState.notifications);
-      if (result.mutated.notificationsToUpsert) {
-        for (const notif of result.mutated.notificationsToUpsert) {
-          triggerSystemNotification(notif.title, notif.message, notif.id).catch(err => {
-            logger.warn('Failed to dispatch system notification:', err);
-          });
-        }
+    }
+    if (result.notificationsToEmit && result.notificationsToEmit.length > 0) {
+      for (const notif of result.notificationsToEmit) {
+        triggerSystemNotification(notif.title, notif.message, notif.id).catch(err => {
+          logger.warn('Failed to dispatch system notification:', err);
+        });
       }
     }
 
@@ -724,8 +722,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     const now = new Date();
     const yyyyMm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const reminderId = `retention-reminder:${yyyyMm}`;
+    const storageKey = `centra_retention_notified_${yyyyMm}`;
 
     const alreadyReminded = latestStateRef.current.notifications.some(n => n.id === reminderId);
+    const hasNotifiedThisMonth = (() => {
+      try {
+        return typeof window !== 'undefined' && window.localStorage?.getItem(storageKey) === '1';
+      } catch {
+        return false;
+      }
+    })();
+
     if (!alreadyReminded) {
       const reminderTitle = '2-Month Data Retention Reminder';
       const reminderMsg =
@@ -740,6 +747,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
         isRead: false,
       };
 
+      const shouldEmit = !hasNotifiedThisMonth;
+      if (shouldEmit) {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem(storageKey, '1');
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       executeOperation(state => {
         if (state.notifications.some(n => n.id === reminderId)) {
           return { ok: true, nextState: state, mutated: {}, notificationsToEmit: [] };
@@ -753,7 +771,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
           mutated: {
             notificationsToUpsert: [reminderItem],
           },
-          notificationsToEmit: [reminderItem],
+          notificationsToEmit: shouldEmit ? [reminderItem] : [],
         };
       }).catch(err => {
         logger.warn('Failed to create monthly retention reminder notification:', err);
@@ -769,9 +787,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
       timestamp: new Date().toISOString(),
       isRead: false,
     };
-    triggerSystemNotification(newNotif.title, newNotif.message, newNotif.id).catch(err => {
-      logger.warn('Failed to dispatch system notification:', err);
-    });
     executeOperation(state => ({
       ok: true,
       nextState: {

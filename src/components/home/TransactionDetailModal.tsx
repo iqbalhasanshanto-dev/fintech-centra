@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check, Paperclip, X, ChevronDown, User } from 'lucide-react';
-import { Transaction } from '../../types';
+import { Transaction, Category } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { Modal } from '../ui/Modal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { DatePicker } from '../ui/DatePicker';
+import { FIGMA_DEFAULT_CATEGORIES, CentraDB } from '../../db/storage';
 import { formatCurrency, formatFullDate, formatTime, getTransactionDisplay } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
 import { sanitizeText } from '../../utils/sanitize';
 import { validateLabel, validateNote } from '../../utils/validators';
+import { logger } from '../../utils/logger';
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -32,6 +35,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   const [note, setNote] = useState('');
   const [noteError, setNoteError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [isPinTapping, setIsPinTapping] = useState(false);
@@ -66,9 +71,38 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
       setNote(disp.cleanNote);
       setNoteError(null);
       setCategoryId(transaction.categoryId);
+      setEditDate(transaction.date ? transaction.date.slice(0, 10) : new Date().toISOString().slice(0, 10));
+      setIsCategoryPickerOpen(false);
       setIsEditing(false);
     }
   }, [transaction]);
+
+  const availableCategories = React.useMemo(() => {
+    if (!currentTx) return [];
+    const isIncome = currentTx.type === 'income';
+    const isHiddenSystem = (c: Category) =>
+      ['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || '') || c.hidden;
+
+    const filtered = categories.filter(c => {
+      if (isHiddenSystem(c)) return false;
+      return isIncome ? c.type === 'income' : c.type === 'expense';
+    });
+    const defaults = FIGMA_DEFAULT_CATEGORIES.filter(c => {
+      if (isHiddenSystem(c)) return false;
+      return isIncome ? c.type === 'income' : c.type === 'expense';
+    });
+    const merged = [...filtered];
+    for (const def of defaults) {
+      if (!merged.some(m => m.name.toLowerCase() === def.name.toLowerCase() || m.id === def.id)) {
+        merged.push(def);
+      }
+    }
+    return merged;
+  }, [categories, currentTx]);
+
+  const selectedCategoryObj = React.useMemo(() => {
+    return availableCategories.find(c => c.id === categoryId) || categories.find(c => c.id === categoryId) || null;
+  }, [availableCategories, categories, categoryId]);
 
   if (!currentTx) return null;
 
@@ -90,7 +124,29 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
       }
     }
 
-    const chosenCategory = categories.find(c => c.id === categoryId);
+    const chosenCategory = availableCategories.find(c => c.id === categoryId) || categories.find(c => c.id === categoryId);
+    if (chosenCategory && !categories.some(c => c.id === chosenCategory.id)) {
+      CentraDB.upsertCategory(chosenCategory).catch(err => {
+        logger.warn('Failed to upsert default category on edit save:', err);
+      });
+    }
+
+    let updatedIsoDate = currentTx.date;
+    try {
+      if (editDate) {
+        const orig = new Date(currentTx.date);
+        const [y, m, d] = editDate.split('-').map(Number);
+        if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+          orig.setFullYear(y, m - 1, d);
+          updatedIsoDate = orig.toISOString();
+        } else {
+          updatedIsoDate = new Date(`${editDate}T12:00:00Z`).toISOString();
+        }
+      }
+    } catch {
+      updatedIsoDate = currentTx.date;
+    }
+
     updateTransaction(currentTx.id, {
       merchant: merchant.trim() ? sanitizeText(merchant, 60) : '',
       note: note.trim()
@@ -100,6 +156,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
       categoryName: chosenCategory ? chosenCategory.name : currentTx.categoryName,
       categoryIcon: chosenCategory ? chosenCategory.icon : currentTx.categoryIcon,
       categoryColor: chosenCategory ? chosenCategory.color : currentTx.categoryColor,
+      date: updatedIsoDate,
     });
     setIsEditing(false);
   };
@@ -309,7 +366,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             /* Edit Mode Form */
             <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1.5">
                   {currentTx.type === 'income' ? 'Received From' : 'Paid To'}
                 </label>
                 <input
@@ -317,9 +374,9 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   placeholder={currentTx.type === 'income' ? 'e.g. Employer, Client' : 'e.g. Supermarket, Landlord'}
                   value={merchant}
                   onChange={e => handleMerchantChange(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${
-                    merchantError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
-                  } text-[#18212F] dark:text-white text-xs focus:outline-none focus:border-[#C6FF3D] font-medium`}
+                  className={`w-full h-[52px] px-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                    merchantError ? 'border-rose-500' : 'border-black/[0.08] dark:border-white/[0.10]'
+                  } text-[#18212F] dark:text-white text-xs font-semibold focus:outline-hidden focus:border-[#C6FF3D]` }
                 />
                 {merchantError && (
                   <p className="mt-1 text-[11px] text-rose-500 font-medium">{merchantError}</p>
@@ -327,27 +384,126 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1">
-                  Category
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1.5">
+                  Date
                 </label>
-                <div className="relative">
-                  <select
-                    value={categoryId}
-                    onChange={e => setCategoryId(e.target.value)}
-                    className="w-full appearance-none pr-8 px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white text-xs focus:outline-none focus:border-[#C6FF3D] font-medium cursor-pointer"
-                  >
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id} className="bg-white dark:bg-[#1D1D1D] text-[#18212F] dark:text-white">
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400 dark:text-gray-500" />
-                </div>
+                <DatePicker
+                  value={editDate}
+                  onChange={setEditDate}
+                  buttonClassName="w-full h-[52px] px-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.08] dark:border-white/[0.10] text-[#18212F] dark:text-white text-xs font-semibold flex items-center justify-between cursor-pointer"
+                />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1.5">
+                  Category
+                </label>
+                {isCategoryPickerOpen ? (
+                  <div className="rounded-2xl border border-black/[0.08] dark:border-white/[0.10] bg-[#F1F2F4] dark:bg-[#262626] p-3 space-y-2.5 animate-scale-in">
+                    <button
+                      type="button"
+                      onClick={() => setIsCategoryPickerOpen(false)}
+                      className="w-full flex items-center justify-between cursor-pointer select-none text-left touch-manipulation"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center text-gray-700 dark:text-gray-300">
+                          <CategoryIcon name={selectedCategoryObj?.icon || currentTx.categoryIcon} className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 block">
+                            CATEGORY
+                          </span>
+                          <h4 className="text-sm font-bold text-[#18212F] dark:text-white mt-0.5">
+                            {selectedCategoryObj?.name || currentTx.categoryName}
+                          </h4>
+                        </div>
+                      </div>
+                      <div className="w-7 h-7 rounded-full hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                        <ChevronDown className="w-4 h-4 rotate-180 transition-transform" />
+                      </div>
+                    </button>
+
+                    <div className="h-px w-full bg-black/[0.06] dark:bg-white/[0.08]" />
+
+                    <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                      {availableCategories.map(cat => {
+                        const isSelected = cat.id === categoryId;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              setCategoryId(cat.id);
+                              setIsCategoryPickerOpen(false);
+                            }}
+                            className={`w-full p-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-colors select-none text-left touch-manipulation ${
+                              isSelected
+                                ? 'bg-[#4D6E18]/10 text-[#4D6E18] dark:bg-[#C6FF3D]/15 dark:text-[#C6FF3D] font-semibold'
+                                : 'text-[#18212F] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 font-medium'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                              <div
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                  isSelected
+                                    ? 'bg-[#4D6E18]/15 dark:bg-[#C6FF3D]/20 text-[#4D6E18] dark:text-[#C6FF3D]'
+                                    : 'bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-300'
+                                }`}
+                              >
+                                <CategoryIcon name={cat.icon} className="w-4 h-4" />
+                              </div>
+                              <span className="text-xs font-semibold truncate">{cat.name}</span>
+                            </div>
+                            <div className="shrink-0 ml-2">
+                              {isSelected ? (
+                                <div className="w-5 h-5 rounded-full bg-[#C6FF3D] text-[#0A0E1A] flex items-center justify-center">
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                </div>
+                              ) : (
+                                <div className="w-5 h-5 rounded-full border border-black/20 dark:border-white/20" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryPickerOpen(true)}
+                    className="w-full h-[52px] px-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.08] dark:border-white/[0.10] text-[#18212F] dark:text-white text-xs font-semibold flex items-center justify-between cursor-pointer hover:border-[#C6FF3D] transition-all text-left"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0 text-gray-700 dark:text-gray-300">
+                        <CategoryIcon name={selectedCategoryObj?.icon || currentTx.categoryIcon} className="w-4 h-4" />
+                      </div>
+                      <span className="truncate text-xs font-semibold">
+                        {selectedCategoryObj?.name || currentTx.categoryName || 'Select category'}
+                      </span>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 ml-2" />
+                  </button>
+                )}
+
+                {/* Synchronized hidden select for testing and accessibility */}
+                <select
+                  value={categoryId}
+                  onChange={e => setCategoryId(e.target.value)}
+                  className="sr-only"
+                  aria-label="Category"
+                  tabIndex={-1}
+                >
+                  {availableCategories.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1.5">
                   Note
                 </label>
                 <textarea
@@ -355,8 +511,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   onChange={e => handleNoteChange(e.target.value)}
                   rows={2}
                   className={`w-full px-4 py-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${
-                    noteError ? 'border-rose-500' : 'border-black/[0.06] dark:border-white/[0.08]'
-                  } text-[#18212F] dark:text-white text-xs focus:outline-none focus:border-[#C6FF3D] font-medium`}
+                    noteError ? 'border-rose-500' : 'border-black/[0.08] dark:border-white/[0.10]'
+                  } text-[#18212F] dark:text-white text-xs font-medium focus:outline-hidden focus:border-[#C6FF3D]`}
                 />
                 {noteError && (
                   <p className="mt-1 text-[11px] text-rose-500 font-medium">{noteError}</p>

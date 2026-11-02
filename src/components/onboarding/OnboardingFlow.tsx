@@ -77,10 +77,12 @@ export const OnboardingFlow: React.FC = () => {
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward');
 
   const currentStepRef = useRef<OnboardingStep>(currentStep);
-  currentStepRef.current = currentStep;
-
   const userIdRef = useRef<string | undefined>(user?.id);
-  userIdRef.current = user?.id;
+
+  React.useLayoutEffect(() => {
+    currentStepRef.current = currentStep;
+    userIdRef.current = user?.id;
+  });
 
   const isFinishedRef = useRef(false);
 

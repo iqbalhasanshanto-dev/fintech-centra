@@ -40,6 +40,17 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
   const [goalForHistory, setGoalForHistory] = useState<Goal | null>(null);
 
+  const [cachedGoalName, setCachedGoalName] = useState<string>('');
+  const goalTitleName = selectedGoalForFunds?.name || cachedGoalName || 'Goal';
+
+  const openFundModal = (goal: Goal, mode: 'deposit' | 'withdraw') => {
+    setSelectedGoalForFunds(goal);
+    setCachedGoalName(goal.name);
+    setFundMode(mode);
+    setFundAmount('');
+    setFundError(null);
+  };
+
   const handleFundSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGoalForFunds) return;
@@ -207,24 +218,14 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                     {/* Add & Withdraw Actions & Menu */}
                     <div className="flex items-center space-x-1.5 sm:space-x-2 relative shrink-0">
                       <button
-                        onClick={() => {
-                          setSelectedGoalForFunds(goal);
-                          setFundMode('deposit');
-                          setFundAmount('');
-                          setFundError(null);
-                        }}
+                        onClick={() => openFundModal(goal, 'deposit')}
                         className="px-2.5 py-1 rounded-full bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] hover:bg-[#16A34A]/25 dark:hover:bg-[#22C55E]/25 text-[11px] font-bold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0"
                       >
                         + Add
                       </button>
 
                       <button
-                        onClick={() => {
-                          setSelectedGoalForFunds(goal);
-                          setFundMode('withdraw');
-                          setFundAmount('');
-                          setFundError(null);
-                        }}
+                        onClick={() => openFundModal(goal, 'withdraw')}
                         className={`px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 dark:hover:bg-amber-500/25 text-[11px] font-bold flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                           goal.currentAmount <= 0 ? 'opacity-50' : ''
                         }`}
@@ -416,8 +417,8 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
         }}
         title={
           fundMode === 'deposit'
-            ? `Add Funds to ${selectedGoalForFunds?.name}`
-            : `Withdraw Funds from ${selectedGoalForFunds?.name}`
+            ? `Add Funds to ${goalTitleName}`
+            : `Withdraw Funds from ${goalTitleName}`
         }
         subtitle={
           fundMode === 'deposit'

@@ -2,11 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Download, ChevronLeft, X, ChevronDown, Check, Pin } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
-import { Transaction } from '../../types';
+import { Transaction, Category } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { SwipeableRow } from '../ui/SwipeableRow';
 import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
-import { CentraDB } from '../../db/storage';
+import { FIGMA_DEFAULT_CATEGORIES } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
 import { exportTransactionsToCSV } from '../../utils/csvExport';
 
@@ -39,16 +39,32 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
   const [openDropdown, setOpenDropdown] = useState<'category' | 'account' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Filter out internal system categories (e.g. transfer, goal contribution, uncategorized)
+  // Filter out internal system categories (e.g. transfer, goal contribution, uncategorized) and merge with default categories
   const visibleCategories = useMemo(() => {
-    return categories.filter(c => !['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || ''));
+    const isHiddenSystem = (c: Category) =>
+      ['transfer', 'goal_contribution', 'uncategorized'].includes(c.systemKey || '') || c.hidden;
+
+    const filtered = categories.filter(c => !isHiddenSystem(c));
+    const defaults = FIGMA_DEFAULT_CATEGORIES.filter(c => !isHiddenSystem(c));
+
+    const merged = [...filtered];
+    for (const def of defaults) {
+      if (!merged.some(m => m.name.toLowerCase() === def.name.toLowerCase() || m.id === def.id)) {
+        merged.push(def);
+      }
+    }
+    return merged;
   }, [categories]);
+
+  const selectedCategoryObj = useMemo(() => {
+    if (selectedCategory === 'all') return null;
+    return visibleCategories.find(c => c.id === selectedCategory) || categories.find(c => c.id === selectedCategory) || null;
+  }, [selectedCategory, visibleCategories, categories]);
 
   const selectedCategoryLabel = useMemo(() => {
     if (selectedCategory === 'all') return 'All Categories';
-    const found = categories.find(c => c.id === selectedCategory);
-    return found ? found.name : 'All Categories';
-  }, [selectedCategory, categories]);
+    return selectedCategoryObj ? selectedCategoryObj.name : 'All Categories';
+  }, [selectedCategory, selectedCategoryObj]);
 
   const selectedAccountLabel = useMemo(() => {
     const found = PAYMENT_METHODS.find(m => m.id === selectedAccount);
@@ -72,7 +88,10 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
           (tx.tags && tx.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())));
 
         // Category
-        const matchesCategory = selectedCategory === 'all' || tx.categoryId === selectedCategory;
+        const matchesCategory =
+          selectedCategory === 'all' ||
+          tx.categoryId === selectedCategory ||
+          (selectedCategoryObj && tx.categoryName.toLowerCase() === selectedCategoryObj.name.toLowerCase());
 
         // Type
         const matchesType = selectedType === 'all' || tx.type === selectedType;
@@ -85,7 +104,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
 
         return matchesSearch && matchesCategory && matchesType && matchesAccount;
       });
-  }, [transactions, searchQuery, selectedCategory, selectedType, selectedAccount]);
+  }, [transactions, searchQuery, selectedCategory, selectedType, selectedAccount, selectedCategoryObj]);
 
   // Group transactions into Current Month, Previous Month, and Earlier
   const groupedSections = useMemo(() => {
@@ -147,7 +166,7 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
   const handleExportCSV = async () => {
     const res = await exportTransactionsToCSV(transactions, categories, accounts);
     if (res.success) {
-      setToastMessage(res.savedToDownloads ? `✓ Saved ${res.filename} to Downloads folder` : '✓ Exported transactions to CSV');
+      setToastMessage(res.savedToDownloads ? `Saved ${res.filename} to Downloads folder` : 'Exported transactions to CSV');
     } else {
       setToastMessage('No transactions to export yet');
     }
@@ -165,8 +184,11 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
     >
       {/* Toast notification banner */}
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[120] bg-black/90 dark:bg-white text-white dark:text-black text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl animate-fade-in pointer-events-none">
-          {toastMessage}
+        <div className="fixed top-16 inset-x-4 z-[120] flex justify-center pointer-events-none">
+          <div className="px-4 py-2.5 rounded-full bg-[#1D1D1D]/95 text-white border border-[#C6FF3D]/30 text-xs font-semibold shadow-2xl backdrop-blur-md animate-fade-in flex items-center gap-2 pointer-events-auto">
+            <div className="w-2 h-2 rounded-full bg-[#C6FF3D] shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
         </div>
       )}
 

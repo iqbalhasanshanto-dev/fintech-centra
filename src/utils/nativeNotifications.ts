@@ -52,8 +52,8 @@ export async function triggerSystemNotification(
 ): Promise<boolean> {
   if (typeof window === 'undefined') return false;
 
-  const cleanTitle = (title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim();
-  const cleanBody = (body || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim();
+  const cleanTitle = (title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').replace(/\u{FE0F}/gu, '').trim();
+  const cleanBody = (body || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').replace(/\u{FE0F}/gu, '').trim();
 
   const tag = id || `notif_${Date.now()}`;
   const options: NotificationOptions = {

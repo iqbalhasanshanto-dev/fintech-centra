@@ -9,7 +9,7 @@
 <br />
 
 [![MIT License](https://img.shields.io/badge/License-MIT-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](LICENSE)
-[![Latest Release v4.1.0](https://img.shields.io/badge/Release-v4.1.0-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](#-releases--version-history-table-download-any-version)
+[![Latest Release v4.1.1](https://img.shields.io/badge/Release-v4.1.1-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](#-releases--version-history-table-download-any-version)
 [![337 Passing Tests](https://img.shields.io/badge/Tests-337%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
 [![Android SDK 36](https://img.shields.io/badge/Android-SDK%2036-3DDC84.svg?style=flat-square&logo=android&logoColor=white&labelColor=000000)](android/)
 [![Capacitor 8.5](https://img.shields.io/badge/Capacitor-8.5-119EFF.svg?style=flat-square&logo=capacitor&logoColor=white&labelColor=000000)](https://capacitorjs.com/)
@@ -23,19 +23,19 @@
     <td align="center" style="padding: 18px; background-color: #0d1117; border: 1px solid #30363d; border-radius: 14px;">
       <b>⚡ Instant Direct Downloads (No App Store / Sign-Up Required)</b>
       <br /><br />
-      <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0-debug.apk">
-        <img src="https://img.shields.io/badge/📲_Download_Android_APK-v4.1.0_(Latest_Stable,_6.00_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v4.1.0 Android APK" />
+      <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk">
+        <img src="https://img.shields.io/badge/📲_Download_Android_APK-v4.1.1_(Latest_Stable,_5.99_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v4.1.1 Android APK" />
       </a>
       &nbsp;
-      <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.0.0-debug.apk">
-        <img src="https://img.shields.io/badge/📦_Download_Android_APK-v4.0.0_(Previous_Release,_5.98_MB)-3B82F6?style=for-the-badge&logo=android&logoColor=ffffff&labelColor=121212" alt="Download Centra v4.0.0 Android APK" />
+      <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk">
+        <img src="https://img.shields.io/badge/📦_Download_Android_APK-v4.1.0_(Previous_Release,_6.00_MB)-3B82F6?style=for-the-badge&logo=android&logoColor=ffffff&labelColor=121212" alt="Download Centra v4.1.0 Android APK" />
       </a>
       &nbsp;
       <a href="#-desktop--mobile-installation-guide">
         <img src="https://img.shields.io/badge/💻_Desktop_&_Mobile-Installation_Guide-white?style=for-the-badge&logo=desktop&logoColor=000000&labelColor=121212" alt="Build / Run on Desktop" />
       </a>
       <br /><br />
-      <b>👉 Direct One-Click APK Download (Android & Desktop):</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0-debug.apk">Download Centra v4.1.0 APK (6.00 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.0.0-debug.apk">Download Centra v4.0.0 APK (5.98 MB)</a>
+      <b>👉 Direct One-Click APK Download (Android & Desktop):</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk">Download Centra v4.1.1 APK (5.99 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk">Download Centra v4.1.0 APK (6.00 MB)</a>
     </td>
   </tr>
 </table>
@@ -62,8 +62,9 @@ Download standalone Android application packages directly from GitHub. Every APK
 
 | Version | Channel | Download / Release Record | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v4.1.0`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.0-debug.apk) | 6.00 MB | 5-second Undo Delete, standalone Savings Goals with per-goal History log, native Android Downloads CSV & notifications, back-stack navigation, bottom nav alignment |
-| **`v4.0.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.0.0-debug.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.0.0-debug.apk) | 5.98 MB | Spring motion UI animations, swipe-to-delete rows, sliding tab pills, 2-month rolling retention, native phone notifications, immediate PIN lock |
+| **`v4.1.1`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.1.apk) | 5.99 MB | Edit transaction date & Figma category picker, 52px input alignment, once-per-month retention notifications, centered toasts, all-categories activity filter, instant home back exit |
+| **`v4.1.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.0.apk) | 6.00 MB | 5-second Undo Delete, standalone Savings Goals with per-goal History log, native Android Downloads CSV & notifications, back-stack navigation, bottom nav alignment |
+| **`v4.0.0`** | 📦 Archive | [**🏷️ Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v4.0.0) · [Notes](CHANGELOG.md) | 5.98 MB | Spring motion UI animations, swipe-to-delete rows, sliding tab pills, 2-month rolling retention, native phone notifications, immediate PIN lock |
 | **`v3.3.0`** | 📦 Archive | [**🏷️ Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v3.3.0) · [Notes](CHANGELOG.md) | 5.97 MB | Custom payee/source primary titles, Savings Goal fund withdrawals, onboarding minimize persistence, month-end balance carryover |
 | **`v3.2.0`** | 📦 Archive | [**🏷️ Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v3.2.0) · [Notes](CHANGELOG.md) | 5.94 MB | Interactive glowing/dimmed calendar Today button, pinned transactions stick to top with badges across all activity lists |
 | **`v3.1.4`** | 📦 Archive | [**🏷️ Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v3.1.4) · [Notes](CHANGELOG.md) | 5.94 MB | Android safe-area zero top gap, non-wrapping header titles, word-break fix on goal cards, locked main scroll |
@@ -78,10 +79,10 @@ Download standalone Android application packages directly from GitHub. Every APK
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
-- **v4.1.0 (`Centra-v4.1.0-debug.apk`)**: `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13`
-- **v4.0.0 (`Centra-v4.0.0-debug.apk`)**: `0bfd170ccefabcd4c15cdb60a01e8b42ccfc4b12240ff500c1a0d8a1f351cd54`
+- **v4.1.1 (`Centra-v4.1.1.apk`)**: `5dc92a7b373f843064d1d33ab2db7861faf1d24d4d951368023f9a0e4afad700`
+- **v4.1.0 (`Centra-v4.1.0.apk`)**: `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13`
 
-Verify on macOS/Linux (`shasum -a 256 releases/Centra-v4.1.0-debug.apk`) or Windows (`CertUtil -hashfile releases\Centra-v4.1.0-debug.apk SHA256`).
+Verify on macOS/Linux (`shasum -a 256 releases/Centra-v4.1.1.apk`) or Windows (`CertUtil -hashfile releases\Centra-v4.1.1.apk SHA256`).
 </details>
 
 <details>
@@ -112,7 +113,7 @@ Publishing a new Android release with one-click direct download links takes 3 au
 ## 💻 Desktop & Mobile Installation Guide
 
 ### 📱 Android Phone Installation
-1. Tap the [**📲 Download Centra v4.1.0 APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0-debug.apk) button above.
+1. Tap the [**📲 Download Centra v4.1.1 APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk) button above.
 2. Once the download finishes, open the `.apk` file from your browser's notification tray or the `Downloads` folder.
 3. If Android displays: *"For your security, your phone is not allowed to install unknown apps from this source"*:
    - Tap **Settings**.
@@ -125,10 +126,10 @@ Publishing a new Android release with one-click direct download links takes 3 au
 Download the `.apk` directly to your computer using the download buttons or table above:
 - **Install via ADB onto Connected Device or Emulator**:
   ```bash
-  adb install -r Centra-v4.1.0-debug.apk
+  adb install -r Centra-v4.1.1.apk
   ```
 - **Android Studio Virtual Device (AVD)**: Drag and drop the downloaded `.apk` directly onto any running Android emulator window.
-- **Windows Subsystem for Android (WSA)**: Install using `adb connect 127.0.0.1:58526 && adb install Centra-v4.1.0-debug.apk`.
+- **Windows Subsystem for Android (WSA)**: Install using `adb connect 127.0.0.1:58526 && adb install Centra-v4.1.1.apk`.
 
 #### Option 2: Native Desktop Build via Tauri 2
 Centra includes a native Rust-powered desktop bundle for macOS (`.dmg`), Windows (`.msi` / `.exe`), and Linux (`.AppImage` / `.deb`):
@@ -149,16 +150,16 @@ Verify that your downloaded APK is 100% authentic and matches the source code:
 
 - **macOS / Linux**:
   ```bash
-  shasum -a 256 releases/Centra-v4.1.0-debug.apk
+  shasum -a 256 releases/Centra-v4.1.1.apk
   ```
 - **Windows (PowerShell / Command Prompt)**:
   ```powershell
-  CertUtil -hashfile releases\Centra-v4.1.0-debug.apk SHA256
+  CertUtil -hashfile releases\Centra-v4.1.1.apk SHA256
   ```
 
-**Expected SHA-256 Hash for v4.1.0**:
+**Expected SHA-256 Hash for v4.1.1**:
 ```text
-466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13
+5dc92a7b373f843064d1d33ab2db7861faf1d24d4d951368023f9a0e4afad700
 ```
 
 ---
@@ -223,8 +224,8 @@ fintech-centra/
 ├── ios/                     # Capacitor 8 iOS native project (Swift Package Manager)
 ├── public/                  # Static web assets, logos, and theme-init flash prevention script
 ├── releases/                # Active Android APK distributions (Latest & Previous)
-│   ├── Centra-v4.1.0-debug.apk
-│   ├── Centra-v4.0.0-debug.apk
+│   ├── Centra-v4.1.1.apk
+│   ├── Centra-v4.1.0.apk
 │   └── README.md
 ├── scripts/                 # Build and release automation scripts
 │   └── prepare-release.mjs  # One-command release packager and SHA-256 calculator

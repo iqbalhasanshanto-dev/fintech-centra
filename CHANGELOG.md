@@ -6,6 +6,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [v4.1.1] — 2026-11-02
+
+### 🚀 Release: Edit Transaction Date & Figma Category Selector, Monthly Retention Notifications, Centered Toasts & Back Navigation Polish
+
+Centra `v4.1.1` delivers a major upgrade to transaction editing with date editing and an interactive Figma-style category picker, resolves monthly data retention reminder notifications, fixes goal modal titles during dismissal, centers all application toast bars, expands the Recent Activities category filter, improves Android back-button exit responsiveness on the Home screen, and transitions release artifacts to clean, non-debug filenames (`Centra-v4.1.1.apk`).
+
+#### 📥 Direct Downloads & Verification
+- **Android APK (One-Click Direct Download)**: [**Centra-v4.1.1.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.1.apk) (Fallback: [`releases/Centra-v4.1.1.apk?raw=true`](releases/Centra-v4.1.1.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.1.apk)
+- **File Size**: `6,277,474 bytes` (5.99 MB)
+- **SHA-256 Checksum**:
+  ```
+  5dc92a7b373f843064d1d33ab2db7861faf1d24d4d951368023f9a0e4afad700
+  ```
+
+#### ✏️ Edit Transaction Modal Overhaul
+- **Full Date Editing**: Integrated custom interactive `DatePicker` modal allowing users to adjust transaction dates seamlessly.
+- **Custom Figma Category Selector**: Replaced native HTML `<select>` with a custom collapsible picker matching Quick Action styling, complete with category icons, checkmark badges, and merged default categories.
+- **Dynamic Category Persistence**: Automatically upserts default categories into `CentraDB` upon selection if not already persisted.
+- **Pixel-Perfect Input Alignment**: Normalized input heights to `52px` across Merchant, Date, and Category selectors for consistent UI rhythm.
+
+#### 🔔 2-Month Rolling Retention Notification Polish
+- **Monthly Notification Guard**: Throttled system tray notifications for the 2-Month Data Retention reminder to once per calendar month using `localStorage` key `centra_retention_notified_${yyyyMm}`.
+- **Notification Read Fix**: Fixed notification pipeline so marking reminders or alerts as read never retriggers Android status-bar popups (`notificationsToEmit: []`).
+- **Clean Reminder Cards**: Removed non-functional `View details >` link from the pinned retention card in Notifications modal and prevented erroneous Quick Action modal openings on tap.
+
+#### 🎯 Goal Modal Polish & Title Flash Prevention
+- **Stable Modal Titles**: Preserved `lastGoalNameRef` in `PlanScreen` so goal fund modals retain their title (e.g. `"Add Funds to Car"`) smoothly throughout the exit animation without flashing `"undefined"`.
+
+#### 🍞 Centered Toasts & Modern Dot Indicators
+- **Horizontal Centering Containers**: Replaced `left-1/2 -translate-x-1/2` with full-width flex containers (`fixed inset-x-4 flex justify-center pointer-events-none`) across Settings and Recent Activities toasts, ensuring toasts never get clipped on mobile screens.
+- **Minimalist Status Badges**: Removed `✓` / `✅` tick marks in favor of a clean, glowing neon-lime dot indicator (`w-2 h-2 rounded-full bg-[#C6FF3D]`).
+
+#### 🔍 Recent Activities Filter & Home Navigation
+- **All Categories Available**: Merged all 11 default categories into the Recent Activities filter list with multi-property matching (`id` and lowercase `name`).
+- **Instant Home Back Exit**: Android hardware Back gesture on the root Home tab immediately presents the exit toast without cycling through redundant history entries.
+
+---
+
 ## [v4.1.0] — 2026-11-01
 
 ### 🚀 Release: 5-Second Undo Delete, Standalone Savings Goals with Per-Goal History, Native Android Downloads & Status-Bar Notifications
@@ -13,8 +52,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 Centra `v4.1.0` introduces a 5-second Undo Delete safety system with delayed server deletion, standalone Savings Goal accounting with a dedicated chronological History modal log, native Android MediaStore Downloads folder CSV integration, real-time Android system notification tray alerts, comprehensive All-Data CSV backup, bottom navbar sliding pill alignment and inactive Settings state, smooth 45-degree `+` to `×` rotation, tab back-history navigation, and red swipe bleed elimination.
 
 #### 📥 Direct Downloads & Verification
-- **Android APK (One-Click Direct Download)**: [**Centra-v4.1.0-debug.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0-debug.apk) (Fallback: [`releases/Centra-v4.1.0-debug.apk?raw=true`](releases/Centra-v4.1.0-debug.apk?raw=true))
-- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.0-debug.apk)
+- **Android APK (One-Click Direct Download)**: [**Centra-v4.1.0.apk**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/Centra-v4.1.0.apk) (Fallback: [`releases/Centra-v4.1.0.apk?raw=true`](releases/Centra-v4.1.0.apk?raw=true))
+- **Direct Raw Mirror**: [Download from Raw GitHub](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/Centra-v4.1.0.apk)
 - **File Size**: `6,275,302 bytes` (6.00 MB)
 - **SHA-256 Checksum**:
   ```

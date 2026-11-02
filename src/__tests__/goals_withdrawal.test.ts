@@ -2,10 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   FinanceState,
   applyWithdrawFromGoal,
-  applyContributeToGoal,
   applyDeleteTransaction,
 } from '../utils/financeOperations';
-import { Account, Category, Goal, Transaction } from '../types';
+import { Account, Category, Goal } from '../types';
 
 describe('Goals Withdrawal Operations', () => {
   const baseAccount: Account = {

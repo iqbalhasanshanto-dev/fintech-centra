@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, TouchEvent, MouseEvent } from 'react';
+import React, { useState, useRef, TouchEvent, MouseEvent } from 'react';
 import { Trash2 } from 'lucide-react';
 
 export interface SwipeableRowProps {
@@ -87,7 +87,7 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
     setTimeout(async () => {
       try {
         await onDelete();
-      } catch (err) {
+      } catch {
         setIsCollapsing(false);
         setTranslateX(0);
       }

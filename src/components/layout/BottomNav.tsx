@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PieChart, Plus, X, Target, SlidersHorizontal, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
+import { PieChart, Plus, Target, SlidersHorizontal, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
 
 export type TabType = 'home' | 'report' | 'plan' | 'settings';

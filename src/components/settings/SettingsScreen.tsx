@@ -41,7 +41,7 @@ import { getUserInitials } from '../../utils/initials';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { logger } from '../../utils/logger';
 import { CurrencyCode } from '../../types';
-import { CentraDB, GUEST_USER_ID } from '../../db/storage';
+import { GUEST_USER_ID } from '../../db/storage';
 import { SUPPORTED_CURRENCIES } from '../../utils/currencies';
 import { RATES_LAST_UPDATED } from '../../utils/formatters';
 import { useBackHandler } from '../../utils/backButton';
@@ -233,7 +233,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       userProfile: user,
     });
     if (res.success) {
-      setStatusToast(res.savedToDownloads ? `✓ Saved ${res.filename} to Downloads folder` : '✓ Exported all data to CSV');
+      setStatusToast(res.savedToDownloads ? `Saved ${res.filename} to Downloads folder` : 'Exported all data to CSV');
     } else {
       setStatusToast('No data to export yet');
     }
@@ -1133,8 +1133,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       </Modal>
 
       {statusToast && (
-        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 bg-[#16A34A] text-white rounded-xl shadow-xl flex items-center gap-2 text-sm font-semibold animate-fade-in">
-          <span>✓ {statusToast}</span>
+        <div className="fixed bottom-24 lg:bottom-10 inset-x-4 z-[160] flex justify-center pointer-events-none">
+          <div className="w-full max-w-sm px-4 py-3 rounded-2xl bg-[#1D1D1D]/95 text-white border border-[#C6FF3D]/30 shadow-2xl backdrop-blur-md flex items-center justify-center text-center text-xs font-semibold animate-fade-in pointer-events-auto">
+            <div className="w-2 h-2 rounded-full bg-[#C6FF3D] shrink-0 mr-2.5" />
+            <span>{statusToast}</span>
+          </div>
         </div>
       )}
 

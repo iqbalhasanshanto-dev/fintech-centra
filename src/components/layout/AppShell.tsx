@@ -24,20 +24,9 @@ export const AppShell: React.FC = () => {
   const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal'>('spend');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [showExitToast, setShowExitToast] = useState(false);
   const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
   const mainContentRef = useRef<HTMLElement>(null);
-  const lastBackPressRef = useRef<number>(0);
-  const exitToastTimerRef = useRef<NodeJS.Timeout | null>(null);
   const tabHistoryRef = useRef<TabType[]>(['home']);
-
-  useEffect(() => {
-    return () => {
-      if (exitToastTimerRef.current) {
-        clearTimeout(exitToastTimerRef.current);
-      }
-    };
-  }, []);
 
   // Synchronously ensure Demo Mode never renders settings screen
   const effectiveTab: TabType = (isGuest && activeTab === 'settings') ? 'home' : activeTab;
@@ -45,7 +34,13 @@ export const AppShell: React.FC = () => {
   // Hardware back button root handler: pops tab history stack, and immediately minimizes/exits when at root 'home'
   useEffect(() => {
     const unregister = BackButtonManager.registerRootHandler(() => {
-      // If we have back history across tabs, pop and navigate back
+      // Whenever the user is on Home (and no modal/drawer is open), immediately minimize/exit to phone home screen
+      if (effectiveTab === 'home') {
+        exitNativeApp();
+        return;
+      }
+
+      // If we are on another tab and have back history across tabs, pop and navigate back
       if (tabHistoryRef.current.length > 1) {
         tabHistoryRef.current.pop();
         const prevTab = tabHistoryRef.current[tabHistoryRef.current.length - 1] || 'home';
@@ -53,15 +48,9 @@ export const AppShell: React.FC = () => {
         return;
       }
 
-      // If activeTab is not home for any reason, navigate to home
-      if (effectiveTab !== 'home') {
-        tabHistoryRef.current = ['home'];
-        setActiveTab('home');
-        return;
-      }
-
-      // Only at root tab (home with no prior tab history): immediately minimize/exit to phone home screen
-      exitNativeApp();
+      // Fallback: return to home
+      tabHistoryRef.current = ['home'];
+      setActiveTab('home');
     });
     return unregister;
   }, [effectiveTab]);
@@ -88,8 +77,9 @@ export const AppShell: React.FC = () => {
     if (targetTab === effectiveTab) {
       scrollToTop();
     } else {
-      // Push to history stack avoiding consecutive duplicates
-      if (tabHistoryRef.current[tabHistoryRef.current.length - 1] !== targetTab) {
+      if (targetTab === 'home') {
+        tabHistoryRef.current = ['home'];
+      } else if (tabHistoryRef.current[tabHistoryRef.current.length - 1] !== targetTab) {
         tabHistoryRef.current.push(targetTab);
       }
       setActiveTab(targetTab);
@@ -238,15 +228,6 @@ export const AppShell: React.FC = () => {
             <div className="w-full h-1 bg-white/10 overflow-hidden">
               <div className="h-full bg-[#C6FF3D] animate-undo-progress" />
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Exit Toast Pill */}
-      {showExitToast && (
-        <div className="fixed bottom-28 inset-x-4 z-[200] flex justify-center pointer-events-none">
-          <div className="px-4 py-2 rounded-full bg-[#1D1D1D]/95 text-white border border-white/15 shadow-2xl backdrop-blur-md text-xs font-semibold animate-fade-in pointer-events-none select-none flex items-center gap-2">
-            <span>Swipe back again to exit</span>
           </div>
         </div>
       )}
