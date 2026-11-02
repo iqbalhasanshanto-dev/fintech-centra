@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, ChevronDown, Check, LogOut, Sun, Moon } from 'lucide-react';
+import { Bell, ChevronDown, Check, LogOut, Sun, Moon, Download } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { PeriodFilter } from '../../types';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import { InstallAppModal } from '../ui/InstallAppModal';
 import { getGreeting } from '../../utils/greeting';
 import { getUserInitials } from '../../utils/initials';
+import { usePwaInstall } from '../../utils/pwaInstall';
 
 interface HeaderProps {
   onOpenNotifications: () => void;
@@ -29,6 +31,15 @@ export const Header: React.FC<HeaderProps> = ({
   const [showGuestConfirm, setShowGuestConfirm] = useState(false);
   const [showExitDemoConfirm, setShowExitDemoConfirm] = useState(false);
   const [greeting, setGreeting] = useState(() => getGreeting());
+  const { isInstallable, triggerInstall } = usePwaInstall();
+  const [showInstallModal, setShowInstallModal] = useState(false);
+
+  const handleInstallClick = async () => {
+    const res = await triggerInstall();
+    if (res === 'manual') {
+      setShowInstallModal(true);
+    }
+  };
 
   useEffect(() => {
     const update = () => setGreeting(getGreeting());
@@ -167,6 +178,20 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action Toolbar */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Install Centra App Button for Web */}
+            {isInstallable && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] hover:bg-black/5 dark:hover:bg-white/10 text-xs font-semibold text-gray-800 dark:text-gray-200 transition-colors shadow-xs cursor-pointer shrink-0"
+                title="Install Centra App"
+                aria-label="Install Centra App"
+              >
+                <Download className="w-3.5 h-3.5 text-[#56791E] dark:text-[#C6FF3D]" />
+                <span className="hidden sm:inline">Install App</span>
+              </button>
+            )}
+
             {/* Theme Toggle Button (Sun/Moon - Demo Mode only for rapid light/dark preview) */}
             {isGuest && (
               <button
@@ -266,6 +291,11 @@ export const Header: React.FC<HeaderProps> = ({
         message="Are you sure you want to exit demo mode and return to the login screen?"
         type="warning"
         confirmText="Exit Demo"
+      />
+
+      <InstallAppModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
       />
     </header>
   );
