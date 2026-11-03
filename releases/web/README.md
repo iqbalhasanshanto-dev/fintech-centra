@@ -10,7 +10,7 @@ Once installed, Centra runs in a dedicated borderless window with desktop dock/t
 
 | Version | Channel | Installation Method | Highlights |
 |:---|:---|:---|:---|
-| **`v1.0.0`** | 🟢 Latest | **Direct Browser Install** (Zero `.zip` files) · [Install Guide](#-how-to-install--run-centra-as-a-standalone-desktop-app) | Production-optimized standalone PWA, offline Service Worker, Web App Manifest with window-controls-overlay, pure-black OLED theme, local PBKDF2 cryptography |
+| **`v1.0.1`** | 🟢 Latest | **Direct Browser Install** (Zero `.zip` files) · [Install Guide](#-how-to-install--run-centra-as-a-standalone-desktop-app) | Production-optimized standalone PWA, offline Service Worker, Web App Manifest with window-controls-overlay, pure-black OLED theme, local PBKDF2 cryptography |
 
 ---
 

@@ -1,61 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import type { Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, GUEST_SESSION_FLAG_KEY } from '../../context/AuthContext';
 import { logger } from '../../utils/logger';
 import logoOnDark from '../../assets/brand/logo-on-dark.svg';
 import logoOnLight from '../../assets/brand/logo-on-light.svg';
 import { CornerGlow } from '../ui/CornerGlow';
 
 export const AuthCallbackScreen: React.FC = () => {
-  const { setAuthView } = useAuth();
+  const { setAuthView, handleSession } = useAuth();
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     let isMounted = true;
+    let handled = false;
 
     if (!isSupabaseConfigured()) {
       setAuthView('signedOut');
       return;
     }
 
-    const checkSession = async () => {
+    const processSession = async (session: Session) => {
+      if (handled || !isMounted) return;
+      handled = true;
+
+      window.history.replaceState({}, document.title, '/');
+
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!isMounted) return;
-
-        if (session?.user) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id, onboarding_completed')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (!isMounted) return;
-
-          if (profile?.onboarding_completed) {
-            setAuthView('app');
-          } else {
-            setAuthView('onboarding');
-          }
-          return true;
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
         }
-        return false;
-      } catch (err: unknown) {
-        logger.warn('Callback session check error:', err);
-        return false;
+      } catch {
+        // Ignore
       }
-    };
 
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted) return;
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-
+      if (handleSession) {
+        await handleSession(session);
+      } else {
         const { data: profile } = await supabase
           .from('profiles')
           .select('id, onboarding_completed')
@@ -69,6 +51,53 @@ export const AuthCallbackScreen: React.FC = () => {
         } else {
           setAuthView('onboarding');
         }
+      }
+    };
+
+    const checkSession = async () => {
+      try {
+        let { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return false;
+
+        const searchParams = new URLSearchParams(window.location.search);
+        const code = searchParams.get('code');
+
+        if (!session && code) {
+          try {
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            if (data?.session) {
+              session = data.session;
+            } else if (error) {
+              logger.warn('Code exchange note (may have been handled by detectSessionInUrl):', error);
+              const retry = await supabase.auth.getSession();
+              session = retry.data.session;
+            }
+          } catch (exchangeErr) {
+            logger.warn('Code exchange exception (may have been handled by detectSessionInUrl):', exchangeErr);
+            const retry = await supabase.auth.getSession();
+            session = retry.data.session;
+          }
+        }
+
+        if (!isMounted) return false;
+
+        if (session?.user) {
+          await processSession(session);
+          return true;
+        }
+        return false;
+      } catch (err: unknown) {
+        logger.warn('Callback session check error:', err);
+        return false;
+      }
+    };
+
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session?.user) {
+        await processSession(session);
       }
     });
 
@@ -84,7 +113,7 @@ export const AuthCallbackScreen: React.FC = () => {
       subscription.unsubscribe();
       clearTimeout(timeoutTimer);
     };
-  }, [setAuthView]);
+  }, [setAuthView, handleSession]);
 
   return (
     <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex items-center justify-center p-6 transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black">

@@ -25,7 +25,7 @@ describe('Auth Redirect Helper (src/utils/authRedirect.ts)', () => {
     vi.mocked(platform.isTauri).mockReturnValue(false);
 
     const result = getAuthRedirectUrl();
-    expect(result).toBe(`${window.location.origin}/auth/callback`);
+    expect(result).toBe(`${window.location.origin}/`);
   });
 
   it('returns web origin callback when on Tauri desktop platform', () => {
@@ -33,6 +33,6 @@ describe('Auth Redirect Helper (src/utils/authRedirect.ts)', () => {
     vi.mocked(platform.isTauri).mockReturnValue(true);
 
     const result = getAuthRedirectUrl();
-    expect(result).toBe(`${window.location.origin}/auth/callback`);
+    expect(result).toBe(`${window.location.origin}/`);
   });
 });

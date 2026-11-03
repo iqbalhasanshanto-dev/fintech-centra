@@ -10,7 +10,7 @@ Welcome to the official multi-platform distribution center for Centra. Centra ma
 |:---|:---|:---|:---|:---|:---|
 | **🤖 Android** | **`v4.1.1`** | 🟢 Latest | Standalone APK (`.apk`) | [**📲 Download Android APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.1.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.1.apk) | [Android Releases Guide](android/README.md) |
 | **🍏 iOS** | **`v1.0.1`** | 🟢 Latest | Standalone IPA (`.ipa`) | [**📲 Download iOS IPA**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.1.ipa) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.1.ipa) | [iOS Releases Guide](ios/README.md) |
-| **💻 Web / Desktop** | **`v1.0.0`** | 🟢 Latest | Standalone PWA (`Browser Install`) | [**🌐 Install Web App (Zero .zip)**](web/README.md) | [Web Releases Guide](web/README.md) |
+| **💻 Web / Desktop** | **`v1.0.1`** | 🟢 Latest | Standalone PWA (`Browser Install`) | [**🌐 Install Web App (Zero .zip)**](web/README.md) | [Web Releases Guide](web/README.md) |
 
 ---
 

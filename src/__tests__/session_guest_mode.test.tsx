@@ -26,6 +26,8 @@ vi.mock('../lib/supabaseClient', () => {
         getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
         getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
         signOut: vi.fn().mockResolvedValue({ error: null }),
+        signInWithOAuth: vi.fn().mockResolvedValue({ error: null }),
+        exchangeCodeForSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
         onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
       },
     },
@@ -39,6 +41,10 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     sessionStorage.clear();
     vi.clearAllMocks();
     CentraDB.clearAllData();
+    (supabase.auth.getSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
   });
 
   // (a) cold start with an old persistent guest flag shows the landing page, not the dashboard
@@ -294,5 +300,113 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
 
     // Zero supabase.from calls throughout
     expect(supabase.from).toHaveBeenCalledTimes(0);
+  });
+
+  // (g) signInWithOAuth clears GUEST_SESSION_FLAG_KEY from sessionStorage before calling supabase
+  it('(g) signInWithOAuth clears GUEST_SESSION_FLAG_KEY from sessionStorage before starting OAuth', async () => {
+    sessionStorage.setItem(GUEST_SESSION_FLAG_KEY, 'true');
+    CentraDB.setActiveUser(GUEST_USER_ID);
+
+    let authContextRef!: ReturnType<typeof useAuth>;
+    const TestConsumer = () => {
+      authContextRef = useAuth();
+      return <div>Ready</div>;
+    };
+
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>
+    );
+
+    expect(sessionStorage.getItem(GUEST_SESSION_FLAG_KEY)).toBe('true');
+
+    await act(async () => {
+      await authContextRef.signInWithOAuth('google');
+    });
+
+    // Flag must have been removed from sessionStorage
+    expect(sessionStorage.getItem(GUEST_SESSION_FLAG_KEY)).toBeNull();
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'google',
+        options: expect.objectContaining({
+          redirectTo: `${window.location.origin}/`,
+        }),
+      })
+    );
+  });
+
+  // (h) cold start with OAuth callback in URL clears GUEST_SESSION_FLAG_KEY and renders AuthCallbackScreen
+  it('(h) cold start with OAuth callback in URL clears GUEST_SESSION_FLAG_KEY and does not boot into guest mode', async () => {
+    sessionStorage.setItem(GUEST_SESSION_FLAG_KEY, 'true');
+    window.history.replaceState({}, '', '/?code=test-oauth-code');
+
+    (supabase.auth.getSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
+
+    render(<App />);
+
+    // Flag must have been cleared
+    expect(sessionStorage.getItem(GUEST_SESSION_FLAG_KEY)).toBeNull();
+
+    // Must NOT boot into guest dashboard
+    expect(screen.queryByText(/Guest Mode \(Local Demo\)/i)).not.toBeInTheDocument();
+    // Must render authenticating callback screen
+    expect(screen.getByText(/Authenticating\.\.\./i)).toBeInTheDocument();
+
+    window.history.replaceState({}, '', '/');
+  });
+
+  // (i) cold start with active Supabase session clears GUEST_SESSION_FLAG_KEY and prioritizes real session over guest mode
+  it('(i) cold start with active Supabase session clears GUEST_SESSION_FLAG_KEY and prioritizes real session over guest mode', async () => {
+    const validUserId = '77777777-7777-4777-8777-777777777777';
+    sessionStorage.setItem(GUEST_SESSION_FLAG_KEY, 'true');
+
+    (supabase.auth.getSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: {
+        session: {
+          user: { id: validUserId, email: 'realuser@example.com' },
+          access_token: 'fake-jwt',
+        },
+      },
+      error: null,
+    });
+
+    (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((_table: string) => ({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { id: validUserId, onboarding_completed: true, base_currency: 'USD', name: 'Real User' },
+            error: null,
+          }),
+          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
+    }));
+
+    CentraDB.setActiveUser(validUserId);
+    CentraDB.saveUser({
+      id: validUserId,
+      name: 'Real User',
+      email: 'realuser@example.com',
+      baseCurrency: 'USD',
+      onboardingCompleted: true,
+      createdAt: new Date().toISOString(),
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Dashboard/i })).toBeInTheDocument();
+    });
+
+    // GUEST_SESSION_FLAG_KEY must be cleared
+    expect(sessionStorage.getItem(GUEST_SESSION_FLAG_KEY)).toBeNull();
+    // Real user is in dashboard, NOT guest mode
+    expect(screen.queryByText(/Guest Mode \(Local Demo\)/i)).not.toBeInTheDocument();
   });
 });

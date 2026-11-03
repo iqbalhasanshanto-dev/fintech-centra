@@ -11,8 +11,8 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](LICENSE)
 [![Android v4.1.1](https://img.shields.io/badge/Android-v4.1.1-C6FF3D.svg?style=flat-square&logo=android&logoColor=000000&labelColor=000000)](#-android-releases-v411)
 [![iOS v1.0.1](https://img.shields.io/badge/iOS-v1.0.1-119EFF.svg?style=flat-square&logo=apple&logoColor=white&labelColor=000000)](#-ios-releases-v101)
-[![Web / Desktop v1.0.0](https://img.shields.io/badge/Web_/_Desktop-v1.0.0-38BDF8.svg?style=flat-square&logo=pwa&logoColor=white&labelColor=000000)](#-web--desktop-releases-v100)
-[![347 Passing Tests](https://img.shields.io/badge/Tests-347%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
+[![Web / Desktop v1.0.1](https://img.shields.io/badge/Web_/_Desktop-v1.0.1-38BDF8.svg?style=flat-square&logo=pwa&logoColor=white&labelColor=000000)](#-web--desktop-releases-v100)
+[![358 Passing Tests](https://img.shields.io/badge/Tests-358%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
 [![Android SDK 36](https://img.shields.io/badge/Android-SDK%2036-3DDC84.svg?style=flat-square&logo=android&logoColor=white&labelColor=000000)](android/)
 [![Capacitor 8.5](https://img.shields.io/badge/Capacitor-8.5-119EFF.svg?style=flat-square&logo=capacitor&logoColor=white&labelColor=000000)](https://capacitorjs.com/)
 [![Supabase RLS](https://img.shields.io/badge/Supabase-RLS%20Enforced-3ECF8E.svg?style=flat-square&logo=supabase&logoColor=white&labelColor=000000)](supabase/)
@@ -87,7 +87,7 @@ Centra provides three independent release tracks: **Android**, **iOS**, and **We
 | **`v1.0.1`** | 🟢 Latest | [**📲 Download iOS IPA**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.1.ipa) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.1.ipa) | 2.46 MB | Fixed bottom navigation bar safe-area gap on iPhone screens, edge-to-edge WKWebView layout |
 | **`v1.0.0`** | ⚪ Previous | [**📦 Download iOS IPA**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.0.ipa) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.0.ipa) | 2.74 MB | Initial official iOS release — Unsigned Release IPA for sideloading & Xcode Capacitor 8 native Swift project (with local Xcode Simulator testing via `npm run cap:open:ios`), pure-black OLED launcher icons & 2732px splash screens, local PBKDF2 PIN lock & offline CentraDB |
 
-### 💻 Web & Desktop Releases (`v1.0.0` — macOS, Windows, Linux)
+### 💻 Web & Desktop Releases (`v1.0.1` — macOS, Windows, Linux)
 
 | Version | Channel | Download / Release Record | Size | Highlights |
 |:---|:---|:---|:---|:---|

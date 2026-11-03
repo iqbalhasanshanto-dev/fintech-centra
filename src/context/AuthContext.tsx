@@ -76,6 +76,7 @@ interface AuthContextType {
   completeOnboarding: () => Promise<void>;
   createAccountFromGuest: () => void;
   exitGuestMode: () => void;
+  handleSession?: (session: Session | null) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +99,31 @@ function getInitialAuthState(): {
   isLockedByPin: boolean;
   authView: AuthState;
 } {
-  // 1. Session-scoped guest mode check (CURRENT session only via sessionStorage)
+  // 1. Check for OAuth callback in URL FIRST
+  let hasOAuthCallback = false;
+  try {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      hasOAuthCallback = params.has('code') || window.location.hash.includes('access_token=');
+    }
+  } catch {}
+
+  if (hasOAuthCallback) {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+      }
+    } catch {}
+    return {
+      user: CentraDB.getUser(),
+      isAuthenticated: false,
+      isGuest: false,
+      isLockedByPin: false,
+      authView: 'loading',
+    };
+  }
+
+  // 2. Session-scoped guest mode check (CURRENT session only via sessionStorage)
   try {
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(GUEST_SESSION_FLAG_KEY) === 'true') {
       CentraDB.setActiveUser(GUEST_USER_ID);
@@ -111,25 +136,6 @@ function getInitialAuthState(): {
       };
     }
   } catch {}
-
-  // 2. Check for OAuth callback in URL
-  let hasOAuthCallback = false;
-  try {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      hasOAuthCallback = params.has('code') || window.location.hash.includes('access_token=');
-    }
-  } catch {}
-
-  if (hasOAuthCallback) {
-    return {
-      user: CentraDB.getUser(),
-      isAuthenticated: false,
-      isGuest: false,
-      isLockedByPin: false,
-      authView: 'loading',
-    };
-  }
 
   // 3. Check for cached Supabase session in localStorage
   let cachedUserId: string | null = null;
@@ -538,6 +544,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 0. Clean up any stale persistent guest flags from older versions in localStorage
       cleanupLegacyGuestData();
 
+      // Check if the current URL has an OAuth return payload
+      const hasOAuthCallback = typeof window !== 'undefined' && (
+        window.location.search.includes('code=') ||
+        window.location.hash.includes('access_token=')
+      );
+
+      // Check if Supabase session exists
+      let session: Session | null = null;
+      if (isSupabaseConfigured()) {
+        try {
+          const res = await supabase.auth.getSession();
+          session = res.data.session;
+        } catch (err) {
+          logger.warn('Cold start getSession error:', err);
+        }
+      }
+
+      // If a real session or OAuth callback code is present, clear guest session flag FIRST
+      // and process the real authenticated session instead of booting into Guest mode!
+      if (hasOAuthCallback || session?.user) {
+        try {
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+          }
+        } catch {
+          // Ignore
+        }
+
+        if (session?.user) {
+          await handleSession(session);
+          return;
+        }
+
+        if (hasOAuthCallback) {
+          // OAuth callback is handling session creation; do not fall through to guest mode
+          return;
+        }
+      }
+
       // 1. Session-scoped guest mode check (CURRENT session only via sessionStorage)
       let isGuestSession = false;
       try {
@@ -563,19 +608,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // 3. Supabase session check
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await handleSession(session);
-        } else if (authViewRef.current !== 'app' && authViewRef.current !== 'locked') {
-          setAuthView('signedOut');
-        }
-      } catch (err) {
-        logger.warn('Cold start getSession error:', err);
-        if (authViewRef.current !== 'app' && authViewRef.current !== 'locked') {
-          setAuthView('signedOut');
-        }
+      // 3. No session and not guest
+      if (authViewRef.current !== 'app' && authViewRef.current !== 'locked') {
+        setAuthView('signedOut');
       }
     };
 
@@ -763,6 +798,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Supabase backend is not configured.');
     }
 
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+      }
+    } catch {
+      // Ignore
+    }
+
     const currentMode = mode || authMode;
     setOauthLoading(provider);
     setOauthError(null);
@@ -807,6 +850,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Web path
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+      }
+    } catch {
+      // Ignore
+    }
     localStorage.setItem(INTENT_STORAGE_KEY, currentMode);
 
     try {
@@ -1285,6 +1335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         completeOnboarding,
         createAccountFromGuest,
         exitGuestMode,
+        handleSession,
       }}
     >
       {children}
