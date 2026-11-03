@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Pin, Trash2 } from 'lucide-react';
+import { Pin, Trash2, ArrowUpDown } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
@@ -43,7 +43,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
   return (
     <section id="transactions" className="transition-colors w-full">
       {/* Activity Card Matching Figma Frame Home full screen (activity-card) */}
-      <div className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all w-full min-h-[360px] lg:min-h-[430px] flex flex-col">
+      <div className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all w-full min-h-[380px] lg:min-h-[430px] flex flex-col">
         {/* Card Header: Title + View All Action */}
         <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.07] mb-2 shrink-0">
           <h2 className="text-sm sm:text-base font-medium text-[#18212F] dark:text-white/60">
@@ -61,8 +61,16 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
 
         {/* Transactions List with unconstrained clean spacing */}
         {recentTransactions.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center py-16 text-center text-xs font-medium text-[#667085] dark:text-white/40">
-            No transactions yet. Tap &apos;+&apos; in the bottom bar to add your first transaction.
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-16 px-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#F1F2F4] dark:bg-white/[0.06] flex items-center justify-center text-[#667085] dark:text-[#9CA3AF] mb-3">
+              <ArrowUpDown className="w-6 h-6" />
+            </div>
+            <p className="text-sm sm:text-base font-bold text-[#18212F] dark:text-white mb-1">
+              Nothing here yet
+            </p>
+            <p className="text-xs sm:text-sm text-[#667085] dark:text-[#9CA3AF] max-w-xs">
+              Transactions you add will show up here instantly.
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-black/[0.03] dark:divide-white/[0.04] flex-1">

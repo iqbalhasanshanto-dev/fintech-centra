@@ -45,6 +45,9 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
         {/* Hero Balance Row with Privacy Mode Toggle */}
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="min-w-0">
+            <span className="text-xs font-medium text-[#667085] dark:text-[#9CA3AF] block mb-1">
+              Net Balance
+            </span>
             <span className="text-3xl sm:text-4xl font-bold tracking-tight text-[#18212F] dark:text-white tabular-nums currency-amount truncate block">
               {formatCurrency(displayBalance, settings?.baseCurrency, settings?.privacyMode)}
             </span>
@@ -70,33 +73,29 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
           </button>
         </div>
 
-        {/* Stacked Summary Rows */}
-        <div className="space-y-3 pt-3 border-t border-black/[0.04] dark:border-white/[0.05]">
-          {/* Total Income Row */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-1 h-5 rounded-full bg-[#16A34A] dark:bg-[#22C55E] shrink-0" />
-              <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
+        {/* Total Income & Expenses: 2-Column Grid Side-by-Side */}
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+          {/* Total Income */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-1 h-8 rounded-full bg-[#16A34A] dark:bg-[#22C55E] shrink-0" />
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
                 Total income
               </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white whitespace-nowrap">
+              <span className="text-sm sm:text-base font-bold tabular-nums text-[#18212F] dark:text-white truncate">
                 {formatCurrency(periodIncome, settings?.baseCurrency, settings?.privacyMode)}
               </span>
             </div>
           </div>
 
-          {/* Total Expenses Row */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-1 h-5 rounded-full bg-[#E11D48] dark:bg-[#F43F5E] shrink-0" />
-              <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
+          {/* Total Expenses */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-1 h-8 rounded-full bg-[#E11D48] dark:bg-[#F43F5E] shrink-0" />
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-medium text-[#667085] dark:text-[#9CA3AF] truncate">
                 Total expenses
               </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <span className="text-base sm:text-lg font-bold tabular-nums text-[#18212F] dark:text-white whitespace-nowrap">
+              <span className="text-sm sm:text-base font-bold tabular-nums text-[#18212F] dark:text-white truncate">
                 {formatCurrency(periodExpenses, settings?.baseCurrency, settings?.privacyMode)}
               </span>
             </div>

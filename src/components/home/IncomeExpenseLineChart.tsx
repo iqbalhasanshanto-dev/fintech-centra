@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
 } from 'recharts';
+import { LineChart as ChartIcon } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { convertCurrency, formatCurrency } from '../../utils/formatters';
 import { getPeriodDateRange } from '../../utils/dates';
@@ -179,10 +180,18 @@ export const IncomeExpenseLineChart: React.FC = () => {
       </div>
 
       {/* Area Chart Container */}
-      <div className="h-60 sm:h-64 lg:flex-1 lg:min-h-[220px] w-full">
+      <div className="h-60 sm:h-64 lg:flex-1 lg:min-h-[220px] w-full flex flex-col justify-center">
         {chartData.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-[#667085] dark:text-[#9CA3AF]">
-            No transaction data available for this timeframe.
+          <div className="h-full min-h-[180px] flex flex-col items-center justify-center p-6 rounded-2xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/40 dark:bg-[#262626]/30 text-center">
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/[0.06] flex items-center justify-center text-[#667085] dark:text-[#9CA3AF] mb-2 shadow-xs">
+              <ChartIcon className="w-5 h-5" />
+            </div>
+            <p className="text-sm font-semibold text-[#18212F] dark:text-white">
+              No cash flow yet
+            </p>
+            <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-1 max-w-xs">
+              Add your first income or expense to see the trend.
+            </p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

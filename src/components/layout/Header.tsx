@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({
         paddingRight: 'env(safe-area-inset-right, 0px)',
       }}
     >
-      <div className="w-full max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 h-16 sm:h-20 flex items-center justify-between">
+      <div className="w-full max-w-[1040px] mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
 
         {/* Left: Dynamic Header Title */}
         <div className="flex flex-col justify-center min-w-0 pr-2">

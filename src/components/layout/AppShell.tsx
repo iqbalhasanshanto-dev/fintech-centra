@@ -113,13 +113,13 @@ export const AppShell: React.FC = () => {
 
         {/* Guest Mode Warning Banner */}
         {isGuest && (
-          <div className="w-full max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-3 shrink-0">
+          <div className="w-full max-w-[1040px] mx-auto px-5 sm:px-8 pt-3 shrink-0">
             <GuestBanner />
           </div>
         )}
 
         {/* Main Screen Content Container (Locked Scrollable Area with pb-28 for Bottom Nav) */}
-        <main ref={mainContentRef} className={`flex-1 min-h-0 overflow-y-auto w-full max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 ${effectiveTab === 'settings' ? 'pt-0' : 'pt-3'} pb-28 md:pt-6 md:pb-28 bg-[#F7F8FA] dark:bg-[#000000]`}>
+        <main ref={mainContentRef} className={`flex-1 min-h-0 overflow-y-auto w-full max-w-[1040px] mx-auto px-5 sm:px-8 ${effectiveTab === 'settings' ? 'pt-0' : 'pt-3'} pb-28 md:pt-6 md:pb-28 bg-[#F7F8FA] dark:bg-[#000000]`}>
           {effectiveTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => handleSelectTab('report')}
@@ -138,6 +138,7 @@ export const AppShell: React.FC = () => {
             <LazyErrorBoundary fallbackTitle="Unable to load Goals & Budgets">
               <PlanScreen
                 onOpenAddGoal={() => handleOpenAddWithTab('create-goal')}
+                onOpenAddBudget={() => handleOpenAddWithTab('budget')}
               />
             </LazyErrorBoundary>
           )}

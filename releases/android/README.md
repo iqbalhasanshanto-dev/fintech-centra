@@ -26,7 +26,7 @@ This directory houses curated and verified Android application package (`.apk`) 
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
-- **v4.1.2 (`Centra-v4.1.2.apk`)**: `43d1db702c877a9263fb1518beab36fab2d3f790df483dd8f28daeafe3ea2e74`
+- **v4.1.2 (`Centra-v4.1.2.apk`)**: `eadd76145f81cb68e4c6ba2a6fc7e45b66a39ba1ca9bf8c9d090aef44baa73e3`
 - **v4.1.0 (`Centra-v4.1.0.apk`)**: `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13`
 
 Verify on macOS/Linux (`shasum -a 256 releases/android/Centra-v4.1.2.apk`) or Windows (`CertUtil -hashfile releases\android\Centra-v4.1.2.apk SHA256`).

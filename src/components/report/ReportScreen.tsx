@@ -68,26 +68,28 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
     return new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   }, []);
 
-  return (
-    <div className="space-y-6 animate-fade-in pb-2 pt-1 sm:pt-2">
-      {/* =========================================================================
-          CARD 1: Expenses by category (12-analytics--full.png)
-          ========================================================================= */}
-      <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] transition-colors shadow-xs">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-[#18212F] dark:text-white">
-            Expenses by category
-          </h3>
-          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+  const categoryCard = (
+    <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] transition-colors shadow-xs h-full flex flex-col justify-between">
+      <div>
+        <div className="flex items-start justify-between gap-2 mb-4">
+          <div>
+            <h3 className="text-lg font-bold text-[#18212F] dark:text-white">
+              Expenses by category
+            </h3>
+            <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-0.5">
+              Share of total spend in this period
+            </p>
+          </div>
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0">
             {currentMonthYearLabel}
           </span>
         </div>
 
         {expenseDonutData.length === 0 ? (
-          <div className="p-8 rounded-2xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#262626]/40 text-center my-4">
+          <div className="flex-1 min-h-[220px] flex flex-col items-center justify-center text-center p-8 rounded-2xl border border-dashed border-black/[0.08] dark:border-white/[0.12] bg-[#F1F2F4]/50 dark:bg-[#262626]/40 my-4">
             <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No expense breakdown recorded</p>
             <p className="text-xs text-[#667085] dark:text-[#9CA3AF] mt-1">
-              Record your expenses to visualize itemized category analytics.
+              Add an expense to see the split.
             </p>
           </div>
         ) : (
@@ -186,11 +188,16 @@ export const ReportScreen: React.FC<ReportScreenProps> = ({
           </div>
         )}
       </div>
+    </div>
+  );
 
-      {/* =========================================================================
-          CARD 2: Spending calendar & CARD 3: Selected date Breakdown (AnalyticsCalendar)
-          ========================================================================= */}
-      <AnalyticsCalendar onSelectTransaction={handleTxSelect} />
+  return (
+    <div className="space-y-6 animate-fade-in pb-2 pt-1 sm:pt-2">
+      {/* AnalyticsCalendar rendering top row (with categoryCard) and full-width Selected Date below */}
+      <AnalyticsCalendar
+        leftColumn={categoryCard}
+        onSelectTransaction={handleTxSelect}
+      />
 
       {/* Transaction Detail Modal */}
       <TransactionDetailModal

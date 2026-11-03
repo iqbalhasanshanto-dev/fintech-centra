@@ -26,10 +26,12 @@ import { isNative } from '../../utils/platform';
 
 interface PlanScreenProps {
   onOpenAddGoal: () => void;
+  onOpenAddBudget?: () => void;
 }
 
 export const PlanScreen: React.FC<PlanScreenProps> = ({
   onOpenAddGoal,
+  onOpenAddBudget,
 }) => {
   const { goals, budgets, settings, contributeToGoal, withdrawFromGoal, deleteGoal, deleteBudget, deleteGoalHistoryEntry } = useFinance();
   
@@ -164,24 +166,24 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
           )}
         </div>
 
-        <div className="space-y-3">
-          {goals.length === 0 ? (
-            <div className="p-8 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.08] text-center">
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No savings goals created yet</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
-                Set milestones for a dream purchase, vacation, or emergency fund to track your progress.
-              </p>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onOpenAddGoal}
-                icon={<Plus className="w-3.5 h-3.5" />}
-              >
-                Create Goal
-              </Button>
-            </div>
-          ) : (
-            goals.map(goal => {
+        {goals.length === 0 ? (
+          <div className="p-8 rounded-[24px] bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.08] text-center w-full">
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No savings goals created yet</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
+              Set milestones for a dream purchase, vacation, or emergency fund to track your progress.
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onOpenAddGoal}
+              icon={<Plus className="w-3.5 h-3.5" />}
+            >
+              Create Goal
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {goals.map(goal => {
               const pace = calculateGoalPace(
                 goal.currentAmount,
                 goal.targetAmount,
@@ -329,9 +331,9 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                 </div>
               </SwipeableRow>
             );
-          })
-          )}
+          })}
         </div>
+      )}
       </div>
 
       {/* Section 2: Budgets & Category Spending Limits */}
@@ -345,18 +347,28 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
               {budgets.length}
             </span>
           </div>
+
+          {onOpenAddBudget && (
+            <button
+              onClick={onOpenAddBudget}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#16A34A]/15 text-[#16A34A] dark:bg-[#22C55E]/15 dark:text-[#22C55E] text-xs font-semibold hover:bg-[#16A34A]/25 dark:hover:bg-[#22C55E]/25 transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Budget</span>
+            </button>
+          )}
         </div>
 
-        <div className="space-y-3">
-          {budgets.length === 0 ? (
-            <div className="p-8 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.08] text-center">
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No category budgets created yet</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Set monthly spending limits for your categories to keep spending on track.
-              </p>
-            </div>
-          ) : (
-            budgets.map(budget => {
+        {budgets.length === 0 ? (
+          <div className="p-8 rounded-[28px] bg-white dark:bg-[#1D1D1D] border border-dashed border-black/[0.08] dark:border-white/[0.08] text-center w-full">
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">No category budgets created yet</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Set monthly spending limits for your categories to keep spending on track.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {budgets.map(budget => {
               const percentSpent = (budget.spentAmount / budget.limitAmount) * 100;
               const remaining = budget.limitAmount - budget.spentAmount;
               const isOver = percentSpent >= 100;
@@ -430,9 +442,9 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                   </div>
                 </SwipeableRow>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
       </div>
 
       {/* Add / Withdraw Funds Modal */}
@@ -546,8 +558,8 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       <Modal
         isOpen={!!goalForHistory}
         onClose={() => setGoalForHistory(null)}
-        title={goalForHistory ? `${goalForHistory.name} History` : 'Goal History'}
-        subtitle="Chronological log of deposits and withdrawals"
+        title="Goal history"
+        subtitle={goalForHistory ? goalForHistory.name : undefined}
       >
         {goalForHistory && (() => {
           const liveGoal = goals.find(g => g.id === goalForHistory.id) || goalForHistory;
@@ -638,7 +650,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                             </div>
                             <div className="min-w-0">
                               <h5 className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                                {isInitial ? 'Initial Deposit' : isWithdraw ? 'Withdrawn Funds' : 'Added Funds'}
+                                {isInitial ? 'Initial Deposit' : isWithdraw ? 'Withdrawal' : 'Deposit'}
                               </h5>
                               <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
                                 {dateFormatted}

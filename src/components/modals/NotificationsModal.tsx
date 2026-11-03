@@ -282,7 +282,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Notifications"
-      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] md:bg-black/60 md:backdrop-blur-md flex flex-col md:items-center md:justify-center md:p-6 overflow-hidden text-[#18212F] dark:text-white antialiased"
+      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] md:bg-black/65 md:backdrop-blur-sm flex flex-col md:items-center md:justify-center md:p-4 overflow-hidden text-[#18212F] dark:text-white antialiased"
     >
       {/* Desktop Backdrop Click to dismiss */}
       <div
@@ -292,10 +292,10 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       />
 
       {/* Inner Container: Full-screen on mobile, centered modal card on desktop/tablet */}
-      <div className="w-full h-full md:h-auto md:max-w-xl md:w-full md:max-h-[82vh] md:rounded-[32px] bg-[#F7F8FA] dark:bg-[#000000] md:dark:bg-[#141414] md:border md:border-black/10 md:dark:border-white/10 md:shadow-2xl flex flex-col overflow-hidden animate-fade-in">
+      <div className="w-full h-full md:h-auto md:max-w-[540px] md:max-h-[82vh] md:rounded-[28px] bg-[#F7F8FA] dark:bg-[#000000] md:bg-white md:dark:bg-[#181818] md:border md:border-black/10 md:dark:border-white/12 md:shadow-2xl flex flex-col overflow-hidden animate-fade-in">
         {/* Top Header Bar */}
         <div
-          className="shrink-0 w-full bg-[#F7F8FA] dark:bg-[#000000] md:dark:bg-[#141414] border-b border-black/5 dark:border-white/10"
+          className="shrink-0 w-full bg-[#F7F8FA] dark:bg-[#000000] md:bg-white md:dark:bg-[#181818] border-b border-black/5 dark:border-white/10"
           style={{
             paddingTop: 'env(safe-area-inset-top, 0px)',
             paddingLeft: 'env(safe-area-inset-left, 0px)',
@@ -303,27 +303,39 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           }}
         >
           <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
-            {/* Mobile: Back Button (<) */}
-            <button
-              type="button"
-              onClick={onClose}
-              className="md:hidden w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 cursor-pointer shrink-0"
-              aria-label="Back"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
+            {/* Mobile: Back Button (<) & Title */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="md:hidden w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 cursor-pointer shrink-0"
+                aria-label="Back"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
 
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white text-center md:text-left">
-              Notifications
-            </h1>
+              <h1 className="text-lg font-bold tracking-tight text-[#18212F] dark:text-white">
+                Notifications
+              </h1>
+            </div>
 
-            {/* Right Controls */}
+            {/* Right Controls: Mark all as read, Clear all (Trash2), Close (X) */}
             <div className="flex items-center gap-2 shrink-0">
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllNotificationsAsRead}
+                  className="px-2.5 py-1 text-xs font-semibold text-[#4D6E18] dark:text-[#C6FF3D] hover:bg-[#C6FF3D]/10 rounded-lg transition-colors cursor-pointer"
+                >
+                  Mark all as read
+                </button>
+              )}
+
               {uniqueNotifications.length > 0 && (
                 <button
                   type="button"
                   onClick={clearNotifications}
-                  className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0 shadow-xs"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0 shadow-xs"
                   title="Clear all"
                   aria-label="Clear all notifications"
                 >
@@ -335,7 +347,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="hidden md:flex w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer shrink-0 shadow-xs"
+                className="hidden md:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer shrink-0 shadow-xs"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -351,7 +363,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         >
           <div className="w-full flex-1 flex flex-col space-y-4 pb-3">
 
-        {/* Inbox Controls Bar: "Your updates" + unread badge + "Mark all as read" */}
+        {/* Inbox Controls Bar: "Your updates" + unread badge */}
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-[#18212F] dark:text-white/80">
@@ -363,16 +375,6 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               </span>
             )}
           </div>
-
-          {unreadCount > 0 && (
-            <button
-              type="button"
-              onClick={markAllNotificationsAsRead}
-              className="text-xs font-medium text-[#4D6E18] dark:text-[#C6FF3D] hover:underline transition-colors cursor-pointer"
-            >
-              Mark all as read
-            </button>
-          )}
         </div>
 
         {/* Notifications Scroll List Container */}

@@ -10,10 +10,12 @@ import { isNative } from '../../utils/platform';
 
 interface AnalyticsCalendarProps {
   onSelectTransaction?: (tx: Transaction) => void;
+  leftColumn?: React.ReactNode;
 }
 
 export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
   onSelectTransaction,
+  leftColumn,
 }) => {
   const { transactions, settings, deleteTransaction } = useFinance();
 
@@ -191,10 +193,8 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
     }
   };
 
-  return (
-    <section id="interactive-calendar" className="space-y-6">
-      {/* Card 2: Spending Calendar (12-analytics--full.png) */}
-      <div className="bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] rounded-[28px] p-5 sm:p-6 transition-colors shadow-xs">
+  const calendarCard = (
+    <div className="bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] rounded-[28px] p-5 sm:p-6 transition-colors shadow-xs h-full flex flex-col justify-between">
         {/* Calendar Header with aligned icon & text */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
@@ -315,9 +315,26 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
           </span>
         </div>
       </div>
+  );
+
+  return (
+    <section id="interactive-calendar" className="space-y-6">
+      {/* Top Row: Side-by-Side on Desktop */}
+      {leftColumn ? (
+        <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-5 lg:items-stretch">
+          <div className="lg:col-span-5 flex flex-col">
+            {leftColumn}
+          </div>
+          <div className="lg:col-span-7 flex flex-col">
+            {calendarCard}
+          </div>
+        </div>
+      ) : (
+        calendarCard
+      )}
 
       {/* Card 3: Selected Date Breakdown (Separate Card Below the Calendar matching 12-analytics--full.png) */}
-      <div className="bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] rounded-[28px] p-5 sm:p-6 flex flex-col shadow-xs">
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/[0.06] dark:border-white/[0.12] rounded-[28px] p-5 sm:p-6 flex flex-col shadow-xs w-full">
         {/* Selected Date Header */}
         <div className="border-b border-black/[0.06] dark:border-white/[0.08] pb-4 mb-4">
           <span className="text-xs font-medium text-[#667085] dark:text-gray-400 block mb-0.5">

@@ -233,7 +233,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       >
         {/* Floating Bottom Nav Container */}
         <nav 
-          className="max-w-[440px] sm:max-w-[560px] mx-auto flex items-center justify-between gap-4 sm:gap-6 pointer-events-auto relative"
+          className="max-w-[440px] sm:max-w-[520px] mx-auto flex items-center justify-between gap-4 sm:gap-5 pointer-events-auto relative"
           aria-label="Main Navigation Bar"
         >
           {/* Floating Capsule Dock: Home, Analytics, Budgets */}

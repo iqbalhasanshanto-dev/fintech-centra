@@ -21,8 +21,6 @@ import {
   KeyRound,
   AlertCircle,
   FileText,
-  Sun,
-  Moon,
   ChevronDown,
   Check,
   Search
@@ -73,22 +71,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const { user, updateUser, logout, lockApp, isGuest, createAccountFromGuest, exitGuestMode } = useAuth();
   const { theme, setTheme } = useTheme();
 
-  const isDarkComputed = (theme || settings.theme) === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
-  const [prevDarkComputed, setPrevDarkComputed] = useState(isDarkComputed);
-  const [isDarkActive, setIsDarkActive] = useState(isDarkComputed);
-
-  if (prevDarkComputed !== isDarkComputed) {
-    setPrevDarkComputed(isDarkComputed);
-    setIsDarkActive(isDarkComputed);
-  }
-
-  const handleToggleTheme = () => {
-    const nextDark = !isDarkActive;
-    setIsDarkActive(nextDark);
-    const nextMode = nextDark ? 'dark' : 'light';
-    setTheme(nextMode);
-    updateSettings({ theme: nextMode });
-    updateNativeStatusBar(nextDark);
+  const handleSelectThemeMode = (mode: 'system' | 'light' | 'dark') => {
+    setTheme(mode);
+    updateSettings({ theme: mode });
+    if (mode === 'dark') {
+      updateNativeStatusBar(true);
+    } else if (mode === 'light') {
+      updateNativeStatusBar(false);
+    } else {
+      const sysDark =
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches;
+      updateNativeStatusBar(sysDark);
+    }
   };
 
   // Modals state
@@ -340,7 +336,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
 
       {/* Top Header Bar matching unified spec */}
       <div
-        className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-5 sm:-mx-8 lg:-mx-12 px-5 sm:px-8 lg:px-12 border-b border-black/5 dark:border-white/10"
+        className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-5 sm:-mx-8 px-5 sm:px-8 border-b border-black/5 dark:border-white/10"
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
@@ -350,16 +346,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer shrink-0"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
+            <span>Back</span>
           </button>
 
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white text-center">
             Settings
           </h1>
 
-          <div className="w-10 h-10 shrink-0" aria-hidden="true" />
+          <div className="w-16 shrink-0" aria-hidden="true" />
         </div>
       </div>
 
@@ -624,62 +621,33 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         </div>
 
         <div className="space-y-4 text-xs">
-          {/* Theme / Appearance Mode Toggle Switch */}
-          <div
-            onClick={handleToggleTheme}
-            className="flex items-center justify-between pt-1 cursor-pointer select-none gap-4"
-          >
+          {/* Theme / Appearance Mode 3-Column Segmented Pill Selector */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">Appearance</p>
               <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
-                Switch between Dark and Light mode
+                Choose between System, Light, or Dark theme
               </p>
             </div>
 
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isDarkActive}
-              aria-label="Toggle Dark Mode"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleToggleTheme();
-              }}
-              className={`group relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 border focus:outline-hidden ${
-                isDarkActive
-                  ? 'bg-[#C6FF3D] border-[#C6FF3D]'
-                  : 'bg-[#E5E7EB] border-[#D1D5DB] dark:bg-[#262626] dark:border-white/[0.12]'
-              }`}
-            >
-              <span
-                className={`pointer-events-none flex items-center justify-center h-6 w-6 rounded-full shadow-xs spring-switch-thumb ${
-                  isDarkActive
-                    ? 'translate-x-5 bg-[#0A0E1A] text-[#C6FF3D]'
-                    : 'translate-x-0 bg-white text-amber-500'
-                }`}
-              >
-                {isDarkActive ? (
-                  <Moon className="w-3.5 h-3.5 fill-[#C6FF3D]" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5" />
-                )}
-              </span>
-            </button>
-
-            {/* Synchronized hidden buttons for test compatibility */}
-            <div className="sr-only" aria-hidden="true">
-              {(['system', 'light', 'dark'] as const).map(mode => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => {
-                    setTheme(mode);
-                    updateSettings({ theme: mode });
-                  }}
-                >
-                  {mode}
-                </button>
-              ))}
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] shrink-0 self-start sm:self-auto min-w-[240px]">
+              {(['system', 'light', 'dark'] as const).map(mode => {
+                const isActive = (theme || settings.theme) === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => handleSelectThemeMode(mode)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer capitalize text-center ${
+                      isActive
+                        ? 'bg-[#C6FF3D] text-[#0A0E1A] font-bold shadow-xs'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {mode}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
