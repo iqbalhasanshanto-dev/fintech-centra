@@ -10,7 +10,7 @@ export interface PlatformVersions {
 export const PLATFORM_VERSIONS: PlatformVersions = {
   android: '4.1.1',
   ios: '1.0.1',
-  web: '1.0.1',
+  web: '1.0.2',
 };
 
 export const VERSIONS: PlatformVersions = (versionsData || PLATFORM_VERSIONS) as PlatformVersions;

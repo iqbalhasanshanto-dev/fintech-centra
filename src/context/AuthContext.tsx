@@ -864,6 +864,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         provider,
         options: {
           redirectTo: getAuthRedirectUrl(),
+          ...(provider === 'google' ? { queryParams: { prompt: 'select_account' } } : {}),
         },
       });
 

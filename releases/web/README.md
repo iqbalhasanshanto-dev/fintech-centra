@@ -10,7 +10,7 @@ Once installed, Centra runs in a dedicated borderless window with desktop dock/t
 
 | Version | Channel | Installation Method | Highlights |
 |:---|:---|:---|:---|
-| **`v1.0.1`** | 🟢 Latest | **Direct Browser Install** (Zero `.zip` files) · [Install Guide](#-how-to-install--run-centra-as-a-standalone-desktop-app) | Production-optimized standalone PWA, offline Service Worker, Web App Manifest with window-controls-overlay, pure-black OLED theme, local PBKDF2 cryptography |
+| **`v1.0.2`** | 🟢 Latest | **Direct Browser Install** (Zero `.zip` files) · [Install Guide](#-how-to-install--run-centra-as-a-standalone-desktop-app) | Unified floating bottom capsule navigation on desktop & mobile, side-by-side Account Information & Cash Flow Trend dashboard, permanent standalone PWA title bar, clean "Centra" window title, Google account chooser support, and desktop mouse drag + 1-click Goal History deletion |
 
 ---
 

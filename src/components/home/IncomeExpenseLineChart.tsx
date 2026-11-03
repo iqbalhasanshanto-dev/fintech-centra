@@ -154,7 +154,7 @@ export const IncomeExpenseLineChart: React.FC = () => {
   }, [transactions, periodFilter, settings.baseCurrency]);
 
   return (
-    <section id="cashflow-line-chart" className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all w-full">
+    <section id="cashflow-line-chart" className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all w-full h-full flex flex-col justify-between lg:mt-0">
       {/* Header with Title and Dot Legend (08-home.png) */}
       <div className="mb-5">
         <h3 className="text-base font-semibold text-[#18212F] dark:text-white">
@@ -179,7 +179,7 @@ export const IncomeExpenseLineChart: React.FC = () => {
       </div>
 
       {/* Area Chart Container */}
-      <div className="h-60 sm:h-64 w-full">
+      <div className="h-60 sm:h-64 lg:flex-1 lg:min-h-[220px] w-full">
         {chartData.length === 0 ? (
           <div className="h-full flex items-center justify-center text-xs text-[#667085] dark:text-[#9CA3AF]">
             No transaction data available for this timeframe.

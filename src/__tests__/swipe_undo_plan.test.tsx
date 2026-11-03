@@ -9,6 +9,7 @@ import {
 import { GoalHistoryEntry } from '../types';
 import { FinanceProvider, useFinance } from '../context/FinanceContext';
 import { PlanScreen } from '../components/plan/PlanScreen';
+import { SwipeableRow } from '../components/ui/SwipeableRow';
 
 // Mock AuthContext
 vi.mock('../context/AuthContext', () => ({
@@ -264,5 +265,25 @@ describe('PlanScreen SwipeableRow Integration', () => {
     // Check that SwipeableRow structure is present around cards
     const swipeableRows = container.querySelectorAll('.relative.overflow-hidden');
     expect(swipeableRows.length).toBeGreaterThan(0);
+  });
+
+  it('SwipeableRow supports desktop mouse drag to reveal delete action', () => {
+    const onDelete = vi.fn();
+    render(
+      <SwipeableRow onDelete={onDelete} deleteLabel="Delete">
+        <div>Swipeable Goal Row Content</div>
+      </SwipeableRow>
+    );
+
+    const rowContent = screen.getByText('Swipeable Goal Row Content');
+
+    // Simulate mouse drag left by 60px
+    fireEvent.mouseDown(rowContent, { clientX: 200, clientY: 50 });
+    fireEvent.mouseMove(rowContent, { clientX: 140, clientY: 50 });
+    fireEvent.mouseUp(rowContent);
+
+    // Delete button should now be revealed
+    const deleteBtn = screen.getByRole('button', { name: 'Delete' });
+    expect(deleteBtn).toBeInTheDocument();
   });
 });

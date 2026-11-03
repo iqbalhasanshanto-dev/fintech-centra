@@ -212,13 +212,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* Subtle Background Gradient Scrim behind the Floating Capsule Dock */}
       <div
         aria-hidden="true"
-        className={`pointer-events-none fixed bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-[#F7F8FA] via-[#F7F8FA]/90 to-transparent dark:from-black dark:via-black/80 dark:to-transparent z-30 md:hidden ${
+        className={`pointer-events-none fixed bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-[#F7F8FA] via-[#F7F8FA]/90 to-transparent dark:from-black dark:via-black/80 dark:to-transparent z-30 ${
           isInputFocused ? 'hidden' : ''
         }`}
       />
 
       <div 
-        className={`fixed left-0 right-0 z-40 w-full px-4 select-none md:hidden pointer-events-none ${isInputFocused ? 'hidden' : ''}`}
+        className={`fixed left-0 right-0 z-40 w-full px-4 select-none pointer-events-none ${isInputFocused ? 'hidden' : ''}`}
         style={{
           bottom: `${isInputFocused ? 0 : viewportBottom}px`,
           paddingBottom: isIOS
@@ -233,7 +233,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       >
         {/* Floating Bottom Nav Container */}
         <nav 
-          className="max-w-md mx-auto flex items-center justify-between gap-3 pointer-events-auto relative"
+          className="max-w-[440px] sm:max-w-[540px] mx-auto flex items-center justify-between gap-3 pointer-events-auto relative"
           aria-label="Main Navigation Bar"
         >
           {/* Floating Capsule Dock: Home, Analytics, Budgets */}
@@ -255,15 +255,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                   <button
                     key={tab.id}
                     onClick={() => onSelectTab(tab.id)}
-                    className={`relative z-10 w-full min-h-[44px] px-2 py-1.5 rounded-full flex flex-col items-center justify-center transition-colors duration-200 cursor-pointer ${
+                    className={`relative z-10 w-full min-h-[44px] sm:h-[46px] px-2 sm:px-5 py-1.5 rounded-full flex flex-col sm:flex-row items-center justify-center sm:gap-2.5 transition-colors duration-200 cursor-pointer ${
                       isActive
                         ? 'text-white dark:text-[#0A0E1A] font-bold'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium'
                     }`}
                     aria-label={tab.label}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-[10px] mt-0.5 tracking-tight font-semibold">{tab.label}</span>
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span className="text-[10px] sm:text-xs mt-0.5 sm:mt-0 tracking-tight font-semibold">{tab.label}</span>
                   </button>
                 );
               })}

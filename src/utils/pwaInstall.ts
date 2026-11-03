@@ -90,7 +90,7 @@ export function usePwaInstall() {
     };
   }, []);
 
-  const triggerInstall = async (): Promise<'prompted' | 'manual'> => {
+  const triggerInstallPrompt = async (): Promise<boolean> => {
     if (deferredPrompt && typeof deferredPrompt.prompt === 'function') {
       try {
         await deferredPrompt.prompt();
@@ -98,20 +98,30 @@ export function usePwaInstall() {
         if (choice && choice.outcome === 'accepted') {
           deferredPrompt = null;
           setPrompt(null);
+          return true;
         }
-        return 'prompted';
+        return false;
       } catch {
-        return 'manual';
+        return false;
       }
     }
-    return 'manual';
+    return false;
   };
 
+  const triggerInstall = async (): Promise<'prompted' | 'manual'> => {
+    const success = await triggerInstallPrompt();
+    return success ? 'prompted' : 'manual';
+  };
+
+  const canPrompt = Boolean(prompt);
+
   return {
-    isInstallable: !isNative() && !isStandalone,
+    canPrompt,
+    isInstallable: canPrompt && !isStandalone && !isNative(),
     isStandalone,
     prompt,
     triggerInstall,
+    triggerInstallPrompt,
     isSafariMac: isSafariBrowser() && isMacPlatform(),
     isSafariIos: isSafariBrowser() && isIosPlatform(),
   };

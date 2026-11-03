@@ -78,6 +78,63 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled || isCollapsing) return;
+    // Don't drag if clicking a button or interactive element inside
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, input, select, textarea')) return;
+
+    startXRef.current = e.clientX;
+    startYRef.current = e.clientY;
+    currentXRef.current = translateX;
+    isHorizontalSwipeRef.current = null;
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || startXRef.current === null || startYRef.current === null) return;
+    const currentX = e.clientX;
+    const currentY = e.clientY;
+    const deltaX = currentX - startXRef.current;
+    const deltaY = currentY - startYRef.current;
+
+    // Detect primary direction
+    if (isHorizontalSwipeRef.current === null) {
+      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+        isHorizontalSwipeRef.current = Math.abs(deltaX) > Math.abs(deltaY);
+      }
+    }
+
+    if (!isHorizontalSwipeRef.current) return;
+
+    let nextOffset = currentXRef.current + deltaX;
+    if (nextOffset > 0) nextOffset = 0;
+    if (nextOffset < MAX_SWIPE_OFFSET - 20) {
+      nextOffset = MAX_SWIPE_OFFSET - 20 + (nextOffset - (MAX_SWIPE_OFFSET - 20)) * 0.2;
+    }
+    setTranslateX(nextOffset);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    startXRef.current = null;
+    startYRef.current = null;
+    isHorizontalSwipeRef.current = null;
+
+    if (translateX < MAX_SWIPE_OFFSET / 2) {
+      setTranslateX(MAX_SWIPE_OFFSET);
+    } else {
+      setTranslateX(0);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      handleMouseUp();
+    }
+  };
+
   const handleDeleteTrigger = async (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     if (isCollapsing) return;
@@ -129,6 +186,10 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onClick={e => {
           if (isOpen && translateX < 0) {
             e.stopPropagation();
@@ -139,7 +200,7 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
           transform: `translateX(${translateX}px)`,
           transition: isDragging ? 'none' : 'transform 240ms cubic-bezier(0.34, 1.35, 0.64, 1)',
         }}
-        className="relative z-10 w-full bg-inherit"
+        className="relative z-10 w-full bg-inherit select-none"
       >
         {children}
       </div>

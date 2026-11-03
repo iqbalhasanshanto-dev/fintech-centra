@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [Web 1.0.2] - 2026-03-30
+
+### 💻 Web App & UI Overhaul (Unified Bottom Nav, Side-by-Side Dashboard & PWA Polish)
+- **Google Account Chooser (`prompt: 'select_account'`)**: Configured OAuth parameters on Web and Native so users can select between multiple logged-in Google accounts on every sign-in or sign-up.
+- **Unified Floating Bottom Capsule Navigation**: Removed the desktop left sidebar and enabled the floating capsule navigation dock (`Home`, `Analytics`, `Budgets` + circular `#C6FF3D` `+` action button) on all screen sizes (mobile, tablet, desktop Web). On tablet and desktop, tab items display icon-left and label-right horizontally (`Home`, `Analytics`, `Budgets`).
+- **Side-by-Side Desktop Dashboard**: Placed `Account Information` (`YourMoneySection`) and `Cash Flow Trend` (`IncomeExpenseLineChart`) side-by-side in a responsive 12-column grid (`lg:col-span-5` + `lg:col-span-7`), stretching to matching row height with `Recent Activity` full-width below. Removed `InsightBanner` ("Outstanding Savings Rate") for a clean, streamlined dashboard.
+- **Permanent PWA Title Bar & Centra App Name**: Updated `public/manifest.json` and `index.html` to pure `"Centra"`, removing `window-controls-overlay` so the macOS/Windows Chrome standalone title bar is permanent with no collapsible chevron overlaying app content.
+- **Desktop Mouse Swipe & 1-Click Goal History Deletion**: Added mouse drag support (`onMouseDown`, `onMouseMove`, `onMouseUp`, `onMouseLeave`) to `SwipeableRow` and added a visible subtle trash icon button to Goal History entries. Automatically seeds an initial `GoalHistoryEntry` for goals with balances so history entries can always be deleted and rebalanced.
+- **Native Install Prompt Streamlining**: Removed custom instructions modal and uninstall button states from `Header.tsx`. Only prompts native browser install when available and not in standalone/native mode.
+
+---
+
 ## [iOS 1.0.1] - 2026-04-12
 
 ### 📱 iOS Bug Fixes & Layout Optimization

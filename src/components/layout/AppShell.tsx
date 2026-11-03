@@ -2,7 +2,6 @@ import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useFinance } from '../../context/FinanceContext';
 import { Header } from './Header';
-import { Sidebar } from './Sidebar';
 import { BottomNav, TabType } from './BottomNav';
 import { GuestBanner } from './GuestBanner';
 import { HomeScreen } from '../home/HomeScreen';
@@ -99,14 +98,7 @@ export const AppShell: React.FC = () => {
   return (
     <div className="h-[100dvh] overflow-hidden w-full bg-[#F7F8FA] dark:bg-[#000000] text-gray-900 dark:text-gray-100 flex antialiased">
 
-      {/* 1. Desktop Left Sidebar Navigation (Visible on lg: ≥1024px) */}
-      <Sidebar
-        activeTab={effectiveTab}
-        onSelectTab={handleSelectTab}
-        onOpenAddAction={() => handleOpenAddWithTab('transaction')}
-      />
-
-      {/* 2. Main Area (Header + Scrollable Content + Footer) */}
+      {/* Main Area (Header + Scrollable Content + Floating Bottom Dock) */}
       <div className="flex-1 flex flex-col min-w-0 w-full h-[100dvh] overflow-hidden bg-[#F7F8FA] dark:bg-[#000000]">
 
         {/* Top Header Toolbar */}
@@ -126,8 +118,8 @@ export const AppShell: React.FC = () => {
           </div>
         )}
 
-        {/* Main Screen Content Container (Locked Scrollable Area) */}
-        <main ref={mainContentRef} className={`flex-1 min-h-0 overflow-y-auto w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${effectiveTab === 'settings' ? 'pt-0 pb-4' : 'pt-3 pb-4'} md:py-6 bg-[#F7F8FA] dark:bg-[#000000]`}>
+        {/* Main Screen Content Container (Locked Scrollable Area with pb-28 for Bottom Nav) */}
+        <main ref={mainContentRef} className={`flex-1 min-h-0 overflow-y-auto w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${effectiveTab === 'settings' ? 'pt-0' : 'pt-3'} pb-28 md:pt-6 md:pb-28 bg-[#F7F8FA] dark:bg-[#000000]`}>
           {effectiveTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => handleSelectTab('report')}
@@ -157,7 +149,7 @@ export const AppShell: React.FC = () => {
           )}
 
           {/* Centra Footer */}
-          <footer id="footer" className="max-w-7xl mx-auto w-full px-2 sm:px-6 py-6 pb-28 lg:pb-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-3 mt-8">
+          <footer id="footer" className="max-w-7xl mx-auto w-full px-2 sm:px-6 py-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-3 mt-8">
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
               <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Centra Financial OS • Offline-First</span>
             </div>
@@ -172,14 +164,12 @@ export const AppShell: React.FC = () => {
 
       </div>
 
-      {/* 3. Mobile Floating Bottom Navigation (Hidden on lg: ≥1024px) */}
-      <div className="lg:hidden">
-        <BottomNav
-          activeTab={effectiveTab}
-          onSelectTab={handleSelectTab}
-          onOpenAddAction={handleOpenAddWithTab}
-        />
-      </div>
+      {/* Floating Bottom Navigation (All screen sizes: Mobile, Tablet, Desktop) */}
+      <BottomNav
+        activeTab={effectiveTab}
+        onSelectTab={handleSelectTab}
+        onOpenAddAction={handleOpenAddWithTab}
+      />
 
       {/* Quick Action Sheet Modal */}
       <AddActionModal

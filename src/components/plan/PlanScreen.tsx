@@ -14,7 +14,7 @@ import confetti from 'canvas-confetti';
 import { logger } from '../../utils/logger';
 import { useFinance } from '../../context/FinanceContext';
 import { Goal } from '../../types';
-import { getGoalHistory } from '../../utils/goalHistory';
+import { ensureGoalHistory } from '../../utils/goalHistory';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { CircularProgress } from '../ui/CircularProgress';
 import { Modal } from '../ui/Modal';
@@ -535,7 +535,7 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
       >
         {goalForHistory && (() => {
           const liveGoal = goals.find(g => g.id === goalForHistory.id) || goalForHistory;
-          const historyList = liveGoal.history || getGoalHistory(liveGoal.id);
+          const historyList = liveGoal.history && liveGoal.history.length > 0 ? liveGoal.history : ensureGoalHistory(liveGoal);
           const percent = liveGoal.targetAmount > 0 ? (liveGoal.currentAmount / liveGoal.targetAmount) * 100 : 0;
 
           return (
@@ -631,19 +631,34 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                             </div>
                           </div>
 
-                          <div className="text-right shrink-0">
-                            <span
-                              className={`text-xs font-bold tabular-nums block ${
-                                isWithdraw
-                                  ? 'text-amber-600 dark:text-amber-400'
-                                  : 'text-[#16A34A] dark:text-[#22C55E]'
-                              }`}
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            <div className="text-right">
+                              <span
+                                className={`text-xs font-bold tabular-nums block ${
+                                  isWithdraw
+                                    ? 'text-amber-600 dark:text-amber-400'
+                                    : 'text-[#16A34A] dark:text-[#22C55E]'
+                                }`}
+                              >
+                                {isWithdraw ? '-' : '+'}{formatCurrency(entry.amount, settings.baseCurrency, settings.privacyMode)}
+                              </span>
+                              <span className="text-[10px] text-gray-400 dark:text-white/40 tabular-nums">
+                                Bal: {formatCurrency(entry.balanceAfter, settings.baseCurrency, settings.privacyMode)}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteGoalHistoryEntry(liveGoal.id, entry.id);
+                              }}
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                              title="Delete entry"
+                              aria-label="Delete entry"
                             >
-                              {isWithdraw ? '-' : '+'}{formatCurrency(entry.amount, settings.baseCurrency, settings.privacyMode)}
-                            </span>
-                            <span className="text-[10px] text-gray-400 dark:text-white/40 tabular-nums">
-                              Bal: {formatCurrency(entry.balanceAfter, settings.baseCurrency, settings.privacyMode)}
-                            </span>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
                       </SwipeableRow>

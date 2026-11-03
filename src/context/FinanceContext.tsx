@@ -18,6 +18,7 @@ import {
   removeGoalHistoryEntry,
   saveGoalHistory,
   deleteGoalHistory,
+  ensureGoalHistory,
 } from '../utils/goalHistory';
 import { CentraDB, isGuestUser } from '../db/storage';
 import { convertCurrency, formatCurrency } from '../utils/formatters';
@@ -140,7 +141,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   const [transactions, setTransactions] = useState<Transaction[]>(() => CentraDB.getTransactions());
   const [categories, setCategories] = useState<Category[]>(() => CentraDB.getCategories());
   const [goals, setGoals] = useState<Goal[]>(() =>
-    CentraDB.getGoals().map(g => ({ ...g, history: getGoalHistory(g.id) }))
+    CentraDB.getGoals().map(g => ({ ...g, history: ensureGoalHistory(g) }))
   );
   const [budgets, setBudgets] = useState<Budget[]>(() => CentraDB.getBudgets());
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => CentraDB.getNotifications());
@@ -152,7 +153,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     accounts: CentraDB.getAccounts(),
     transactions: CentraDB.getTransactions(),
     categories: CentraDB.getCategories(),
-    goals: CentraDB.getGoals().map(g => ({ ...g, history: getGoalHistory(g.id) })),
+    goals: CentraDB.getGoals().map(g => ({ ...g, history: ensureGoalHistory(g) })),
     budgets: CentraDB.getBudgets(),
     notifications: CentraDB.getNotifications(),
     settings: CentraDB.getSettings(),
@@ -163,7 +164,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     const accs = CentraDB.getAccounts();
     const txs = CentraDB.getTransactions();
     const cats = CentraDB.getCategories();
-    const gs = CentraDB.getGoals().map(g => ({ ...g, history: getGoalHistory(g.id) }));
+    const gs = CentraDB.getGoals().map(g => ({ ...g, history: ensureGoalHistory(g) }));
     const buds = CentraDB.getBudgets();
     const notifs = CentraDB.getNotifications();
     const sets = CentraDB.getSettings();

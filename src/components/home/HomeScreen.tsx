@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { YourMoneySection } from './YourMoneySection';
 import { IncomeExpenseLineChart } from './IncomeExpenseLineChart';
-import { InsightBanner } from './InsightBanner';
 import { TransactionsList } from './TransactionsList';
 import { TransactionDetailModal } from './TransactionDetailModal';
 import { TransactionDrawer } from './TransactionDrawer';
@@ -21,52 +20,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showSeeAllDrawer, setShowSeeAllDrawer] = useState(false);
 
   return (
-    <div className="animate-fade-in pb-2 w-full">
-      
-      {/* =========================================================================
-          1. MOBILE COMPOSITION (below `lg` breakpoint)
-          - Solid opaque background on container level to prevent card bleed
-          ========================================================================= */}
-      <div className="lg:hidden space-y-6 w-full bg-[#F7F8FA] dark:bg-black">
-        {/* Inflow / Outflow Cash Flow Cards */}
-        <YourMoneySection
-          onNavigateToReport={onNavigateToReport}
-          onOpenAddTransaction={onOpenAddTransaction}
-        />
+    <div className="animate-fade-in pb-2 w-full space-y-6">
+      {/* Side-by-side on desktop (lg:grid lg:grid-cols-12 lg:gap-6 lg:items-stretch), stacked on mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:items-stretch w-full">
+        {/* Left column: Account Information card */}
+        <div className="lg:col-span-5 flex flex-col">
+          <YourMoneySection
+            onNavigateToReport={onNavigateToReport}
+            onOpenAddTransaction={onOpenAddTransaction}
+          />
+        </div>
 
-        {/* Income vs Expense Over Time Line Chart */}
-        <IncomeExpenseLineChart />
-
-        {/* Transactions List */}
-        <TransactionsList
-          onSelectTransaction={tx => setSelectedTransaction(tx)}
-          onOpenSeeAll={() => setShowSeeAllDrawer(true)}
-        />
+        {/* Right column: Cash Flow Trend card */}
+        <div className="lg:col-span-7 flex flex-col">
+          <IncomeExpenseLineChart />
+        </div>
       </div>
 
-      {/* =========================================================================
-          2. DESKTOP COMPOSITION (`lg:` and up)
-          - Wide responsive layout filling the area to the right of the sidebar
-          ========================================================================= */}
-      <div className="hidden lg:block space-y-8 w-full">
-        {/* 1. "Your Money" Heading, "+ New transaction" button, and two side-by-side cards */}
-        <YourMoneySection
-          onNavigateToReport={onNavigateToReport}
-          onOpenAddTransaction={onOpenAddTransaction}
-        />
-
-        {/* 2. Income vs Expense Over Time Line Chart */}
-        <IncomeExpenseLineChart />
-
-        {/* 3. Financial Intelligence Insight Card */}
-        <InsightBanner onActionClick={onNavigateToReport} />
-
-        {/* 4. Transactions List */}
-        <TransactionsList
-          onSelectTransaction={tx => setSelectedTransaction(tx)}
-          onOpenSeeAll={() => setShowSeeAllDrawer(true)}
-        />
-      </div>
+      {/* Directly below: Full-width Recent Activity */}
+      <TransactionsList
+        onSelectTransaction={tx => setSelectedTransaction(tx)}
+        onOpenSeeAll={() => setShowSeeAllDrawer(true)}
+      />
 
       {/* Shared Modals & Drawers */}
       <TransactionDetailModal

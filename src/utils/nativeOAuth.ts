@@ -203,6 +203,7 @@ export const startNativeOAuth = async (
     options: {
       redirectTo: getAuthRedirectUrl(),
       skipBrowserRedirect: true,
+      ...(provider === 'google' ? { queryParams: { prompt: 'select_account' } } : {}),
     },
   });
 

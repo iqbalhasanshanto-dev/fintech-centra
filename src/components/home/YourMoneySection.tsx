@@ -23,9 +23,9 @@ export const YourMoneySection: React.FC<YourMoneySectionProps> = ({
   const displayBalance = totalBalance ?? (periodIncome - periodExpenses);
 
   return (
-    <section id="cashflow-summary" className="transition-colors w-full">
+    <section id="cashflow-summary" className="transition-colors w-full h-full flex flex-col">
       {/* Account Information Hero Card (08-home.png) */}
-      <div className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all">
+      <div className="rounded-[28px] bg-white dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.15] p-5 sm:p-6 shadow-sm transition-all h-full flex flex-col justify-between">
         {/* Card Header: Label + Details Action */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-[#667085] dark:text-[#9CA3AF]">

@@ -1,15 +1,11 @@
 {
   "id": "/",
-  "name": "Centra - Personal Finance OS",
+  "name": "Centra",
   "short_name": "Centra",
   "description": "Open-source, offline-first personal finance & budgeting application",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": [
-    "window-controls-overlay",
-    "standalone"
-  ],
   "orientation": "portrait",
   "background_color": "#000000",
   "theme_color": "#000000",

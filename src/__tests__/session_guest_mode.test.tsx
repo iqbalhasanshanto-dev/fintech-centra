@@ -69,7 +69,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
 
     // The dashboard must NOT be rendered
     expect(screen.queryByText(/Guest Mode \(Local Demo\)/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Dashboard/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Home/i })).not.toBeInTheDocument();
 
     // Stale persistent guest flags in localStorage must have been cleared
     expect(localStorage.getItem('centra_is_guest_v2')).toBeNull();
@@ -95,7 +95,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     // Dashboard renders
     await waitFor(() => {
       expect(screen.getByText(/Guest Mode \(Local Demo\)/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Dashboard/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Home/i })).toBeInTheDocument();
     });
 
     // Session flag is set
@@ -110,7 +110,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     // Must still show the demo dashboard
     await waitFor(() => {
       expect(screen.getByText(/Guest Mode \(Local Demo\)/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Dashboard/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Home/i })).toBeInTheDocument();
     });
   });
 
@@ -185,7 +185,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
 
     // Resumes directly into the app shell (shows Dashboard, NOT the landing screen)
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Dashboard/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Home/i })).toBeInTheDocument();
     });
 
     // Real user is not guest
@@ -401,7 +401,7 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Dashboard/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Home/i })).toBeInTheDocument();
     });
 
     // GUEST_SESSION_FLAG_KEY must be cleared

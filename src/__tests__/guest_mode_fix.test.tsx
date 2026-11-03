@@ -79,8 +79,8 @@ describe('Guest Mode Fix & Invariant Verification', () => {
       // Guest banner indicating guest mode
       expect(screen.getByText(/Guest Mode \(Local Demo\)/i)).toBeInTheDocument();
       // Main dashboard elements should be present
-      expect(screen.getByRole('button', { name: /Dashboard/i })).toBeInTheDocument();
-      expect(screen.getByText(/New transaction/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Home/i })).toBeInTheDocument();
+      expect(screen.getByText(/Account Information/i)).toBeInTheDocument();
     });
 
     // Verify retry screen and loading screen never render

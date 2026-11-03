@@ -1,4 +1,4 @@
-import { GoalHistoryEntry } from '../types';
+import { Goal, GoalHistoryEntry } from '../types';
 
 const GOAL_HISTORY_STORAGE_KEY = 'centra_goal_history';
 
@@ -99,5 +99,26 @@ export function deleteGoalHistory(goalId: string): void {
   } catch (err) {
     console.warn('Failed to delete goal history:', err);
   }
+}
+
+/**
+ * Automatically seeds an initial GoalHistoryEntry for goals where currentAmount > 0 and no history exists.
+ */
+export function ensureGoalHistory(goal: Goal): GoalHistoryEntry[] {
+  let history = getGoalHistory(goal.id);
+  if (history.length === 0 && goal.currentAmount > 0) {
+    const seedEntry: GoalHistoryEntry = {
+      id: 'init-' + goal.id,
+      goalId: goal.id,
+      type: 'initial',
+      amount: goal.currentAmount,
+      note: 'Initial deposit',
+      date: (goal as unknown as { createdAt?: string }).createdAt || goal.startDate || new Date().toISOString(),
+      balanceAfter: goal.currentAmount,
+    };
+    saveGoalHistory(goal.id, [seedEntry]);
+    history = [seedEntry];
+  }
+  return history;
 }
 
