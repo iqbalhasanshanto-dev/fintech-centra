@@ -1,5 +1,6 @@
 import React, { useState, useRef, TouchEvent, MouseEvent } from 'react';
 import { Trash2 } from 'lucide-react';
+import { isNative } from '../../utils/platform';
 
 export interface SwipeableRowProps {
   children: React.ReactNode;
@@ -26,6 +27,11 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
   const currentXRef = useRef<number>(0);
   const isHorizontalSwipeRef = useRef<boolean | null>(null);
   const startYRef = useRef<number | null>(null);
+
+  // On Web, disable touch/mouse swipe-to-delete so rows never slide or rubber-band on click
+  if (!isNative()) {
+    return <div className={className}>{children}</div>;
+  }
 
   const isOpen = translateX <= MAX_SWIPE_OFFSET / 2;
 
@@ -75,63 +81,6 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
       setTranslateX(MAX_SWIPE_OFFSET);
     } else {
       setTranslateX(0);
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (disabled || isCollapsing) return;
-    // Don't drag if clicking a button or interactive element inside
-    const target = e.target as HTMLElement;
-    if (target.closest('button, a, input, select, textarea')) return;
-
-    startXRef.current = e.clientX;
-    startYRef.current = e.clientY;
-    currentXRef.current = translateX;
-    isHorizontalSwipeRef.current = null;
-    setIsDragging(true);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || startXRef.current === null || startYRef.current === null) return;
-    const currentX = e.clientX;
-    const currentY = e.clientY;
-    const deltaX = currentX - startXRef.current;
-    const deltaY = currentY - startYRef.current;
-
-    // Detect primary direction
-    if (isHorizontalSwipeRef.current === null) {
-      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
-        isHorizontalSwipeRef.current = Math.abs(deltaX) > Math.abs(deltaY);
-      }
-    }
-
-    if (!isHorizontalSwipeRef.current) return;
-
-    let nextOffset = currentXRef.current + deltaX;
-    if (nextOffset > 0) nextOffset = 0;
-    if (nextOffset < MAX_SWIPE_OFFSET - 20) {
-      nextOffset = MAX_SWIPE_OFFSET - 20 + (nextOffset - (MAX_SWIPE_OFFSET - 20)) * 0.2;
-    }
-    setTranslateX(nextOffset);
-  };
-
-  const handleMouseUp = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    startXRef.current = null;
-    startYRef.current = null;
-    isHorizontalSwipeRef.current = null;
-
-    if (translateX < MAX_SWIPE_OFFSET / 2) {
-      setTranslateX(MAX_SWIPE_OFFSET);
-    } else {
-      setTranslateX(0);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      handleMouseUp();
     }
   };
 
@@ -186,10 +135,6 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
         onClick={e => {
           if (isOpen && translateX < 0) {
             e.stopPropagation();

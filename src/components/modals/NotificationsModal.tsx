@@ -10,7 +10,8 @@ import {
   Info, 
   Trash2, 
   ChevronRight,
-  Pin
+  Pin,
+  X
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -281,53 +282,74 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Notifications"
-      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] flex flex-col overflow-hidden text-[#18212F] dark:text-white antialiased"
+      className="fixed inset-0 z-[100] bg-[#F7F8FA] dark:bg-[#000000] md:bg-black/60 md:backdrop-blur-md flex flex-col md:items-center md:justify-center md:p-6 overflow-hidden text-[#18212F] dark:text-white antialiased"
     >
-      {/* Top Header Bar matching unified spec */}
+      {/* Desktop Backdrop Click to dismiss */}
       <div
-        className="shrink-0 w-full bg-[#F7F8FA] dark:bg-[#000000] border-b border-black/5 dark:border-white/10"
-        style={{
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-          paddingLeft: 'env(safe-area-inset-left, 0px)',
-          paddingRight: 'env(safe-area-inset-right, 0px)',
-        }}
-      >
-        <div className="w-full max-w-lg mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 cursor-pointer shrink-0"
-            aria-label="Back"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+        className="hidden md:block absolute inset-0 -z-10"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white text-center">
-            Notifications
-          </h1>
-
-          {uniqueNotifications.length > 0 ? (
+      {/* Inner Container: Full-screen on mobile, centered modal card on desktop/tablet */}
+      <div className="w-full h-full md:h-auto md:max-w-xl md:w-full md:max-h-[82vh] md:rounded-[32px] bg-[#F7F8FA] dark:bg-[#000000] md:dark:bg-[#141414] md:border md:border-black/10 md:dark:border-white/10 md:shadow-2xl flex flex-col overflow-hidden animate-fade-in">
+        {/* Top Header Bar */}
+        <div
+          className="shrink-0 w-full bg-[#F7F8FA] dark:bg-[#000000] md:dark:bg-[#141414] border-b border-black/5 dark:border-white/10"
+          style={{
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+            paddingLeft: 'env(safe-area-inset-left, 0px)',
+            paddingRight: 'env(safe-area-inset-right, 0px)',
+          }}
+        >
+          <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
+            {/* Mobile: Back Button (<) */}
             <button
               type="button"
-              onClick={clearNotifications}
-              className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0 shadow-xs"
-              title="Clear all"
-              aria-label="Clear all notifications"
+              onClick={onClose}
+              className="md:hidden w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-700 dark:text-gray-300 cursor-pointer shrink-0"
+              aria-label="Back"
             >
-              <Trash2 className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
-          ) : (
-            <div className="w-10 h-10 shrink-0" aria-hidden="true" />
-          )}
-        </div>
-      </div>
 
-      {/* Notifications Scroll List Container */}
-      <div
-        className="flex-1 overflow-y-auto px-4 sm:px-6 pt-3 pb-24"
-        style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
-      >
-        <div className="w-full max-w-lg mx-auto flex-1 flex flex-col space-y-4 pb-3">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white text-center md:text-left">
+              Notifications
+            </h1>
+
+            {/* Right Controls */}
+            <div className="flex items-center gap-2 shrink-0">
+              {uniqueNotifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearNotifications}
+                  className="w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0 shadow-xs"
+                  title="Clear all"
+                  aria-label="Clear all notifications"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Desktop: Close Button (X) */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="hidden md:flex w-10 h-10 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#1D1D1D] items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer shrink-0 shadow-xs"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Notifications Scroll List Container */}
+        <div
+          className="flex-1 overflow-y-auto px-4 sm:px-6 pt-3 pb-24 md:pb-6"
+          style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
+        >
+          <div className="w-full flex-1 flex flex-col space-y-4 pb-3">
 
         {/* Inbox Controls Bar: "Your updates" + unread badge + "Mark all as read" */}
         <div className="flex items-center justify-between pt-1">
@@ -411,6 +433,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               )}
             </>
           )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logoOnDark from '../../assets/brand/logo-on-dark.svg';
@@ -8,10 +8,10 @@ import { CornerGlow } from '../ui/CornerGlow';
 type ThemeMode = 'system' | 'light' | 'dark';
 
 interface ThemeSelectionScreenProps {
-  initialTheme?: 'dark' | 'light';
-  onDraftChange?: (patch: { theme: 'dark' | 'light' }) => void;
+  initialTheme?: 'system' | 'dark' | 'light';
+  onDraftChange?: (patch: { theme: 'system' | 'dark' | 'light' }) => void;
   onBack: () => void;
-  onContinue: (theme: 'dark' | 'light') => void;
+  onContinue: (theme: 'system' | 'dark' | 'light') => void;
 }
 
 export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
@@ -21,44 +21,42 @@ export const ThemeSelectionScreen: React.FC<ThemeSelectionScreenProps> = ({
   onContinue,
 }) => {
   const { user, saveOnboardingProfile } = useAuth();
-  const [selectedMode, setSelectedMode] = useState<ThemeMode>(initialTheme || 'dark');
+  const [selectedMode, setSelectedMode] = useState<ThemeMode>(initialTheme || 'system');
+
+  useEffect(() => {
+    if (selectedMode === 'system') {
+      const isSystemDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isSystemDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, [selectedMode]);
 
   const handleSelectMode = (mode: ThemeMode) => {
     setSelectedMode(mode);
-    let resolvedTheme: 'dark' | 'light';
     if (mode === 'system') {
       const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (isSystemDark) {
         document.documentElement.classList.add('dark');
-        resolvedTheme = 'dark';
       } else {
         document.documentElement.classList.remove('dark');
-        resolvedTheme = 'light';
       }
     } else if (mode === 'dark') {
       document.documentElement.classList.add('dark');
-      resolvedTheme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
-      resolvedTheme = 'light';
     }
-    onDraftChange?.({ theme: resolvedTheme });
+    onDraftChange?.({ theme: mode });
   };
 
   const handleProceed = async () => {
-    let resolvedTheme: 'dark' | 'light';
-    if (selectedMode === 'system') {
-      const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      resolvedTheme = isSystemDark ? 'dark' : 'light';
-    } else {
-      resolvedTheme = selectedMode;
-    }
-
     await saveOnboardingProfile({
       name: user?.name || '',
-      theme: resolvedTheme,
+      theme: selectedMode,
     });
-    onContinue(resolvedTheme);
+    onContinue(selectedMode);
   };
 
   return (

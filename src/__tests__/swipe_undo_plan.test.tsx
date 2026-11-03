@@ -10,6 +10,7 @@ import { GoalHistoryEntry } from '../types';
 import { FinanceProvider, useFinance } from '../context/FinanceContext';
 import { PlanScreen } from '../components/plan/PlanScreen';
 import { SwipeableRow } from '../components/ui/SwipeableRow';
+import * as platformModule from '../utils/platform';
 
 // Mock AuthContext
 vi.mock('../context/AuthContext', () => ({
@@ -250,8 +251,8 @@ describe('FinanceContext: 5-Second Undo for Goal History & Budgets', () => {
   });
 });
 
-describe('PlanScreen SwipeableRow Integration', () => {
-  it('renders PlanScreen with SwipeableRow on Goal cards and Budget cards', () => {
+describe('PlanScreen & SwipeableRow Integration', () => {
+  it('renders PlanScreen with Goal cards, Budget cards, and inline delete buttons on Web', () => {
     const { container } = render(
       <FinanceProvider userId="test_user_plan_undo">
         <PlanScreen onOpenAddGoal={vi.fn()} />
@@ -262,27 +263,36 @@ describe('PlanScreen SwipeableRow Integration', () => {
     expect(screen.getByText('Milestone savings goals')).toBeDefined();
     expect(screen.getByText('Category Budgets')).toBeDefined();
 
-    // Check that SwipeableRow structure is present around cards
-    const swipeableRows = container.querySelectorAll('.relative.overflow-hidden');
-    expect(swipeableRows.length).toBeGreaterThan(0);
+    // Check that delete budget buttons are present on Web
+    const deleteBudgetBtns = screen.queryAllByRole('button', { name: 'Delete budget' });
+    expect(deleteBudgetBtns.length).toBeGreaterThan(0);
   });
 
-  it('SwipeableRow supports desktop mouse drag to reveal delete action', () => {
+  it('SwipeableRow renders clean children without rubber-band on Web and supports touch swipe on native', () => {
     const onDelete = vi.fn();
-    render(
+    const { rerender } = render(
+      <SwipeableRow onDelete={onDelete} deleteLabel="Delete">
+        <div>Swipeable Goal Row Content</div>
+      </SwipeableRow>
+    );
+
+    // On Web (!isNative), renders clean static container
+    expect(screen.getByText('Swipeable Goal Row Content')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+
+    // On Native (isNative() === true), touch swipe reveals delete button
+    vi.spyOn(platformModule, 'isNative').mockReturnValue(true);
+    rerender(
       <SwipeableRow onDelete={onDelete} deleteLabel="Delete">
         <div>Swipeable Goal Row Content</div>
       </SwipeableRow>
     );
 
     const rowContent = screen.getByText('Swipeable Goal Row Content');
+    fireEvent.touchStart(rowContent, { touches: [{ clientX: 200, clientY: 50 }] });
+    fireEvent.touchMove(rowContent, { touches: [{ clientX: 140, clientY: 50 }] });
+    fireEvent.touchEnd(rowContent);
 
-    // Simulate mouse drag left by 60px
-    fireEvent.mouseDown(rowContent, { clientX: 200, clientY: 50 });
-    fireEvent.mouseMove(rowContent, { clientX: 140, clientY: 50 });
-    fireEvent.mouseUp(rowContent);
-
-    // Delete button should now be revealed
     const deleteBtn = screen.getByRole('button', { name: 'Delete' });
     expect(deleteBtn).toBeInTheDocument();
   });

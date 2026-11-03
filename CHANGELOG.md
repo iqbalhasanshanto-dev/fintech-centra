@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [Web 1.0.3] & [Android 4.1.2] - 2026-03-30 / 2026-11-03
+
+### 🌐 Web & Native Platform Optimizations
+- **Web-Only Static Rows (Native-Only Swipe-to-Delete)**: Disabled touch/mouse drag handlers on Web (`!isNative()`) in `SwipeableRow` to prevent rows from sliding or rubber-banding on desktop clicks, keeping swipe-to-delete active exclusively on Android & iOS (`isNative()`).
+- **Inline 1-Click Delete Buttons on Web**: Added subtle `<Trash2 />` icon buttons across Web views (Category Budgets in `PlanScreen`, Goal History modal entries, `Recent Activity` transactions in `TransactionsList`, full drawer in `TransactionDrawer`, and `AnalyticsCalendar`), hidden on native mobile where swipe-to-delete is active.
+- **Expanded Recent Activity Box on Dashboard**: Gave `TransactionsList` container a minimum height of `min-h-[360px] lg:min-h-[430px] flex flex-col`, centering empty-state vertically and pushing the `Centra Financial OS • Offline-First` footer below the initial viewport fold.
+- **Descriptive Browser Tab & App Title**: Updated `<title>` in `index.html` and manifest `"name"` to `"Centra — Finance Tracking App"`.
+- **Enlarged Header Greeting & Balanced Desktop Padding**: Standardized horizontal container padding across `Header.tsx`, `AppShell.tsx`, and `SettingsScreen.tsx` to `max-w-6xl mx-auto px-5 sm:px-8 lg:px-12`. Increased greeting and name typography size and aligned Settings back button flush with cards.
+- **Enhanced Bottom Nav Spacing**: Increased spacing between the floating capsule pill and the circular `#C6FF3D` `+` action button from `gap-3` to `gap-4 sm:gap-6` (`max-w-[440px] sm:max-w-[560px]`).
+- **Zero-Flicker OAuth Transition**: Removed the intermediate `"Authenticating..."` card box and `"Starting Centra..."` splash screen on Web returns from Google OAuth, seamlessly rendering a minimal clean background before transitioning to Onboarding or Dashboard.
+- **Default System Appearance**: Defaulted appearance theme to `'system'` across Web, Android, and iOS in `ThemeSelectionScreen`, `ThemeContext`, `public/theme-init.js`, `storage.ts`, and Supabase settings upsert.
+- **Desktop Centered Notifications Modal Card**: Redesigned notifications on desktop/tablet (`md:`) as a sleek centered modal card (`max-w-xl max-h-[82vh] rounded-[32px]`) with a top-right `✕` close button, keeping full-screen layout on mobile.
+- **Network-First Service Worker Navigation**: Updated `public/sw.js` cache to `centra-pwa-v1.0.3` with a Network-First strategy for HTML navigations to ensure installed PWAs always load the newest bundle when online, and hid `"Install Centra App"` in Settings when already standalone.
+
+---
+
 ## [Web 1.0.2] - 2026-03-30
 
 ### 💻 Web App & UI Overhaul (Unified Bottom Nav, Side-by-Side Dashboard & PWA Polish)

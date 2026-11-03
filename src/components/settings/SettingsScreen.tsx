@@ -119,7 +119,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const [autoLockTimeout, setAutoLockTimeoutState] = useState<number>(() => getAutoLockTimeout());
 
   // PWA Installation state
-  const { isInstallable, triggerInstall } = usePwaInstall();
+  const { isInstallable, isStandalone, triggerInstall } = usePwaInstall();
   const [showInstallModal, setShowInstallModal] = useState(false);
 
   const handleInstallClick = async () => {
@@ -340,12 +340,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
 
       {/* Top Header Bar matching unified spec */}
       <div
-        className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-4 sm:-mx-6 lg:-mx-8 border-b border-black/5 dark:border-white/10"
+        className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-5 sm:-mx-8 lg:-mx-12 px-5 sm:px-8 lg:px-12 border-b border-black/5 dark:border-white/10"
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        <div className="w-full max-w-lg mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="w-full flex items-center justify-between h-14">
           <button
             type="button"
             onClick={onBack}
@@ -806,7 +806,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           </button>
 
           {/* Install Centra App (Web, Desktop PWA & iOS Safari) */}
-          {isInstallable && (
+          {isInstallable && !isStandalone && (
             <button
               type="button"
               onClick={handleInstallClick}

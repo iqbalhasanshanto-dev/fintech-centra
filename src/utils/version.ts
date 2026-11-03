@@ -7,13 +7,25 @@ export interface PlatformVersions {
   web: string;
 }
 
-export const PLATFORM_VERSIONS: PlatformVersions = {
-  android: '4.1.1',
-  ios: '1.0.1',
-  web: '1.0.2',
+const resolveVer = (val: unknown, fallback: string): string => {
+  if (typeof val === 'string') return val;
+  if (val && typeof val === 'object' && 'version' in val && typeof (val as { version: unknown }).version === 'string') {
+    return (val as { version: string }).version;
+  }
+  return fallback;
 };
 
-export const VERSIONS: PlatformVersions = (versionsData || PLATFORM_VERSIONS) as PlatformVersions;
+export const PLATFORM_VERSIONS: PlatformVersions = {
+  android: '4.1.2',
+  ios: '1.0.1',
+  web: '1.0.3',
+};
+
+export const VERSIONS: PlatformVersions = {
+  android: resolveVer(versionsData?.android, PLATFORM_VERSIONS.android),
+  ios: resolveVer(versionsData?.ios, PLATFORM_VERSIONS.ios),
+  web: resolveVer(versionsData?.web, PLATFORM_VERSIONS.web),
+};
 
 /**
  * Returns true if running as a standalone PWA on iOS (Safari Add-to-Home-Screen).

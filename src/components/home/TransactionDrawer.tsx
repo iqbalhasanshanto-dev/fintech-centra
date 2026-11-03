@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Download, ChevronLeft, X, ChevronDown, Check, Pin } from 'lucide-react';
+import { Search, Download, ChevronLeft, X, ChevronDown, Check, Pin, Trash2 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction, Category } from '../../types';
 import { CategoryIcon } from '../ui/CategoryIcon';
@@ -9,6 +9,7 @@ import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 import { FIGMA_DEFAULT_CATEGORIES } from '../../db/storage';
 import { useBackHandler } from '../../utils/backButton';
 import { exportTransactionsToCSV } from '../../utils/csvExport';
+import { isNative } from '../../utils/platform';
 
 interface TransactionDrawerProps {
   isOpen: boolean;
@@ -432,19 +433,36 @@ export const TransactionDrawer: React.FC<TransactionDrawerProps> = ({
                               </div>
                             </div>
 
-                            <div className="text-right shrink-0">
-                              <span
-                                className={`text-sm font-bold tabular-nums ${
-                                  isIncome
-                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                    : isExpense
-                                    ? 'text-rose-600 dark:text-rose-400'
-                                    : 'text-sky-600 dark:text-sky-400'
-                                }`}
-                              >
-                                {isIncome ? '+' : isExpense ? '-' : ''}
-                                {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
-                              </span>
+                            <div className="flex items-center gap-2.5 shrink-0">
+                              <div className="text-right">
+                                <span
+                                  className={`text-sm font-bold tabular-nums ${
+                                    isIncome
+                                      ? 'text-emerald-600 dark:text-emerald-400'
+                                      : isExpense
+                                      ? 'text-rose-600 dark:text-rose-400'
+                                      : 'text-sky-600 dark:text-sky-400'
+                                  }`}
+                                >
+                                  {isIncome ? '+' : isExpense ? '-' : ''}
+                                  {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
+                                </span>
+                              </div>
+
+                              {!isNative() && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteTransaction(tx.id);
+                                  }}
+                                  className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                  title="Delete transaction"
+                                  aria-label="Delete transaction"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </div>
                           </div>
                         </SwipeableRow>

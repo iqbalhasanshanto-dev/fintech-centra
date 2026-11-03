@@ -22,6 +22,7 @@ import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
 import { SwipeableRow } from '../ui/SwipeableRow';
 import { formatCurrency, calculateGoalPace } from '../../utils/formatters';
+import { isNative } from '../../utils/platform';
 
 interface PlanScreenProps {
   onOpenAddGoal: () => void;
@@ -410,6 +411,21 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                         strokeWidth={4}
                         showText={true}
                       />
+
+                      {!isNative() && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteBudget(budget.id);
+                          }}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                          title="Delete budget"
+                          aria-label="Delete budget"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </SwipeableRow>
@@ -647,18 +663,20 @@ export const PlanScreen: React.FC<PlanScreenProps> = ({
                               </span>
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteGoalHistoryEntry(liveGoal.id, entry.id);
-                              }}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                              title="Delete entry"
-                              aria-label="Delete entry"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {!isNative() && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteGoalHistoryEntry(liveGoal.id, entry.id);
+                                }}
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                title="Delete entry"
+                                aria-label="Delete entry"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </SwipeableRow>

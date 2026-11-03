@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Pin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Pin, Trash2 } from 'lucide-react';
 import { Transaction } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { SwipeableRow } from '../ui/SwipeableRow';
 import { formatCurrency, getTransactionDisplay } from '../../utils/formatters';
 import { todayLocalDateKey, toLocalDateKey } from '../../utils/dates';
+import { isNative } from '../../utils/platform';
 
 interface AnalyticsCalendarProps {
   onSelectTransaction?: (tx: Transaction) => void;
@@ -413,18 +414,35 @@ export const AnalyticsCalendar: React.FC<AnalyticsCalendarProps> = ({
                         </div>
                       </div>
 
-                      <span
-                        className={`font-bold tabular-nums shrink-0 text-sm ${
-                          isIncome
-                            ? 'text-[#16A34A] dark:text-[#22C55E]'
-                            : isExpense
-                            ? 'text-[#E11D48] dark:text-[#FB7185]'
-                            : 'text-[#0284C7] dark:text-[#38BDF8]'
-                        }`}
-                      >
-                        {isIncome ? '+' : isExpense ? '-' : ''}
-                        {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
-                      </span>
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        <span
+                          className={`font-bold tabular-nums text-sm ${
+                            isIncome
+                              ? 'text-[#16A34A] dark:text-[#22C55E]'
+                              : isExpense
+                              ? 'text-[#E11D48] dark:text-[#FB7185]'
+                              : 'text-[#0284C7] dark:text-[#38BDF8]'
+                          }`}
+                        >
+                          {isIncome ? '+' : isExpense ? '-' : ''}
+                          {formatCurrency(tx.amount, tx.currency, settings.privacyMode)}
+                        </span>
+
+                        {!isNative() && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteTransaction(tx.id);
+                            }}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                            title="Delete transaction"
+                            aria-label="Delete transaction"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </SwipeableRow>
                 );

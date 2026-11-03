@@ -354,8 +354,8 @@ describe('Session-Scoped Guest Mode & Cold Start Landing Invariants', () => {
 
     // Must NOT boot into guest dashboard
     expect(screen.queryByText(/Guest Mode \(Local Demo\)/i)).not.toBeInTheDocument();
-    // Must render authenticating callback screen
-    expect(screen.getByText(/Authenticating\.\.\./i)).toBeInTheDocument();
+    // Renders clean minimal background during background OAuth exchange (no "Authenticating..." box)
+    expect(document.querySelector('.min-h-screen.w-full.bg-\\[\\#F7F8FA\\]')).toBeInTheDocument();
 
     window.history.replaceState({}, '', '/');
   });

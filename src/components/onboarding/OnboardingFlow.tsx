@@ -26,7 +26,7 @@ export interface OnboardingDraftState {
   address?: string;
   avatarUrl?: string;
   currency?: string;
-  theme?: 'dark' | 'light';
+  theme?: 'system' | 'dark' | 'light';
   selectedCategories?: string[];
 }
 

@@ -70,7 +70,7 @@ interface AuthContextType {
     address?: string;
     avatarUrl?: string;
     currency?: string;
-    theme?: 'dark' | 'light';
+    theme?: 'system' | 'dark' | 'light';
     categories?: string[];
   }) => Promise<void>;
   completeOnboarding: () => Promise<void>;
@@ -308,7 +308,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Read and clear stored OAuth intent if present
+    // Clear OAuth pending flag and read/clear stored OAuth intent if present
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem('centra_oauth_pending');
+      }
+    } catch {
+      // Ignore
+    }
     const storedIntent = localStorage.getItem(INTENT_STORAGE_KEY) as AuthMode | null;
     if (storedIntent) {
       localStorage.removeItem(INTENT_STORAGE_KEY);
@@ -406,7 +413,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await supabase.from('settings').upsert({
           user_id: userId,
           id: `settings_${userId}`,
-          theme: 'light',
+          theme: 'system',
           base_currency: null,
           privacy_mode: false,
           security: { biometricEnabled: false, pinLockEnabled: false },
@@ -853,6 +860,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (typeof sessionStorage !== 'undefined') {
         sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+        sessionStorage.setItem('centra_oauth_pending', 'true');
       }
     } catch {
       // Ignore
@@ -1115,7 +1123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     address?: string;
     avatarUrl?: string;
     currency?: string;
-    theme?: 'dark' | 'light';
+    theme?: 'system' | 'dark' | 'light';
     categories?: string[];
   }) => {
     const updatedUser: UserProfile = {
@@ -1152,6 +1160,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       document.documentElement.classList.add('dark');
     } else if (data.theme === 'light') {
       document.documentElement.classList.remove('dark');
+    } else if (data.theme === 'system') {
+      const isSystemDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isSystemDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
 
     if (data.categories !== undefined) {

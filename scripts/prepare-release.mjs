@@ -38,9 +38,21 @@ if (rawArg1 === 'android' || rawArg1 === 'ios' || rawArg1 === 'web') {
   requestedVersion = rawArg1;
 }
 
-const currentVersion = versions[platform] || '1.0.0';
+const getVer = (val) => (typeof val === 'object' && val?.version ? val.version : val);
+const currentVersion = getVer(versions[platform]) || '1.0.0';
 const version = requestedVersion || currentVersion;
-versions[platform] = version;
+
+if (typeof versions[platform] === 'object' && versions[platform] !== null) {
+  versions[platform].version = version;
+  if (platform === 'android') {
+    versions.android.versionCode = 12;
+    versions.android.artifactPath = `releases/android/Centra-v${version}.apk`;
+  } else if (platform === 'web') {
+    versions.web.updatedAt = '2026-03-30';
+  }
+} else {
+  versions[platform] = version;
+}
 fs.writeFileSync(versionsPath, JSON.stringify(versions, null, 2) + '\n', 'utf8');
 console.log(`✅ Synced versions.json [${platform}] -> ${version}`);
 
@@ -48,7 +60,7 @@ console.log(`✅ Synced versions.json [${platform}] -> ${version}`);
 const pkgPath = path.join(rootDir, 'package.json');
 if (fs.existsSync(pkgPath)) {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  pkg.version = versions.android;
+  pkg.version = getVer(versions.android);
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
 }
 
@@ -77,14 +89,18 @@ if (platform === 'android') {
   releaseFileName = `Centra-v${version}.apk`;
   releaseFilePath = path.join(targetRelDir, releaseFileName);
 
-  const apkSource = path.join(rootDir, 'android/app/build/outputs/apk/debug/app-debug.apk');
+  const apkReleaseSource = path.join(rootDir, 'android/app/build/outputs/apk/release/app-release.apk');
+  const apkReleaseUnsigned = path.join(rootDir, 'android/app/build/outputs/apk/release/app-release-unsigned.apk');
+  const apkDebugSource = path.join(rootDir, 'android/app/build/outputs/apk/debug/app-debug.apk');
+  const apkSource = fs.existsSync(apkReleaseSource) ? apkReleaseSource : fs.existsSync(apkReleaseUnsigned) ? apkReleaseUnsigned : apkDebugSource;
+
   if (fs.existsSync(apkSource)) {
     fs.copyFileSync(apkSource, releaseFilePath);
-    console.log(`✅ Copied app-debug.apk -> releases/android/${releaseFileName}`);
+    console.log(`✅ Copied ${path.basename(apkSource)} -> releases/android/${releaseFileName}`);
   } else if (!fs.existsSync(releaseFilePath)) {
     console.error(`❌ Error: APK build not found at:\n   ${apkSource}\n   nor at ${releaseFilePath}`);
     console.error('\n👉 Please run the build command first:');
-    console.error('   npm run build && npx cap sync android && cd android && ./gradlew assembleDebug && cd ..\n');
+    console.error('   npm run build && npx cap sync android && cd android && ./gradlew assembleRelease && cd ..\n');
     process.exit(1);
   }
 

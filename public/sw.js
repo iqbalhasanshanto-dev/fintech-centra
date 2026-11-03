@@ -1,4 +1,4 @@
-const CACHE_NAME = 'centra-pwa-v1.0.0';
+const CACHE_NAME = 'centra-pwa-v1.0.3';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -42,6 +42,25 @@ self.addEventListener('fetch', (event) => {
 
   // Bypass external API calls (e.g. Supabase, OAuth endpoints)
   if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Network-First strategy for navigation requests so the installed PWA always loads the latest HTML/JS online
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cachedResponse = await caches.match(event.request);
+          return cachedResponse || caches.match('/index.html') || caches.match('/');
+        })
+    );
     return;
   }
 

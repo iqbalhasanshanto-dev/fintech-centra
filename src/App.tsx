@@ -44,6 +44,17 @@ export const MainApp: React.FC = () => {
 
   // Cold start resolving session (splash screen)
   if (authView === 'loading') {
+    let isOauthPending = false;
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        isOauthPending = sessionStorage.getItem('centra_oauth_pending') === 'true';
+      }
+    } catch {
+      // Ignore
+    }
+    if (isOauthPending) {
+      return <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000]" />;
+    }
     return <LoadingSplashScreen />;
   }
 

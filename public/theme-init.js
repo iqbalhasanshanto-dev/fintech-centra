@@ -1,7 +1,17 @@
 (function () {
   try {
+    var mode = localStorage.getItem('centra_theme_mode');
     var hint = localStorage.getItem('centra_theme_hint');
-    var isDark = hint === 'dark' || (!hint && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var isDark;
+    if (mode === 'dark' || (!mode && hint === 'dark')) {
+      isDark = true;
+    } else if (mode === 'light' || (!mode && hint === 'light')) {
+      isDark = false;
+    } else {
+      // mode === 'system' or unset on first launch
+      isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
     if (isDark) {
       document.documentElement.classList.add('dark');
       document.documentElement.style.colorScheme = 'dark';

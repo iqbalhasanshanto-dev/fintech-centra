@@ -17,13 +17,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     try {
-      const settings = CentraDB.getSettings();
-      if (settings?.theme && settings.theme !== 'system') {
-        return settings.theme;
+      const storedMode = typeof localStorage !== 'undefined' ? localStorage.getItem('centra_theme_mode') : null;
+      if (storedMode === 'system' || storedMode === 'dark' || storedMode === 'light') {
+        return storedMode as ThemeMode;
       }
-      const hint = typeof localStorage !== 'undefined' ? localStorage.getItem('centra_theme_hint') : null;
-      if (hint === 'dark' || hint === 'light') {
-        return hint;
+      const settings = CentraDB.getSettings();
+      if (settings?.theme) {
+        return settings.theme;
       }
       return 'system';
     } catch {
@@ -71,6 +71,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setThemeState(newTheme);
 
     try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('centra_theme_mode', newTheme);
+      }
       const currentSettings = CentraDB.getSettings();
       CentraDB.saveSettings({
         ...currentSettings,

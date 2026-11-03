@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { useAuth, GUEST_SESSION_FLAG_KEY } from '../../context/AuthContext';
@@ -30,6 +30,7 @@ export const AuthCallbackScreen: React.FC = () => {
       try {
         if (typeof sessionStorage !== 'undefined') {
           sessionStorage.removeItem(GUEST_SESSION_FLAG_KEY);
+          sessionStorage.removeItem('centra_oauth_pending');
         }
       } catch {
         // Ignore
@@ -115,30 +116,30 @@ export const AuthCallbackScreen: React.FC = () => {
     };
   }, [setAuthView, handleSession]);
 
-  return (
-    <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex items-center justify-center p-6 transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black">
-      <CornerGlow />
+  if (errorMessage) {
+    return (
+      <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000] text-[#18212F] dark:text-white flex items-center justify-center p-6 transition-colors bg-grid-pattern selection:bg-[#C6FF3D] selection:text-black">
+        <CornerGlow />
 
-      <div className="w-full max-w-sm bg-white dark:bg-[#1D1D1D] rounded-[32px] p-8 sm:p-10 border border-black/5 dark:border-white/10 shadow-2xl text-center animate-fade-in z-10">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <img
-            src={logoOnLight}
-            alt="Centra"
-            className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl dark:hidden"
-            draggable={false}
-          />
-          <img
-            src={logoOnDark}
-            alt="Centra"
-            className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl hidden dark:block"
-            draggable={false}
-          />
-          <span className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white font-display">
-            Centra
-          </span>
-        </div>
+        <div className="w-full max-w-sm bg-white dark:bg-[#1D1D1D] rounded-[32px] p-8 sm:p-10 border border-black/5 dark:border-white/10 shadow-2xl text-center animate-fade-in z-10">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <img
+              src={logoOnLight}
+              alt="Centra"
+              className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl dark:hidden"
+              draggable={false}
+            />
+            <img
+              src={logoOnDark}
+              alt="Centra"
+              className="w-8 h-8 object-contain drop-shadow-sm select-none rounded-xl hidden dark:block"
+              draggable={false}
+            />
+            <span className="text-xl font-bold tracking-tight text-[#18212F] dark:text-white font-display">
+              Centra
+            </span>
+          </div>
 
-        {errorMessage ? (
           <div className="space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto">
               <AlertCircle className="w-6 h-6" />
@@ -155,18 +156,11 @@ export const AuthCallbackScreen: React.FC = () => {
               <span>Return to sign in</span>
             </button>
           </div>
-        ) : (
-          <div className="space-y-4 py-4">
-            <Loader2 className="w-8 h-8 animate-spin text-[#18212F] dark:text-[#C6FF3D] mx-auto" />
-            <h2 className="text-lg font-bold text-[#18212F] dark:text-white">
-              Authenticating...
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Verifying your session, please wait.
-            </p>
-          </div>
-        )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // During OAuth code exchange in background, render a clean minimal background
+  return <div className="min-h-screen w-full bg-[#F7F8FA] dark:bg-[#000000]" />;
 };

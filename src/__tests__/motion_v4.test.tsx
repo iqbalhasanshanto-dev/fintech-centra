@@ -14,6 +14,7 @@ import { OtpScreen } from '../components/auth/OtpScreen';
 import { PlanScreen } from '../components/plan/PlanScreen';
 import { AddActionModal } from '../components/modals/AddActionModal';
 import { Goal } from '../types';
+import * as platformModule from '../utils/platform';
 
 global.ResizeObserver = class ResizeObserver {
   observe() {}
@@ -218,6 +219,7 @@ describe('Centra v4.0.0 UI Motion & Micro-Interaction System', () => {
 
   describe('6. Swipe-Left to Delete Row + Smooth Height Collapse', () => {
     it('reveals delete button on horizontal swipe and triggers smooth collapse before onDelete', async () => {
+      vi.spyOn(platformModule, 'isNative').mockReturnValue(true);
       vi.useFakeTimers();
       const handleDelete = vi.fn();
 

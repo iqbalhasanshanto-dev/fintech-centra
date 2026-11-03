@@ -93,24 +93,24 @@ export const Header: React.FC<HeaderProps> = ({
         paddingRight: 'env(safe-area-inset-right, 0px)',
       }}
     >
-      <div className="w-full px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <div className="w-full max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 h-16 sm:h-20 flex items-center justify-between">
 
         {/* Left: Dynamic Header Title */}
         <div className="flex flex-col justify-center min-w-0 pr-2">
           {activeTab === 'report' ? (
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#18212F] dark:text-white whitespace-nowrap truncate">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white whitespace-nowrap truncate">
               Analytics
             </h1>
           ) : activeTab === 'plan' ? (
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#18212F] dark:text-white whitespace-nowrap truncate">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white whitespace-nowrap truncate">
               Goals &amp; Budgets
             </h1>
           ) : (
             <>
-              <span className="text-xs sm:text-sm font-normal text-[#667085] dark:text-[#9CA3AF] tracking-tight whitespace-nowrap truncate">
+              <span className="text-xs sm:text-sm font-medium text-[#667085] dark:text-[#9CA3AF] tracking-tight whitespace-nowrap truncate">
                 {greeting}
               </span>
-              <span className="text-base sm:text-lg font-bold tracking-tight text-[#18212F] dark:text-white mt-0.5 truncate max-w-[170px] sm:max-w-[240px]">
+              <span className="text-lg sm:text-2xl font-bold tracking-tight text-[#18212F] dark:text-white mt-0.5 truncate max-w-[200px] sm:max-w-[320px]">
                 {isGuest ? 'Demo User' : user.name || 'Adam James'}
               </span>
             </>
