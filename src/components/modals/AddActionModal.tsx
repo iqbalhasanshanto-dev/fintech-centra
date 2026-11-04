@@ -279,12 +279,31 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const [goalInitialDepositError, setGoalInitialDepositError] = useState<string | null>(null);
   const [goalTargetDate, setGoalTargetDate] = useState('2027-06-30');
 
+  // Form State: Budget
+  const [budgetCategoryId, setBudgetCategoryId] = useState('');
+  const [budgetAlertThreshold, setBudgetAlertThreshold] = useState(80);
+
   const [prevModalOpenProps, setPrevModalOpenProps] = useState({ isOpen, defaultTab });
   if (prevModalOpenProps.isOpen !== isOpen || prevModalOpenProps.defaultTab !== defaultTab) {
     setPrevModalOpenProps({ isOpen, defaultTab });
     if (isOpen) {
       setOpenPicker(null);
       setActiveTab(resolveInitialTab(defaultTab));
+      setCategoryId('');
+      setAccountId('');
+      setBudgetCategoryId('');
+      setFromAccountId('');
+      setToAccountId('');
+      setAmount('');
+      setAmountError(null);
+      setMerchant('');
+      setMerchantError(null);
+      setNote('');
+      setNoteError(null);
+      setReceiptName(null);
+      setReceiptDataUrl(null);
+      setReceiptError(null);
+
       if (defaultTab === 'create-goal') {
         setGoalMode('create');
       } else if (defaultTab === 'goal') {
@@ -296,10 +315,6 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
       }
     }
   }
-
-  // Form State: Budget
-  const [budgetCategoryId, setBudgetCategoryId] = useState('');
-  const [budgetAlertThreshold, setBudgetAlertThreshold] = useState(80);
 
   // Feedback & error messages (no window.alert calls)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
@@ -505,6 +520,8 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
     setMerchantError(null);
     setNote('');
     setNoteError(null);
+    setCategoryId(availableCategories[0]?.id || '');
+    setAccountId(effectiveAccounts[0]?.id || '');
     removeReceipt();
   };
 
@@ -830,6 +847,9 @@ export const AddActionModal: React.FC<AddActionModalProps> = ({
   const handleTabSwitch = (newTab: 'spend' | 'income' | 'transfer' | 'goal' | 'budget') => {
     setActiveTab(newTab);
     setOpenPicker(null);
+    setCategoryId('');
+    setAccountId('');
+    setBudgetCategoryId('');
     setAmount('');
     setAmountError(null);
     setErrorMessage(null);

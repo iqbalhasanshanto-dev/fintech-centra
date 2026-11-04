@@ -102,7 +102,7 @@ export const AppShell: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 w-full h-[100dvh] overflow-hidden bg-[#F7F8FA] dark:bg-[#000000]">
 
         {/* Top Header Toolbar */}
-        <div className={effectiveTab === 'settings' ? 'hidden lg:block shrink-0 z-40' : 'shrink-0 z-40'}>
+        <div className={effectiveTab === 'settings' ? 'hidden' : 'shrink-0 z-40'}>
           <Header
             activeTab={effectiveTab}
             onOpenNotifications={() => setShowNotificationsModal(true)}
@@ -119,7 +119,7 @@ export const AppShell: React.FC = () => {
         )}
 
         {/* Main Screen Content Container (Locked Scrollable Area with pb-28 for Bottom Nav) */}
-        <main ref={mainContentRef} className={`flex-1 min-h-0 overflow-y-auto w-full max-w-[1040px] mx-auto px-5 sm:px-8 ${effectiveTab === 'settings' ? 'pt-0' : 'pt-3'} pb-28 md:pt-6 md:pb-28 bg-[#F7F8FA] dark:bg-[#000000]`}>
+        <main ref={mainContentRef} className={`flex-1 min-h-0 overflow-y-auto w-full max-w-[1040px] mx-auto px-5 sm:px-8 ${effectiveTab === 'settings' ? 'pt-0 md:pt-0' : 'pt-3 md:pt-6'} pb-28 md:pb-28 bg-[#F7F8FA] dark:bg-[#000000]`}>
           {effectiveTab === 'home' && (
             <HomeScreen
               onNavigateToReport={() => handleSelectTab('report')}

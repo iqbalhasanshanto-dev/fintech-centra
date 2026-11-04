@@ -140,9 +140,10 @@ describe('Smart Transactions & Formatting Helpers', () => {
       });
 
       expect(res.title).toBe('Groceries');
-      // Subtitle must NEVER repeat Groceries over Groceries!
+      // Subtitle must NEVER repeat Groceries or prepend Cash!
       expect(res.subtitle).not.toContain('Groceries');
-      expect(res.subtitle).toMatch(/^Cash • Today •/);
+      expect(res.subtitle).not.toContain('Cash');
+      expect(res.subtitle).toMatch(/^Today •/);
     });
 
     it('Handles legacy transactions where merchant was set to category name', () => {
@@ -157,7 +158,8 @@ describe('Smart Transactions & Formatting Helpers', () => {
       expect(res.hasCustomMerchant).toBe(false);
       expect(res.title).toBe('Groceries');
       expect(res.subtitle).not.toContain('Groceries');
-      expect(res.subtitle).toMatch(/^City Bank • Today •/);
+      expect(res.subtitle).not.toContain('City Bank');
+      expect(res.subtitle).toMatch(/^Today •/);
     });
 
     it('Handles default merchant names like income/expense/other as non-custom', () => {

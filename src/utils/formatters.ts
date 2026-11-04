@@ -239,8 +239,8 @@ export function getTransactionDisplay(tx: TransactionDisplayInput): TransactionD
 
   if (title.toLowerCase() === catName.toLowerCase()) {
     // Both custom merchant and note were blank (or matched category name)
-    // Do NOT repeat category name!
-    subtitle = tx.accountName ? `${tx.accountName} • ${smartDate}` : smartDate;
+    // Do NOT repeat category name or prepend account name
+    subtitle = smartDate;
   } else {
     // Otherwise, ALWAYS return `${catName} • ${smartDate}`
     subtitle = `${catName} • ${smartDate}`;

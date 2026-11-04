@@ -225,15 +225,17 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
           {/* View Mode */}
           {!isEditing ? (
             <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between py-2.5 border-b border-black/[0.04] dark:border-white/[0.05]">
-                <div className="flex items-center space-x-2 text-[#667085] dark:text-[#9CA3AF] font-bold uppercase tracking-widest text-[10px]">
-                  <CreditCard className="w-3.5 h-3.5" />
-                  <span>Account</span>
+              {currentTx.type !== 'income' && (
+                <div className="flex items-center justify-between py-2.5 border-b border-black/[0.04] dark:border-white/[0.05]">
+                  <div className="flex items-center space-x-2 text-[#667085] dark:text-[#9CA3AF] font-bold uppercase tracking-widest text-[10px]">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>Account</span>
+                  </div>
+                  <span className="font-semibold text-[#18212F] dark:text-white">
+                    {currentTx.accountName}
+                  </span>
                 </div>
-                <span className="font-semibold text-[#18212F] dark:text-white">
-                  {currentTx.accountName}
-                </span>
-              </div>
+              )}
 
               <div className="flex items-center justify-between py-2.5 border-b border-black/[0.04] dark:border-white/[0.05]">
                 <div className="flex items-center space-x-2 text-[#667085] dark:text-[#9CA3AF] font-bold uppercase tracking-widest text-[10px]">

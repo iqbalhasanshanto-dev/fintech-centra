@@ -18,7 +18,7 @@ const resolveVer = (val: unknown, fallback: string): string => {
 export const PLATFORM_VERSIONS: PlatformVersions = {
   android: '4.1.2',
   ios: '1.0.1',
-  web: '1.0.3',
+  web: '1.0.4',
 };
 
 export const VERSIONS: PlatformVersions = {

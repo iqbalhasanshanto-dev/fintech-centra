@@ -243,7 +243,7 @@ describe('UI & Functional Fixes Suite', () => {
       expect(res.subtitle).not.toContain('Trip to airport');
     });
 
-    it('falls back to smartDate or accountName • smartDate when title equals categoryName', () => {
+    it('falls back to smartDate without prepending accountName when title equals categoryName', () => {
       const resWithAccount = getTransactionDisplay({
         categoryName: 'Groceries',
         merchant: '',
@@ -253,7 +253,7 @@ describe('UI & Functional Fixes Suite', () => {
       });
 
       expect(resWithAccount.title).toBe('Groceries');
-      expect(resWithAccount.subtitle).toMatch(/^City Bank • /);
+      expect(resWithAccount.subtitle).not.toContain('City Bank');
       expect(resWithAccount.subtitle).not.toContain('Groceries');
     });
   });

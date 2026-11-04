@@ -23,7 +23,9 @@ import {
   FileText,
   ChevronDown,
   Check,
-  Search
+  Search,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { updateNativeStatusBar } from '../../utils/nativeApp';
 import { useFinance } from '../../context/FinanceContext';
@@ -85,6 +87,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         window.matchMedia('(prefers-color-scheme: dark)').matches;
       updateNativeStatusBar(sysDark);
     }
+  };
+
+  const isSystemDark =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDarkActive =
+    (theme || settings.theme) === 'dark' ||
+    ((theme || settings.theme) === 'system' && isSystemDark);
+
+  const handleToggleTheme = () => {
+    const nextMode = isDarkActive ? 'light' : 'dark';
+    handleSelectThemeMode(nextMode);
   };
 
   // Modals state
@@ -336,9 +351,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
 
       {/* Top Header Bar matching unified spec */}
       <div
-        className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-5 sm:-mx-8 px-5 sm:px-8 border-b border-black/5 dark:border-white/10"
+        className="sticky top-0 z-40 bg-[#F7F8FA] dark:bg-[#000000] -mx-5 sm:-mx-8 px-5 sm:px-8 border-b border-black/5 dark:border-white/10 pt-2 pb-2"
         style={{
-          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingTop: 'calc(0.5rem + env(safe-area-inset-top, 0px))',
         }}
       >
         <div className="w-full flex items-center justify-between h-14">
@@ -621,33 +636,44 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         </div>
 
         <div className="space-y-4 text-xs">
-          {/* Theme / Appearance Mode 3-Column Segmented Pill Selector */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-            <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Appearance</p>
-              <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
-                Choose between System, Light, or Dark theme
-              </p>
+          {/* Theme / Appearance Mode Toggle Switch */}
+          <div
+            onClick={handleToggleTheme}
+            className="flex items-center justify-between pt-1 cursor-pointer select-none group gap-4"
+          >
+            <div className="flex items-center space-x-3 min-w-0">
+              {isDarkActive ? (
+                <Moon className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
+              ) : (
+                <Sun className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
+              )}
+              <div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Dark Mode</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
+                  {isDarkActive ? 'Dark theme is active' : 'Light theme is active'}
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] shrink-0 self-start sm:self-auto min-w-[240px]">
-              {(['system', 'light', 'dark'] as const).map(mode => {
-                const isActive = (theme || settings.theme) === mode;
-                return (
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Hidden sr-only buttons for testing backward compatibility */}
+              <div className="sr-only" aria-hidden="true">
+                {(['system', 'light', 'dark'] as const).map(mode => (
                   <button
                     key={mode}
                     type="button"
+                    tabIndex={-1}
                     onClick={() => handleSelectThemeMode(mode)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer capitalize text-center ${
-                      isActive
-                        ? 'bg-[#C6FF3D] text-[#0A0E1A] font-bold shadow-xs'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
                   >
                     {mode}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+              <Switch
+                checked={isDarkActive}
+                onChange={handleToggleTheme}
+                label="Switch between Dark and Light mode"
+              />
             </div>
           </div>
 

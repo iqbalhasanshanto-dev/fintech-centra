@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [Web 1.0.4] - 2026-03-30 / 2026-11-04
+
+### 🛠️ Modal Picker Reset, Clean Unnamed Subtitles, High-Outflow Alert Filter & Settings Header
+- **Category & Payment Method Picker Default Reset (`AddActionModal.tsx`)**:
+  - Re-opening Quick Action or switching between tabs (`Spend`, `Income`, `Transfer`, `Budget`) now resets category and payment method pickers to the first available option (`Cash` and the primary tab category) rather than persisting prior selections.
+  - Reset form fields on modal opening, on tab changes (`handleTabSwitch`), and in `resetTransactionFields()`.
+- **Clean Subtitles on Unnamed Transactions (`formatters.ts` & `TransactionDetailModal.tsx`)**:
+  - In `getTransactionDisplay(tx)`: For transactions without a custom merchant or note (`title.toLowerCase() === catName.toLowerCase()`), stopped prepending `tx.accountName` (`"Cash •"`), cleanly displaying only the relative timestamp (`Today • 8:29 AM`).
+  - In `TransactionDetailModal.tsx`: Hid the `Account: Cash` row in View Mode for Income transactions where payment methods are not applicable.
+- **High-Outflow Alert Restricted to Expenses (`financeOperations.ts`)**:
+  - Filtered `High-Outflow Transaction Alert` (`txAmount >= 5000`) so it only triggers on spending (`newTx.type === 'expense'`), eliminating false outflow alerts on large income deposits.
+- **Settings Screen Layout & Sticky Navbar Polish (`AppShell.tsx` & `SettingsScreen.tsx`)**:
+  - Completely hid the global `<Header />` bar across all screen sizes when navigating to `Settings` (`effectiveTab === 'settings' ? 'hidden' : 'shrink-0 z-40'`), setting `<main>` top padding to `pt-0 md:pt-0` to eliminate duplicate headers.
+  - Sits the sticky top `Settings` header bar flush against the scroll viewport with `pt-2 pb-2` and safe-area insetting (`calc(0.5rem + env(safe-area-inset-top, 0px))`), preventing content from bleeding above the header during scrolling.
+- **Toggle Switch for Dark / Light Mode (`SettingsScreen.tsx`)**:
+  - Restored the toggle switch with Sun / Moon icons under `Appearance & Currency` to quickly flip between Dark Mode and Light Mode, preserving accessible hidden inputs for automated testing and keeping initial app setup on `'system'`.
+- **Service Worker & Version Synchronization**:
+  - Bumped Web release track to `v1.0.4` across `versions.json`, `src/constants/version.ts`, `src/utils/version.ts`, and updated `public/sw.js` cache name to `centra-pwa-v1.0.4`.
+
 ## [Web 1.0.3] & [Android 4.1.2] - 2026-03-30 / 2026-11-04
 
 ### 🌐 Base44 Web UI Layout, 2-Column Grids & Multi-Platform Optimizations

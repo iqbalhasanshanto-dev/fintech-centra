@@ -275,13 +275,17 @@ export function applyAddTransaction(
 
   const notificationsToEmit = [...newNotifications];
 
-  // High transaction alert
-  if (state.settings.notifications.transactionAlerts && txAmount >= 500) {
+  // High transaction alert (outflow only, >= 5000)
+  if (
+    newTx.type === 'expense' &&
+    state.settings.notifications.transactionAlerts &&
+    txAmount >= 5000
+  ) {
     const highAlert: NotificationItem = {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif_${Date.now()}`,
       type: 'transaction',
-      title: 'High Amount Transaction Alert',
-      message: `${newTx.type === 'income' ? 'Received' : 'Paid'} ${formatCurrency(txAmount, newTx.currency)} (${newTx.merchant || newTx.categoryName}).`,
+      title: 'High-Outflow Transaction Alert',
+      message: `Paid ${formatCurrency(txAmount, newTx.currency)} (${newTx.merchant || newTx.categoryName}).`,
       timestamp: new Date().toISOString(),
       isRead: false,
       severity: 'info',
