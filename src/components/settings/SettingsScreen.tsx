@@ -3,7 +3,6 @@ import {
   Shield,
   Bell,
   Palette,
-  HelpCircle,
   LogOut,
   ChevronRight,
   ChevronLeft,
@@ -25,7 +24,9 @@ import {
   Check,
   Search,
   Sun,
-  Moon
+  Moon,
+  Scale,
+  LifeBuoy
 } from 'lucide-react';
 import { updateNativeStatusBar } from '../../utils/nativeApp';
 import { useFinance } from '../../context/FinanceContext';
@@ -36,7 +37,7 @@ import { ConfirmModal } from '../ui/ConfirmModal';
 import { Button } from '../ui/Button';
 import { Switch } from '../ui/Switch';
 import { ImageCropModal } from '../ui/ImageCropModal';
-import { LegalDocsModal } from '../modals/LegalDocsModal';
+import { LegalDocsModal, LegalDocType } from '../modals/LegalDocsModal';
 import { getUserInitials } from '../../utils/initials';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { logger } from '../../utils/logger';
@@ -104,9 +105,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
 
   // Modals state
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showHelpModal, setShowHelpModal] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
   const [showDeleteDataModal, setShowDeleteDataModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -142,11 +141,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
 
   // Hardware back button handlers for all settings sub-modals
   useBackHandler(showEditProfile, () => setShowEditProfile(false));
-  useBackHandler(showHelpModal, () => setShowHelpModal(false));
+  useBackHandler(!!legalDoc, () => setLegalDoc(null));
   useBackHandler(showInstallModal, () => setShowInstallModal(false));
   useBackHandler(showCurrencyModal, () => setShowCurrencyModal(false));
-  useBackHandler(showPrivacyModal, () => setShowPrivacyModal(false));
-  useBackHandler(showTermsModal, () => setShowTermsModal(false));
   useBackHandler(showDeleteDataModal, () => {
     setShowDeleteDataModal(false);
     setDeleteConfirmText('');
@@ -757,29 +754,53 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           {/* Privacy Policy */}
           <button
             type="button"
-            onClick={() => setShowPrivacyModal(true)}
+            onClick={() => setLegalDoc('privacy')}
             className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <Lock className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                Privacy policy
-              </span>
+              <Shield className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Privacy Policy</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
+                  Offline-first storage, RLS security &amp; data rights
+                </p>
+              </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
 
-          {/* Terms of Service */}
+          {/* Terms & Conditions */}
           <button
             type="button"
-            onClick={() => setShowTermsModal(true)}
+            onClick={() => setLegalDoc('terms')}
             className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
           >
             <div className="flex items-center gap-3 min-w-0">
               <FileText className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                Terms of service
-              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Terms &amp; Conditions</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
+                  Usage terms, financial disclaimer &amp; responsibilities
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
+          </button>
+
+          {/* Open-Source License */}
+          <button
+            type="button"
+            onClick={() => setLegalDoc('license')}
+            className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <Scale className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Open-Source License</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
+                  MIT License • Copyright © 2026 Md. Iqbal Hasan Shanto
+                </p>
+              </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
@@ -787,14 +808,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
           {/* Help & Support */}
           <button
             type="button"
-            onClick={() => setShowHelpModal(true)}
+            onClick={() => setLegalDoc('support')}
             className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <HelpCircle className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                Help &amp; support
-              </span>
+              <LifeBuoy className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Help &amp; Support</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
+                  FAQs, troubleshooting, GitHub issues &amp; direct email
+                </p>
+              </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
@@ -960,13 +984,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
 
       {/* Unified Legal & Support Docs Modal */}
       <LegalDocsModal
-        isOpen={showPrivacyModal || showTermsModal || showHelpModal}
-        initialDoc={showPrivacyModal ? 'privacy' : showTermsModal ? 'terms' : 'support'}
-        onClose={() => {
-          setShowPrivacyModal(false);
-          setShowTermsModal(false);
-          setShowHelpModal(false);
-        }}
+        isOpen={!!legalDoc}
+        initialDoc={legalDoc || 'privacy'}
+        onClose={() => setLegalDoc(null)}
       />
 
       {/* Delete All Data Modal (Requires typing DELETE) */}

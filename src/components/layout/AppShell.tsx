@@ -150,15 +150,51 @@ export const AppShell: React.FC = () => {
           )}
 
           {/* Centra Footer */}
-          <footer id="footer" className="max-w-7xl mx-auto w-full px-2 sm:px-6 py-6 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-3 mt-8">
-            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-              <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Centra Financial OS • Offline-First</span>
+          <footer
+            id="footer"
+            className="w-full py-6 mt-8 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs"
+          >
+            {/* Left Brand & Status */}
+            <div className="flex items-center flex-wrap gap-2 text-gray-600 dark:text-gray-400">
+              <span className="w-2 h-2 rounded-full bg-[#16A34A] dark:bg-[#C6FF3D] shrink-0" aria-hidden="true" />
+              <span className="font-bold text-gray-800 dark:text-gray-200">Centra</span>
+              <span className="text-gray-400 dark:text-gray-600 hidden sm:inline">•</span>
+              <span className="text-gray-500 dark:text-gray-400">Personal Finance &amp; Expense Tracker</span>
+              <span className="px-2 py-0.5 rounded-full bg-black/[0.05] dark:bg-white/[0.08] text-[10px] font-semibold text-gray-600 dark:text-gray-400">
+                Offline-First
+              </span>
             </div>
-            <div className="flex items-center gap-6 text-xs font-medium text-gray-500 dark:text-gray-400">
-              <button type="button" onClick={() => setLegalDoc('privacy')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
-              <button type="button" onClick={() => setLegalDoc('terms')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Terms</button>
-              <button type="button" onClick={() => setLegalDoc('support')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">Support</button>
-              <button type="button" onClick={() => setLegalDoc('api')} className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">API Docs</button>
+
+            {/* Right Legal & Support Links */}
+            <div className="flex items-center flex-wrap gap-4 sm:gap-6 text-xs font-medium text-gray-500 dark:text-gray-400">
+              <button
+                type="button"
+                onClick={() => setLegalDoc('privacy')}
+                className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Privacy Policy
+              </button>
+              <button
+                type="button"
+                onClick={() => setLegalDoc('terms')}
+                className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Terms &amp; Conditions
+              </button>
+              <button
+                type="button"
+                onClick={() => setLegalDoc('license')}
+                className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                License
+              </button>
+              <button
+                type="button"
+                onClick={() => setLegalDoc('support')}
+                className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Support
+              </button>
             </div>
           </footer>
         </main>

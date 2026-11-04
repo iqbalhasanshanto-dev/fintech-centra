@@ -415,7 +415,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
                 onClick={() => setLegalDoc('terms')}
                 className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
               >
-                Terms of Service
+                Terms &amp; Conditions
               </button>{' '}
               and{' '}
               <button
