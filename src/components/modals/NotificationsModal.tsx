@@ -25,6 +25,7 @@ interface NotificationsModalProps {
   onNavigateToTab?: (tab: 'home' | 'report' | 'plan' | 'settings') => void;
   onOpenRecentActivities?: () => void;
   onNavigateToSettings?: () => void;
+  onOpenUpdateModal?: () => void;
 }
 
 export const NotificationsModal: React.FC<NotificationsModalProps> = ({
@@ -34,6 +35,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   onNavigateToTab,
   onOpenRecentActivities,
   onNavigateToSettings,
+  onOpenUpdateModal,
 }) => {
   const { 
     notifications, 
@@ -97,6 +99,14 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     );
   };
 
+  const isUpdateNotification = (item: NotificationItem) => {
+    return (
+      item.id.startsWith('update-available:') ||
+      item.id.startsWith('update-alert-') ||
+      item.title.toLowerCase().includes('update available')
+    );
+  };
+
   const getIcon = (type: NotificationType) => {
     const iconClass = "w-4 h-4";
     switch (type) {
@@ -132,6 +142,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     if (isRetentionReminder(item)) {
       return null;
     }
+    if (isUpdateNotification(item)) {
+      return 'Update now';
+    }
     if (isWelcomeNotification(item)) {
       return 'Add transaction';
     }
@@ -153,6 +166,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       return;
     }
     onClose();
+    if (isUpdateNotification(item)) {
+      if (onOpenUpdateModal) {
+        onOpenUpdateModal();
+      }
+      return;
+    }
     if (item.type === 'security') {
       if (isGuest) return;
       if (onNavigateToSettings) onNavigateToSettings();

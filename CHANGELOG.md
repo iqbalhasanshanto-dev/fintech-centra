@@ -17,9 +17,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Step 1: Flushes pending offline transactions to Supabase with `CentraDB.processOutbox()` (wrapped in a 3-second timeout guard) prior to applying updates, guaranteeing zero data loss.
   - Step 2: On Web/PWA, unregisters service workers, purges static asset caches (`caches.keys()`), and reloads the window while leaving `localStorage`, indexedDB user tables, and authentication tokens 100% intact.
   - Step 2: On Android and iOS, opens direct raw APK/IPA binary download URLs (`Browser.open` / `_system`) for in-place OS package installation.
-- **Update Prompt Modal (`UpdatePromptModal.tsx`)**:
+- **Update Prompt Modal & Notification Hub (`UpdatePromptModal.tsx` & `NotificationsModal.tsx`)**:
   - Centered OLED card with version transition pill (`v{installedVersion} → v{latestVersion}`), data-protection reassurance badge (`✓ Your accounts, transactions, and login session will be preserved.`), "What's New" bulleted release notes, "Later" session dismissal, and animated "Syncing & Updating..." button.
   - Automatically checks on mount in `AppShell.tsx` and renders the prompt whenever a newer version is released.
+  - Automatically creates an in-app bell notification (`update-available:${latestVersion}`) and dispatches a phone status-bar alert (`triggerSystemNotification`) on available updates.
+  - Clicking any update notification in `NotificationsModal.tsx` triggers `"Update now"` and opens `<UpdatePromptModal />`.
+  - Automatically cleans up already-installed update notifications on app startup to prevent stale alerts.
   - Added "Check for updates" row in `SettingsScreen.tsx` under "Data & support" displaying the active installed version and providing manual on-demand checks with status feedback.
 - **Service Worker & Manifest Synchronization**:
   - Synchronized versions across `versions.json`, `public/versions.json`, `src/constants/version.ts`, `src/utils/version.ts`, and updated Service Worker cache to `centra-pwa-v1.0.5`.

@@ -202,3 +202,4 @@ export async function triggerSafeAppUpdate(updateInfo: AppUpdateInfo): Promise<v
     }
   }
 }
+

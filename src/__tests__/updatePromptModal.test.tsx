@@ -92,3 +92,4 @@ describe('UpdatePromptModal Component (src/components/modals/UpdatePromptModal.t
     });
   });
 });
+

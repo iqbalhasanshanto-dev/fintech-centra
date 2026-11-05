@@ -104,7 +104,7 @@ interface FinanceContextType {
   updateBudget: (id: string, updates: Partial<Budget>) => void;
   deleteBudget: (id: string) => void;
 
-  addNotification: (item: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead'>) => void;
+  addNotification: (item: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead'> & { id?: string }) => void;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
   deleteNotification: (id: string) => void;
@@ -783,24 +783,37 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
   }, [isHydrated, userId, executeOperation]);
 
   // Notification Trigger Helper
-  const addNotification = (item: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead'>) => {
+  const addNotification = (item: Omit<NotificationItem, 'id' | 'timestamp' | 'isRead'> & { id?: string }) => {
+    if (item.id && latestStateRef.current.notifications.some(n => n.id === item.id)) {
+      return;
+    }
     const newNotif: NotificationItem = {
       ...item,
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif_${Date.now()}`,
+      id: item.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `notif_${Date.now()}`),
       timestamp: new Date().toISOString(),
       isRead: false,
     };
-    executeOperation(state => ({
-      ok: true,
-      nextState: {
-        ...state,
-        notifications: [newNotif, ...state.notifications],
-      },
-      mutated: {
-        notificationsToUpsert: [newNotif],
-      },
-      notificationsToEmit: [newNotif],
-    }));
+    executeOperation(state => {
+      if (item.id && state.notifications.some(n => n.id === item.id)) {
+        return {
+          ok: true,
+          nextState: state,
+          mutated: {},
+          notificationsToEmit: [],
+        };
+      }
+      return {
+        ok: true,
+        nextState: {
+          ...state,
+          notifications: [newNotif, ...state.notifications],
+        },
+        mutated: {
+          notificationsToUpsert: [newNotif],
+        },
+        notificationsToEmit: [newNotif],
+      };
+    });
   };
 
   const addTransaction = async (txData: Omit<Transaction, 'id'>): Promise<Transaction> => {

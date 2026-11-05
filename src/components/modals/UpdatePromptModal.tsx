@@ -182,3 +182,4 @@ export const UpdatePromptModal: React.FC<UpdatePromptModalProps> = ({
 
   return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : modalNode;
 };
+

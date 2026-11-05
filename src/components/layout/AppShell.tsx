@@ -16,10 +16,19 @@ import { UpdatePromptModal } from '../modals/UpdatePromptModal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { BackButtonManager, exitNativeApp } from '../../utils/backButton';
 import { checkForAppUpdate, AppUpdateInfo } from '../../utils/updateChecker';
+import { triggerSystemNotification } from '../../utils/nativeNotifications';
+import { getAppVersion } from '../../utils/version';
 
 export const AppShell: React.FC = () => {
   const { isGuest } = useAuth();
-  const { transactions, pendingUndo, undoLastDelete } = useFinance();
+  const { 
+    transactions, 
+    pendingUndo, 
+    undoLastDelete, 
+    notifications, 
+    addNotification, 
+    markNotificationAsRead 
+  } = useFinance();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalDefaultTab, setAddModalDefaultTab] = useState<'transaction' | 'transfer' | 'goal' | 'budget' | 'spend' | 'income' | 'create-goal'>('spend');
@@ -30,20 +39,81 @@ export const AppShell: React.FC = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const mainContentRef = useRef<HTMLElement>(null);
   const tabHistoryRef = useRef<TabType[]>(['home']);
+  const hasCheckedUpdateRef = useRef(false);
+  const notificationsRef = useRef(notifications);
+  notificationsRef.current = notifications;
+  const cleanedNotifIdsRef = useRef<Set<string>>(new Set());
 
   // Automatic in-app update check on mount
   useEffect(() => {
+    if (hasCheckedUpdateRef.current) return;
+    hasCheckedUpdateRef.current = true;
+
     checkForAppUpdate(false)
       .then((info) => {
         if (info && info.updateAvailable) {
           setUpdateInfo(info);
           setShowUpdateModal(true);
+
+          const updateNotifId = `update-available:${info.latestVersion}`;
+          const alreadyExists = notificationsRef.current.some(n => n.id === updateNotifId);
+          if (!alreadyExists) {
+            const notesStr = info.releaseNotes && info.releaseNotes.length > 0
+              ? info.releaseNotes.join('; ')
+              : 'Bug fixes and performance improvements';
+            addNotification({
+              id: updateNotifId,
+              title: `New Update Available (v${info.latestVersion})`,
+              message: `Centra v${info.latestVersion} is ready with the latest improvements and bug fixes: ${notesStr}. Tap to update now.`,
+              type: 'system',
+              severity: 'info',
+            });
+
+            triggerSystemNotification(
+              'Update Available: Centra v' + info.latestVersion,
+              'Tap to update to the latest version with bug fixes and improvements.',
+              'update-' + info.latestVersion
+            ).catch(err => {
+              console.warn('Failed to dispatch status bar update notification:', err);
+            });
+          }
         }
       })
       .catch((err) => {
         console.warn('In-app update check warning on mount:', err);
       });
-  }, []);
+  }, [addNotification]);
+
+  // Auto-clean already-installed update notifications
+  useEffect(() => {
+    const currentVer = getAppVersion();
+    notifications.forEach(n => {
+      if (
+        !n.isRead &&
+        !cleanedNotifIdsRef.current.has(n.id) &&
+        (n.id.startsWith('update-alert-v4.1.3') || n.id === `update-available:${currentVer}`)
+      ) {
+        cleanedNotifIdsRef.current.add(n.id);
+        markNotificationAsRead(n.id);
+      }
+    });
+  }, [notifications, markNotificationAsRead]);
+
+  const handleOpenUpdateModal = async () => {
+    if (updateInfo) {
+      setShowUpdateModal(true);
+      return;
+    }
+    try {
+      const info = await checkForAppUpdate(true);
+      if (info) {
+        setUpdateInfo(info);
+        setShowUpdateModal(true);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch update info for modal:', err);
+    }
+  };
 
   // Synchronously ensure Demo Mode never renders settings screen
   const effectiveTab: TabType = (isGuest && activeTab === 'settings') ? 'home' : activeTab;
@@ -241,6 +311,7 @@ export const AppShell: React.FC = () => {
         onNavigateToTab={handleSelectTab}
         onNavigateToSettings={() => handleSelectTab('settings')}
         onOpenRecentActivities={() => handleSelectTab('home')}
+        onOpenUpdateModal={handleOpenUpdateModal}
       />
 
       {/* Dedicated Legal & Support Modal */}
