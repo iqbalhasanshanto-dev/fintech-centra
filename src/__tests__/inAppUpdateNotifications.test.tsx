@@ -7,6 +7,15 @@ import * as updateCheckerModule from '../utils/updateChecker';
 import * as nativeNotificationsModule from '../utils/nativeNotifications';
 import { getAppVersion } from '../utils/version';
 import { NotificationItem } from '../types';
+import { Browser } from '@capacitor/browser';
+import * as platformModule from '../utils/platform';
+
+vi.mock('@capacitor/browser', () => ({
+  Browser: {
+    open: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
+  },
+}));
 
 let mockNotifications: NotificationItem[] = [];
 const mockAddNotification = vi.fn((notif) => {
@@ -127,7 +136,7 @@ describe('In-App Update Notifications System', () => {
       expect(onOpenUpdateModal).toHaveBeenCalled();
     });
 
-    it('renders "Open link" and opens URL in new window when actionUrl is http/https', () => {
+    it('renders "Visit website" and opens URL in new window when actionUrl is http/https', () => {
       const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       const onOpenQuickAction = vi.fn();
       mockNotifications = [
@@ -150,12 +159,121 @@ describe('In-App Update Notifications System', () => {
         />
       );
 
-      expect(screen.getByText('Open link')).toBeDefined();
+      expect(screen.getByText('Visit website')).toBeDefined();
       const card = screen.getByText('Special Event');
       fireEvent.click(card);
 
       expect(windowOpenSpy).toHaveBeenCalledWith('https://centra.app/announcement', '_blank', 'noopener,noreferrer');
       expect(onOpenQuickAction).not.toHaveBeenCalled();
+      windowOpenSpy.mockRestore();
+    });
+
+    it('renders "Download update" when notification mentions download update or .apk link', () => {
+      mockNotifications = [
+        {
+          id: 'download-url-notif',
+          type: 'system',
+          title: 'New APK Release',
+          message: 'Download update at https://try-centra.netlify.app/Centra-v4.1.3.apk',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        },
+      ];
+
+      render(
+        <NotificationsModal
+          isOpen={true}
+          onClose={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('Download update')).toBeDefined();
+    });
+
+    it('opens external URL via Browser.open on native Android/iOS', () => {
+      vi.spyOn(platformModule, 'isNative').mockReturnValue(true);
+      const browserOpenSpy = vi.spyOn(Browser, 'open').mockResolvedValue(undefined as never);
+      mockNotifications = [
+        {
+          id: 'native-browser-notif',
+          type: 'security',
+          title: 'Security Alert',
+          message: 'Verify at https://try-centra.netlify.app',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        },
+      ];
+
+      render(
+        <NotificationsModal
+          isOpen={true}
+          onClose={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('Visit website')).toBeDefined();
+      const card = screen.getByText('Security Alert');
+      fireEvent.click(card);
+
+      expect(browserOpenSpy).toHaveBeenCalledWith({ url: 'https://try-centra.netlify.app' });
+    });
+
+    it('extracts URL from message text and opens it when notification has no actionUrl', () => {
+      vi.spyOn(platformModule, 'isNative').mockReturnValue(false);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      mockNotifications = [
+        {
+          id: 'extracted-url-notif',
+          type: 'system',
+          title: 'Latest Updates',
+          message: 'Explore our web release at https://try-centra.netlify.app — thank you!',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        },
+      ];
+
+      render(
+        <NotificationsModal
+          isOpen={true}
+          onClose={vi.fn()}
+        />
+      );
+
+      const card = screen.getByText('Latest Updates');
+      fireEvent.click(card);
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('https://try-centra.netlify.app', '_blank', 'noopener,noreferrer');
+      windowOpenSpy.mockRestore();
+    });
+
+    it('renders inline https URL in message body as clickable link that opens external URL', () => {
+      vi.spyOn(platformModule, 'isNative').mockReturnValue(false);
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      mockNotifications = [
+        {
+          id: 'inline-link-notif',
+          type: 'system',
+          title: 'Visit Us',
+          message: 'Official website: https://try-centra.netlify.app',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        },
+      ];
+
+      render(
+        <NotificationsModal
+          isOpen={true}
+          onClose={vi.fn()}
+        />
+      );
+
+      const inlineLink = screen.getByRole('link', { name: 'https://try-centra.netlify.app' });
+      expect(inlineLink).toBeDefined();
+      expect(inlineLink.className).toContain('text-[#4D6E18]');
+      expect(inlineLink.className).toContain('underline');
+
+      fireEvent.click(inlineLink);
+      expect(windowOpenSpy).toHaveBeenCalledWith('https://try-centra.netlify.app', '_blank', 'noopener,noreferrer');
       windowOpenSpy.mockRestore();
     });
 

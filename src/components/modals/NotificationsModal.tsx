@@ -17,6 +17,30 @@ import { useFinance } from '../../context/FinanceContext';
 import { useAuth } from '../../context/AuthContext';
 import { NotificationType, NotificationItem } from '../../types';
 import { useBackHandler } from '../../utils/backButton';
+import { Browser } from '@capacitor/browser';
+import { isNative } from '../../utils/platform';
+
+export const openExternalUrl = async (url: string): Promise<void> => {
+  if (!url) return;
+  try {
+    if (isNative() && typeof Browser?.open === 'function') {
+      await Browser.open({ url });
+      return;
+    }
+  } catch (err) {
+    console.warn('Native Browser.open failed, falling back to window.open:', err);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+};
+
+export const extractUrlFromText = (text?: string): string | null => {
+  if (!text) return null;
+  const match = text.match(/https?:\/\/[^\s—]+/i);
+  return match ? match[0] : null;
+};
 
 interface NotificationsModalProps {
   isOpen: boolean;
@@ -142,12 +166,22 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     if (isRetentionReminder(item)) {
       return null;
     }
-    if (item.actionUrl && (item.actionUrl.startsWith('http://') || item.actionUrl.startsWith('https://'))) {
-      return 'Open link';
-    }
     if (isUpdateNotification(item)) {
       return 'Update now';
     }
+
+    const hasExternalUrl =
+      Boolean(item.actionUrl && /^https?:\/\//i.test(item.actionUrl)) ||
+      Boolean(item.message && /https?:\/\/[^\s—]+/i.test(item.message));
+
+    if (hasExternalUrl) {
+      const combined = `${item.title} ${item.message} ${item.actionUrl || ''}`.toLowerCase();
+      if (combined.includes('download update') || combined.includes('.apk') || combined.includes('.ipa')) {
+        return 'Download update';
+      }
+      return 'Visit website';
+    }
+
     if (isWelcomeNotification(item)) {
       return 'Add transaction';
     }
@@ -169,10 +203,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       return;
     }
     onClose();
-    if (item.actionUrl && (item.actionUrl.startsWith('http://') || item.actionUrl.startsWith('https://'))) {
-      window.open(item.actionUrl, '_blank', 'noopener,noreferrer');
+
+    if (item.actionUrl && /^https?:\/\//i.test(item.actionUrl)) {
+      openExternalUrl(item.actionUrl);
       return;
     }
+
+    const extractedUrl = extractUrlFromText(item.message);
+    if (!item.actionUrl && extractedUrl) {
+      openExternalUrl(extractedUrl);
+      return;
+    }
+
     if (isUpdateNotification(item)) {
       if (onOpenUpdateModal) {
         onOpenUpdateModal();
@@ -202,6 +244,45 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     } catch {
       return '';
     }
+  };
+
+  const renderMessageWithLinks = (message?: string, notifId?: string) => {
+    if (!message) return null;
+    const urlRegex = /(https?:\/\/[^\s—]+)/g;
+    const parts = message.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (/^https?:\/\/[^\s—]+/i.test(part)) {
+        return (
+          <span
+            key={index}
+            role="link"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (notifId) {
+                markNotificationAsRead(notifId);
+              }
+              openExternalUrl(part);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation();
+                e.preventDefault();
+                if (notifId) {
+                  markNotificationAsRead(notifId);
+                }
+                openExternalUrl(part);
+              }
+            }}
+            className="text-[#4D6E18] dark:text-[#C6FF3D] underline font-semibold cursor-pointer hover:opacity-80"
+          >
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
   };
 
   const todayDateString = useMemo(() => {
@@ -277,7 +358,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
         {/* Message Body */}
         <p className="text-sm text-[#667085] dark:text-white/70 leading-relaxed">
-          {item.message}
+          {renderMessageWithLinks(item.message, item.id)}
         </p>
 
         {/* Footer Row: Timestamp + Action Link */}

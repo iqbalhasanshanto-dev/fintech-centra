@@ -39,7 +39,7 @@ Every release binary is cryptographically hashed with SHA-256 for uncompromising
 
 | Platform | File | Size | SHA-256 Checksum |
 |:---|:---|:---|:---|
-| **Android** | `Centra-v4.1.3.apk` | 4.74 MB | `396b879567f2c3a3c3c57d9139fcf98ec9a3072d0a3d28288006728268fca9cd` |
+| **Android** | `Centra-v4.1.3.apk` | 4.74 MB | `01f1c88e8be4e7702608112d00b14af7e8c6ff8db82d973f2e879a05aecf8eab` |
 | **Android (Prev)** | `Centra-v4.1.0.apk` | 6.00 MB | `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13` |
 | **iOS** | `Centra-v1.0.1.ipa` | 2.46 MB | `775229a9ab2b60d45f77f510520ee8a74cd37841a11077e1cf38b1849df29b62` |
 | **iOS (Prev)** | `Centra-v1.0.0.ipa` | 2.74 MB | `47f7807b7d8f064879f2442a597232bcb3716098996b5fadf63efed80f7838d3` |
