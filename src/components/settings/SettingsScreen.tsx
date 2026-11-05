@@ -787,7 +787,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
 
-          {/* Open-Source License */}
+          {/* Software License */}
           <button
             type="button"
             onClick={() => setLegalDoc('license')}
@@ -796,9 +796,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             <div className="flex items-center gap-3 min-w-0">
               <Scale className="w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">Open-Source License</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Software License</p>
                 <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
-                  MIT License • Copyright © 2026 Md. Iqbal Hasan Shanto
+                  Commercial &amp; brand rights reserved • © 2026 Md. Iqbal Hasan Shanto
                 </p>
               </div>
             </div>

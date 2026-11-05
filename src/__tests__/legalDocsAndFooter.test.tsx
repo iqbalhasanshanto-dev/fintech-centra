@@ -31,10 +31,16 @@ describe('LegalDocsModal, Upgraded App Footer & Support Center', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /^Privacy Policy$/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /^Terms & Conditions$/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /^License \(MIT\)$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^License$/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /^Support$/i })).toBeInTheDocument();
 
       expect(screen.getByText(/Zero Data Selling • Offline-First Architecture/i)).toBeInTheDocument();
+      expect(screen.getByText(/Privacy-First & Offline-First Architecture/i)).toBeInTheDocument();
+      expect(screen.getByText(/Information We Collect & Store/i)).toBeInTheDocument();
+      expect(screen.getByText(/Cloud Synchronization & Cryptographic Security/i)).toBeInTheDocument();
+      expect(screen.getByText(/Rolling 2-Month Data Retention & CSV Backups/i)).toBeInTheDocument();
+      expect(screen.getByText(/Third-Party Infrastructure & Zero Tracking/i)).toBeInTheDocument();
+      expect(screen.getByText(/Your Data Rights & Instant Deletion/i)).toBeInTheDocument();
     });
 
     it('switches to Terms & Conditions tab and displays terms content', () => {
@@ -46,12 +52,17 @@ describe('LegalDocsModal, Upgraded App Footer & Support Center', () => {
         />
       );
 
-      expect(screen.getByText(/Clear, Transparent Terms • Open-Source Personal Finance Tool/i)).toBeInTheDocument();
+      expect(screen.getByText(/Transparent Usage Terms • Personal Finance & Budgeting Tool/i)).toBeInTheDocument();
+      expect(screen.getByText(/Acceptance of Terms/i)).toBeInTheDocument();
       expect(screen.getByText(/Scope of Service & Financial Disclaimer/i)).toBeInTheDocument();
       expect(screen.getByText(/Centra is not a bank, licensed depository institution/i)).toBeInTheDocument();
+      expect(screen.getByText(/Account Security & User Responsibility/i)).toBeInTheDocument();
+      expect(screen.getByText(/Multi-Currency Conversions & Calculations/i)).toBeInTheDocument();
+      expect(screen.getByText(/Intellectual Property & Brand Protection/i)).toBeInTheDocument();
+      expect(screen.getByText(/Disclaimer of Warranties & Limitation of Liability/i)).toBeInTheDocument();
     });
 
-    it('renders License (MIT) with verbatim copyright and permissions cards', () => {
+    it('renders License with protected copyright and permissions cards', () => {
       render(
         <LegalDocsModal
           isOpen={true}
@@ -60,14 +71,17 @@ describe('LegalDocsModal, Upgraded App Footer & Support Center', () => {
         />
       );
 
-      expect(screen.getByText(/^Permissions$/i)).toBeInTheDocument();
+      expect(screen.getByText(/^Permitted$/i)).toBeInTheDocument();
       expect(screen.getByText(/^Conditions$/i)).toBeInTheDocument();
-      expect(screen.getByText(/^Limitations$/i)).toBeInTheDocument();
-      expect(screen.getByText(/Copyright \(c\) 2026 Md\. Iqbal Hasan Shanto/i)).toBeInTheDocument();
+      expect(screen.getByText(/^Restricted$/i)).toBeInTheDocument();
+      expect(screen.getByText(/No Commercial Clones/i)).toBeInTheDocument();
+      expect(screen.getByText(/No Paid Redistribution/i)).toBeInTheDocument();
+      expect(screen.getByText(/No Rebranding or App Store Republishing/i)).toBeInTheDocument();
+      expect(screen.getByText(/All Rights Reserved on Brand, Trademarks, and Commercial Distribution/i)).toBeInTheDocument();
       expect(screen.getByText(/View on GitHub/i)).toBeInTheDocument();
     });
 
-    it('renders Support tab with direct email, GitHub issues, and FAQs', () => {
+    it('renders Support tab with direct email, GitHub issues, website, and FAQs', () => {
       render(
         <LegalDocsModal
           isOpen={true}
@@ -76,14 +90,19 @@ describe('LegalDocsModal, Upgraded App Footer & Support Center', () => {
         />
       );
 
-      expect(screen.getByText(/Direct Email Support/i)).toBeInTheDocument();
+      expect(screen.getByText(/Developer Email/i)).toBeInTheDocument();
       expect(screen.getByText(/mdiqbalhasan\.dev@gmail\.com/i)).toBeInTheDocument();
-      expect(screen.getByText(/GitHub Issue Tracker/i)).toBeInTheDocument();
+      expect(screen.getByText(/GitHub Issues/i)).toBeInTheDocument();
+      expect(screen.getByText(/Official Website/i)).toBeInTheDocument();
+      expect(screen.getByText(/https:\/\/try-centra\.netlify\.app\//i)).toBeInTheDocument();
       expect(screen.getByText(/Frequently Asked Questions \(FAQ\)/i)).toBeInTheDocument();
-      expect(screen.getByText(/How does Offline-First Sync work\?/i)).toBeInTheDocument();
+      expect(screen.getByText(/How does Offline Sync work\?/i)).toBeInTheDocument();
+      expect(screen.getByText(/How do I export a CSV backup\?/i)).toBeInTheDocument();
+      expect(screen.getByText(/How does the 2-Month Retention Policy work\?/i)).toBeInTheDocument();
+      expect(screen.getByText(/How do I reset my App PIN\?/i)).toBeInTheDocument();
     });
 
-    it('maps "api" initialDoc to support tab gracefully', () => {
+    it('maps "api" initialDoc to license tab per specification', () => {
       render(
         <LegalDocsModal
           isOpen={true}
@@ -92,7 +111,7 @@ describe('LegalDocsModal, Upgraded App Footer & Support Center', () => {
         />
       );
 
-      expect(screen.getByText(/Frequently Asked Questions \(FAQ\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/All Rights Reserved on Brand, Trademarks, and Commercial Distribution/i)).toBeInTheDocument();
     });
   });
 
@@ -119,8 +138,7 @@ describe('LegalDocsModal, Upgraded App Footer & Support Center', () => {
       expect(licenseBtn).toBeInTheDocument();
       fireEvent.click(licenseBtn);
 
-      expect(screen.getByText(/Open-Source License/i)).toBeInTheDocument();
-      expect(screen.getByText(/Copyright \(c\) 2026 Md\. Iqbal Hasan Shanto/i)).toBeInTheDocument();
+      expect(screen.getByText(/All Rights Reserved on Brand, Trademarks, and Commercial Distribution/i)).toBeInTheDocument();
     });
   });
 
@@ -139,14 +157,15 @@ describe('LegalDocsModal, Upgraded App Footer & Support Center', () => {
       expect(screen.getByText('Download your data')).toBeInTheDocument();
       expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
       expect(screen.getByText('Terms & Conditions')).toBeInTheDocument();
-      expect(screen.getByText('Open-Source License')).toBeInTheDocument();
+      expect(screen.getByText('Software License')).toBeInTheDocument();
       expect(screen.getByText('Help & Support')).toBeInTheDocument();
 
-      // Open Open-Source License modal from Settings
-      const licenseRow = screen.getByText('Open-Source License');
+      // Open Software License modal from Settings
+      const licenseRow = screen.getByText('Software License');
       fireEvent.click(licenseRow);
 
-      expect(screen.getByText(/MIT License • Copyright © 2026 Md\. Iqbal Hasan Shanto/i)).toBeInTheDocument();
+      expect(screen.getByText(/Commercial & brand rights reserved • © 2026 Md\. Iqbal Hasan Shanto/i)).toBeInTheDocument();
+      expect(screen.getByText(/All Rights Reserved on Brand, Trademarks, and Commercial Distribution/i)).toBeInTheDocument();
     });
   });
 });

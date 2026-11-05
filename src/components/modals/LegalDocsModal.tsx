@@ -11,9 +11,11 @@ import {
   Lock,
   Check,
   AlertCircle,
+  Ban,
   Mail,
   HelpCircle,
   Server,
+  Globe,
 } from 'lucide-react';
 import { useBackHandler } from '../../utils/backButton';
 import { getAppVersion } from '../../utils/version';
@@ -49,7 +51,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
   initialDoc = 'privacy',
 }) => {
   const resolveTab = (doc: LegalDocType): TabKey => {
-    if (doc === 'api') return 'support';
+    if (doc === 'api') return 'license';
     if (doc === 'license') return 'license';
     if (doc === 'terms') return 'terms';
     if (doc === 'support') return 'support';
@@ -108,7 +110,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
               <h2 className="text-base sm:text-lg font-bold tracking-tight text-gray-900 dark:text-white truncate">
                 {activeTab === 'privacy' && 'Privacy Policy'}
                 {activeTab === 'terms' && 'Terms & Conditions'}
-                {activeTab === 'license' && 'Open-Source License'}
+                {activeTab === 'license' && 'License'}
                 {activeTab === 'support' && 'Support & Help Center'}
               </h2>
               <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
@@ -158,7 +160,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                 : 'bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/15'
             }`}
           >
-            License (MIT)
+            License
           </button>
           <button
             type="button"
@@ -209,7 +211,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                 <p>
                   We collect and process only the minimal data strictly necessary to provide personal finance tracking and synchronization:
                 </p>
-                <ul className="list-disc list-inside space-y-1 pl-1 text-xs sm:text-xs text-gray-600 dark:text-gray-300">
+                <ul className="list-disc list-inside space-y-1 pl-1 text-xs text-gray-600 dark:text-gray-300">
                   <li>
                     <strong className="text-gray-900 dark:text-white">Account &amp; Profile Data:</strong> Display name, email address, optional profile picture, date of birth, country, and selected base currency when you authenticate via Google OAuth or Email OTP.
                   </li>
@@ -292,7 +294,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
               <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-800 dark:text-blue-300 font-semibold flex items-center justify-between flex-wrap gap-2 text-xs">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                  <span>Clear, Transparent Terms • Open-Source Personal Finance Tool</span>
+                  <span>Transparent Usage Terms • Personal Finance &amp; Budgeting Tool</span>
                 </div>
                 <span className="text-[11px] font-normal text-blue-700/80 dark:text-blue-400/80">
                   Effective Date: March 30, 2026
@@ -317,7 +319,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                   <span>Scope of Service &amp; Financial Disclaimer</span>
                 </h3>
                 <p>
-                  Centra is an offline-first personal budgeting, expense logging, and financial productivity tool. <strong className="text-gray-900 dark:text-white">Centra is not a bank, licensed depository institution, certified financial advisor, tax specialist, or investment broker.</strong> All visual graphs, savings pace projections, budget progress bars, and currency conversions are provided strictly for personal record-keeping, organization, and informational purposes. You should not rely on Centra as a substitute for professional financial, tax, or investment advice.
+                  Centra is a personal expense tracking and budgeting tool, not a bank, licensed financial advisor, or tax preparer. <strong className="text-gray-900 dark:text-white">Centra is not a bank, licensed depository institution, certified financial advisor, tax specialist, or investment broker.</strong> All visual graphs, savings pace projections, budget progress bars, and currency conversions are provided strictly for personal record-keeping, organization, and informational purposes. You should not rely on Centra as a substitute for professional financial, tax, or investment advice.
                 </p>
               </div>
 
@@ -328,7 +330,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                   <span>Account Security &amp; User Responsibility</span>
                 </h3>
                 <p>
-                  You are solely responsible for safeguarding your device, local App PIN, Google account credentials, and email security. If you use Centra in purely offline Guest mode or clear your browser/app storage before pending offline outbox items synchronize to the cloud, un-synced local records cannot be recovered by Centra.
+                  You are solely responsible for safeguarding your device, local App PIN, Google account credentials, and email security. If you use Centra in purely offline Guest mode or clear your browser/app storage before pending offline outbox items synchronize to the cloud, un-synced local records cannot be recovered by Centra. Always ensure your device is synced before performing storage cleanups.
                 </p>
               </div>
 
@@ -336,10 +338,10 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
               <div className="space-y-1.5">
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <span className="text-blue-600 dark:text-blue-400">4.</span>
-                  <span>Currency Conversion &amp; Calculations</span>
+                  <span>Multi-Currency Conversions &amp; Calculations</span>
                 </h3>
                 <p>
-                  Multi-currency balances and transactions are converted into your chosen Base Currency using bundled reference exchange rates. Actual conversion rates applied by your credit card issuer, bank, or currency exchange provider may differ due to spread margins and foreign transaction fees.
+                  Multi-currency balances and transactions are converted into your chosen Base Currency using reference exchange rates used for dashboard totals. Actual conversion rates applied by your credit card issuer, bank, or currency exchange provider may differ due to spread margins and foreign transaction fees.
                 </p>
               </div>
 
@@ -347,10 +349,10 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
               <div className="space-y-1.5">
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <span className="text-blue-600 dark:text-blue-400">5.</span>
-                  <span>Acceptable Use</span>
+                  <span>Intellectual Property &amp; Brand Protection</span>
                 </h3>
                 <p>
-                  You agree to use Centra solely for lawful personal finance tracking. You agree not to abuse the backend database infrastructure, perform denial-of-service attacks, attempt unauthorized privilege escalation, or interfere with other users' isolated data partitions.
+                  The <strong className="text-gray-900 dark:text-white">"Centra"</strong> name, logo, visual identity, logomarks, and UI design are protected trademarks and proprietary assets of <strong className="text-gray-900 dark:text-white">Md. Iqbal Hasan Shanto</strong>. You may not use, clone, rebrand, or commercially distribute the application, trademarks, or brand assets without prior written permission from Md. Iqbal Hasan Shanto.
                 </p>
               </div>
 
@@ -367,38 +369,38 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: LICENSE (MIT) */}
+          {/* TAB 3: LICENSE */}
           {activeTab === 'license' && (
             <div className="space-y-4">
               {/* Summary 3-Column Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* Permissions */}
+                {/* Permitted (Emerald) */}
                 <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold">
                     <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span>Permissions</span>
+                    <span>Permitted</span>
                   </div>
                   <ul className="text-[11px] space-y-1 font-medium">
                     <li className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span>Commercial Use</span>
+                      <span>Personal Use</span>
                     </li>
                     <li className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span>Modification</span>
+                      <span>Source Code Inspection</span>
                     </li>
                     <li className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span>Distribution</span>
+                      <span>Security Auditing</span>
                     </li>
                     <li className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span>Private Use</span>
+                      <span>Educational Study &amp; Contributions</span>
                     </li>
                   </ul>
                 </div>
 
-                {/* Conditions */}
+                {/* Conditions (Sky Blue) */}
                 <div className="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-800 dark:text-sky-300 space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold">
                     <FileText className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
@@ -407,49 +409,72 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                   <ul className="text-[11px] space-y-1 font-medium">
                     <li className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
-                      <span>Include Copyright Notice</span>
+                      <span>Preserve Copyright &amp; Attribution</span>
+                    </li>
+                    <li className="text-[10px] pl-3 text-sky-700 dark:text-sky-300 font-mono">
+                      © 2026 Md. Iqbal Hasan Shanto
                     </li>
                     <li className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
-                      <span>Include License Notice</span>
+                      <span>Retain Full License Notice</span>
                     </li>
                   </ul>
                 </div>
 
-                {/* Limitations */}
-                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 space-y-2">
+                {/* Restricted (Rose) */}
+                <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-800 dark:text-rose-300 space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold">
-                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                    <span>Limitations</span>
+                    <Ban className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <span>Restricted</span>
                   </div>
                   <ul className="text-[11px] space-y-1 font-medium">
                     <li className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                      <span>No Liability</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                      <span>No Commercial Clones</span>
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                      <span>No Warranty</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                      <span>No Paid Redistribution</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                      <span>No Rebranding or App Store Republishing</span>
                     </li>
                   </ul>
                 </div>
               </div>
 
-              {/* Monospace Verbatim MIT License Card */}
+              {/* Monospace Verbatim Protected License Card */}
               <div className="p-4 rounded-2xl bg-[#F7F8FA] dark:bg-[#1C1C1C] border border-black/10 dark:border-white/10 font-mono text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed select-all">
-{`MIT License
-
-Copyright (c) 2026 Md. Iqbal Hasan Shanto
+{`Copyright (c) 2026 Md. Iqbal Hasan Shanto. All Rights Reserved on Brand, Trademarks, and Commercial Distribution.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+of this software and associated documentation files (the "Software"), to view,
+inspect, study, evaluate, audit for security, and contribute non-commercial
+enhancements or fixes to the Software, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. Brand, Trademarks & Visual Identity:
+   The name "Centra", associated logos, logomarks, wordmarks, icons, UI/UX designs,
+   and visual identity are protected proprietary assets of Md. Iqbal Hasan Shanto.
+   No rights or licenses are granted to use the "Centra" name, logo, trademarks,
+   or visual identity in any fork, clone, redistribution, derivative work, or
+   commercial product without prior express written permission from Md. Iqbal Hasan Shanto.
+
+2. Commercial Distribution & App Store Restrictions:
+   Unauthorized commercial use, selling copies, offering paid hosted versions,
+   monetizing forks or derivatives, and publishing clones or modified versions
+   to public distribution channels—including but not limited to the Apple App Store,
+   Google Play Store, browser extension web stores, or public commercial websites—is
+   strictly prohibited without prior express written permission from Md. Iqbal Hasan Shanto.
+
+3. Personal & Non-Commercial Evaluation:
+   Users and security researchers are permitted to inspect, run, test, and evaluate
+   the codebase for personal, educational, non-commercial, and open security auditing
+   purposes.
+
+4. Attribution & Notice Retention:
+   The above copyright notice, this permission notice, and attribution to Md. Iqbal Hasan Shanto
+   shall be preserved in all copies, forks, or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -467,7 +492,7 @@ SOFTWARE.`}
                     <GithubIcon className="w-5 h-5 text-gray-900 dark:text-white" />
                   </div>
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">Centra Open-Source Repository</h4>
+                    <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">Centra Open Repository</h4>
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">View source code, star on GitHub, or submit pull requests</p>
                   </div>
                 </div>
@@ -488,8 +513,8 @@ SOFTWARE.`}
           {activeTab === 'support' && (
             <div className="space-y-4">
               {/* Direct Contact Channels */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Email Support Card */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Developer Email Card */}
                 <div className="p-4 rounded-2xl bg-[#F7F8FA] dark:bg-[#1C1C1C] border border-black/5 dark:border-white/10 flex flex-col justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -497,8 +522,8 @@ SOFTWARE.`}
                         <Mail className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-gray-900 dark:text-white">Direct Email Support</h4>
-                        <p className="text-[11px] text-gray-500 dark:text-gray-400">Get assistance from the core maintainer</p>
+                        <h4 className="text-xs font-bold text-gray-900 dark:text-white">Developer Email</h4>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">Direct core maintainer support</p>
                       </div>
                     </div>
                     <p className="font-mono text-xs text-gray-700 dark:text-gray-300 pt-1 truncate">
@@ -514,7 +539,7 @@ SOFTWARE.`}
                   </a>
                 </div>
 
-                {/* GitHub Issue Tracker Card */}
+                {/* GitHub Issues Card */}
                 <div className="p-4 rounded-2xl bg-[#F7F8FA] dark:bg-[#1C1C1C] border border-black/5 dark:border-white/10 flex flex-col justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -522,8 +547,8 @@ SOFTWARE.`}
                         <GithubIcon className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-gray-900 dark:text-white">GitHub Issue Tracker</h4>
-                        <p className="text-[11px] text-gray-500 dark:text-gray-400">Report bugs or request new features</p>
+                        <h4 className="text-xs font-bold text-gray-900 dark:text-white">GitHub Issues</h4>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">Report bugs &amp; request features</p>
                       </div>
                     </div>
                     <p className="font-mono text-xs text-gray-700 dark:text-gray-300 pt-1 truncate">
@@ -540,6 +565,33 @@ SOFTWARE.`}
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
+
+                {/* Official Website Card */}
+                <div className="p-4 rounded-2xl bg-[#F7F8FA] dark:bg-[#1C1C1C] border border-black/5 dark:border-white/10 flex flex-col justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <Globe className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-900 dark:text-white">Official Website</h4>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">Web app &amp; product updates</p>
+                      </div>
+                    </div>
+                    <p className="font-mono text-xs text-gray-700 dark:text-gray-300 pt-1 truncate">
+                      https://try-centra.netlify.app/
+                    </p>
+                  </div>
+                  <a
+                    href="https://try-centra.netlify.app/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-full bg-[#18212F] text-white dark:bg-[#C6FF3D] dark:text-[#0A0E1A] font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Visit Website</span>
+                  </a>
+                </div>
               </div>
 
               {/* Frequently Asked Questions (FAQ) */}
@@ -554,37 +606,37 @@ SOFTWARE.`}
                 <div className="space-y-2">
                   <div className="p-3.5 rounded-2xl bg-[#F7F8FA] dark:bg-[#1C1C1C] border border-black/5 dark:border-white/10 space-y-1">
                     <h5 className="text-xs font-bold text-gray-900 dark:text-white">
-                      How does Offline-First Sync work?
+                      How does Offline Sync work?
                     </h5>
                     <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                      Every transaction, goal, or budget you add offline is saved immediately to your device and queued in the local outbox. As soon as your internet connection returns, Centra syncs your changes to Supabase automatically.
+                      Every transaction, goal, or budget you add offline is saved immediately to your device in local storage and queued in the offline outbox. Once an active internet connection is detected, Centra automatically synchronizes all pending changes with your Supabase cloud account in the background.
                     </p>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-[#F7F8FA] dark:bg-[#1C1C1C] border border-black/5 dark:border-white/10 space-y-1">
                     <h5 className="text-xs font-bold text-gray-900 dark:text-white">
-                      How do I export a backup of my financial data?
+                      How do I export a CSV backup?
                     </h5>
                     <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                      Open <strong className="text-gray-800 dark:text-gray-200">Settings → Data &amp; support → Download your data</strong> to export a complete CSV file containing your accounts, transactions, categories, budgets, and goals.
+                      Navigate to <strong className="text-gray-800 dark:text-gray-200">Settings → Data &amp; support → Download your data</strong>. Centra will instantly generate and download a comprehensive CSV archive containing all your accounts, transactions, category budgets, and savings goals.
                     </p>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-[#F7F8FA] dark:bg-[#1C1C1C] border border-black/5 dark:border-white/10 space-y-1">
                     <h5 className="text-xs font-bold text-gray-900 dark:text-white">
-                      Why do transactions older than 2 months roll over?
+                      How does the 2-Month Retention Policy work?
                     </h5>
                     <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                      Centra keeps the Current Month and Previous Month active to ensure instant load times. Export a CSV backup anytime to archive historical months.
+                      To ensure maximum mobile performance and maintain instant client hydration, Centra keeps active ledgers for the Current Month and Previous Month (2 months total). You can download an uncompressed CSV export at any time to preserve long-term historical records.
                     </p>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-[#F7F8FA] dark:bg-[#1C1C1C] border border-black/5 dark:border-white/10 space-y-1">
                     <h5 className="text-xs font-bold text-gray-900 dark:text-white">
-                      How do I switch between System, Dark, and Light themes?
+                      How do I reset my App PIN?
                     </h5>
                     <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                      Centra follows your device's System theme by default, and you can toggle Dark/Light mode anytime in <strong className="text-gray-800 dark:text-gray-200">Settings → Appearance &amp; Currency</strong>.
+                      If you have forgotten your local App PIN, you can re-authenticate using your primary Google OAuth or Email account on the lock screen, or disable and configure a new 4-digit PIN under <strong className="text-gray-800 dark:text-gray-200">Settings → Security &amp; authentication → App PIN Lock</strong>.
                     </p>
                   </div>
                 </div>
