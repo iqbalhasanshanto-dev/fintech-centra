@@ -100,7 +100,7 @@ Centra provides three independent release tracks: **Android**, **iOS**, and **We
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
-- **Android v4.1.3 (`Centra-v4.1.3.apk`)**: `e426bbde3b2eef4feaef713f5d7e38c5024eacf47adda2ab6595022f3d9f9e88`
+- **Android v4.1.3 (`Centra-v4.1.3.apk`)**: `2c81687ac062d116647565fe408c0de2bc293c36db74224fce11e13eb3dcba55`
 - **Android v4.1.2 (`Centra-v4.1.2.apk`)**: `eadd76145f81cb68e4c6ba2a6fc7e45b66a39ba1ca9bf8c9d090aef44baa73e3`
 - **Android v4.1.0 (`Centra-v4.1.0.apk`)**: `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13`
 - **iOS v1.0.1 (`Centra-v1.0.1.ipa`)**: `775229a9ab2b60d45f77f510520ee8a74cd37841a11077e1cf38b1849df29b62`
@@ -206,7 +206,7 @@ Verify that your downloaded packages are 100% authentic and unaltered:
 
 | Platform Track | Release Package | Expected SHA-256 Hash |
 |:---|:---|:---|
-| **Android** | `Centra-v4.1.3.apk` | `e426bbde3b2eef4feaef713f5d7e38c5024eacf47adda2ab6595022f3d9f9e88` |
+| **Android** | `Centra-v4.1.3.apk` | `2c81687ac062d116647565fe408c0de2bc293c36db74224fce11e13eb3dcba55` |
 | **Android (Prev)** | `Centra-v4.1.0.apk` | `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13` |
 | **iOS** | `Centra-v1.0.1.ipa` | `775229a9ab2b60d45f77f510520ee8a74cd37841a11077e1cf38b1849df29b62` |
 | **iOS (Prev)** | `Centra-v1.0.0.ipa` | `47f7807b7d8f064879f2442a597232bcb3716098996b5fadf63efed80f7838d3` |

@@ -33,6 +33,8 @@ import {
   ProfileRow,
 } from './dbTypes';
 import { logger } from '../utils/logger';
+import { getAppVersion } from '../utils/version';
+import { getNativePlatform } from '../utils/platform';
 
 export const GUEST_USER_ID = 'guest';
 
@@ -1297,6 +1299,8 @@ export const CentraDB = {
     try {
       const updates: Partial<ProfileRow> = {
         updated_at: new Date().toISOString(),
+        app_version: getAppVersion(),
+        platform: getNativePlatform(),
       };
       if (user.name !== undefined) updates.name = user.name;
       if (user.email !== undefined) updates.email = user.email;
@@ -1483,6 +1487,27 @@ export const CentraDB = {
 
     // 1. Drain outbox first (unthrottled!)
     await CentraDB.processOutbox();
+
+    // Telemetry update: sync app_version and platform to public.profiles asynchronously
+    if (isSupabaseConfigured() && !isGuestUser(userId)) {
+      (async () => {
+        try {
+          if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+          const query = supabase.from('profiles');
+          if (query && typeof query.update === 'function') {
+            await query
+              .update({
+                app_version: getAppVersion(),
+                platform: getNativePlatform(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', userId);
+          }
+        } catch (telemetryErr) {
+          logger.warn('Failed to update profile telemetry (app_version/platform):', telemetryErr);
+        }
+      })().catch(() => {});
+    }
 
     // 2. In-flight guard: prevent concurrent sync executions for the same user
     const inFlight = activeSyncPromisesByUser.get(userId);
@@ -1936,6 +1961,8 @@ export const CentraDB = {
           avatar_url: INITIAL_USER.avatarUrl || null,
           base_currency: INITIAL_USER.baseCurrency || null,
           onboarding_completed: true,
+          app_version: getAppVersion(),
+          platform: getNativePlatform(),
           updated_at: new Date().toISOString(),
         };
 
@@ -2056,6 +2083,8 @@ export const CentraDB = {
             is_pro: false,
             plan_expiry: null,
             onboarding_completed: false,
+            app_version: getAppVersion(),
+            platform: getNativePlatform(),
             updated_at: new Date().toISOString(),
           });
         }
@@ -2084,6 +2113,8 @@ export const CentraDB = {
       try {
         const { error } = await supabase.from('profiles').update({
           onboarding_completed: true,
+          app_version: getAppVersion(),
+          platform: getNativePlatform(),
           updated_at: new Date().toISOString(),
         }).eq('id', userId);
         if (error) {

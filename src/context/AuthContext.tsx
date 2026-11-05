@@ -6,7 +6,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import type { Session, AuthError } from '@supabase/supabase-js';
 import { hasDevicePin, verifyDevicePin } from '../utils/pinLock';
 import { getAuthRedirectUrl } from '../utils/authRedirect';
-import { isNative } from '../utils/platform';
+import { isNative, getNativePlatform } from '../utils/platform';
+import { getAppVersion } from '../utils/version';
 import { startNativeOAuth, handleNativeDeepLink } from '../utils/nativeOAuth';
 import { initNativeApp } from '../utils/nativeApp';
 import { BackButtonManager } from '../utils/backButton';
@@ -390,6 +391,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             is_pro: false,
             plan_expiry: null,
             onboarding_completed: false,
+            app_version: getAppVersion(),
+            platform: getNativePlatform(),
           })
           .select('id, onboarding_completed, name, email, avatar_url, base_currency')
           .maybeSingle();
@@ -438,6 +441,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           CentraDB.markOnboardingCompleted(userId).catch(() => {});
         }
         await CentraDB.syncFromSupabase(userId, userEmail, userName);
+
+        // Telemetry update: sync app_version and platform to public.profiles asynchronously
+        (async () => {
+          try {
+            if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+            const query = supabase.from('profiles');
+            if (query && typeof query.update === 'function') {
+              await query
+                .update({
+                  app_version: getAppVersion(),
+                  platform: getNativePlatform(),
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', userId);
+            }
+          } catch (telemetryErr) {
+            logger.warn('AuthContext profile telemetry update failed:', telemetryErr);
+          }
+        })().catch(() => {});
         const currentUser = CentraDB.getUser();
         const resolvedUser = currentUser.id ? { ...currentUser, onboardingCompleted: true } : {
           id: userId,

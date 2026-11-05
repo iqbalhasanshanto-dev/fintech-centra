@@ -26,6 +26,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Added "Check for updates" row in `SettingsScreen.tsx` under "Data & support" displaying the active installed version and providing manual on-demand checks with status feedback.
 - **Service Worker & Manifest Synchronization**:
   - Synchronized versions across `versions.json`, `public/versions.json`, `src/constants/version.ts`, `src/utils/version.ts`, and updated Service Worker cache to `centra-pwa-v1.0.5`.
+- **User Telemetry Sync (`public.profiles`)**:
+  - Automatically synchronizes `app_version` and `platform` to `public.profiles` in Supabase asynchronously upon remote sync, user save, onboarding completion, and auth session resolution with safe error guarding.
 
 ## [Web 1.0.4] - 2026-03-30 / 2026-11-04
 

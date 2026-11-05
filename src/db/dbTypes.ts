@@ -14,6 +14,8 @@ export interface ProfileRow {
   plan_expiry: string | null;
   base_currency: string | null;
   onboarding_completed: boolean;
+  app_version?: string | null;
+  platform?: string | null;
   created_at?: string;
   updated_at?: string;
 }

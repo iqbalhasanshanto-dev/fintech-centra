@@ -467,4 +467,41 @@ describe('Phase 3: Storage & Sync Engine', () => {
       unsub();
     });
   });
+
+  describe('Profile Telemetry Sync', () => {
+    it('saveUser includes app_version and platform in profiles updates', async () => {
+      const uid = '99999999-9999-4999-8999-999999999999';
+      const mockEq = vi.fn().mockResolvedValue({ error: null });
+      const mockUpdate = vi.fn().mockReturnValue({
+        eq: mockEq,
+      });
+      (supabase.from as any).mockImplementation((table: string) => {
+        if (table === 'profiles') {
+          return { update: mockUpdate };
+        }
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        };
+      });
+
+      await CentraDB.saveUser({
+        id: uid,
+        name: 'Telemetry User',
+        email: 'telemetry@centra.app',
+        isPro: false,
+        onboardingCompleted: true,
+        createdAt: new Date().toISOString(),
+      });
+
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          app_version: expect.any(String),
+          platform: expect.any(String),
+        })
+      );
+      expect(mockEq).toHaveBeenCalledWith('id', uid);
+    });
+  });
 });
