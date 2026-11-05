@@ -9,10 +9,10 @@
 <br />
 
 [![MIT License](https://img.shields.io/badge/License-MIT-C6FF3D.svg?style=flat-square&labelColor=000000&color=C6FF3D)](LICENSE)
-[![Android v4.1.2](https://img.shields.io/badge/Android-v4.1.2-C6FF3D.svg?style=flat-square&logo=android&logoColor=000000&labelColor=000000)](#-android-releases-v412)
+[![Android v4.1.3](https://img.shields.io/badge/Android-v4.1.3-C6FF3D.svg?style=flat-square&logo=android&logoColor=000000&labelColor=000000)](#-android-releases-v413)
 [![iOS v1.0.1](https://img.shields.io/badge/iOS-v1.0.1-119EFF.svg?style=flat-square&logo=apple&logoColor=white&labelColor=000000)](#-ios-releases-v101)
-[![Web / Desktop v1.0.4](https://img.shields.io/badge/Web_/_Desktop-v1.0.4-38BDF8.svg?style=flat-square&logo=pwa&logoColor=white&labelColor=000000)](#-web--desktop-releases-v100)
-[![359 Passing Tests](https://img.shields.io/badge/Tests-359%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
+[![Web / Desktop v1.0.5](https://img.shields.io/badge/Web_/_Desktop-v1.0.5-38BDF8.svg?style=flat-square&logo=pwa&logoColor=white&labelColor=000000)](#-web--desktop-releases-v105)
+[![386 Passing Tests](https://img.shields.io/badge/Tests-386%20Passing-22c55e.svg?style=flat-square&labelColor=000000)](src/__tests__/)
 [![Android SDK 36](https://img.shields.io/badge/Android-SDK%2036-3DDC84.svg?style=flat-square&logo=android&logoColor=white&labelColor=000000)](android/)
 [![Capacitor 8.5](https://img.shields.io/badge/Capacitor-8.5-119EFF.svg?style=flat-square&logo=capacitor&logoColor=white&labelColor=000000)](https://capacitorjs.com/)
 [![Supabase RLS](https://img.shields.io/badge/Supabase-RLS%20Enforced-3ECF8E.svg?style=flat-square&logo=supabase&logoColor=white&labelColor=000000)](supabase/)
@@ -25,8 +25,8 @@
     <td align="center" style="padding: 18px; background-color: #0d1117; border: 1px solid #30363d; border-radius: 14px;">
       <b>⚡ Instant Multi-Platform Direct Access (No App Store / Sign-Up Required)</b>
       <br /><br />
-      <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.2.apk">
-        <img src="https://img.shields.io/badge/🤖_Download_Android_APK-v4.1.2_(Latest_Stable,_4.73_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v4.1.2 Android APK" />
+      <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.3.apk">
+        <img src="https://img.shields.io/badge/🤖_Download_Android_APK-v4.1.3_(Latest_Stable,_4.74_MB)-C6FF3D?style=for-the-badge&logo=android&logoColor=000000&labelColor=121212" alt="Download Centra v4.1.3 Android APK" />
       </a>
       &nbsp;
       <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.1.ipa">
@@ -34,10 +34,10 @@
       </a>
       &nbsp;
       <a href="releases/web/README.md">
-        <img src="https://img.shields.io/badge/💻_Install_Web_App-v1.0.3_(Direct_Browser_Install)-38BDF8?style=for-the-badge&logo=pwa&logoColor=ffffff&labelColor=121212" alt="Install Centra v1.0.3 Web / Desktop App" />
+        <img src="https://img.shields.io/badge/💻_Install_Web_App-v1.0.5_(Direct_Browser_Install)-38BDF8?style=for-the-badge&logo=pwa&logoColor=ffffff&labelColor=121212" alt="Install Centra v1.0.5 Web / Desktop App" />
       </a>
       <br /><br />
-      <b>👉 Direct One-Click Access:</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.2.apk">Android APK v4.1.2 (4.73 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.1.ipa">iOS IPA v1.0.1 (2.46 MB)</a> | <a href="releases/web/README.md">Web Standalone App (Browser Install)</a>
+      <b>👉 Direct One-Click Access:</b> <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.3.apk">Android APK v4.1.3 (4.74 MB)</a> | <a href="https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.1.ipa">iOS IPA v1.0.1 (2.46 MB)</a> | <a href="releases/web/README.md">Web Standalone App (Browser Install)</a>
     </td>
   </tr>
 </table>
@@ -62,11 +62,12 @@
 
 Centra provides three independent release tracks: **Android**, **iOS**, and **Web / Desktop (PWA)**. Every package is cryptographically fingerprinted with SHA-256 for integrity verification.
 
-### 🤖 Android Releases (`v4.1.2`)
+### 🤖 Android Releases (`v4.1.3`)
 
 | Version | Channel | Download / Release Record | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v4.1.2`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.2.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.2.apk) | 4.73 MB | Native touch swipe-to-delete, default system appearance theme, enlarged header greetings & balanced padding, enhanced bottom capsule nav spacing, and expanded recent activity |
+| **`v4.1.3`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.3.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.3.apk) | 4.74 MB | Added automatic in-app update notifications and 1-click updater, comprehensive Legal, License, Privacy Policy, and Support Center, fixed Quick Action picker reset and Settings header layout |
+| **`v4.1.2`** | ⚪ Previous | [**📦 Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v4.1.2) · [Notes](CHANGELOG.md) | 4.73 MB | Native touch swipe-to-delete, default system appearance theme, enlarged header greetings & balanced padding, enhanced bottom capsule nav spacing, and expanded recent activity |
 | **`v4.1.1`** | ⚪ Previous | [**📦 Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v4.1.1) · [Notes](CHANGELOG.md) | 6.00 MB | Edit transaction date & Figma category picker, 52px input alignment, once-per-month retention notifications, centered toasts, all-categories activity filter, instant home back exit |
 | **`v4.1.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.0.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.0.apk) | 6.00 MB | 5-second Undo Delete, standalone Savings Goals with per-goal History log, native Android Downloads CSV & notifications, back-stack navigation, bottom nav alignment |
 | **`v4.0.0`** | 📦 Archive | [**🏷️ Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v4.0.0) · [Notes](CHANGELOG.md) | 5.98 MB | Spring motion UI animations, swipe-to-delete rows, sliding tab pills, 2-month rolling retention, native phone notifications, immediate PIN lock |
@@ -88,16 +89,18 @@ Centra provides three independent release tracks: **Android**, **iOS**, and **We
 | **`v1.0.1`** | 🟢 Latest | [**📲 Download iOS IPA**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.1.ipa) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.1.ipa) | 2.46 MB | Fixed bottom navigation bar safe-area gap on iPhone screens, edge-to-edge WKWebView layout |
 | **`v1.0.0`** | ⚪ Previous | [**📦 Download iOS IPA**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.0.ipa) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.0.ipa) | 2.74 MB | Initial official iOS release — Unsigned Release IPA for sideloading & Xcode Capacitor 8 native Swift project (with local Xcode Simulator testing via `npm run cap:open:ios`), pure-black OLED launcher icons & 2732px splash screens, local PBKDF2 PIN lock & offline CentraDB |
 
-### 💻 Web & Desktop Releases (`v1.0.4` — macOS, Windows, Linux)
+### 💻 Web & Desktop Releases (`v1.0.5` — macOS, Windows, Linux)
 
 | Version | Channel | Download / Release Record | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v1.0.3`** | 🟢 Latest | [**🌐 Install Web App (Zero .zip)**](releases/web/README.md) | Direct Browser Install | Web-only static rows with 1-click delete buttons, desktop centered Notifications modal card, enlarged header greeting & balanced padding, expanded Recent Activity box, default system appearance theme, descriptive tab title, and Network-First PWA caching |
+| **`v1.0.5`** | 🟢 Latest | [**🌐 Install Web App (Zero .zip)**](releases/web/README.md) | Direct Browser Install | Added automatic in-app update detector and 1-click zero-data-loss updater, comprehensive Legal, License, Privacy Policy, and Support Center |
+| **`v1.0.4`** | ⚪ Previous | [**🌐 Release Notes**](releases/web/README.md) | Direct Browser Install | Web-only static rows with 1-click delete buttons, desktop centered Notifications modal card, enlarged header greeting & balanced padding, expanded Recent Activity box, default system appearance theme, descriptive tab title, and Network-First PWA caching |
 | **`v1.0.2`** | ⚪ Previous | [**🌐 Release Notes**](releases/web/README.md) | Direct Browser Install | Unified floating bottom capsule navigation on desktop & mobile, side-by-side Account Information & Cash Flow Trend dashboard, permanent standalone PWA title bar, Google account chooser support |
 
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
+- **Android v4.1.3 (`Centra-v4.1.3.apk`)**: `fb9cd89716b4e1b4a4fc65f69aaca8952863a08ddfe0454bb51e0f3e98108928`
 - **Android v4.1.2 (`Centra-v4.1.2.apk`)**: `eadd76145f81cb68e4c6ba2a6fc7e45b66a39ba1ca9bf8c9d090aef44baa73e3`
 - **Android v4.1.0 (`Centra-v4.1.0.apk`)**: `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13`
 - **iOS v1.0.1 (`Centra-v1.0.1.ipa`)**: `775229a9ab2b60d45f77f510520ee8a74cd37841a11077e1cf38b1849df29b62`
@@ -105,7 +108,7 @@ Centra provides three independent release tracks: **Android**, **iOS**, and **We
 
 Verify on macOS/Linux:
 ```bash
-shasum -a 256 releases/android/Centra-v4.1.2.apk
+shasum -a 256 releases/android/Centra-v4.1.3.apk
 shasum -a 256 releases/ios/Centra-v1.0.1.ipa
 shasum -a 256 releases/ios/Centra-v1.0.0.ipa
 ```
@@ -203,7 +206,7 @@ Verify that your downloaded packages are 100% authentic and unaltered:
 
 | Platform Track | Release Package | Expected SHA-256 Hash |
 |:---|:---|:---|
-| **Android** | `Centra-v4.1.2.apk` | `eadd76145f81cb68e4c6ba2a6fc7e45b66a39ba1ca9bf8c9d090aef44baa73e3` |
+| **Android** | `Centra-v4.1.3.apk` | `fb9cd89716b4e1b4a4fc65f69aaca8952863a08ddfe0454bb51e0f3e98108928` |
 | **Android (Prev)** | `Centra-v4.1.0.apk` | `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13` |
 | **iOS** | `Centra-v1.0.1.ipa` | `775229a9ab2b60d45f77f510520ee8a74cd37841a11077e1cf38b1849df29b62` |
 | **iOS (Prev)** | `Centra-v1.0.0.ipa` | `47f7807b7d8f064879f2442a597232bcb3716098996b5fadf63efed80f7838d3` |

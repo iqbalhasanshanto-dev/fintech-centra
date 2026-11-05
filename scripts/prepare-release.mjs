@@ -45,7 +45,7 @@ const version = requestedVersion || currentVersion;
 if (typeof versions[platform] === 'object' && versions[platform] !== null) {
   versions[platform].version = version;
   if (platform === 'android') {
-    versions.android.versionCode = 12;
+    versions.android.versionCode = 13;
     versions.android.artifactPath = `releases/android/Centra-v${version}.apk`;
   } else if (platform === 'web') {
     versions.web.updatedAt = '2026-03-30';
@@ -54,6 +54,10 @@ if (typeof versions[platform] === 'object' && versions[platform] !== null) {
   versions[platform] = version;
 }
 fs.writeFileSync(versionsPath, JSON.stringify(versions, null, 2) + '\n', 'utf8');
+const publicVersionsPath = path.join(rootDir, 'public/versions.json');
+try {
+  fs.writeFileSync(publicVersionsPath, JSON.stringify(versions, null, 2) + '\n', 'utf8');
+} catch {}
 console.log(`✅ Synced versions.json [${platform}] -> ${version}`);
 
 // Also sync root package.json version with android track

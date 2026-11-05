@@ -12,8 +12,10 @@ import { LazyErrorBoundary } from '../ui/LazyErrorBoundary';
 import { AddActionModal } from '../modals/AddActionModal';
 import { NotificationsModal } from '../modals/NotificationsModal';
 import { LegalDocsModal, LegalDocType } from '../modals/LegalDocsModal';
+import { UpdatePromptModal } from '../modals/UpdatePromptModal';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { BackButtonManager, exitNativeApp } from '../../utils/backButton';
+import { checkForAppUpdate, AppUpdateInfo } from '../../utils/updateChecker';
 
 export const AppShell: React.FC = () => {
   const { isGuest } = useAuth();
@@ -24,8 +26,24 @@ export const AppShell: React.FC = () => {
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
+  const [updateInfo, setUpdateInfo] = useState<AppUpdateInfo | null>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const mainContentRef = useRef<HTMLElement>(null);
   const tabHistoryRef = useRef<TabType[]>(['home']);
+
+  // Automatic in-app update check on mount
+  useEffect(() => {
+    checkForAppUpdate(false)
+      .then((info) => {
+        if (info && info.updateAvailable) {
+          setUpdateInfo(info);
+          setShowUpdateModal(true);
+        }
+      })
+      .catch((err) => {
+        console.warn('In-app update check warning on mount:', err);
+      });
+  }, []);
 
   // Synchronously ensure Demo Mode never renders settings screen
   const effectiveTab: TabType = (isGuest && activeTab === 'settings') ? 'home' : activeTab;
@@ -230,6 +248,13 @@ export const AppShell: React.FC = () => {
         isOpen={!!legalDoc}
         initialDoc={legalDoc || 'privacy'}
         onClose={() => setLegalDoc(null)}
+      />
+
+      {/* Zero-Data-Loss In-App Update Modal */}
+      <UpdatePromptModal
+        isOpen={showUpdateModal}
+        onClose={() => setShowUpdateModal(false)}
+        updateInfo={updateInfo}
       />
 
       {/* 5-Second Undo Delete Toast Bar (Above Bottom Nav & Modals) */}

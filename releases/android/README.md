@@ -8,7 +8,8 @@ This directory houses curated and verified Android application package (`.apk`) 
 
 | Version | Channel | Download / Release Record | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v4.1.2`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.2.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.2.apk) | 4.73 MB | Native touch swipe-to-delete, default system appearance theme, enlarged header greetings & balanced padding, enhanced bottom capsule nav spacing, and expanded recent activity |
+| **`v4.1.3`** | 🟢 Latest | [**📲 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.3.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.3.apk) | 4.74 MB | Added automatic in-app update notifications and 1-click updater, comprehensive Legal, License, Privacy Policy, and Support Center, fixed Quick Action picker reset and Settings header layout |
+| **`v4.1.2`** | ⚪ Previous | [**📦 Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v4.1.2) · [Notes](../../CHANGELOG.md) | 4.73 MB | Native touch swipe-to-delete, default system appearance theme, enlarged header greetings & balanced padding, enhanced bottom capsule nav spacing, and expanded recent activity |
 | **`v4.1.1`** | ⚪ Previous | [**📦 Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v4.1.1) · [Notes](../../CHANGELOG.md) | 6.00 MB | Edit transaction date & Figma category picker, 52px input alignment, once-per-month retention notifications, centered toasts, all-categories activity filter, instant home back exit |
 | **`v4.1.0`** | ⚪ Previous | [**📦 Download APK**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/android/Centra-v4.1.0.apk) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.0.apk) | 6.00 MB | 5-second Undo Delete, standalone Savings Goals with per-goal History log, native Android Downloads CSV & notifications, back-stack navigation, bottom nav alignment |
 | **`v4.0.0`** | 📦 Archive | [**🏷️ Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v4.0.0) · [Notes](../../CHANGELOG.md) | 5.98 MB | Spring motion UI animations, swipe-to-delete rows, sliding tab pills, 2-month rolling retention, native phone notifications, immediate PIN lock |
@@ -26,10 +27,11 @@ This directory houses curated and verified Android application package (`.apk`) 
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
+- **v4.1.3 (`Centra-v4.1.3.apk`)**: `fb9cd89716b4e1b4a4fc65f69aaca8952863a08ddfe0454bb51e0f3e98108928`
 - **v4.1.2 (`Centra-v4.1.2.apk`)**: `eadd76145f81cb68e4c6ba2a6fc7e45b66a39ba1ca9bf8c9d090aef44baa73e3`
 - **v4.1.0 (`Centra-v4.1.0.apk`)**: `466f385d5110c3d6c41d51ff40fe90faab7f3357d23542f016ba1886e7a8fe13`
 
-Verify on macOS/Linux (`shasum -a 256 releases/android/Centra-v4.1.2.apk`) or Windows (`CertUtil -hashfile releases\android\Centra-v4.1.2.apk SHA256`).
+Verify on macOS/Linux (`shasum -a 256 releases/android/Centra-v4.1.3.apk`) or Windows (`CertUtil -hashfile releases\android\Centra-v4.1.3.apk SHA256`).
 </details>
 
 ---
@@ -40,12 +42,12 @@ Verify the integrity of downloaded APK binaries using the standard SHA-256 crypt
 
 ### macOS / Linux:
 ```bash
-shasum -a 256 releases/android/Centra-v4.1.2.apk
+shasum -a 256 releases/android/Centra-v4.1.3.apk
 ```
 
 ### Windows (PowerShell / Command Prompt):
 ```powershell
-CertUtil -hashfile releases\android\Centra-v4.1.2.apk SHA256
+CertUtil -hashfile releases\android\Centra-v4.1.3.apk SHA256
 ```
 
 ---

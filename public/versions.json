@@ -1,0 +1,30 @@
+{
+  "android": {
+    "version": "4.1.3",
+    "versionCode": 13,
+    "artifactPath": "releases/android/Centra-v4.1.3.apk",
+    "downloadUrl": "https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.3.apk",
+    "releaseNotes": [
+      "Added automatic in-app update notifications and 1-click updater",
+      "Added comprehensive Legal, License, Privacy Policy, and Support Center",
+      "Fixed Quick Action picker reset and Settings header layout"
+    ]
+  },
+  "ios": {
+    "version": "1.0.1",
+    "artifactPath": "releases/ios/Centra-v1.0.1.ipa",
+    "downloadUrl": "https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.1.ipa",
+    "releaseNotes": [
+      "Fixed iOS safe-area bottom spacing across onboarding and main screens",
+      "Improved offline sync and Google account chooser support"
+    ]
+  },
+  "web": {
+    "version": "1.0.5",
+    "updatedAt": "2026-03-30",
+    "releaseNotes": [
+      "Added automatic in-app update detector and 1-click zero-data-loss updater",
+      "Added comprehensive Legal, License, Privacy Policy, and Support Center"
+    ]
+  }
+}

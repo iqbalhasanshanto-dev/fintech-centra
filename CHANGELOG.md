@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [Web 1.0.5] & [Android 4.1.3] - 2026-03-30 / 2026-11-05
+
+### 🚀 Zero-Data-Loss In-App Update Engine & 1-Click Updater
+- **Zero-Data-Loss Automatic Update Checker (`updateChecker.ts`)**:
+  - Implemented semantic version comparison (`isNewerVersion`) across Web, Android, and iOS.
+  - Multi-tier endpoint fallback fetching `versions.json` from `https://usecentra.vercel.app/versions.json`, `https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/versions.json`, and local `/versions.json`.
+  - Respects session dismissal (`sessionStorage.getItem('centra_dismissed_update_' + latestVersion)`) unless explicitly triggered with `forceCheck = true`.
+- **Pre-Update Data Protection Guard**:
+  - Step 1: Flushes pending offline transactions to Supabase with `CentraDB.processOutbox()` (wrapped in a 3-second timeout guard) prior to applying updates, guaranteeing zero data loss.
+  - Step 2: On Web/PWA, unregisters service workers, purges static asset caches (`caches.keys()`), and reloads the window while leaving `localStorage`, indexedDB user tables, and authentication tokens 100% intact.
+  - Step 2: On Android and iOS, opens direct raw APK/IPA binary download URLs (`Browser.open` / `_system`) for in-place OS package installation.
+- **Update Prompt Modal (`UpdatePromptModal.tsx`)**:
+  - Centered OLED card with version transition pill (`v{installedVersion} → v{latestVersion}`), data-protection reassurance badge (`✓ Your accounts, transactions, and login session will be preserved.`), "What's New" bulleted release notes, "Later" session dismissal, and animated "Syncing & Updating..." button.
+  - Automatically checks on mount in `AppShell.tsx` and renders the prompt whenever a newer version is released.
+  - Added "Check for updates" row in `SettingsScreen.tsx` under "Data & support" displaying the active installed version and providing manual on-demand checks with status feedback.
+- **Service Worker & Manifest Synchronization**:
+  - Synchronized versions across `versions.json`, `public/versions.json`, `src/constants/version.ts`, `src/utils/version.ts`, and updated Service Worker cache to `centra-pwa-v1.0.5`.
+
 ## [Web 1.0.4] - 2026-03-30 / 2026-11-04
 
 ### 🛠️ Modal Picker Reset, Clean Unnamed Subtitles, High-Outflow Alert Filter & Settings Header

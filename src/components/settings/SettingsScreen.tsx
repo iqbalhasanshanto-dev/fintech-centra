@@ -26,7 +26,8 @@ import {
   Sun,
   Moon,
   Scale,
-  LifeBuoy
+  LifeBuoy,
+  RefreshCw
 } from 'lucide-react';
 import { updateNativeStatusBar } from '../../utils/nativeApp';
 import { useFinance } from '../../context/FinanceContext';
@@ -55,6 +56,8 @@ import { exportAllDataToCSV } from '../../utils/csvExport';
 import { getAllGoalHistory } from '../../utils/goalHistory';
 import { usePwaInstall } from '../../utils/pwaInstall';
 import { InstallAppModal } from '../ui/InstallAppModal';
+import { UpdatePromptModal } from '../modals/UpdatePromptModal';
+import { checkForAppUpdate, AppUpdateInfo } from '../../utils/updateChecker';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -117,6 +120,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [statusToast, setStatusToast] = useState<string | null>(null);
+
+  // In-App Update states
+  const [updateInfo, setUpdateInfo] = useState<AppUpdateInfo | null>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
   // PIN lock setup / disable state
   const [showSetPinModal, setShowSetPinModal] = useState(false);
@@ -260,6 +268,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       setStatusToast('No data to export yet');
     }
     setTimeout(() => setStatusToast(null), 3500);
+  };
+
+  const handleCheckForUpdates = async () => {
+    if (isCheckingUpdate) return;
+    setIsCheckingUpdate(true);
+    try {
+      const info = await checkForAppUpdate(true);
+      if (info && info.updateAvailable) {
+        setUpdateInfo(info);
+        setShowUpdateModal(true);
+      } else {
+        setStatusToast(`You're on the latest version (v${getAppVersion()}).`);
+        setTimeout(() => setStatusToast(null), 3500);
+      }
+    } catch {
+      setStatusToast(`You're on the latest version (v${getAppVersion()}).`);
+      setTimeout(() => setStatusToast(null), 3500);
+    } finally {
+      setIsCheckingUpdate(false);
+    }
   };
 
   const handleResetGuestData = () => {
@@ -823,6 +851,25 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
           </button>
 
+          {/* Check for Updates */}
+          <button
+            type="button"
+            onClick={handleCheckForUpdates}
+            disabled={isCheckingUpdate}
+            className="w-full py-3.5 flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <RefreshCw className={`w-4 h-4 text-[#667085] dark:text-[#9CA3AF] shrink-0 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Check for updates</p>
+                <p className="text-[11px] font-normal text-gray-500 dark:text-gray-400 leading-snug mt-0.5">
+                  Current version: v{getAppVersion()}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" />
+          </button>
+
           {/* Install Centra App (Web, Desktop PWA & iOS Safari) */}
           {isInstallable && !isStandalone && (
             <button
@@ -1295,6 +1342,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       <InstallAppModal
         isOpen={showInstallModal}
         onClose={() => setShowInstallModal(false)}
+      />
+
+      {/* Zero-Data-Loss In-App Update Modal */}
+      <UpdatePromptModal
+        isOpen={showUpdateModal}
+        onClose={() => setShowUpdateModal(false)}
+        updateInfo={updateInfo}
       />
 
     </div>
