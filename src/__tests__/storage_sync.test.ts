@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CentraDB } from '../db/storage';
 import { OutboxQueue } from '../db/outbox';
 import { supabase } from '../lib/supabaseClient';
+import * as nativeNotificationsModule from '../utils/nativeNotifications';
 
 vi.mock('../lib/supabaseClient', () => {
   const mockFrom = vi.fn();
@@ -502,6 +503,66 @@ describe('Phase 3: Storage & Sync Engine', () => {
         })
       );
       expect(mockEq).toHaveBeenCalledWith('id', uid);
+    });
+  });
+
+  describe('Remote Notifications Sync and Status-Bar Popup', () => {
+    it('triggers status bar notification for new unread remote notification and marks notified', async () => {
+      const uid = '88888888-8888-4888-8888-888888888888';
+      CentraDB.setActiveUser(uid);
+
+      const triggerSpy = vi.spyOn(nativeNotificationsModule, 'triggerSystemNotification').mockResolvedValue(true);
+
+      const remoteNotif = {
+        id: 'remote_notif_101',
+        user_id: uid,
+        title: 'Security Alert',
+        message: 'New login detected from Mobile App',
+        type: 'security',
+        is_read: false,
+        timestamp: new Date().toISOString(),
+      };
+
+      (supabase.from as any).mockImplementation((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: { id: uid }, error: null }),
+              }),
+            }),
+          };
+        }
+        if (table === 'notifications') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                order: vi.fn().mockResolvedValue({ data: [remoteNotif], error: null }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockResolvedValue({ data: [], error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+      });
+
+      await CentraDB.syncFromSupabase(uid, undefined, undefined, { force: true });
+
+      expect(triggerSpy).toHaveBeenCalledWith('Security Alert', 'New login detected from Mobile App', 'remote_notif_101');
+      expect(localStorage.getItem('centra_notified_remote_notif_101')).toBe('1');
+
+      // Syncing again does not re-trigger notification because it is already notified in localStorage
+      triggerSpy.mockClear();
+      await CentraDB.syncFromSupabase(uid, undefined, undefined, { force: true });
+      expect(triggerSpy).not.toHaveBeenCalled();
+
+      triggerSpy.mockRestore();
     });
   });
 });

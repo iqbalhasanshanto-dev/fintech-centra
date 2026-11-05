@@ -1,7 +1,7 @@
 {
   "android": {
     "version": "4.1.3",
-    "versionCode": 13,
+    "versionCode": 17,
     "artifactPath": "releases/android/Centra-v4.1.3.apk",
     "downloadUrl": "https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.3.apk",
     "releaseNotes": [

@@ -142,6 +142,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     if (isRetentionReminder(item)) {
       return null;
     }
+    if (item.actionUrl && (item.actionUrl.startsWith('http://') || item.actionUrl.startsWith('https://'))) {
+      return 'Open link';
+    }
     if (isUpdateNotification(item)) {
       return 'Update now';
     }
@@ -166,6 +169,10 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       return;
     }
     onClose();
+    if (item.actionUrl && (item.actionUrl.startsWith('http://') || item.actionUrl.startsWith('https://'))) {
+      window.open(item.actionUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
     if (isUpdateNotification(item)) {
       if (onOpenUpdateModal) {
         onOpenUpdateModal();
@@ -178,7 +185,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       else onNavigateToTab?.('settings');
       return;
     }
-    if (isWelcomeNotification(item) || item.type === 'system') {
+    if (isWelcomeNotification(item)) {
       onOpenQuickAction?.();
     } else if (item.type === 'budget' || item.type === 'goal') {
       onNavigateToTab?.('plan');

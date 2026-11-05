@@ -35,6 +35,7 @@ import {
 import { logger } from '../utils/logger';
 import { getAppVersion } from '../utils/version';
 import { getNativePlatform } from '../utils/platform';
+import { triggerSystemNotification } from '../utils/nativeNotifications';
 
 export const GUEST_USER_ID = 'guest';
 
@@ -1653,6 +1654,27 @@ export const CentraDB = {
 
         if (!notifError && notifData) {
           const remote = notifData.map(mapNotificationFromDb);
+          const existingNotifs = cache.notifications || safeGet<NotificationItem[]>(getUserStorageKey(userId, 'notifications'), []) || [];
+          const existingNotifIds = new Set(existingNotifs.map(n => n.id));
+
+          for (const n of remote) {
+            if (!n.isRead && !existingNotifIds.has(n.id)) {
+              try {
+                if (typeof localStorage !== 'undefined') {
+                  const notifKey = 'centra_notified_' + n.id;
+                  if (!localStorage.getItem(notifKey)) {
+                    localStorage.setItem(notifKey, '1');
+                    triggerSystemNotification(n.title, n.message, n.id).catch(err => {
+                      logger.warn('Failed to trigger system notification for remote notif:', err);
+                    });
+                  }
+                }
+              } catch (alertErr) {
+                logger.warn('Error processing remote notification alert:', alertErr);
+              }
+            }
+          }
+
           const pendingNotifs = OutboxQueue.getPending(userId);
           cache.notifications = mergeEntityWithOutbox('notifications', remote, cache.notifications, pendingNotifs);
           safeSet(getUserStorageKey(userId, 'notifications'), cache.notifications);

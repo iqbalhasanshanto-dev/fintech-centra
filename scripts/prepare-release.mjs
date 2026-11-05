@@ -42,10 +42,29 @@ const getVer = (val) => (typeof val === 'object' && val?.version ? val.version :
 const currentVersion = getVer(versions[platform]) || '1.0.0';
 const version = requestedVersion || currentVersion;
 
+// Read existing versionCode from android/app/build.gradle and versions.json, ensuring it is never < 17
+const gradlePath = path.join(rootDir, 'android/app/build.gradle');
+let gradleVersionCode = 0;
+if (fs.existsSync(gradlePath)) {
+  const gradleContent = fs.readFileSync(gradlePath, 'utf8');
+  const match = gradleContent.match(/versionCode\s+(\d+)/);
+  if (match) {
+    gradleVersionCode = parseInt(match[1], 10);
+  }
+}
+const jsonVersionCode = typeof versions.android === 'object' && versions.android?.versionCode
+  ? parseInt(versions.android.versionCode, 10)
+  : 0;
+const existingVersionCode = Math.max(
+  Number.isFinite(gradleVersionCode) ? gradleVersionCode : 0,
+  Number.isFinite(jsonVersionCode) ? jsonVersionCode : 0
+);
+const nextVersionCode = Math.max(17, existingVersionCode);
+
 if (typeof versions[platform] === 'object' && versions[platform] !== null) {
   versions[platform].version = version;
   if (platform === 'android') {
-    versions.android.versionCode = 13;
+    versions.android.versionCode = nextVersionCode;
     versions.android.artifactPath = `releases/android/Centra-v${version}.apk`;
   } else if (platform === 'web') {
     versions.web.updatedAt = '2026-03-30';
@@ -82,12 +101,12 @@ let sha256 = '';
 
 if (platform === 'android') {
   // Update android/app/build.gradle
-  const gradlePath = path.join(rootDir, 'android/app/build.gradle');
   if (fs.existsSync(gradlePath)) {
     let content = fs.readFileSync(gradlePath, 'utf8');
+    content = content.replace(/versionCode\s+\d+/, 'versionCode ' + nextVersionCode);
     content = content.replace(/versionName\s+"[^"]+"/, `versionName "${version}"`);
     fs.writeFileSync(gradlePath, content, 'utf8');
-    console.log(`✅ Synced android/app/build.gradle (versionName) -> ${version}`);
+    console.log(`✅ Synced android/app/build.gradle (versionCode ${nextVersionCode}, versionName ${version})`);
   }
 
   releaseFileName = `Centra-v${version}.apk`;

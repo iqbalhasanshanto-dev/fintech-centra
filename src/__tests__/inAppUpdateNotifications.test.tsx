@@ -126,6 +126,92 @@ describe('In-App Update Notifications System', () => {
       expect(onClose).toHaveBeenCalled();
       expect(onOpenUpdateModal).toHaveBeenCalled();
     });
+
+    it('renders "Open link" and opens URL in new window when actionUrl is http/https', () => {
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      const onOpenQuickAction = vi.fn();
+      mockNotifications = [
+        {
+          id: 'custom-url-notif',
+          type: 'system',
+          title: 'Special Event',
+          message: 'Check out our announcement online.',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          actionUrl: 'https://centra.app/announcement',
+        },
+      ];
+
+      render(
+        <NotificationsModal
+          isOpen={true}
+          onClose={vi.fn()}
+          onOpenQuickAction={onOpenQuickAction}
+        />
+      );
+
+      expect(screen.getByText('Open link')).toBeDefined();
+      const card = screen.getByText('Special Event');
+      fireEvent.click(card);
+
+      expect(windowOpenSpy).toHaveBeenCalledWith('https://centra.app/announcement', '_blank', 'noopener,noreferrer');
+      expect(onOpenQuickAction).not.toHaveBeenCalled();
+      windowOpenSpy.mockRestore();
+    });
+
+    it('does not trigger onOpenQuickAction for generic system notifications without welcome', () => {
+      const onOpenQuickAction = vi.fn();
+      mockNotifications = [
+        {
+          id: 'generic-system-notif',
+          type: 'system',
+          title: 'System Maintenance Notice',
+          message: 'Server maintenance scheduled tonight.',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        },
+      ];
+
+      render(
+        <NotificationsModal
+          isOpen={true}
+          onClose={vi.fn()}
+          onOpenQuickAction={onOpenQuickAction}
+        />
+      );
+
+      const card = screen.getByText('System Maintenance Notice');
+      fireEvent.click(card);
+
+      expect(onOpenQuickAction).not.toHaveBeenCalled();
+    });
+
+    it('triggers onOpenQuickAction for welcome notifications', () => {
+      const onOpenQuickAction = vi.fn();
+      mockNotifications = [
+        {
+          id: 'welcome-notif',
+          type: 'system',
+          title: 'Welcome to Centra',
+          message: 'Add your first transaction now.',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        },
+      ];
+
+      render(
+        <NotificationsModal
+          isOpen={true}
+          onClose={vi.fn()}
+          onOpenQuickAction={onOpenQuickAction}
+        />
+      );
+
+      const card = screen.getByText('Welcome to Centra');
+      fireEvent.click(card);
+
+      expect(onOpenQuickAction).toHaveBeenCalled();
+    });
   });
 
   describe('AppShell In-App Update Trigger and Auto-Clean', () => {
