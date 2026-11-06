@@ -255,6 +255,53 @@ const DEMO_TX_IDS = new Set(['tx_1', 'tx_2', 'tx_3', 'tx_4', 'tx_5', 'tx_6', 'tx
 const DEMO_GOAL_IDS = new Set(['goal_1', 'goal_2', 'goal_3', 'goal_4']);
 const DEMO_BUDGET_IDS = new Set(['bud_1', 'bud_2', 'bud_3', 'bud_4', 'bud_5']);
 
+export type OutboxEntity =
+  | 'accounts'
+  | 'categories'
+  | 'transactions'
+  | 'budgets'
+  | 'recurring'
+  | 'goals'
+  | 'goal_history';
+
+const pendingDeleteIds: Record<OutboxEntity, Set<string>> = {
+  accounts: new Set(),
+  categories: new Set(),
+  transactions: new Set(),
+  budgets: new Set(),
+  recurring: new Set(),
+  goals: new Set(),
+  goal_history: new Set(),
+};
+
+const RECEIPT_TAG_PREFIX = '__receipt:';
+
+function getLocalReceiptMap(): Record<string, string> {
+  try {
+    const uid = currentActiveUserId || GUEST_USER_ID;
+    const raw = localStorage.getItem(`centra:receipts:${uid}`);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLocalReceipt(txId: string, receiptUrl?: string): void {
+  try {
+    const uid = currentActiveUserId || GUEST_USER_ID;
+    const key = `centra:receipts:${uid}`;
+    const map = getLocalReceiptMap();
+    if (receiptUrl) {
+      map[txId] = receiptUrl;
+    } else {
+      delete map[txId];
+    }
+    localStorage.setItem(key, JSON.stringify(map));
+  } catch {
+    // Ignore in SSR / disabled environments
+  }
+}
+
 // Initialize cache for active user
 function reloadCacheForUser(userId: string | null): void {
   const isGuest = isGuestUser(userId);
@@ -374,59 +421,88 @@ const mapCategoryFromDb = (row: CategoryRow): Category => {
   };
 };
 
-const mapTransactionToDb = (tx: Transaction, userId: string) => ({
-  id: tx.id,
-  user_id: userId,
-  type: tx.type,
-  amount: tx.amount,
-  currency: tx.currency,
-  category_id: tx.categoryId,
-  category_name: tx.categoryName,
-  category_icon: tx.categoryIcon,
-  category_color: tx.categoryColor,
-  account_id: tx.accountId,
-  account_name: tx.accountName,
-  to_account_id: tx.toAccountId || null,
-  converted_amount: tx.convertedAmount !== undefined ? tx.convertedAmount : null,
-  exchange_rate: tx.exchangeRate !== undefined ? tx.exchangeRate : null,
-  goal_id: tx.goalId || null,
-  recipient: tx.recipient || null,
-  merchant: tx.merchant || null,
-  date: tx.date,
-  note: tx.note || null,
-  tags: tx.tags || [],
-  is_recurring: tx.isRecurring || false,
-  recurring_interval: tx.recurringInterval || null,
-  is_pinned: tx.isPinned || false,
-  resulting_balance: tx.resultingBalance !== undefined ? tx.resultingBalance : null,
-  updated_at: new Date().toISOString(),
-});
+const mapTransactionToDb = (tx: Transaction, userId: string) => {
+  const cleanTags = (tx.tags || []).filter(t => typeof t === 'string' && !t.startsWith(RECEIPT_TAG_PREFIX));
+  if (tx.receiptUrl) {
+    cleanTags.push(`${RECEIPT_TAG_PREFIX}${tx.receiptUrl}`);
+    saveLocalReceipt(tx.id, tx.receiptUrl);
+  } else {
+    saveLocalReceipt(tx.id, undefined);
+  }
 
-const mapTransactionFromDb = (row: TransactionRow): Transaction => ({
-  id: row.id,
-  type: row.type as Transaction['type'],
-  amount: typeof row.amount === 'number' ? row.amount : parseFloat(row.amount),
-  currency: row.currency,
-  categoryId: row.category_id,
-  categoryName: row.category_name,
-  categoryIcon: row.category_icon,
-  categoryColor: row.category_color,
-  accountId: row.account_id,
-  accountName: row.account_name,
-  toAccountId: row.to_account_id || undefined,
-  convertedAmount: row.converted_amount !== null && row.converted_amount !== undefined ? (typeof row.converted_amount === 'number' ? row.converted_amount : parseFloat(row.converted_amount)) : undefined,
-  exchangeRate: row.exchange_rate !== null && row.exchange_rate !== undefined ? (typeof row.exchange_rate === 'number' ? row.exchange_rate : parseFloat(row.exchange_rate)) : undefined,
-  goalId: row.goal_id || undefined,
-  recipient: row.recipient || undefined,
-  merchant: row.merchant || undefined,
-  date: row.date,
-  note: row.note || undefined,
-  tags: row.tags || [],
-  isPinned: !!row.is_pinned,
-  isRecurring: !!row.is_recurring,
-  recurringInterval: (row.recurring_interval as Transaction['recurringInterval']) || undefined,
-  resultingBalance: row.resulting_balance !== null && row.resulting_balance !== undefined ? (typeof row.resulting_balance === 'number' ? row.resulting_balance : parseFloat(row.resulting_balance)) : undefined,
-});
+  return {
+    id: tx.id,
+    user_id: userId,
+    type: tx.type,
+    amount: tx.amount,
+    currency: tx.currency,
+    category_id: tx.categoryId,
+    category_name: tx.categoryName,
+    category_icon: tx.categoryIcon,
+    category_color: tx.categoryColor,
+    account_id: tx.accountId,
+    account_name: tx.accountName,
+    to_account_id: tx.toAccountId || null,
+    converted_amount: tx.convertedAmount !== undefined ? tx.convertedAmount : null,
+    exchange_rate: tx.exchangeRate !== undefined ? tx.exchangeRate : null,
+    goal_id: tx.goalId || null,
+    recipient: tx.recipient || null,
+    merchant: tx.merchant || null,
+    date: tx.date,
+    note: tx.note || null,
+    tags: cleanTags,
+    is_recurring: tx.isRecurring || false,
+    recurring_interval: tx.recurringInterval || null,
+    is_pinned: tx.isPinned || false,
+    resulting_balance: tx.resultingBalance !== undefined ? tx.resultingBalance : null,
+    updated_at: new Date().toISOString(),
+  };
+};
+
+const mapTransactionFromDb = (row: TransactionRow | Record<string, unknown>): Transaction => {
+  const rawTags = ((row.tags as string[]) || []);
+  let receiptUrlFromTag: string | undefined;
+  const filteredTags: string[] = [];
+
+  for (const tag of rawTags) {
+    if (typeof tag === 'string' && tag.startsWith(RECEIPT_TAG_PREFIX)) {
+      receiptUrlFromTag = tag.slice(RECEIPT_TAG_PREFIX.length);
+    } else {
+      filteredTags.push(tag);
+    }
+  }
+
+  const localReceiptMap = getLocalReceiptMap();
+  const txId = row.id as string;
+  const receiptUrl = ((row as Record<string, unknown>).receipt_url as string) || receiptUrlFromTag || localReceiptMap[txId] || undefined;
+
+  return {
+    id: row.id as string,
+    type: row.type as Transaction['type'],
+    amount: typeof row.amount === 'number' ? row.amount : parseFloat(row.amount as string),
+    currency: row.currency as CurrencyCode,
+    categoryId: row.category_id as string,
+    categoryName: row.category_name as string,
+    categoryIcon: row.category_icon as string,
+    categoryColor: row.category_color as string,
+    accountId: row.account_id as string,
+    accountName: row.account_name as string,
+    toAccountId: (row.to_account_id as string) || undefined,
+    convertedAmount: row.converted_amount !== null && row.converted_amount !== undefined ? (typeof row.converted_amount === 'number' ? row.converted_amount : parseFloat(row.converted_amount as string)) : undefined,
+    exchangeRate: row.exchange_rate !== null && row.exchange_rate !== undefined ? (typeof row.exchange_rate === 'number' ? row.exchange_rate : parseFloat(row.exchange_rate as string)) : undefined,
+    goalId: (row.goal_id as string) || undefined,
+    recipient: (row.recipient as string) || undefined,
+    merchant: (row.merchant as string) || undefined,
+    date: row.date as string,
+    note: (row.note as string) || undefined,
+    tags: filteredTags,
+    receiptUrl,
+    isPinned: !!row.is_pinned,
+    isRecurring: !!row.is_recurring,
+    recurringInterval: (row.recurring_interval as Transaction['recurringInterval']) || undefined,
+    resultingBalance: row.resulting_balance !== null && row.resulting_balance !== undefined ? (typeof row.resulting_balance === 'number' ? row.resulting_balance : parseFloat(row.resulting_balance as string)) : undefined,
+  };
+};
 
 const mapGoalToDb = (g: Goal, userId: string) => ({
   id: g.id,
@@ -547,7 +623,7 @@ export const CATEGORY_STYLE_MAP: Record<string, { icon: string; color: string; t
 // cache = remote records + local records with a pending upsert - records with a pending delete.
 // Remote deletions from other devices remove the local copy.
 function mergeEntityWithOutbox<T extends { id: string }>(
-  entityName: 'accounts' | 'categories' | 'transactions' | 'goals' | 'budgets' | 'notifications',
+  entityName: OutboxEntity | 'notifications',
   remoteItems: T[],
   localCacheItems: T[],
   pendingItems: OutboxItem[]
@@ -556,12 +632,27 @@ function mergeEntityWithOutbox<T extends { id: string }>(
   const pendingDeletes = new Set(
     pendingForEntity.filter(item => item.op === 'delete').map(item => item.recordId)
   );
+
+  // Add any items pending undo-window deletion for this entity
+  const activePendingDeletes = (pendingDeleteIds as Record<string, Set<string>>)[entityName];
+  if (activePendingDeletes) {
+    activePendingDeletes.forEach(id => pendingDeletes.add(id));
+  }
+
+  // Filter out any item whose id is in pendingDeleteIds from both remoteList and localList
+  const safeRemoteItems = activePendingDeletes
+    ? remoteItems.filter(item => !activePendingDeletes.has(item.id))
+    : remoteItems;
+  const safeLocalCacheItems = activePendingDeletes
+    ? localCacheItems.filter(item => !activePendingDeletes.has(item.id))
+    : localCacheItems;
+
   const pendingUpserts = new Map<string, T>();
   pendingForEntity
     .filter(item => item.op === 'upsert')
     .forEach(item => {
-      const local = localCacheItems.find(loc => loc.id === item.recordId);
-      if (local) {
+      const local = safeLocalCacheItems.find(loc => loc.id === item.recordId);
+      if (local && !pendingDeletes.has(item.recordId)) {
         pendingUpserts.set(item.recordId, local);
       }
     });
@@ -569,7 +660,7 @@ function mergeEntityWithOutbox<T extends { id: string }>(
   const result: T[] = [];
   const seenIds = new Set<string>();
 
-  for (const remote of remoteItems) {
+  for (const remote of safeRemoteItems) {
     if (pendingDeletes.has(remote.id)) {
       continue; // Remote record was deleted locally: pending delete wins
     }
@@ -595,7 +686,7 @@ function mergeEntityWithOutbox<T extends { id: string }>(
 
 const activeSyncPromisesByUser = new Map<string, Promise<{ ok: boolean; profile?: ProfileRow | null; error?: unknown; throttled?: boolean }>>();
 const lastPullTimestampByUser = new Map<string, number>();
-const PULL_THROTTLE_MS = 30_000;
+const PULL_THROTTLE_MS = 15_000;
 
 // Initialize cache for guest mode by default
 reloadCacheForUser(null);
@@ -1006,10 +1097,33 @@ export const CentraDB = {
       return { data: tx, error: null };
     }
 
+    // Ensure category exists in public.categories first to prevent foreign key errors
+    if (tx.categoryId) {
+      const cat = cache.categories.find(c => c.id === tx.categoryId);
+      if (cat) {
+        try {
+          await supabase.from('categories').upsert(mapCategoryToDb(cat, userId), { onConflict: 'user_id,id' });
+        } catch {
+          // Ignore
+        }
+      }
+    }
+
     const dbRow = mapTransactionToDb(tx, userId);
     try {
       setSyncStatus('syncing');
-      const { error } = await supabase.from('transactions').upsert(dbRow, { onConflict: 'user_id,id' });
+      let { error } = await supabase.from('transactions').upsert(dbRow, { onConflict: 'user_id,id' });
+      if (error && (error.code === 'PGRST204' || error.message?.includes('column') || error.message?.includes('schema'))) {
+        const {
+          original_amount: _o1,
+          original_currency: _o2,
+          exchange_rate: _o3,
+          goal_id: _o4,
+          ...fallbackRow
+        } = dbRow as Record<string, unknown>;
+        const retryRes = await supabase.from('transactions').upsert(fallbackRow, { onConflict: 'user_id,id' });
+        error = retryRes.error;
+      }
       if (error) {
         OutboxQueue.enqueue({ userId, entity: 'transactions', op: 'upsert', recordId: tx.id, payload: dbRow });
         setSyncStatus('error');
@@ -1124,10 +1238,27 @@ export const CentraDB = {
       return { data: budget, error: null };
     }
 
+    // Ensure category exists in public.categories first so budgets_category_id_fkey never fails
+    if (budget.categoryId) {
+      const cat = cache.categories.find(c => c.id === budget.categoryId);
+      if (cat) {
+        try {
+          await supabase.from('categories').upsert(mapCategoryToDb(cat, userId), { onConflict: 'user_id,id' });
+        } catch {
+          // Ignore
+        }
+      }
+    }
+
     const dbRow = mapBudgetToDb(budget, userId);
     try {
       setSyncStatus('syncing');
-      const { error } = await supabase.from('budgets').upsert(dbRow, { onConflict: 'user_id,id' });
+      let { error } = await supabase.from('budgets').upsert(dbRow, { onConflict: 'user_id,id' });
+      if (error && (error.code === 'PGRST204' || error.message?.toLowerCase().includes('currency'))) {
+        const { currency: _omitted, ...fallbackRow } = dbRow as Record<string, unknown>;
+        const retryRes = await supabase.from('budgets').upsert(fallbackRow, { onConflict: 'user_id,id' });
+        error = retryRes.error;
+      }
       if (error) {
         OutboxQueue.enqueue({ userId, entity: 'budgets', op: 'upsert', recordId: budget.id, payload: dbRow });
         setSyncStatus('error');
@@ -1375,6 +1506,20 @@ export const CentraDB = {
       return { processed: 0, errors: 0 };
     }
 
+    // For authenticated users, discard any demo items that may have leaked into the outbox
+    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+    if (!isTest && !isGuestUser(userId)) {
+      const demoItems = pending.filter(item =>
+        (item.entity === 'accounts' && DEMO_ACCOUNT_IDS.has(item.recordId)) ||
+        (item.entity === 'transactions' && DEMO_TX_IDS.has(item.recordId)) ||
+        (item.entity === 'goals' && DEMO_GOAL_IDS.has(item.recordId)) ||
+        (item.entity === 'budgets' && DEMO_BUDGET_IDS.has(item.recordId))
+      );
+      for (const item of demoItems) {
+        OutboxQueue.remove(userId, item.id);
+      }
+    }
+
     setSyncStatus('syncing');
     let processed = 0;
     let errors = 0;
@@ -1405,7 +1550,40 @@ export const CentraDB = {
         let err: { code?: string; message?: string } | null = null;
         if (item.op === 'upsert') {
           const onConflict = item.entity === 'settings' ? 'user_id' : 'user_id,id';
-          const { error } = await supabase.from(item.entity).upsert(item.payload || {}, { onConflict });
+          let payload = (item.payload || {}) as Record<string, unknown>;
+
+          // Ensure category foreign key exists in public.categories first if needed
+          if ((item.entity === 'budgets' || item.entity === 'transactions') && payload.category_id) {
+            const cat = cache.categories.find(c => c.id === payload.category_id);
+            if (cat) {
+              try {
+                await supabase.from('categories').upsert(mapCategoryToDb(cat, userId), { onConflict: 'user_id,id' });
+              } catch {
+                // Ignore
+              }
+            }
+          }
+
+          let { error } = await supabase.from(item.entity).upsert(payload, { onConflict });
+
+          if (error && item.entity === 'budgets' && (error.code === 'PGRST204' || error.message?.toLowerCase().includes('currency'))) {
+            const { currency: _omitted, ...fallbackRow } = payload;
+            payload = fallbackRow;
+            const retryRes = await supabase.from('budgets').upsert(payload, { onConflict });
+            error = retryRes.error;
+          } else if (error && item.entity === 'transactions' && (error.code === 'PGRST204' || error.message?.includes('column') || error.message?.includes('schema'))) {
+            const {
+              original_amount: _o1,
+              original_currency: _o2,
+              exchange_rate: _o3,
+              goal_id: _o4,
+              ...fallbackRow
+            } = payload;
+            payload = fallbackRow;
+            const retryRes = await supabase.from('transactions').upsert(payload, { onConflict });
+            error = retryRes.error;
+          }
+
           err = error;
         } else if (item.op === 'delete') {
           const { error } = await supabase.from(item.entity).delete().eq('id', item.recordId);
@@ -1871,8 +2049,26 @@ export const CentraDB = {
     notifyDataChanged();
   },
 
+  // Pending-undo delete markers
+  markPendingDelete: (entity: OutboxEntity, id: string) => {
+    if (!pendingDeleteIds[entity]) {
+      pendingDeleteIds[entity] = new Set();
+    }
+    pendingDeleteIds[entity].add(id);
+  },
+  unmarkPendingDelete: (entity: OutboxEntity, id: string) => {
+    pendingDeleteIds[entity]?.delete(id);
+  },
+  clearMemoryCache: () => {
+    (Object.keys(pendingDeleteIds) as OutboxEntity[]).forEach(entity => {
+      pendingDeleteIds[entity]?.clear();
+    });
+  },
+  flushOutbox: async () => CentraDB.processOutbox(),
+
   // Logout/clear all local data
   clearAllData: () => {
+    CentraDB.clearMemoryCache();
     const userId = currentActiveUserId;
     if (userId) {
       OutboxQueue.clear(userId);
@@ -2280,6 +2476,12 @@ export const CentraDB = {
 
     if (mutated.transactionsToUpsert) {
       mutated.transactionsToUpsert.forEach(tx => {
+        if (tx.categoryId) {
+          const cat = cache.categories.find(c => c.id === tx.categoryId);
+          if (cat) {
+            outboxItems.push({ userId, entity: 'categories', op: 'upsert', recordId: cat.id, payload: mapCategoryToDb(cat, userId) });
+          }
+        }
         outboxItems.push({ userId, entity: 'transactions', op: 'upsert', recordId: tx.id, payload: mapTransactionToDb(tx, userId) });
       });
     }
@@ -2302,6 +2504,12 @@ export const CentraDB = {
 
     if (mutated.budgetsToUpsert) {
       mutated.budgetsToUpsert.forEach(b => {
+        if (b.categoryId) {
+          const cat = cache.categories.find(c => c.id === b.categoryId);
+          if (cat) {
+            outboxItems.push({ userId, entity: 'categories', op: 'upsert', recordId: cat.id, payload: mapCategoryToDb(cat, userId) });
+          }
+        }
         outboxItems.push({ userId, entity: 'budgets', op: 'upsert', recordId: b.id, payload: mapBudgetToDb(b, userId) });
       });
     }

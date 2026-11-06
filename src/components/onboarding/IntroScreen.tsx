@@ -37,12 +37,8 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
 
   const handleEmailChange = (val: string) => {
     setEmail(val);
-    if (val.trim()) {
-      const res = validateEmail(val);
-      setEmailError(res.ok ? null : res.error || null);
-    } else {
-      setEmailError(null);
-    }
+    if (emailError) setEmailError(null);
+    if (errorMessage) setErrorMessage('');
   };
 
   const showAppleButton =
@@ -69,14 +65,14 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
       return;
     }
 
-    const emailResult = validateEmail(email);
-    if (!emailResult.ok) {
-      setEmailError(emailResult.error || 'Please enter a valid email address.');
-      setErrorMessage(emailResult.error || 'Please enter a valid email address.');
+    const validation = validateEmail(email);
+    if (!validation.ok) {
+      setEmailError(validation.error || 'Invalid email');
+      setErrorMessage(validation.error || 'Invalid email');
       return;
     }
 
-    const cleanEmail = emailResult.value;
+    const cleanEmail = validation.value;
 
     if (!(await isNetworkConnected())) {
       setErrorMessage(NO_INTERNET_ERROR_MESSAGE);
@@ -295,7 +291,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ initialMode, initialEm
 
               <button
                 type="submit"
-                disabled={isLoading || !!oauthLoading || !email.trim() || !!emailError}
+                disabled={isLoading || !!oauthLoading || !email.trim()}
                 className="w-full py-3.5 px-6 rounded-full bg-[#18212F] dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 active:scale-[0.99] transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isLoading ? (

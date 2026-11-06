@@ -10,7 +10,7 @@ Once installed, Centra runs in a dedicated borderless window with desktop dock/t
 
 | Version | Channel | Installation Method | Highlights |
 |:---|:---|:---|:---|
-| **`v1.0.5`** | 🟢 Latest | **Direct Browser Install** (Zero `.zip` files) · [Install Guide](#-how-to-install--run-centra-as-a-standalone-desktop-app) | Added automatic in-app update detector and 1-click zero-data-loss updater, comprehensive Legal, License, Privacy Policy, and Support Center |
+| **`v1.0.6`** | 🟢 Latest | **Direct Browser Install** (Zero `.zip` files) · [Install Guide](#-how-to-install--run-centra-as-a-standalone-desktop-app) | Added automatic in-app update detector and 1-click zero-data-loss updater, comprehensive Legal, License, Privacy Policy, and Support Center |
 | **`v1.0.4`** | ⚪ Previous | **Direct Browser Install** | Web-only static rows with 1-click delete buttons, desktop centered Notifications modal card, enlarged header greeting & balanced padding, expanded Recent Activity box, default system appearance theme, descriptive tab title, and Network-First PWA caching |
 | **`v1.0.2`** | ⚪ Previous | **Direct Browser Install** | Unified floating bottom capsule navigation on desktop & mobile, side-by-side Account Information & Cash Flow Trend dashboard, permanent standalone PWA title bar, Google account chooser support |
 

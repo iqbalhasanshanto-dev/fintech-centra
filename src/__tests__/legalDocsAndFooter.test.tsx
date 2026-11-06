@@ -131,7 +131,7 @@ describe('LegalDocsModal, Upgraded App Footer & Support Center', () => {
       expect(footer).toBeInTheDocument();
       expect(footer).toHaveTextContent(/Centra/);
       expect(footer).toHaveTextContent(/Personal Finance & Expense Tracker/);
-      expect(footer).toHaveTextContent(/Offline-First/);
+      expect(footer).not.toHaveTextContent(/Offline-First/);
 
       // Verify clicking links in footer opens modal
       const licenseBtn = screen.getByRole('button', { name: /^License$/i });

@@ -265,33 +265,45 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     }
   }, [userId, isGuest, firstSyncState]);
 
-  // Reconnect (online) and tab focus (visibilitychange) sync triggers
-  // Outbox drain is immediate; pull sync is subject to in-flight guard and 30s throttle
+  // Reconnect (online), tab focus/visibility, and 20s cross-device sync triggers
   useEffect(() => {
     if (isGuest || !userId) return;
 
-    const handleOnline = () => {
+    const triggerSync = () => {
       CentraDB.processOutbox().then(() => {
-        CentraDB.syncFromSupabase(userId);
+        CentraDB.syncFromSupabase(userId).then(synced => {
+          if (synced && synced.ok) {
+            reloadFromCache();
+          }
+        });
       });
     };
 
+    const handleOnline = () => triggerSync();
+    const handleFocus = () => triggerSync();
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        CentraDB.processOutbox().then(() => {
-          CentraDB.syncFromSupabase(userId);
-        });
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        triggerSync();
       }
     };
 
     window.addEventListener('online', handleOnline);
+    window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const intervalId = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible' && navigator.onLine) {
+        triggerSync();
+      }
+    }, 20000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
+      window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
     };
-  }, [userId, isGuest]);
+  }, [userId, isGuest, reloadFromCache]);
 
   // Theme application
   useEffect(() => {
@@ -865,12 +877,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     setAccounts(res.nextState.accounts);
     CentraDB.setCachedTransactions(res.nextState.transactions);
     CentraDB.setCachedAccounts(res.nextState.accounts);
+    CentraDB.markPendingDelete('transactions', id);
 
     const executeCommit = async () => {
       try {
         await CentraDB.deleteTransaction(id);
       } catch (err) {
         logger.warn('Failed to permanently delete transaction in Supabase:', err);
+      } finally {
+        CentraDB.unmarkPendingDelete('transactions', id);
       }
       if (pendingDeleteRef.current?.id === id) {
         pendingDeleteRef.current = null;
@@ -879,6 +894,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     };
 
     const undo = async () => {
+      CentraDB.unmarkPendingDelete('transactions', id);
       if (pendingDeleteRef.current?.timer) {
         clearTimeout(pendingDeleteRef.current.timer);
       }
@@ -1074,6 +1090,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     };
     setGoals(nextGoals);
     CentraDB.setCachedGoals(nextGoals);
+    CentraDB.markPendingDelete('goals', id);
 
     const executeCommit = async () => {
       try {
@@ -1081,6 +1098,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
         deleteGoalHistory(id);
       } catch (err) {
         logger.warn('Failed to permanently delete goal in Supabase:', err);
+      } finally {
+        CentraDB.unmarkPendingDelete('goals', id);
       }
       if (pendingDeleteRef.current?.id === id) {
         pendingDeleteRef.current = null;
@@ -1089,6 +1108,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     };
 
     const undo = async () => {
+      CentraDB.unmarkPendingDelete('goals', id);
       if (pendingDeleteRef.current?.timer) {
         clearTimeout(pendingDeleteRef.current.timer);
       }
@@ -1248,12 +1268,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     };
     setBudgets(nextBudgets);
     CentraDB.setCachedBudgets(nextBudgets);
+    CentraDB.markPendingDelete('budgets', id);
 
     const executeCommit = async () => {
       try {
         await CentraDB.deleteBudget(id);
       } catch (err) {
         logger.warn('Failed to permanently delete budget in Supabase:', err);
+      } finally {
+        CentraDB.unmarkPendingDelete('budgets', id);
       }
       if (pendingDeleteRef.current?.id === id) {
         pendingDeleteRef.current = null;
@@ -1262,6 +1285,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode; userId?: str
     };
 
     const undo = async () => {
+      CentraDB.unmarkPendingDelete('budgets', id);
       if (pendingDeleteRef.current?.timer) {
         clearTimeout(pendingDeleteRef.current.timer);
       }

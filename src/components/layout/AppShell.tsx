@@ -248,9 +248,6 @@ export const AppShell: React.FC = () => {
               <span className="font-bold text-gray-800 dark:text-gray-200">Centra</span>
               <span className="text-gray-400 dark:text-gray-600 hidden sm:inline">•</span>
               <span className="text-gray-500 dark:text-gray-400">Personal Finance &amp; Expense Tracker</span>
-              <span className="px-2 py-0.5 rounded-full bg-black/[0.05] dark:bg-white/[0.08] text-[10px] font-semibold text-gray-600 dark:text-gray-400">
-                Offline-First
-              </span>
             </div>
 
             {/* Right Legal & Support Links */}

@@ -1,30 +1,35 @@
 {
   "android": {
-    "version": "4.1.3",
-    "versionCode": 17,
-    "artifactPath": "releases/android/Centra-v4.1.3.apk",
-    "downloadUrl": "https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.3.apk",
+    "version": "4.1.4",
+    "versionCode": 18,
+    "androidVersionCode": 18,
+    "artifactPath": "releases/android/Centra-v4.1.4.apk",
+    "downloadUrl": "https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/android/Centra-v4.1.4.apk",
     "releaseNotes": [
-      "Added automatic in-app update notifications and 1-click updater",
-      "Added comprehensive Legal, License, Privacy Policy, and Support Center",
-      "Fixed Quick Action picker reset and Settings header layout"
+      "Fixed email sign-in validation firing while typing",
+      "Prevented deleted transactions, budgets, and goals from resurfacing during undo window",
+      "Enhanced category budget and transaction sync resilience with automatic foreign-key resolution",
+      "Added amount and receipt image editing to transaction details"
     ]
   },
   "ios": {
-    "version": "1.0.1",
-    "artifactPath": "releases/ios/Centra-v1.0.1.ipa",
-    "downloadUrl": "https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.1.ipa",
+    "version": "1.0.2",
+    "artifactPath": "releases/ios/Centra-v1.0.2.ipa",
+    "downloadUrl": "https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.2.ipa",
     "releaseNotes": [
-      "Fixed iOS safe-area bottom spacing across onboarding and main screens",
-      "Improved offline sync and Google account chooser support"
+      "Fixed email sign-in validation firing while typing",
+      "Added receipt image persistence and editing in transaction details",
+      "Prevented undo-window deleted records from resurfacing"
     ]
   },
   "web": {
-    "version": "1.0.5",
-    "updatedAt": "2026-03-30",
+    "version": "1.0.6",
+    "updatedAt": "2026-11-06",
     "releaseNotes": [
-      "Added automatic in-app update detector and 1-click zero-data-loss updater",
-      "Added comprehensive Legal, License, Privacy Policy, and Support Center"
+      "Fixed email sign-in validation firing while typing",
+      "Added cross-device auto-sync and resilient budget/transaction syncing",
+      "Added amount and receipt image editing to transaction details",
+      "Removed offline-first badge from footer"
     ]
   }
 }

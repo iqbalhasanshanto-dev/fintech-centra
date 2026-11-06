@@ -71,6 +71,7 @@ export interface TransactionRow {
   date: string;
   note?: string | null;
   tags?: string[] | null;
+  receipt_url?: string | null;
   is_recurring?: boolean | null;
   recurring_interval?: string | null;
   is_pinned?: boolean | null;

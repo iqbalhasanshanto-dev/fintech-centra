@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [Web 1.0.6] & [Android 4.1.4] & [iOS 1.0.2] - 2026-11-06
+
+### 🚀 Core Fixes, Cross-Device Sync, Receipt Persistence & UI Polish
+- **Email Sign-In Validation Polish (`IntroScreen.tsx`)**:
+  - Disabled live regex validation while typing so users can freely type their email address without premature error prompts.
+  - Form validation runs on submit (`handleEmailSubmit`), keeping the submit button enabled whenever email is non-empty (`disabled={isLoading || !email.trim()}`).
+- **Pending-Undo Deletion Isolation (`storage.ts` & `FinanceContext.tsx`)**:
+  - Implemented an in-memory `pendingDeleteIds` registry for accounts, categories, transactions, budgets, recurring items, and goals.
+  - Filtered pending-delete IDs during `mergeEntityWithOutbox` so background cloud sync cycles during the 5-second undo window can never resurrect deleted items.
+  - Added immediate pending delete registration on transaction, budget, and goal deletion, clearing upon undo or after commit.
+- **Category Budgets Sync Error Fix & Real-Time Cross-Device Sync (`storage.ts` & `FinanceContext.tsx`)**:
+  - Automatically ensures category records are pushed to `public.categories` prior to upserting budgets or transactions, satisfying foreign key constraints.
+  - Added resilient fallback retry in `upsertBudget`, `upsertTransaction`, and `persistBatch` to gracefully handle databases lacking newer columns (e.g., `currency`, `original_amount`, etc.).
+  - Purged demo budget and goal IDs for authenticated users to avoid sync conflicts.
+  - Added active `visibilitychange` and `focus` event listeners alongside a 20-second background sync interval to automatically sync updates cross-device in real time.
+- **Receipt Image Attachment Persistence & Cross-Platform Sync (`storage.ts`)**:
+  - Encoded receipt URLs as structured internal tags (`__receipt:<url>`) and backed up to local storage so receipt attachments reliably sync across devices and survive remote pulls even when the remote schema lacks a dedicated column.
+  - Filtered internal receipt tags on read so they never render as tag pills in the UI.
+- **Editable Amount & Receipt Attachments in Transaction Detail (`TransactionDetailModal.tsx`)**:
+  - Added amount editing and receipt image management (preview, upload, change, remove with image compression and validation) directly within Edit Transaction mode.
+  - Correctly cleared removed receipts upon save.
+- **Footer & Legal Modal Polish (`AppShell.tsx` & `LegalDocsModal.tsx`)**:
+  - Removed "Offline-First" badge from the footer across all platforms, presenting clean, professional branding: `Centra • Personal Finance & Expense Tracker`.
+- **Release Packages & Version Updates**:
+  - Bumped Android to `v4.1.4` (versionCode 18) with compiled release APK (`Centra-v4.1.4.apk`).
+  - Bumped iOS to `v1.0.2` with compiled release IPA (`Centra-v1.0.2.ipa`).
+  - Bumped Web to `v1.0.6` with updated service worker cache `centra-pwa-v1.0.6`.
+
+
 ## [Web 1.0.5] & [Android 4.1.3] - 2026-03-30 / 2026-11-05
 
 ### 🚀 Zero-Data-Loss In-App Update Engine & 1-Click Updater

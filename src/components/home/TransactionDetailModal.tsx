@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Pin, Trash2, Edit2, Calendar, CreditCard, Tag, FileText, Check, Paperclip, X, ChevronDown, User } from 'lucide-react';
 import { Transaction, Category } from '../../types';
 import { useFinance } from '../../context/FinanceContext';
@@ -8,9 +8,11 @@ import { CategoryIcon } from '../ui/CategoryIcon';
 import { DatePicker } from '../ui/DatePicker';
 import { FIGMA_DEFAULT_CATEGORIES, CentraDB } from '../../db/storage';
 import { formatCurrency, formatFullDate, formatTime, getTransactionDisplay } from '../../utils/formatters';
+import { getCurrencyInfo } from '../../utils/currencies';
 import { useBackHandler } from '../../utils/backButton';
 import { sanitizeText } from '../../utils/sanitize';
 import { validateLabel, validateNote } from '../../utils/validators';
+import { validateImageFile, processImage } from '../../utils/security';
 import { logger } from '../../utils/logger';
 
 interface TransactionDetailModalProps {
@@ -30,12 +32,18 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   useBackHandler(isOpen, onClose);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [editAmount, setEditAmount] = useState('');
+  const [amountError, setAmountError] = useState<string | null>(null);
   const [merchant, setMerchant] = useState('');
   const [merchantError, setMerchantError] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [noteError, setNoteError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState('');
   const [editDate, setEditDate] = useState('');
+  const [editReceiptUrl, setEditReceiptUrl] = useState<string | null>(null);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
@@ -61,6 +69,30 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     }
   };
 
+  const handleReceiptFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageError(null);
+    setIsProcessingImage(true);
+    try {
+      const validation = await validateImageFile(file);
+      if (!validation.ok) {
+        setImageError(validation.error || 'Please upload a valid JPEG, PNG, or WebP receipt image.');
+        if (editFileInputRef.current) editFileInputRef.current.value = '';
+        return;
+      }
+
+      const processed = await processImage(file, { maxDimension: 1200, quality: 0.8 });
+      setEditReceiptUrl(processed.dataUrl);
+    } catch {
+      setImageError('Failed to process image. Please try again.');
+    } finally {
+      setIsProcessingImage(false);
+      if (editFileInputRef.current) editFileInputRef.current.value = '';
+    }
+  };
+
   // Reset form when transaction opens
   React.useEffect(() => {
     if (transaction) {
@@ -72,6 +104,10 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
       setNoteError(null);
       setCategoryId(transaction.categoryId);
       setEditDate(transaction.date ? transaction.date.slice(0, 10) : new Date().toISOString().slice(0, 10));
+      setEditAmount(String(transaction.amount));
+      setAmountError(null);
+      setEditReceiptUrl(transaction.receiptUrl || null);
+      setImageError(null);
       setIsCategoryPickerOpen(false);
       setIsEditing(false);
     }
@@ -109,6 +145,12 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   const display = getTransactionDisplay(currentTx);
 
   const handleSaveEdit = () => {
+    const parsedAmount = parseFloat(editAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setAmountError('Please enter a valid amount greater than 0.');
+      return;
+    }
+
     if (merchant.trim()) {
       const merchantRes = validateLabel(merchant, 'Merchant', false);
       if (!merchantRes.ok) {
@@ -148,15 +190,17 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     }
 
     updateTransaction(currentTx.id, {
+      amount: parsedAmount,
       merchant: merchant.trim() ? sanitizeText(merchant, 60) : '',
       note: note.trim()
-        ? sanitizeText(note, 500) + (currentTx.receiptUrl && !note.includes('[Attached:') ? ` [Attached: Receipt]` : '')
-        : (currentTx.receiptUrl ? `[Attached: Receipt]` : ''),
+        ? sanitizeText(note, 500) + (editReceiptUrl && !note.includes('[Attached:') ? ` [Attached: Receipt]` : '')
+        : (editReceiptUrl ? `[Attached: Receipt]` : ''),
       categoryId,
       categoryName: chosenCategory ? chosenCategory.name : currentTx.categoryName,
       categoryIcon: chosenCategory ? chosenCategory.icon : currentTx.categoryIcon,
       categoryColor: chosenCategory ? chosenCategory.color : currentTx.categoryColor,
       date: updatedIsoDate,
+      receiptUrl: editReceiptUrl || undefined,
     });
     setIsEditing(false);
   };
@@ -338,7 +382,13 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 {currentTx.type !== 'transfer' ? (
                   <button
                     type="button"
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => {
+                      setEditAmount(String(currentTx.amount));
+                      setAmountError(null);
+                      setEditReceiptUrl(currentTx.receiptUrl || null);
+                      setImageError(null);
+                      setIsEditing(true);
+                    }}
                     className="py-2.5 px-3 rounded-full bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.06] dark:border-white/[0.08] text-[#18212F] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -369,6 +419,29 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1.5">
+                  Amount ({getCurrencyInfo(currentTx.currency).symbol || currentTx.currency})
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  min="0.01"
+                  placeholder="0.00"
+                  value={editAmount}
+                  onChange={e => {
+                    setEditAmount(e.target.value);
+                    if (amountError) setAmountError(null);
+                  }}
+                  className={`w-full h-[52px] px-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${
+                    amountError ? 'border-rose-500' : 'border-black/[0.08] dark:border-white/[0.10]'
+                  } text-[#18212F] dark:text-white text-xs font-semibold focus:outline-hidden focus:border-[#C6FF3D]`}
+                />
+                {amountError && (
+                  <p className="mt-1 text-[11px] text-rose-500 font-medium">{amountError}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1.5">
                   {currentTx.type === 'income' ? 'Received From' : 'Paid To'}
                 </label>
                 <input
@@ -378,7 +451,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   onChange={e => handleMerchantChange(e.target.value)}
                   className={`w-full h-[52px] px-4 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border ${
                     merchantError ? 'border-rose-500' : 'border-black/[0.08] dark:border-white/[0.10]'
-                  } text-[#18212F] dark:text-white text-xs font-semibold focus:outline-hidden focus:border-[#C6FF3D]` }
+                  } text-[#18212F] dark:text-white text-xs font-semibold focus:outline-hidden focus:border-[#C6FF3D]`}
                 />
                 {merchantError && (
                   <p className="mt-1 text-[11px] text-rose-500 font-medium">{merchantError}</p>
@@ -521,6 +594,58 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 )}
               </div>
 
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#667085] dark:text-[#9CA3AF] mb-1.5">
+                  Receipt / Attachment
+                </label>
+                {editReceiptUrl ? (
+                  <div className="p-3 rounded-2xl bg-[#F1F2F4] dark:bg-[#262626] border border-black/[0.08] dark:border-white/[0.10] flex items-center justify-between gap-3">
+                    <img
+                      src={editReceiptUrl}
+                      alt="Receipt preview"
+                      className="w-14 h-14 object-cover rounded-xl border border-black/[0.08] dark:border-white/[0.12]"
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => editFileInputRef.current?.click()}
+                        disabled={isProcessingImage}
+                        className="py-1.5 px-3 rounded-full bg-white dark:bg-[#1D1D1D] border border-black/[0.08] dark:border-white/[0.10] text-[#18212F] dark:text-white text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                      >
+                        Change Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditReceiptUrl(null)}
+                        className="py-1.5 px-3 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-rose-500/20 transition-colors cursor-pointer"
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => editFileInputRef.current?.click()}
+                    disabled={isProcessingImage}
+                    className="w-full py-3 px-4 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#262626] text-xs font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+                  >
+                    <Paperclip className="w-4 h-4 text-emerald-600 dark:text-[#C6FF3D]" />
+                    <span>{isProcessingImage ? 'Processing image...' : 'Attach Receipt Image'}</span>
+                  </button>
+                )}
+                <input
+                  ref={editFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleReceiptFileChange}
+                  className="hidden"
+                />
+                {imageError && (
+                  <p className="mt-1 text-[11px] text-rose-500 font-medium">{imageError}</p>
+                )}
+              </div>
+
               <div className="pt-2 flex items-center space-x-2">
                 <button
                   type="button"
@@ -532,7 +657,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 <button
                   type="button"
                   onClick={handleSaveEdit}
-                  disabled={!!merchantError || !!noteError}
+                  disabled={!!merchantError || !!noteError || !!amountError || isProcessingImage}
                   className="flex-1 py-3 rounded-full bg-[#18212F] dark:bg-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white dark:text-black font-bold text-xs flex items-center justify-center space-x-1 shadow-md cursor-pointer transition-all"
                 >
                   <Check className="w-3.5 h-3.5" />

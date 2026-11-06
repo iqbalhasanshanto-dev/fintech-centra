@@ -51,7 +51,7 @@ describe('In-App Update Checker (src/utils/updateChecker.ts)', () => {
         ok: true,
         json: async () => ({
           web: {
-            version: '1.0.5',
+            version: '1.0.6',
             releaseNotes: ['Sample notes'],
           },
         }),
@@ -59,8 +59,8 @@ describe('In-App Update Checker (src/utils/updateChecker.ts)', () => {
 
       const result = await checkForAppUpdate(false);
       expect(result.updateAvailable).toBe(false);
-      expect(result.installedVersion).toBe('1.0.5');
-      expect(result.latestVersion).toBe('1.0.5');
+      expect(result.installedVersion).toBe('1.0.6');
+      expect(result.latestVersion).toBe('1.0.6');
     });
 
     it('returns updateAvailable: true when remote version is newer', async () => {
@@ -69,7 +69,7 @@ describe('In-App Update Checker (src/utils/updateChecker.ts)', () => {
         ok: true,
         json: async () => ({
           web: {
-            version: '1.0.6',
+            version: '1.0.7',
             releaseNotes: ['Feature A', 'Feature B'],
           },
         }),
@@ -77,19 +77,19 @@ describe('In-App Update Checker (src/utils/updateChecker.ts)', () => {
 
       const result = await checkForAppUpdate(false);
       expect(result.updateAvailable).toBe(true);
-      expect(result.latestVersion).toBe('1.0.6');
+      expect(result.latestVersion).toBe('1.0.7');
       expect(result.releaseNotes).toEqual(['Feature A', 'Feature B']);
     });
 
     it('respects dismissed state in sessionStorage unless forceCheck is true', async () => {
       vi.spyOn(platformModule, 'getNativePlatform').mockReturnValue('android');
-      sessionStorage.setItem('centra_dismissed_update_4.1.4', '1');
+      sessionStorage.setItem('centra_dismissed_update_4.1.5', '1');
 
       vi.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: true,
         json: async () => ({
           android: {
-            version: '4.1.4',
+            version: '4.1.5',
             downloadUrl: 'https://test.com/app.apk',
             releaseNotes: ['Android update'],
           },
@@ -104,7 +104,7 @@ describe('In-App Update Checker (src/utils/updateChecker.ts)', () => {
       // forceCheck = true -> ignores dismissed
       const forcedRes = await checkForAppUpdate(true);
       expect(forcedRes.updateAvailable).toBe(true);
-      expect(forcedRes.latestVersion).toBe('4.1.4');
+      expect(forcedRes.latestVersion).toBe('4.1.5');
     });
   });
 

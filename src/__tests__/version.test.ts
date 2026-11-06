@@ -13,39 +13,39 @@ describe('Version Utils (src/utils/version.ts)', () => {
   });
 
   it('exposes correct platform versions in VERSIONS config', () => {
-    expect(VERSIONS.android).toBe('4.1.3');
-    expect(VERSIONS.ios).toBe('1.0.1');
-    expect(VERSIONS.web).toBe('1.0.5');
+    expect(VERSIONS.android).toBe('4.1.4');
+    expect(VERSIONS.ios).toBe('1.0.2');
+    expect(VERSIONS.web).toBe('1.0.6');
   });
 
   it('returns android version when on android native platform', () => {
     vi.spyOn(platformModule, 'getNativePlatform').mockReturnValue('android');
-    expect(getAppVersion()).toBe('4.1.3');
+    expect(getAppVersion()).toBe('4.1.4');
   });
 
   it('returns ios version when on ios native platform', () => {
     vi.spyOn(platformModule, 'getNativePlatform').mockReturnValue('ios');
-    expect(getAppVersion()).toBe('1.0.1');
+    expect(getAppVersion()).toBe('1.0.2');
   });
 
   it('returns web version by default on web', () => {
     vi.spyOn(platformModule, 'getNativePlatform').mockReturnValue('web');
-    expect(getAppVersion()).toBe('1.0.5');
+    expect(getAppVersion()).toBe('1.0.6');
   });
 
   it('honors ?platform=android query param override', () => {
     window.history.replaceState({}, '', '?platform=android');
-    expect(getAppVersion()).toBe('4.1.3');
+    expect(getAppVersion()).toBe('4.1.4');
   });
 
   it('honors ?platform=ios query param override', () => {
     window.history.replaceState({}, '', '?platform=ios');
-    expect(getAppVersion()).toBe('1.0.1');
+    expect(getAppVersion()).toBe('1.0.2');
   });
 
   it('honors ?platform=web query param override', () => {
     window.history.replaceState({}, '', '?platform=web');
-    expect(getAppVersion()).toBe('1.0.5');
+    expect(getAppVersion()).toBe('1.0.6');
   });
 });
 

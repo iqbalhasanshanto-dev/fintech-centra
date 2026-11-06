@@ -59,15 +59,16 @@ const existingVersionCode = Math.max(
   Number.isFinite(gradleVersionCode) ? gradleVersionCode : 0,
   Number.isFinite(jsonVersionCode) ? jsonVersionCode : 0
 );
-const nextVersionCode = Math.max(17, existingVersionCode);
+const nextVersionCode = Math.max(18, existingVersionCode);
 
 if (typeof versions[platform] === 'object' && versions[platform] !== null) {
   versions[platform].version = version;
   if (platform === 'android') {
     versions.android.versionCode = nextVersionCode;
+    versions.android.androidVersionCode = nextVersionCode;
     versions.android.artifactPath = `releases/android/Centra-v${version}.apk`;
   } else if (platform === 'web') {
-    versions.web.updatedAt = '2026-03-30';
+    versions.web.updatedAt = '2026-11-06';
   }
 } else {
   versions[platform] = version;
@@ -79,11 +80,11 @@ try {
 } catch {}
 console.log(`✅ Synced versions.json [${platform}] -> ${version}`);
 
-// Also sync root package.json version with android track
+// Sync root package.json version with web track
 const pkgPath = path.join(rootDir, 'package.json');
 if (fs.existsSync(pkgPath)) {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  pkg.version = getVer(versions.android);
+  pkg.version = getVer(versions.web) || '1.0.6';
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
 }
 

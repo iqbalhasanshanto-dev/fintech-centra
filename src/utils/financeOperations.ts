@@ -395,6 +395,10 @@ export function applyUpdateTransaction(
     resultingBalance: appliedNewBalance,
   };
 
+  if ('receiptUrl' in updates) {
+    updatedTx.receiptUrl = updates.receiptUrl;
+  }
+
   const nextTransactions = state.transactions.map(t => t.id === txId ? updatedTx : t);
 
   // Evaluate budget alerts

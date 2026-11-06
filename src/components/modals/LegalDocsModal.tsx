@@ -114,7 +114,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                 {activeTab === 'support' && 'Support & Help Center'}
               </h2>
               <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
-                Centra — Personal Finance &amp; Expense Tracker • Offline-First • v{getAppVersion()}
+                Centra • Personal Finance &amp; Expense Tracker • v{getAppVersion()}
               </p>
             </div>
           </div>

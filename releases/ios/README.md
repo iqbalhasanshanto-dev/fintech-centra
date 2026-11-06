@@ -8,18 +8,20 @@ This directory houses curated and verified iOS distribution packages for Centra.
 
 | Version | Channel | Download / Release Record | Size | Highlights |
 |:---|:---|:---|:---|:---|
-| **`v1.0.1`** | 🟢 Latest | [**📲 Download iOS IPA**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.1.ipa) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.1.ipa) | 2.46 MB | Fixed bottom navigation bar safe-area gap on iPhone screens, edge-to-edge WKWebView layout |
+| **`v1.0.2`** | 🟢 Latest | [**📲 Download iOS IPA**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.2.ipa) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.2.ipa) | 2.47 MB | Real-time cross-device sync & category budget sync resilience, persistent receipt image attachments, editable amount/receipt in transaction modal, 5-second undo delete isolation, email validation polish |
+| **`v1.0.1`** | ⚪ Previous | [**📦 Source Tag**](https://github.com/iqbalhasanshanto-dev/fintech-centra/tree/v1.0.1) · [Notes](../../CHANGELOG.md) | 2.46 MB | Fixed bottom navigation bar safe-area gap on iPhone screens, edge-to-edge WKWebView layout |
 | **`v1.0.0`** | ⚪ Previous | [**📦 Download iOS IPA**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.0.ipa) · [Mirror](https://raw.githubusercontent.com/iqbalhasanshanto-dev/fintech-centra/main/releases/ios/Centra-v1.0.0.ipa) | 2.74 MB | Initial official iOS release — Unsigned Release IPA for sideloading & Xcode Capacitor 8 native Swift project, pure-black OLED launcher icons & 2732px splash screens, local PBKDF2 PIN lock & offline CentraDB |
 
 <details>
 <summary><b>🔒 View SHA-256 Checksums & Verification Commands</b></summary>
 
-- **v1.0.1 (`Centra-v1.0.1.ipa`)**: `775229a9ab2b60d45f77f510520ee8a74cd37841a11077e1cf38b1849df29b62`
+- **v1.0.2 (`Centra-v1.0.2.ipa`)**: `6bba696f791aa02a7f7cc7328b36579ac8684bcd1297a71c2abe832cf168744f`
+- **v1.0.1 (`Centra-v1.0.1.ipa`)**: `05dd85a7bb0a22f305cbe040854c600ae5773fc6cb8c3e8031349f50cb90eb9d`
 - **v1.0.0 (`Centra-v1.0.0.ipa`)**: `47f7807b7d8f064879f2442a597232bcb3716098996b5fadf63efed80f7838d3`
 
 Verify on macOS:
 ```bash
-shasum -a 256 releases/ios/Centra-v1.0.1.ipa
+shasum -a 256 releases/ios/Centra-v1.0.2.ipa
 shasum -a 256 releases/ios/Centra-v1.0.0.ipa
 ```
 </details>
@@ -38,11 +40,11 @@ shasum -a 256 releases/ios/Centra-v1.0.0.ipa
 4. Press **⌘R** (Run) or click the **Play** button.
 5. The application builds and boots inside the simulator with full offline database persistence, 60fps animations, and hardware safe-area compliance.
 
-### Option 2: Sideload `Centra-v1.0.1.ipa` onto a Physical iPhone or iPad
-1. Download [**`Centra-v1.0.1.ipa`**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.1.ipa).
+### Option 2: Sideload `Centra-v1.0.2.ipa` onto a Physical iPhone or iPad
+1. Download [**`Centra-v1.0.2.ipa`**](https://github.com/iqbalhasanshanto-dev/fintech-centra/raw/main/releases/ios/Centra-v1.0.2.ipa).
 2. Sideload the IPA onto your iOS device using your preferred tool:
    - **AltStore / SideStore**: Open the IPA in AltStore on your device.
-   - **Sideloadly**: Connect your device to Mac/PC, drag `Centra-v1.0.1.ipa` into Sideloadly, and click Start.
+   - **Sideloadly**: Connect your device to Mac/PC, drag `Centra-v1.0.2.ipa` into Sideloadly, and click Start.
    - **Apple Configurator**: Connect your iPhone to Mac and drag the IPA onto your device.
 3. On your device, go to **Settings > General > VPN & Device Management** and trust your developer account.
 4. Launch **Centra** from your Home Screen.
@@ -61,7 +63,7 @@ shasum -a 256 releases/ios/Centra-v1.0.0.ipa
 Verify the cryptographic integrity of the downloaded archive:
 
 ```bash
-shasum -a 256 releases/ios/Centra-v1.0.1.ipa
+shasum -a 256 releases/ios/Centra-v1.0.2.ipa
 ```
 
 ---
